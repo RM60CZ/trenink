@@ -147,7 +147,6 @@
 </head>
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300 font-sans">
 
-    <!-- App Container - max height 100dvh with flex column -->
     <div class="w-full max-w-md mx-auto flex flex-col min-h-[100dvh]">
 
         <!-- Fixed Score Bar -->
@@ -187,7 +186,7 @@
                     <div class="flex items-start justify-between mb-3">
                         <div class="flex flex-col">
                             <h1 class="text-lg font-black tracking-tight text-slate-800 dark:text-white uppercase leading-tight">
-                                Trénink počítání
+                                Trénink počítání na čas
                             </h1>
                             <div class="flex items-center gap-1.5 mt-0.5">
                                 <span id="currentDate" class="text-[11px] font-medium text-slate-400 dark:text-slate-500"></span>
@@ -232,7 +231,6 @@
                                 <select id="cislice2" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs"></select>
                             </div>
                         </div>
-                        <!-- Division info -->
                         <div id="divisionInfo" class="hidden mt-2 text-[10px] text-slate-400 dark:text-slate-500 text-center font-medium">
                             Dělení zobrazí přesně 4 desetinná místa. Odpověď na 1–4 des. místa je uznána.
                         </div>
@@ -241,7 +239,7 @@
                     <!-- Error container -->
                     <div id="chyba" class="text-red-500 text-[10px] font-bold text-center h-4 overflow-hidden mb-1" role="alert"></div>
 
-                    <!-- Worksheet - compact -->
+                    <!-- Worksheet -->
                     <div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl pt-4 px-4 pb-0 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center">
                         <div class="w-full overflow-x-auto scrollbar-hide flex flex-col items-end relative z-10">
                             <div id="priklad" style="white-space: break-spaces;" class="math-text font-mono text-lg tracking-tighter text-slate-700 dark:text-slate-200">Zvolte nastavení a stiskněte ▶ Začít</div>
@@ -267,7 +265,7 @@
                 </div>
             </div>
 
-            <!-- History - compact -->
+            <!-- History -->
             <div id="historyContainer" class="px-1 opacity-0 transition-opacity duration-500 select-none" aria-live="polite">
                 <div class="text-[9px] font-bold uppercase text-slate-400 tracking-wider mb-1.5">Historie</div>
                 <div id="historyList" class="flex flex-wrap gap-1.5">
@@ -275,7 +273,6 @@
                 </div>
             </div>
 
-            <!-- Bottom spacer for mobile -->
             <div class="h-4"></div>
         </div>
     </div>
@@ -431,7 +428,6 @@
 
         odpovedEl.addEventListener('input', updateBtnDisable);
 
-        // Kontrola, zda je vstup platné číslo
         function jePlatneCislo(vstup) {
             if (vstup === '') return false;
             const norm = normalizuj(vstup);
@@ -492,9 +488,7 @@
             const btnText = tlacitkoEl.textContent.trim();
             const inputText = odpovedEl.value.trim();
 
-            // ── ZAČÍT nebo DALŠÍ PŘÍKLAD ──
             if (!zobrazitVysledek) {
-                // Kontrola slova "smazat" pouze při ZAČÍT
                 if (btnText === 'ZAČÍT' && normalizuj(inputText) === 'smazat') {
                     if (typeof window.clearHistory === 'function') {
                         window.clearHistory();
@@ -523,7 +517,6 @@
                     isProcessing = false;
                 }, 50);
             } 
-            // ── VÝSLEDEK(kontrola) ──
             else {
                 const uziv = inputText;
                 
@@ -760,7 +753,6 @@
                 }
                 if (!text || text.includes('Zvolte nastavení')) return;
                 history.unshift({ text, correct: isCorrect });
-                // Bez omezení počtu položek
                 renderHistory();
             }
 
