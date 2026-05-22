@@ -816,8 +816,9 @@
             scoreWrong.textContent = wrong;
             streakCount.textContent = streak;
 
-            const iconCheck = `<svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>`;
-            const iconCross = `<svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+            // ✅ ÚPRAVA 1: Ikony odstraněny – prázdné řetězce
+            const iconCheck = ``;
+            const iconCross = ``;
 
             settingsToggle.addEventListener('click', () => {
                 settingsPanel.classList.toggle('collapsed');
@@ -840,7 +841,7 @@
                     enterHint.style.opacity = '1';
                 }
             });
-            input.addEventListener('blur', () => enterHint.style.opacity = '0');
+            input.addEventListener('blur', () => enterHint.style.opacity = '0';
             input.addEventListener('input', () => {
                 if (input.value.length > 0) enterHint.style.opacity = '0';
             });
@@ -942,8 +943,10 @@
                     }
                     
                     text = `${fmt(p.a)} ${p.op} ${fmt(p.b)} = ${vyslStr}`;
+                    // ✅ ÚPRAVA 2: Pokud je počet míst ≥5, zobrazit 4
                     if (pocetMist !== null) {
-                        text += ` (${pocetMist})`;
+                        const zobrazenyPocet = pocetMist >= 5 ? 4 : pocetMist;
+                        text += ` (${zobrazenyPocet})`;
                     }
                 } else {
                     text = prikladEl.textContent.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
