@@ -345,7 +345,7 @@
             aktualizujCislici2();
         });
 
-        // Nová funkce: zjistí, zda je dělení přesné do určitého počtu desetinných míst
+        // Zjistí, zda je dělení přesné a kolik má skutečných desetinných míst
         function jePresneDeleni(a, b, maxDecimals = 10) {
             let zbytek = a % b;
             if (zbytek === 0) return { presne: true, desetinnaMista: 0 };
@@ -361,55 +361,75 @@
             return { presne: false, desetinnaMista: null };
         }
 
-        // Nová funkce: zaokrouhlí na N desetinných míst s matematickým zaokrouhlením
+        // Zaokrouhlí na N desetinných míst s matematickým zaokrouhlením
         function zaokrouhliNaN(cislo, n) {
             const nasobitel = Math.pow(10, n);
             return Math.round(cislo * nasobitel) / nasobitel;
         }
 
-        // Nová funkce: porovná dvě čísla znak po znaku
-        function porovnejZnakPoZnaku(userStr, correctStr) {
-            // Normalizace: odstranit mezery, převést na tečku
+        // Porovná uživatelský vstup se správným výsledkem
+        // pro presne=true: povolí nuly za skutečnými desetinnými místy
+        // pro presne=false: kontroluje přesně na 4 místech
+        function porovnejDeleni(userStr, correctStr, presne, skutecnaDesetinnaMista) {
             const u = userStr.replace(/\s/g, '').replace(',', '.');
             const c = correctStr.replace(/\s/g, '').replace(',', '.');
             
-            // Kontrola celé části a všech desetinných míst, která uživatel zadal
             const uParts = u.split('.');
             const cParts = c.split('.');
             
             const uCela = uParts[0];
             const cCela = cParts[0];
             
-            // Musí být stejná celá část
+            // Celá část musí být přesná
             if (uCela !== cCela) return false;
             
-            // Pokud uživatel nezadal desetinnou část, je to OK (jen celé číslo)
-            if (uParts.length === 1) return true;
+            // Uživatel nezadal desetinnou část
+            if (uParts.length === 1) {
+                // Pokud správný výsledek má desetinnou část, musí být 0
+                if (cParts.length === 1) return true;
+                // Kontrola, zda jsou všechna desetinná místa 0
+                return /^0*$/.test(cParts[1]);
+            }
             
-            // Pokud správný výsledek nemá desetinnou část, uživatel nesmí zadat nic za tečku
+            // Uživatel zadal desetinnou část
+            const uDes = uParts[1];
+            
+            // Pokud správný výsledek nemá desetinnou část
             if (cParts.length === 1) {
-                // Uživatel zadal desetinnou část, ale správný výsledek je celé číslo
-                // Povolíme jen nuly
-                const uDes = uParts[1];
+                // Uživatel musel zadat jen nuly
                 return /^0*$/.test(uDes);
             }
             
-            // Porovnání desetinných částí znak po znaku
-            const uDes = uParts[1];
             const cDes = cParts[1];
             
-            for (let i = 0; i < uDes.length; i++) {
-                // Pokud uživatel zadal více míst než má správný výsledek
-                if (i >= cDes.length) {
-                    // Zbylá místa musí být nuly
-                    if (uDes[i] !== '0') return false;
-                } else {
-                    // Každé zadané místo musí sedět
-                    if (uDes[i] !== cDes[i]) return false;
+            if (presne) {
+                // Přesný výsledek: kontrolujeme skutečná místa + povolíme nuly za nimi
+                for (let i = 0; i < uDes.length; i++) {
+                    if (i < skutecnaDesetinnaMista) {
+                        // Skutečná desetinná místa musí sedět
+                        if (uDes[i] !== cDes[i]) return false;
+                    } else {
+                        // Za skutečnými místy mohou být jen nuly
+                        if (uDes[i] !== '0') return false;
+                    }
                 }
+                return true;
+            } else {
+                // Nepřesný výsledek: kontrolujeme přesně na 4 místech
+                // Doplníme správný výsledek na 4 místa
+                const cDes4 = cDes.padEnd(4, '0').substring(0, 4);
+                
+                for (let i = 0; i < uDes.length; i++) {
+                    if (i < 4) {
+                        // První 4 místa musí sedět
+                        if (uDes[i] !== cDes4[i]) return false;
+                    } else {
+                        // Za 4. místem mohou být jen nuly
+                        if (uDes[i] !== '0') return false;
+                    }
+                }
+                return true;
             }
-            
-            return true;
         }
 
         function vygenerujPriklad() {
@@ -530,7 +550,6 @@
             if (norm === '') return false;
             
             if (priklad.op === '/') {
-                // Pro dělení: porovnat znak po znaku
                 let correctStr;
                 if (priklad.presnostInfo && priklad.presnostInfo.presne) {
                     // Přesný výsledek - použít přesný string
@@ -538,16 +557,14 @@
                 } else {
                     // Nepřesný výsledek - použít zaokrouhlený na 4 místa
                     correctStr = zaokrouhliNaN(priklad.vysledek, 4).toString();
-                    // Zajistit 4 desetinná místa pro porovnání
-                    if (!correctStr.includes('.')) {
-                        correctStr += '.0000';
-                    } else {
-                        const parts = correctStr.split('.');
-                        correctStr = parts[0] + '.' + parts[1].padEnd(4, '0');
-                    }
                 }
                 
-                return porovnejZnakPoZnaku(norm, correctStr);
+                return porovnejDeleni(
+                    norm, 
+                    correctStr, 
+                    priklad.presnostInfo.presne, 
+                    priklad.presnostInfo.desetinnaMista
+                );
             } else if (typeof priklad.vysledek === 'bigint') {
                 try {
                     return BigInt(norm) === priklad.vysledek;
