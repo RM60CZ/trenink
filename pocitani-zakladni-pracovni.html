@@ -45,8 +45,8 @@
             font-variant-numeric: tabular-nums;
         }
         .worksheet-bg {
-            background-color: #e2e8f0; /* Šedivější odstín místo #f8fafc */
-            background-image: radial-gradient(circle, #94a3b8 1px, transparent 1px); /* Šedivější tečky */
+            background-color: #e2e8f0;
+            background-image: radial-gradient(circle, #94a3b8 1px, transparent 1px);
             background-size: 24px 24px;
         }
         .dark .worksheet-bg {
@@ -135,7 +135,6 @@
             #tlacitko.btn-pulse, #tlacitko.btn-glow-emerald { animation: none !important; }
         }
 
-        /* Fixed score bar */
         .score-bar {
             position: sticky;
             top: 0;
@@ -145,13 +144,11 @@
         }
     </style>
 </head>
-<body class="bg-slate-200 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300 font-sans"> <!-- bg-slate-100 → bg-slate-200 -->
+<body class="bg-slate-200 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300 font-sans">
 
-    <!-- App Container - max height 100dvh with flex column -->
     <div class="w-full max-w-md mx-auto flex flex-col min-h-[100dvh]">
 
-        <!-- Fixed Score Bar -->
-        <div class="score-bar bg-slate-200/80 dark:bg-slate-900/80 border-b border-slate-300 dark:border-slate-800 shadow-sm"> <!-- bg-white/80 → bg-slate-200/80 -->
+        <div class="score-bar bg-slate-200/80 dark:bg-slate-900/80 border-b border-slate-300 dark:border-slate-800 shadow-sm">
             <div class="px-4 py-2.5 flex items-center justify-between select-none">
                 <div class="flex items-center gap-3">
                     <div class="flex items-center gap-1.5">
@@ -176,14 +173,11 @@
             </div>
         </div>
 
-        <!-- Scrollable Content -->
         <div class="flex-1 overflow-y-auto px-4 py-3 space-y-3 scrollbar-hide">
 
-            <!-- Main Card -->
-            <div class="bg-slate-100 dark:bg-slate-900 rounded-2xl shadow-lg shadow-slate-300/50 dark:shadow-black/40 overflow-hidden border border-slate-300 dark:border-slate-800"> <!-- bg-white → bg-slate-100, border-slate-200 → border-slate-300 -->
+            <div class="bg-slate-100 dark:bg-slate-900 rounded-2xl shadow-lg shadow-slate-300/50 dark:shadow-black/40 overflow-hidden border border-slate-300 dark:border-slate-800">
                 <div class="p-4">
 
-                    <!-- Header -->
                     <div class="flex items-start justify-between mb-3">
                         <div class="flex flex-col">
                             <h1 class="text-lg font-black tracking-tight text-slate-800 dark:text-white uppercase leading-tight">
@@ -192,7 +186,7 @@
                             <div class="flex items-center gap-1.5 mt-0.5">
                                 <span id="currentDate" class="text-[11px] font-medium text-slate-400 dark:text-slate-500"></span>
                                 <button onclick="document.documentElement.classList.toggle('dark')"
-                                        class="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors" <!-- hover:bg-slate-100 → hover:bg-slate-200 -->
+                                        class="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
                                         aria-label="Přepnout tmavý/světlý režim">
                                     <svg class="dark:hidden w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
@@ -203,7 +197,7 @@
                                 </button>
                             </div>
                         </div>
-                        <button id="settingsToggle" class="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 mt-0.5" title="Nastavení" aria-label="Nastavení operace a cifer"> <!-- hover:bg-slate-100 → hover:bg-slate-200 -->
+                        <button id="settingsToggle" class="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 mt-0.5" title="Nastavení" aria-label="Nastavení operace a cifer">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -211,12 +205,11 @@
                         </button>
                     </div>
 
-                    <!-- Settings Panel -->
                     <div id="settingsPanel" class="settings-panel mb-3 collapsed">
                         <div class="grid grid-cols-3 gap-2">
                             <div class="flex flex-col">
                                 <label for="operace" class="text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1">Operace</label>
-                                <select id="operace" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer font-bold text-xs"> <!-- bg-slate-50 → bg-slate-100, border-slate-200 → border-slate-300 -->
+                                <select id="operace" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer font-bold text-xs">
                                     <option value="+">+</option>
                                     <option value="-">−</option>
                                     <option value="*">×</option>
@@ -225,36 +218,32 @@
                             </div>
                             <div class="flex flex-col">
                                 <label class="text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1">1. Číslo</label>
-                                <select id="cislice1" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs"></select> <!-- bg-slate-50 → bg-slate-100, border-slate-200 → border-slate-300 -->
+                                <select id="cislice1" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs"></select>
                             </div>
                             <div class="flex flex-col">
                                 <label class="text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1">2. Číslo</label>
-                                <select id="cislice2" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs"></select> <!-- bg-slate-50 → bg-slate-100, border-slate-200 → border-slate-300 -->
+                                <select id="cislice2" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs"></select>
                             </div>
                         </div>
-                        <!-- Division info -->
                         <div id="divisionInfo" class="hidden mt-2 text-[10px] text-slate-400 dark:text-slate-500 text-center font-medium">
-                            Dělení zobrazí přesně 4 desetinná místa. Odpověď na 1–4 des. místa je uznána.
+                            Kontrolují se všechna zadaná místa. Jakákoli chyba = špatně.
                         </div>
                     </div>
 
-                    <!-- Error container -->
                     <div id="chyba" class="text-red-500 text-[10px] font-bold text-center h-4 overflow-hidden mb-1" role="alert"></div>
 
-                    <!-- Worksheet - compact -->
-                    <div class="bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 px-4 pb-0 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center"> <!-- bg-slate-50 → bg-slate-100, border-slate-100 → border-slate-300 -->
+                    <div class="bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 px-4 pb-0 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center">
                         <div class="w-full overflow-x-auto scrollbar-hide flex flex-col items-end relative z-10">
                             <div id="priklad" style="white-space: break-spaces;" class="math-text font-mono text-lg tracking-tighter text-slate-700 dark:text-slate-200">Zvolte nastavení a stiskněte ▶ Začít</div>
-                            <div id="cara" class="math-text font-mono text-2xl text-slate-400 dark:text-slate-600 border-t-2 border-slate-400 dark:border-slate-600 w-full mt-0.5 opacity-0 transition-opacity duration-300"></div> <!-- border-slate-300 → border-slate-400 -->
+                            <div id="cara" class="math-text font-mono text-2xl text-slate-400 dark:text-slate-600 border-t-2 border-slate-400 dark:border-slate-600 w-full mt-0.5 opacity-0 transition-opacity duration-300"></div>
                         </div>
                     </div>
 
-                    <!-- Action Area -->
                     <div class="space-y-2.5">
                         <div class="relative">
                             <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off"
                                    placeholder="Váš výsledek"
-                                   class="w-full pl-3 pr-4 text-lg font-mono font-bold rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right" /> <!-- border-slate-200 → border-slate-300 -->
+                                   class="w-full pl-3 pr-4 text-lg font-mono font-bold rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right" />
                             <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 transform scale-75 pointer-events-none"></div>
                         </div>
                         <div id="enterHint" class="text-[9px] text-slate-400 font-medium opacity-0 transition-opacity duration-200 select-none text-center -mt-1">Enter ↵</div>
@@ -267,7 +256,6 @@
                 </div>
             </div>
 
-            <!-- History - compact -->
             <div id="historyContainer" class="px-1 opacity-0 transition-opacity duration-500 select-none" aria-live="polite">
                 <div class="text-[9px] font-bold uppercase text-slate-400 tracking-wider mb-1.5">Historie</div>
                 <div id="historyList" class="flex flex-wrap gap-1.5">
@@ -275,7 +263,6 @@
                 </div>
             </div>
 
-            <!-- Bottom spacer for mobile -->
             <div class="h-4"></div>
         </div>
     </div>
@@ -284,13 +271,19 @@
     <script>
         let isProcessing = false;
 
-        function formatujCislo(x) {
+        function formatujCislo(x, exactDecimals = null) {
             if (typeof x === 'bigint') return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
             if (typeof x !== 'number') return String(x);
             if (Number.isInteger(x)) return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
             const [cela, des] = x.toString().split('.');
             const celaFmt = cela.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-            return des ? `${celaFmt}.${des}` : celaFmt;
+            if (!des) return celaFmt;
+            // Pro přesné desetinné výsledky - nezobrazovat zbytečné nuly
+            if (exactDecimals !== null) {
+                const desKratke = des.substring(0, exactDecimals).replace(/0+$/, '');
+                return desKratke ? `${celaFmt}.${desKratke}` : celaFmt;
+            }
+            return `${celaFmt}.${des}`;
         }
 
         function normalizuj(vstup) {
@@ -352,12 +345,71 @@
             aktualizujCislici2();
         });
 
-        function zkratNa4Desetinna(cislo) {
-            const str = cislo.toString();
-            const [cela, des] = str.split('.');
-            if (!des) return cela;
-            const desZkracena = des.substring(0, 4);
-            return desZkracena ? `${cela}.${desZkracena}` : cela;
+        // Nová funkce: zjistí, zda je dělení přesné do určitého počtu desetinných míst
+        function jePresneDeleni(a, b, maxDecimals = 10) {
+            let zbytek = a % b;
+            if (zbytek === 0) return { presne: true, desetinnaMista: 0 };
+            
+            for (let i = 1; i <= maxDecimals; i++) {
+                zbytek *= 10;
+                const cislice = Math.floor(zbytek / b);
+                zbytek = zbytek % b;
+                if (zbytek === 0) {
+                    return { presne: true, desetinnaMista: i };
+                }
+            }
+            return { presne: false, desetinnaMista: null };
+        }
+
+        // Nová funkce: zaokrouhlí na N desetinných míst s matematickým zaokrouhlením
+        function zaokrouhliNaN(cislo, n) {
+            const nasobitel = Math.pow(10, n);
+            return Math.round(cislo * nasobitel) / nasobitel;
+        }
+
+        // Nová funkce: porovná dvě čísla znak po znaku
+        function porovnejZnakPoZnaku(userStr, correctStr) {
+            // Normalizace: odstranit mezery, převést na tečku
+            const u = userStr.replace(/\s/g, '').replace(',', '.');
+            const c = correctStr.replace(/\s/g, '').replace(',', '.');
+            
+            // Kontrola celé části a všech desetinných míst, která uživatel zadal
+            const uParts = u.split('.');
+            const cParts = c.split('.');
+            
+            const uCela = uParts[0];
+            const cCela = cParts[0];
+            
+            // Musí být stejná celá část
+            if (uCela !== cCela) return false;
+            
+            // Pokud uživatel nezadal desetinnou část, je to OK (jen celé číslo)
+            if (uParts.length === 1) return true;
+            
+            // Pokud správný výsledek nemá desetinnou část, uživatel nesmí zadat nic za tečku
+            if (cParts.length === 1) {
+                // Uživatel zadal desetinnou část, ale správný výsledek je celé číslo
+                // Povolíme jen nuly
+                const uDes = uParts[1];
+                return /^0*$/.test(uDes);
+            }
+            
+            // Porovnání desetinných částí znak po znaku
+            const uDes = uParts[1];
+            const cDes = cParts[1];
+            
+            for (let i = 0; i < uDes.length; i++) {
+                // Pokud uživatel zadal více míst než má správný výsledek
+                if (i >= cDes.length) {
+                    // Zbylá místa musí být nuly
+                    if (uDes[i] !== '0') return false;
+                } else {
+                    // Každé zadané místo musí sedět
+                    if (uDes[i] !== cDes[i]) return false;
+                }
+            }
+            
+            return true;
         }
 
         function vygenerujPriklad() {
@@ -380,27 +432,62 @@
                 if (op === '/' && b === 0) continue;
                 break;
             }
-            let vysledek, vysledekZobrazeny;
+            
+            let vysledek, vysledekZobrazeny, presnostInfo;
+            
             if (op === '+') {
                 vysledek = a + b;
                 vysledekZobrazeny = vysledek;
+                presnostInfo = null;
             } else if (op === '-') {
                 vysledek = a - b;
                 vysledekZobrazeny = vysledek;
+                presnostInfo = null;
             } else if (op === '*') {
                 vysledek = BigInt(a) * BigInt(b);
                 vysledekZobrazeny = vysledek;
+                presnostInfo = null;
             } else if (op === '/') {
                 vysledek = a / b;
-                vysledekZobrazeny = zkratNa4Desetinna(vysledek);
+                const presnost = jePresneDeleni(a, b);
+                
+                if (presnost.presne) {
+                    // Přesný výsledek - zobrazit bez zbytečných nul
+                    vysledekZobrazeny = vysledek;
+                    presnostInfo = { presne: true, desetinnaMista: presnost.desetinnaMista };
+                } else {
+                    // Nepřesný výsledek - zaokrouhlit na 4 desetinná místa
+                    vysledekZobrazeny = zaokrouhliNaN(vysledek, 4);
+                    presnostInfo = { presne: false, desetinnaMista: 4 };
+                }
             }
-            return { a, b, op, vysledek, vysledekZobrazeny };
+            
+            return { 
+                a, 
+                b, 
+                op, 
+                vysledek, 
+                vysledekZobrazeny,
+                presnostInfo
+            };
         }
 
         function zobrazPriklad(p) {
             const fa = formatujCislo(p.a);
             const fb = formatujCislo(p.b);
-            const fv = formatujCislo(p.vysledekZobrazeny !== undefined ? p.vysledekZobrazeny : p.vysledek);
+            
+            // Pro dělení použít formátování podle přesnosti
+            let fv;
+            if (p.op === '/' && p.presnostInfo) {
+                if (p.presnostInfo.presne) {
+                    fv = formatujCislo(p.vysledekZobrazeny, p.presnostInfo.desetinnaMista);
+                } else {
+                    fv = formatujCislo(p.vysledekZobrazeny, 4);
+                }
+            } else {
+                fv = formatujCislo(p.vysledekZobrazeny);
+            }
+            
             const max = Math.max(fa.length, (p.op + ' ' + fb).length, fv.length);
             prikladEl.textContent = `${fa.padStart(max)}\n${(p.op + ' ' + fb).padStart(max)}`;
             caraEl.style.opacity = '0';
@@ -431,7 +518,6 @@
 
         odpovedEl.addEventListener('input', updateBtnDisable);
 
-        // Kontrola, zda je vstup platné číslo
         function jePlatneCislo(vstup) {
             if (vstup === '') return false;
             const norm = normalizuj(vstup);
@@ -444,29 +530,24 @@
             if (norm === '') return false;
             
             if (priklad.op === '/') {
-                const userNum = parseFloat(norm);
-                if (isNaN(userNum)) return false;
-                
-                const trueTruncated = zkratNa4Desetinna(priklad.vysledek);
-                const trueNum = parseFloat(trueTruncated);
-                
-                const userStr = norm;
-                const [userCela, userDes = ''] = userStr.split('.');
-                const userDesTruncated = userDes.substring(0, 4);
-                
-                const userNumTruncated = parseFloat(userDesTruncated ? `${userCela}.${userDesTruncated}` : userCela);
-                
-                const userDecimals = userDes.length;
-                if (userDecimals >= 3 && userDecimals <= 4) {
-                    const trueDesTruncated = zkratNa4Desetinna(priklad.vysledek).split('.')[1] || '';
-                    const trueDesToMatch = trueDesTruncated.substring(0, userDecimals);
-                    const trueToMatch = parseFloat(`${zkratNa4Desetinna(priklad.vysledek).split('.')[0]}.${trueDesToMatch}`);
-                    const userToMatch = userNumTruncated;
-                    
-                    return Math.abs(userToMatch - trueToMatch) < 1e-9;
+                // Pro dělení: porovnat znak po znaku
+                let correctStr;
+                if (priklad.presnostInfo && priklad.presnostInfo.presne) {
+                    // Přesný výsledek - použít přesný string
+                    correctStr = priklad.vysledekZobrazeny.toString();
+                } else {
+                    // Nepřesný výsledek - použít zaokrouhlený na 4 místa
+                    correctStr = zaokrouhliNaN(priklad.vysledek, 4).toString();
+                    // Zajistit 4 desetinná místa pro porovnání
+                    if (!correctStr.includes('.')) {
+                        correctStr += '.0000';
+                    } else {
+                        const parts = correctStr.split('.');
+                        correctStr = parts[0] + '.' + parts[1].padEnd(4, '0');
+                    }
                 }
                 
-                return Math.abs(userNumTruncated - trueNum) < 1e-9;
+                return porovnejZnakPoZnaku(norm, correctStr);
             } else if (typeof priklad.vysledek === 'bigint') {
                 try {
                     return BigInt(norm) === priklad.vysledek;
@@ -492,9 +573,7 @@
             const btnText = tlacitkoEl.textContent.trim();
             const inputText = odpovedEl.value.trim();
 
-            // ── ZAČÍT nebo DALŠÍ PŘÍKLAD ──
             if (!zobrazitVysledek) {
-                // Kontrola slova "smazat" pouze při ZAČÍT
                 if (btnText === 'ZAČÍT' && normalizuj(inputText) === 'smazat') {
                     if (typeof window.clearHistory === 'function') {
                         window.clearHistory();
@@ -522,14 +601,22 @@
                     aktivujPole();
                     isProcessing = false;
                 }, 50);
-            } 
-            // ── VÝSLEDEK(kontrola) ──
-            else {
+            } else {
                 const uziv = inputText;
                 
                 if (uziv === '') {
-                    const vysl = aktualniPriklad.vysledekZobrazeny !== undefined ? aktualniPriklad.vysledekZobrazeny : aktualniPriklad.vysledek;
-                    odpovedEl.value = formatujCislo(vysl);
+                    // Zobrazit správný výsledek
+                    let vysl;
+                    if (aktualniPriklad.op === '/' && aktualniPriklad.presnostInfo) {
+                        if (aktualniPriklad.presnostInfo.presne) {
+                            vysl = formatujCislo(aktualniPriklad.vysledekZobrazeny, aktualniPriklad.presnostInfo.desetinnaMista);
+                        } else {
+                            vysl = formatujCislo(aktualniPriklad.vysledekZobrazeny, 4);
+                        }
+                    } else {
+                        vysl = formatujCislo(aktualniPriklad.vysledekZobrazeny !== undefined ? aktualniPriklad.vysledekZobrazeny : aktualniPriklad.vysledek);
+                    }
+                    odpovedEl.value = vysl;
                     zobrazitVysledek = false;
                     aktualizujTextTlacitka();
                     divisionInfo.classList.add('hidden');
@@ -753,14 +840,24 @@
                 if (typeof aktualniPriklad !== 'undefined' && aktualniPriklad) {
                     const p = aktualniPriklad;
                     const fmt = (typeof formatujCislo === 'function') ? formatujCislo : (x) => String(x);
-                    const vysl = p.vysledekZobrazeny !== undefined ? p.vysledekZobrazeny : p.vysledek;
-                    text = `${fmt(p.a)} ${p.op} ${fmt(p.b)} = ${fmt(vysl)}`;
+                    
+                    let vyslStr;
+                    if (p.op === '/' && p.presnostInfo) {
+                        if (p.presnostInfo.presne) {
+                            vyslStr = fmt(p.vysledekZobrazeny, p.presnostInfo.desetinnaMista);
+                        } else {
+                            vyslStr = fmt(p.vysledekZobrazeny, 4);
+                        }
+                    } else {
+                        vyslStr = fmt(p.vysledekZobrazeny !== undefined ? p.vysledekZobrazeny : p.vysledek);
+                    }
+                    
+                    text = `${fmt(p.a)} ${p.op} ${fmt(p.b)} = ${vyslStr}`;
                 } else {
                     text = prikladEl.textContent.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
                 }
                 if (!text || text.includes('Zvolte nastavení')) return;
                 history.unshift({ text, correct: isCorrect });
-                // Bez omezení počtu položek
                 renderHistory();
             }
 
