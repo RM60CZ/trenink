@@ -361,10 +361,64 @@
             return { presne: false, desetinnaMista: null };
         }
 
-        // Zaokrouhlí na N desetinných míst s matematickým zaokrouhlením
-        function zaokrouhliNaN(cislo, n) {
-            const nasobitel = Math.pow(10, n);
-            return Math.round(cislo * nasobitel) / nasobitel;
+        // OŘEZÁNÍ na N desetinných míst (NE zaokrouhlení)
+        function orezNaN(cislo, n) {
+            const str = cislo.toString();
+            const [cela, des] = str.split('.');
+            if (!des) return cislo;
+            return parseFloat(`${cela}.${des.substring(0, n)}`);
+        }
+
+        // Spočítá počet správně zadaných desetinných míst (bez koncových nul)
+        function spocitejSpravnaMista(userStr, correctStr, presne, skutecnaDesetinnaMista) {
+            const u = userStr.replace(/\s/g, '').replace(',', '.');
+            const c = correctStr.replace(/\s/g, '').replace(',', '.');
+            
+            const uParts = u.split('.');
+            const cParts = c.split('.');
+            
+            // Uživatel nezadal desetinnou část
+            if (uParts.length === 1) return 0;
+            
+            const uDes = uParts[1];
+            
+            // Pokud správný výsledek nemá desetinnou část
+            if (cParts.length === 1) {
+                // Počítáme nuly na začátku desetinné části, dokud jsou správné
+                let spravnaMista = 0;
+                for (let i = 0; i < uDes.length; i++) {
+                    if (uDes[i] === '0') spravnaMista++;
+                    else break;
+                }
+                return spravnaMista;
+            }
+            
+            const cDes = cParts[1];
+            let spravnaMista = 0;
+            
+            if (presne) {
+                // Přesný výsledek: počítáme dokud sedíme se správnými místy nebo jsou to nuly za nimi
+                for (let i = 0; i < uDes.length; i++) {
+                    if (i < skutecnaDesetinnaMista) {
+                        // Skutečná desetinná místa musí sedět
+                        if (uDes[i] === cDes[i]) spravnaMista++;
+                        else break;
+                    } else {
+                        // Za skutečnými místy mohou být jen nuly
+                        if (uDes[i] === '0') spravnaMista++;
+                        else break;
+                    }
+                }
+            } else {
+                // Nepřesný výsledek: kontrolujeme na 4 místech
+                const cDes4 = cDes.padEnd(4, '0').substring(0, 4);
+                for (let i = 0; i < Math.min(uDes.length, 4); i++) {
+                    if (uDes[i] === cDes4[i]) spravnaMista++;
+                    else break;
+                }
+            }
+            
+            return spravnaMista;
         }
 
         // Porovná uživatelský vstup se správným výsledkem
@@ -476,8 +530,8 @@
                     vysledekZobrazeny = vysledek;
                     presnostInfo = { presne: true, desetinnaMista: presnost.desetinnaMista };
                 } else {
-                    // Nepřesný výsledek - zaokrouhlit na 4 desetinná místa
-                    vysledekZobrazeny = zaokrouhliNaN(vysledek, 4);
+                    // Nepřesný výsledek - OŘÍZNOUT na 4 desetinná místa (ne zaokrouhlit)
+                    vysledekZobrazeny = orezNaN(vysledek, 4);
                     presnostInfo = { presne: false, desetinnaMista: 4 };
                 }
             }
@@ -555,8 +609,8 @@
                     // Přesný výsledek - použít přesný string
                     correctStr = priklad.vysledekZobrazeny.toString();
                 } else {
-                    // Nepřesný výsledek - použít zaokrouhlený na 4 místa
-                    correctStr = zaokrouhliNaN(priklad.vysledek, 4).toString();
+                    // Nepřesný výsledek - použít OŘEZANÝ na 4 místa
+                    correctStr = orezNaN(priklad.vysledek, 4).toString();
                 }
                 
                 return porovnejDeleni(
@@ -854,6 +908,8 @@
 
             function addHistory(isCorrect) {
                 let text = '';
+                let pocetMist = null;
+                
                 if (typeof aktualniPriklad !== 'undefined' && aktualniPriklad) {
                     const p = aktualniPriklad;
                     const fmt = (typeof formatujCislo === 'function') ? formatujCislo : (x) => String(x);
@@ -865,11 +921,30 @@
                         } else {
                             vyslStr = fmt(p.vysledekZobrazeny, 4);
                         }
+                        
+                        // Spočítat počet správných desetinných míst
+                        if (isCorrect && typeof spocitejSpravnaMista === 'function') {
+                            let correctStr;
+                            if (p.presnostInfo.presne) {
+                                correctStr = p.vysledekZobrazeny.toString();
+                            } else {
+                                correctStr = orezNaN(p.vysledek, 4).toString();
+                            }
+                            pocetMist = spocitejSpravnaMista(
+                                input.value, 
+                                correctStr, 
+                                p.presnostInfo.presne, 
+                                p.presnostInfo.desetinnaMista
+                            );
+                        }
                     } else {
                         vyslStr = fmt(p.vysledekZobrazeny !== undefined ? p.vysledekZobrazeny : p.vysledek);
                     }
                     
                     text = `${fmt(p.a)} ${p.op} ${fmt(p.b)} = ${vyslStr}`;
+                    if (pocetMist !== null) {
+                        text += ` (${pocetMist})`;
+                    }
                 } else {
                     text = prikladEl.textContent.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
                 }
