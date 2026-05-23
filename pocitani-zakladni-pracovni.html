@@ -23,7 +23,7 @@
     </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
+        
         .zelene {
             background-color: #15803d !important;
             border-color: #22c55e !important;
@@ -45,8 +45,8 @@
             font-variant-numeric: tabular-nums;
         }
         .worksheet-bg {
-            background-color: #e2e8f0;
-            background-image: radial-gradient(circle, #94a3b8 1px, transparent 1px);
+            background-color: #e2e8f0; /* Šedivější odstín místo #f8fafc */
+            background-image: radial-gradient(circle, #94a3b8 1px, transparent 1px); /* Šedivější tečky */
             background-size: 24px 24px;
         }
         .dark .worksheet-bg {
@@ -135,6 +135,7 @@
             #tlacitko.btn-pulse, #tlacitko.btn-glow-emerald { animation: none !important; }
         }
 
+        /* Fixed score bar */
         .score-bar {
             position: sticky;
             top: 0;
@@ -144,11 +145,13 @@
         }
     </style>
 </head>
-<body class="bg-slate-200 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300 font-sans">
+<body class="bg-slate-200 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300 font-sans"> <!-- bg-slate-100 → bg-slate-200 -->
 
+    <!-- App Container - max height 100dvh with flex column -->
     <div class="w-full max-w-md mx-auto flex flex-col min-h-[100dvh]">
 
-        <div class="score-bar bg-slate-200/80 dark:bg-slate-900/80 border-b border-slate-300 dark:border-slate-800 shadow-sm">
+        <!-- Fixed Score Bar -->
+        <div class="score-bar bg-slate-200/80 dark:bg-slate-900/80 border-b border-slate-300 dark:border-slate-800 shadow-sm"> <!-- bg-white/80 → bg-slate-200/80 -->
             <div class="px-4 py-2.5 flex items-center justify-between select-none">
                 <div class="flex items-center gap-3">
                     <div class="flex items-center gap-1.5">
@@ -173,11 +176,14 @@
             </div>
         </div>
 
+        <!-- Scrollable Content -->
         <div class="flex-1 overflow-y-auto px-4 py-3 space-y-3 scrollbar-hide">
 
-            <div class="bg-slate-100 dark:bg-slate-900 rounded-2xl shadow-lg shadow-slate-300/50 dark:shadow-black/40 overflow-hidden border border-slate-300 dark:border-slate-800">
+            <!-- Main Card -->
+            <div class="bg-slate-100 dark:bg-slate-900 rounded-2xl shadow-lg shadow-slate-300/50 dark:shadow-black/40 overflow-hidden border border-slate-300 dark:border-slate-800"> <!-- bg-white → bg-slate-100, border-slate-200 → border-slate-300 -->
                 <div class="p-4">
 
+                    <!-- Header -->
                     <div class="flex items-start justify-between mb-3">
                         <div class="flex flex-col">
                             <h1 class="text-lg font-black tracking-tight text-slate-800 dark:text-white uppercase leading-tight">
@@ -186,7 +192,7 @@
                             <div class="flex items-center gap-1.5 mt-0.5">
                                 <span id="currentDate" class="text-[11px] font-medium text-slate-400 dark:text-slate-500"></span>
                                 <button onclick="document.documentElement.classList.toggle('dark')"
-                                        class="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+                                        class="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors" <!-- hover:bg-slate-100 → hover:bg-slate-200 -->
                                         aria-label="Přepnout tmavý/světlý režim">
                                     <svg class="dark:hidden w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
@@ -197,7 +203,7 @@
                                 </button>
                             </div>
                         </div>
-                        <button id="settingsToggle" class="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 mt-0.5" title="Nastavení" aria-label="Nastavení operace a cifer">
+                        <button id="settingsToggle" class="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 mt-0.5" title="Nastavení" aria-label="Nastavení operace a cifer"> <!-- hover:bg-slate-100 → hover:bg-slate-200 -->
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -205,11 +211,12 @@
                         </button>
                     </div>
 
+                    <!-- Settings Panel -->
                     <div id="settingsPanel" class="settings-panel mb-3 collapsed">
                         <div class="grid grid-cols-3 gap-2">
                             <div class="flex flex-col">
                                 <label for="operace" class="text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1">Operace</label>
-                                <select id="operace" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer font-bold text-xs">
+                                <select id="operace" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer font-bold text-xs"> <!-- bg-slate-50 → bg-slate-100, border-slate-200 → border-slate-300 -->
                                     <option value="+">+</option>
                                     <option value="-">−</option>
                                     <option value="*">×</option>
@@ -218,32 +225,36 @@
                             </div>
                             <div class="flex flex-col">
                                 <label class="text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1">1. Číslo</label>
-                                <select id="cislice1" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs"></select>
+                                <select id="cislice1" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs"></select> <!-- bg-slate-50 → bg-slate-100, border-slate-200 → border-slate-300 -->
                             </div>
                             <div class="flex flex-col">
                                 <label class="text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1">2. Číslo</label>
-                                <select id="cislice2" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs"></select>
+                                <select id="cislice2" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs"></select> <!-- bg-slate-50 → bg-slate-100, border-slate-200 → border-slate-300 -->
                             </div>
                         </div>
+                        <!-- Division info -->
                         <div id="divisionInfo" class="hidden mt-2 text-[10px] text-slate-400 dark:text-slate-500 text-center font-medium">
-                            Kontrolují se všechna zadaná místa. Jakákoli chyba = špatně.
+                            Dělení zobrazí přesně 4 desetinná místa. Odpověď na 1–4 des. místa je uznána.
                         </div>
                     </div>
 
+                    <!-- Error container -->
                     <div id="chyba" class="text-red-500 text-[10px] font-bold text-center h-4 overflow-hidden mb-1" role="alert"></div>
 
-                    <div class="bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 px-4 pb-0 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center">
+                    <!-- Worksheet - compact -->
+                    <div class="bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 px-4 pb-0 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center"> <!-- bg-slate-50 → bg-slate-100, border-slate-100 → border-slate-300 -->
                         <div class="w-full overflow-x-auto scrollbar-hide flex flex-col items-end relative z-10">
                             <div id="priklad" style="white-space: break-spaces;" class="math-text font-mono text-lg tracking-tighter text-slate-700 dark:text-slate-200">Zvolte nastavení a stiskněte ▶ Začít</div>
-                            <div id="cara" class="math-text font-mono text-2xl text-slate-400 dark:text-slate-600 border-t-2 border-slate-400 dark:border-slate-600 w-full mt-0.5 opacity-0 transition-opacity duration-300"></div>
+                            <div id="cara" class="math-text font-mono text-2xl text-slate-400 dark:text-slate-600 border-t-2 border-slate-400 dark:border-slate-600 w-full mt-0.5 opacity-0 transition-opacity duration-300"></div> <!-- border-slate-300 → border-slate-400 -->
                         </div>
                     </div>
 
+                    <!-- Action Area -->
                     <div class="space-y-2.5">
                         <div class="relative">
                             <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off"
                                    placeholder="Váš výsledek"
-                                   class="w-full pl-3 pr-4 text-lg font-mono font-bold rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right" />
+                                   class="w-full pl-3 pr-4 text-lg font-mono font-bold rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right" /> <!-- border-slate-200 → border-slate-300 -->
                             <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 transform scale-75 pointer-events-none"></div>
                         </div>
                         <div id="enterHint" class="text-[9px] text-slate-400 font-medium opacity-0 transition-opacity duration-200 select-none text-center -mt-1">Enter ↵</div>
@@ -256,6 +267,7 @@
                 </div>
             </div>
 
+            <!-- History - compact -->
             <div id="historyContainer" class="px-1 opacity-0 transition-opacity duration-500 select-none" aria-live="polite">
                 <div class="text-[9px] font-bold uppercase text-slate-400 tracking-wider mb-1.5">Historie</div>
                 <div id="historyList" class="flex flex-wrap gap-1.5">
@@ -263,6 +275,7 @@
                 </div>
             </div>
 
+            <!-- Bottom spacer for mobile -->
             <div class="h-4"></div>
         </div>
     </div>
@@ -271,19 +284,13 @@
     <script>
         let isProcessing = false;
 
-        function formatujCislo(x, exactDecimals = null) {
+        function formatujCislo(x) {
             if (typeof x === 'bigint') return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
             if (typeof x !== 'number') return String(x);
             if (Number.isInteger(x)) return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
             const [cela, des] = x.toString().split('.');
             const celaFmt = cela.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-            if (!des) return celaFmt;
-            // Pro přesné desetinné výsledky - nezobrazovat zbytečné nuly
-            if (exactDecimals !== null) {
-                const desKratke = des.substring(0, exactDecimals).replace(/0+$/, '');
-                return desKratke ? `${celaFmt}.${desKratke}` : celaFmt;
-            }
-            return `${celaFmt}.${des}`;
+            return des ? `${celaFmt}.${des}` : celaFmt;
         }
 
         function normalizuj(vstup) {
@@ -345,151 +352,415 @@
             aktualizujCislici2();
         });
 
-        // Zjistí, zda je dělení přesné a kolik má skutečných desetinných míst
-        function jePresneDeleni(a, b, maxDecimals = 10) {
-            let zbytek = a % b;
-            if (zbytek === 0) return { presne: true, desetinnaMista: 0 };
-
-            for (let i = 1; i <= maxDecimals; i++) {
-                zbytek *= 10;
-                const cislice = Math.floor(zbytek / b);
-                zbytek = zbytek % b;
-                if (zbytek === 0) {
-                    return { presne: true, desetinnaMista: i };
-                }
-            }
-            return { presne: false, desetinnaMista: null };
-        }
-
-        // Zaokrouhlí na N desetinných míst s matematickým zaokrouhlením
-        function zaokrouhliNaN(cislo, n) {
-            const nasobitel = Math.pow(10, n);
-            return Math.round(cislo * nasobitel) / nasobitel;
-        // OŘEZÁNÍ na N desetinných míst (NE zaokrouhlení)
-        function orezNaN(cislo, n) {
+        function zkratNa4Desetinna(cislo) {
             const str = cislo.toString();
             const [cela, des] = str.split('.');
-            if (!des) return cislo;
-            return parseFloat(`${cela}.${des.substring(0, n)}`);
+            if (!des) return cela;
+            const desZkracena = des.substring(0, 4);
+            return desZkracena ? `${cela}.${desZkracena}` : cela;
         }
 
-        // Spočítá počet správně zadaných desetinných míst (bez koncových nul)
-        function spocitejSpravnaMista(userStr, correctStr, presne, skutecnaDesetinnaMista) {
-            const u = userStr.replace(/\s/g, '').replace(',', '.');
-            const c = correctStr.replace(/\s/g, '').replace(',', '.');
-            
-            const uParts = u.split('.');
-            const cParts = c.split('.');
-            
-            // Uživatel nezadal desetinnou část
-            if (uParts.length === 1) return 0;
-            
-            const uDes = uParts[1];
-            
-            // Pokud správný výsledek nemá desetinnou část
-            if (cParts.length === 1) {
-                // Počítáme nuly na začátku desetinné části, dokud jsou správné
-                let spravnaMista = 0;
-                for (let i = 0; i < uDes.length; i++) {
-                    if (uDes[i] === '0') spravnaMista++;
-                    else break;
-                }
-                return spravnaMista;
+        function vygenerujPriklad() {
+            const op = operaceEl.value;
+            const n1 = parseInt(cislice1El.value);
+            const n2 = parseInt(cislice2El.value);
+            chybaEl.textContent = '';
+
+            if (op === '-' && n1 < n2) {
+                chybaEl.textContent = '❌ Při odčítání musí mít první číslo alespoň tolik cifer jako druhé.';
+                return null;
             }
+
+            let a, b, pokusy = 0;
+            while (pokusy < 1000) {
+                pokusy++;
+                a = generujCislo(n1);
+                b = n2 === 1 ? Math.floor(Math.random() * 8) + 2 : generujCislo(n2);
+                if (op === '-' && a <= b) continue;
+                if (op === '/' && b === 0) continue;
+                break;
+            }
+            let vysledek, vysledekZobrazeny;
+            if (op === '+') {
+                vysledek = a + b;
+                vysledekZobrazeny = vysledek;
+            } else if (op === '-') {
+                vysledek = a - b;
+                vysledekZobrazeny = vysledek;
+            } else if (op === '*') {
+                vysledek = BigInt(a) * BigInt(b);
+                vysledekZobrazeny = vysledek;
+            } else if (op === '/') {
+                vysledek = a / b;
+                vysledekZobrazeny = zkratNa4Desetinna(vysledek);
+            }
+            return { a, b, op, vysledek, vysledekZobrazeny };
+        }
+
+        function zobrazPriklad(p) {
+            const fa = formatujCislo(p.a);
+            const fb = formatujCislo(p.b);
+            const fv = formatujCislo(p.vysledekZobrazeny !== undefined ? p.vysledekZobrazeny : p.vysledek);
+            const max = Math.max(fa.length, (p.op + ' ' + fb).length, fv.length);
+            prikladEl.textContent = `${fa.padStart(max)}\n${(p.op + ' ' + fb).padStart(max)}`;
+            caraEl.style.opacity = '0';
+        }
+
+        function ukazCaru() {
+            caraEl.style.opacity = '1';
+        }
+
+        function aktivujPole() {
+            odpovedEl.focus();
+        }
+
+        function updateBtnDisable() {
+            tlacitkoEl.disabled = false;
+        }
+
+        function aktualizujTextTlacitka() {
+            if (!aktualniPriklad) {
+                tlacitkoEl.textContent = 'ZAČÍT';
+            } else if (!zobrazitVysledek) {
+                tlacitkoEl.textContent = 'DALŠÍ PŘÍKLAD';
+            } else {
+                tlacitkoEl.textContent = 'VÝSLEDEK(kontrola)';
+            }
+            updateBtnDisable();
+        }
+
+        odpovedEl.addEventListener('input', updateBtnDisable);
+
+        // Kontrola, zda je vstup platné číslo
+        function jePlatneCislo(vstup) {
+            if (vstup === '') return false;
+            const norm = normalizuj(vstup);
+            if (norm === '') return false;
+            return /^-?\d+([.,]\d*)?$/.test(norm);
+        }
+
+        function zkontrolujOdpoved(uzivatelskaOdpoved, priklad) {
+            const norm = normalizuj(uzivatelskaOdpoved);
+            if (norm === '') return false;
             
-            const cDes = cParts[1];
-            let spravnaMista = 0;
-            
-            if (presne) {
-                // Přesný výsledek: počítáme dokud sedíme se správnými místy nebo jsou to nuly za nimi
-                for (let i = 0; i < uDes.length; i++) {
-                    if (i < skutecnaDesetinnaMista) {
-                        // Skutečná desetinná místa musí sedět
-                        if (uDes[i] === cDes[i]) spravnaMista++;
-                        else break;
-                    } else {
-                        // Za skutečnými místy mohou být jen nuly
-                        if (uDes[i] === '0') spravnaMista++;
-                        else break;
-                    }
+            if (priklad.op === '/') {
+                const userNum = parseFloat(norm);
+                if (isNaN(userNum)) return false;
+                
+                const trueTruncated = zkratNa4Desetinna(priklad.vysledek);
+                const trueNum = parseFloat(trueTruncated);
+                
+                const userStr = norm;
+                const [userCela, userDes = ''] = userStr.split('.');
+                const userDesTruncated = userDes.substring(0, 4);
+                
+                const userNumTruncated = parseFloat(userDesTruncated ? `${userCela}.${userDesTruncated}` : userCela);
+                
+                const userDecimals = userDes.length;
+                if (userDecimals >= 3 && userDecimals <= 4) {
+                    const trueDesTruncated = zkratNa4Desetinna(priklad.vysledek).split('.')[1] || '';
+                    const trueDesToMatch = trueDesTruncated.substring(0, userDecimals);
+                    const trueToMatch = parseFloat(`${zkratNa4Desetinna(priklad.vysledek).split('.')[0]}.${trueDesToMatch}`);
+                    const userToMatch = userNumTruncated;
+                    
+                    return Math.abs(userToMatch - trueToMatch) < 1e-9;
+                }
+                
+                return Math.abs(userNumTruncated - trueNum) < 1e-9;
+            } else if (typeof priklad.vysledek === 'bigint') {
+                try {
+                    return BigInt(norm) === priklad.vysledek;
+                } catch {
+                    return false;
                 }
             } else {
-                // Nepřesný výsledek: kontrolujeme na 4 místech
-                const cDes4 = cDes.padEnd(4, '0').substring(0, 4);
-                for (let i = 0; i < Math.min(uDes.length, 4); i++) {
-                    if (uDes[i] === cDes4[i]) spravnaMista++;
-                    else break;
-                }
+                const num = parseFloat(norm);
+                return !isNaN(num) && Math.abs(num - priklad.vysledek) < 1e-9;
             }
-            
-            return spravnaMista;
         }
 
-        // Porovná uživatelský vstup se správným výsledkem
-@@ -476,8 +530,8 @@
-                    vysledekZobrazeny = vysledek;
-                    presnostInfo = { presne: true, desetinnaMista: presnost.desetinnaMista };
+        function handleTlacitko(e) {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            if (e && e.preventDefault) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            odpovedEl.classList.remove('zelene', 'cervene');
+
+            const btnText = tlacitkoEl.textContent.trim();
+            const inputText = odpovedEl.value.trim();
+
+            // ── ZAČÍT nebo DALŠÍ PŘÍKLAD ──
+            if (!zobrazitVysledek) {
+                // Kontrola slova "smazat" pouze při ZAČÍT
+                if (btnText === 'ZAČÍT' && normalizuj(inputText) === 'smazat') {
+                    if (typeof window.clearHistory === 'function') {
+                        window.clearHistory();
+                    }
+                }
+                
+                const p = vygenerujPriklad();
+                if (!p) {
+                    isProcessing = false;
+                    return;
+                }
+                aktualniPriklad = p;
+                zobrazPriklad(p);
+                odpovedEl.value = '';
+                odpovedEl.placeholder = 'Váš výsledek';
+                zobrazitVysledek = true;
+                aktualizujTextTlacitka();
+                if (p.op === '/') {
+                    divisionInfo.classList.remove('hidden');
                 } else {
-                    // Nepřesný výsledek - zaokrouhlit na 4 desetinná místa
-                    vysledekZobrazeny = zaokrouhliNaN(vysledek, 4);
-                    // Nepřesný výsledek - OŘÍZNOUT na 4 desetinná místa (ne zaokrouhlit)
-                    vysledekZobrazeny = orezNaN(vysledek, 4);
-                    presnostInfo = { presne: false, desetinnaMista: 4 };
+                    divisionInfo.classList.add('hidden');
+                }
+                setTimeout(() => {
+                    ukazCaru();
+                    aktivujPole();
+                    isProcessing = false;
+                }, 50);
+            } 
+            // ── VÝSLEDEK(kontrola) ──
+            else {
+                const uziv = inputText;
+                
+                if (uziv === '') {
+                    const vysl = aktualniPriklad.vysledekZobrazeny !== undefined ? aktualniPriklad.vysledekZobrazeny : aktualniPriklad.vysledek;
+                    odpovedEl.value = formatujCislo(vysl);
+                    zobrazitVysledek = false;
+                    aktualizujTextTlacitka();
+                    divisionInfo.classList.add('hidden');
+                    setTimeout(() => {
+                        odpovedEl.focus();
+                        isProcessing = false;
+                    }, 50);
+                } else if (!jePlatneCislo(uziv)) {
+                    chybaEl.textContent = '⚠️ Vložil jste nepovolený znak, opravte!';
+                    isProcessing = false;
+                    setTimeout(() => odpovedEl.focus(), 100);
+                } else {
+                    const spravne = zkontrolujOdpoved(uziv, aktualniPriklad);
+                    odpovedEl.classList.add(spravne ? 'zelene' : 'cervene');
+                    zobrazitVysledek = false;
+                    aktualizujTextTlacitka();
+                    divisionInfo.classList.add('hidden');
+                    setTimeout(() => isProcessing = false, 150);
                 }
             }
-@@ -555,8 +609,8 @@
-                    // Přesný výsledek - použít přesný string
-                    correctStr = priklad.vysledekZobrazeny.toString();
-                } else {
-                    // Nepřesný výsledek - použít zaokrouhlený na 4 místa
-                    correctStr = zaokrouhliNaN(priklad.vysledek, 4).toString();
-                    // Nepřesný výsledek - použít OŘEZANÝ na 4 místa
-                    correctStr = orezNaN(priklad.vysledek, 4).toString();
-                }
+        }
 
-                return porovnejDeleni(
-@@ -854,6 +908,8 @@
+        tlacitkoEl.addEventListener('touchstart', handleTlacitko, { passive: false });
+        tlacitkoEl.addEventListener('click', (e) => {
+            if (e.pointerType !== 'touch') handleTlacitko(e);
+        });
+        odpovedEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleTlacitko(e);
+        });
+
+        naplnSelecty();
+        aktualizujTextTlacitka();
+        updateBtnDisable();
+        setTimeout(aktivujPole, 100);
+    </script>
+
+    <!-- ═══════ UI ENHANCEMENT LAYER ═══════ -->
+    <script>
+        (function() {
+            const STORAGE_KEY = 'matika_trenink_v2';
+
+            function getTodayString() {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            function formatDateCzech(dateStr) {
+                const [year, month, day] = dateStr.split('-');
+                const months = [
+                    'ledna', 'února', 'března', 'dubna', 'května', 'června',
+                    'července', 'srpna', 'září', 'října', 'listopadu', 'prosince'
+                ];
+                const dayNum = parseInt(day, 10);
+                const monthIndex = parseInt(month, 10) - 1;
+                const weekdays = ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota'];
+                const date = new Date(year, monthIndex, dayNum);
+                const weekday = weekdays[date.getDay()];
+                return `${weekday} ${dayNum}. ${months[monthIndex]} ${year}`;
+            }
+
+            function loadState() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    if (!raw) return null;
+                    const state = JSON.parse(raw);
+                    const today = getTodayString();
+                    if (state.date !== today) {
+                        localStorage.removeItem(STORAGE_KEY);
+                        return null;
+                    }
+                    return state;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            function saveState() {
+                const state = {
+                    date: getTodayString(),
+                    correct: correct,
+                    wrong: wrong,
+                    streak: streak,
+                    history: history
+                };
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                } catch (e) {}
+            }
+
+            let correct = 0, wrong = 0, streak = 0, history = [];
+            const savedState = loadState();
+            if (savedState) {
+                correct = savedState.correct || 0;
+                wrong = savedState.wrong || 0;
+                streak = savedState.streak || 0;
+                history = savedState.history || [];
+            }
+
+            const today = getTodayString();
+            const currentDateEl = document.getElementById('currentDate');
+            if (currentDateEl) {
+                currentDateEl.textContent = formatDateCzech(today);
+            }
+
+            const btn = document.getElementById('tlacitko');
+            const input = document.getElementById('odpoved');
+            const inputIcon = document.getElementById('inputIcon');
+            const enterHint = document.getElementById('enterHint');
+            const scoreCorrect = document.getElementById('scoreCorrect');
+            const scoreWrong = document.getElementById('scoreWrong');
+            const streakCount = document.getElementById('streakCount');
+            const historyContainer = document.getElementById('historyContainer');
+            const historyList = document.getElementById('historyList');
+            const historyEmpty = document.getElementById('historyEmpty');
+            const settingsToggle = document.getElementById('settingsToggle');
+            const settingsPanel = document.getElementById('settingsPanel');
+            const chybaEl = document.getElementById('chyba');
+            const prikladEl = document.getElementById('priklad');
+            const caraEl = document.getElementById('cara');
+            const divisionInfo = document.getElementById('divisionInfo');
+
+            scoreCorrect.textContent = correct;
+            scoreWrong.textContent = wrong;
+            streakCount.textContent = streak;
+
+            const iconCheck = `<svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>`;
+            const iconCross = `<svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+
+            settingsToggle.addEventListener('click', () => {
+                settingsPanel.classList.toggle('collapsed');
+                if (!settingsPanel.classList.contains('collapsed') && document.getElementById('operace').value === '/') {
+                    divisionInfo.classList.remove('hidden');
+                } else if (settingsPanel.classList.contains('collapsed')) {
+                    divisionInfo.classList.add('hidden');
+                }
+            });
+
+            const chybaObserver = new MutationObserver(() => {
+                if (chybaEl.textContent.trim()) {
+                    settingsPanel.classList.remove('collapsed');
+                }
+            });
+            chybaObserver.observe(chybaEl, { childList: true });
+
+            input.addEventListener('focus', () => {
+                if (btn.textContent.trim() === 'VÝSLEDEK(kontrola)') {
+                    enterHint.style.opacity = '1';
+                }
+            });
+            input.addEventListener('blur', () => enterHint.style.opacity = '0');
+            input.addEventListener('input', () => {
+                if (input.value.length > 0) enterHint.style.opacity = '0';
+            });
+
+            const btnObserver = new MutationObserver(() => {
+                const text = btn.textContent.trim();
+                btn.classList.remove('state-start', 'state-result', 'btn-pulse', 'btn-glow-emerald');
+                if (text === 'VÝSLEDEK(kontrola)') {
+                    btn.classList.add('state-result', 'btn-glow-emerald');
+                } else {
+                    btn.classList.add('state-start', 'btn-pulse');
+                }
+            });
+            btnObserver.observe(btn, { childList: true, characterData: true, subtree: true });
+
+            let processedZelene = false;
+            let processedCervene = false;
+
+            const inputObserver = new MutationObserver((mutations) => {
+                mutations.forEach((m) => {
+                    if (m.type === 'attributes' && m.attributeName === 'class') {
+                        const cls = input.classList;
+                        if (cls.contains('zelene')) {
+                            if (processedZelene) return;
+                            processedZelene = true;
+                            correct++;
+                            streak++;
+                            inputIcon.innerHTML = iconCheck;
+                            inputIcon.style.opacity = '1';
+                            inputIcon.style.transform = 'translateY(-50%) scale(1)';
+                            updateScores();
+                            addHistory(true);
+                            saveState();
+                        } else if (cls.contains('cervene')) {
+                            if (processedCervene) return;
+                            processedCervene = true;
+                            wrong++;
+                            streak = 0;
+                            inputIcon.innerHTML = iconCross;
+                            inputIcon.style.opacity = '1';
+                            inputIcon.style.transform = 'translateY(-50%) scale(1)';
+                            input.classList.add('shake');
+                            setTimeout(() => input.classList.remove('shake'), 500);
+                            updateScores();
+                            addHistory(false);
+                            saveState();
+                        } else {
+                            processedZelene = false;
+                            processedCervene = false;
+                            inputIcon.style.opacity = '0';
+                            inputIcon.style.transform = 'translateY(-50%) scale(0.75)';
+                        }
+                    }
+                });
+            });
+            inputObserver.observe(input, { attributes: true, attributeFilter: ['class'] });
+
+            function updateScores() {
+                scoreCorrect.textContent = correct;
+                scoreWrong.textContent = wrong;
+                streakCount.textContent = streak;
+                streakCount.parentElement.classList.add('pop');
+                setTimeout(() => streakCount.parentElement.classList.remove('pop'), 200);
+            }
 
             function addHistory(isCorrect) {
                 let text = '';
-                let pocetMist = null;
-                
                 if (typeof aktualniPriklad !== 'undefined' && aktualniPriklad) {
                     const p = aktualniPriklad;
                     const fmt = (typeof formatujCislo === 'function') ? formatujCislo : (x) => String(x);
-@@ -865,84 +921,103 @@
-                        } else {
-                            vyslStr = fmt(p.vysledekZobrazeny, 4);
-                        }
-                        
-                        // Spočítat počet správných desetinných míst
-                        if (isCorrect && typeof spocitejSpravnaMista === 'function') {
-                            let correctStr;
-                            if (p.presnostInfo.presne) {
-                                correctStr = p.vysledekZobrazeny.toString();
-                            } else {
-                                correctStr = orezNaN(p.vysledek, 4).toString();
-                            }
-                            pocetMist = spocitejSpravnaMista(
-                                input.value, 
-                                correctStr, 
-                                p.presnostInfo.presne, 
-                                p.presnostInfo.desetinnaMista
-                            );
-                        }
-                    } else {
-                        vyslStr = fmt(p.vysledekZobrazeny !== undefined ? p.vysledekZobrazeny : p.vysledek);
-                    }
-
-                    text = `${fmt(p.a)} ${p.op} ${fmt(p.b)} = ${vyslStr}`;
-                    if (pocetMist !== null) {
-                        text += ` (${pocetMist})`;
-                    }
+                    const vysl = p.vysledekZobrazeny !== undefined ? p.vysledekZobrazeny : p.vysledek;
+                    text = `${fmt(p.a)} ${p.op} ${fmt(p.b)} = ${fmt(vysl)}`;
                 } else {
                     text = prikladEl.textContent.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
                 }
                 if (!text || text.includes('Zvolte nastavení')) return;
                 history.unshift({ text, correct: isCorrect });
+                // Bez omezení počtu položek
                 renderHistory();
             }
 
