@@ -145,13 +145,13 @@
         }
     </style>
 </head>
-<body class="bg-slate-200 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300 font-sans"> <!-- bg-slate-100 → bg-slate-200 -->
+<body class="bg-slate-200 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300 font-sans">
 
     <!-- App Container - max height 100dvh with flex column -->
     <div class="w-full max-w-md mx-auto flex flex-col min-h-[100dvh]">
 
         <!-- Fixed Score Bar -->
-        <div class="score-bar bg-slate-200/80 dark:bg-slate-900/80 border-b border-slate-300 dark:border-slate-800 shadow-sm"> <!-- bg-white/80 → bg-slate-200/80 -->
+        <div class="score-bar bg-slate-300/80 dark:bg-slate-900/80 border-b border-slate-300 dark:border-slate-800 shadow-sm">
             <div class="px-4 py-2.5 flex items-center justify-between select-none">
                 <div class="flex items-center gap-3">
                     <div class="flex items-center gap-1.5">
@@ -180,7 +180,7 @@
         <div class="flex-1 overflow-y-auto px-4 py-3 space-y-3 scrollbar-hide">
 
             <!-- Main Card -->
-            <div class="bg-slate-100 dark:bg-slate-900 rounded-2xl shadow-lg shadow-slate-300/50 dark:shadow-black/40 overflow-hidden border border-slate-300 dark:border-slate-800"> <!-- bg-white → bg-slate-100, border-slate-200 → border-slate-300 -->
+            <div class="bg-slate-200 dark:bg-slate-900 rounded-2xl shadow-lg shadow-slate-300/50 dark:shadow-black/40 overflow-hidden border border-slate-300 dark:border-slate-800">
                 <div class="p-4">
 
                     <!-- Header -->
@@ -192,7 +192,7 @@
                             <div class="flex items-center gap-1.5 mt-0.5">
                                 <span id="currentDate" class="text-[11px] font-medium text-slate-400 dark:text-slate-500"></span>
                                 <button onclick="document.documentElement.classList.toggle('dark')"
-                                        class="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors" <!-- hover:bg-slate-100 → hover:bg-slate-200 -->
+                                        class="p-1 rounded-md hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"
                                         aria-label="Přepnout tmavý/světlý režim">
                                     <svg class="dark:hidden w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
@@ -203,7 +203,7 @@
                                 </button>
                             </div>
                         </div>
-                        <button id="settingsToggle" class="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 mt-0.5" title="Nastavení" aria-label="Nastavení operace a cifer"> <!-- hover:bg-slate-100 → hover:bg-slate-200 -->
+                        <button id="settingsToggle" class="p-1.5 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 mt-0.5" title="Nastavení" aria-label="Nastavení operace a cifer">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -216,7 +216,7 @@
                         <div class="grid grid-cols-3 gap-2">
                             <div class="flex flex-col">
                                 <label for="operace" class="text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1">Operace</label>
-                                <select id="operace" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer font-bold text-xs"> <!-- bg-slate-50 → bg-slate-100, border-slate-200 → border-slate-300 -->
+                                <select id="operace" class="bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer font-bold text-xs">
                                     <option value="+">+</option>
                                     <option value="-">−</option>
                                     <option value="*">×</option>
@@ -225,11 +225,11 @@
                             </div>
                             <div class="flex flex-col">
                                 <label class="text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1">1. Číslo</label>
-                                <select id="cislice1" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs"></select> <!-- bg-slate-50 → bg-slate-100, border-slate-200 → border-slate-300 -->
+                                <select id="cislice1" class="bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs"></select>
                             </div>
                             <div class="flex flex-col">
                                 <label class="text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1">2. Číslo</label>
-                                <select id="cislice2" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs"></select> <!-- bg-slate-50 → bg-slate-100, border-slate-200 → border-slate-300 -->
+                                <select id="cislice2" class="bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs"></select>
                             </div>
                         </div>
                         <!-- Division info -->
@@ -242,10 +242,10 @@
                     <div id="chyba" class="text-red-500 text-[10px] font-bold text-center h-4 overflow-hidden mb-1" role="alert"></div>
 
                     <!-- Worksheet - compact -->
-                    <div class="bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 px-4 pb-0 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center"> <!-- bg-slate-50 → bg-slate-100, border-slate-100 → border-slate-300 -->
+                    <div class="bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 px-4 pb-0 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center">
                         <div class="w-full overflow-x-auto scrollbar-hide flex flex-col items-end relative z-10">
                             <div id="priklad" style="white-space: break-spaces;" class="math-text font-mono text-lg tracking-tighter text-slate-700 dark:text-slate-200">Zvolte nastavení a stiskněte ▶ Začít</div>
-                            <div id="cara" class="math-text font-mono text-2xl text-slate-400 dark:text-slate-600 border-t-2 border-slate-400 dark:border-slate-600 w-full mt-0.5 opacity-0 transition-opacity duration-300"></div> <!-- border-slate-300 → border-slate-400 -->
+                            <div id="cara" class="math-text font-mono text-2xl text-slate-400 dark:text-slate-600 border-t-2 border-slate-400 dark:border-slate-600 w-full mt-0.5 opacity-0 transition-opacity duration-300"></div>
                         </div>
                     </div>
 
@@ -254,7 +254,7 @@
                         <div class="relative">
                             <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off"
                                    placeholder="Váš výsledek"
-                                   class="w-full pl-3 pr-4 text-lg font-mono font-bold rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right" /> <!-- border-slate-200 → border-slate-300 -->
+                                   class="w-full pl-3 pr-4 text-lg font-mono font-bold rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right" />
                             <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 transform scale-75 pointer-events-none"></div>
                         </div>
                         <div id="enterHint" class="text-[9px] text-slate-400 font-medium opacity-0 transition-opacity duration-200 select-none text-center -mt-1">Enter ↵</div>
