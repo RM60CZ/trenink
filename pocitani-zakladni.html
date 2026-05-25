@@ -1,30 +1,27 @@
-&lt;!DOCTYPE html&gt;
-&lt;html lang=&quot;cs&quot; class=&quot;dark&quot;&gt;
-&lt;head&gt;
-&lt;meta charset=&quot;UTF-8&quot; /&gt;
-&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0, user-scalable=no,
-viewport-fit=cover&quot; /&gt;
-&lt;title&gt;Trénink počítání&lt;/title&gt;
-&lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot; /&gt;
-&lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin /&gt;
-&lt;link
-href=&quot;https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;fa
-mily=JetBrains+Mono:wght@400;500;700&amp;display=swap&quot; rel=&quot;stylesheet&quot; /&gt;
-&lt;script src=&quot;https://cdn.tailwindcss.com&quot;&gt;&lt;/script&gt;
-&lt;script&gt;
+<!DOCTYPE html>
+<html lang="cs" class="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>Trénink počítání</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
 tailwind.config = {
-darkMode: &#39;class&#39;,
+darkMode: 'class',
 theme: {
 extend: {
 fontFamily: {
-sans: [&#39;Inter&#39;, &#39;system-ui&#39;, &#39;sans-serif&#39;],
-mono: [&#39;JetBrains Mono&#39;, &#39;&quot;Courier New&quot;&#39;, &#39;monospace&#39;],
+sans: ['Inter', 'system-ui', 'sans-serif'],
+mono: ['JetBrains Mono', '"Courier New"', 'monospace'],
 },
 },
 },
 }
-&lt;/script&gt;
-&lt;style&gt;
+</script>
+<style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 .zelene {
@@ -48,14 +45,12 @@ display: block;
 font-variant-numeric: tabular-nums;
 }
 .worksheet-bg {
-background-color: #e2e8f0; /* Šedivější odstín místo #f8fafc */
-background-image: radial-gradient(circle, #94a3b8 1px, transparent 1px); /* Šedivější
-tečky */
+background-color: #e2e8f0; 
+background-image: radial-gradient(circle, #94a3b8 1px, transparent 1px); 
 background-size: 24px 24px;
 }
 .dark .worksheet-bg {
 background-color: rgba(30, 41, 59, 0.4);
-
 background-image: radial-gradient(circle, #334155 1px, transparent 1px);
 }
 .btn-pulse {
@@ -74,17 +69,16 @@ animation: glow-emerald 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 #tlacitko { position: relative; }
 #tlacitko.state-start::before {
-content: &#39;▶&#39;;
+content: '▶';
 display: inline-block;
 margin-right: 0.4rem;
 font-size: 0.8em;
 }
 #tlacitko.state-result::before {
-content: &#39;✓&#39;;
+content: '✓';
 display: inline-block;
 margin-right: 0.4rem;
 font-size: 0.85em;
-
 font-weight: 900;
 }
 .shake {
@@ -113,7 +107,6 @@ to { opacity: 1; transform: translateY(0); }
 .pop {
 animation: pop 0.2s ease-out;
 }
-
 @keyframes pop {
 0% { transform: scale(1); }
 50% { transform: scale(1.2); }
@@ -150,229 +143,153 @@ z-index: 40;
 backdrop-filter: blur(12px);
 -webkit-backdrop-filter: blur(12px);
 }
-&lt;/style&gt;
-&lt;/head&gt;
-&lt;body class=&quot;bg-slate-200 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen
-transition-colors duration-300 font-sans&quot;&gt;
+</style>
+</head>
+<body class="bg-slate-200 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300 font-sans">
 
-&lt;!-- App Container - max height 100dvh with flex column --&gt;
-&lt;div class=&quot;w-full max-w-md mx-auto flex flex-col min-h-[100dvh]&quot;&gt;
+<!-- App Container - max height 100dvh with flex column -->
+<div class="w-full max-w-md mx-auto flex flex-col min-h-[100dvh]">
 
-&lt;!-- Fixed Score Bar --&gt;
-&lt;div class=&quot;score-bar bg-slate-300/80 dark:bg-slate-900/80 border-b border-slate-300
-dark:border-slate-800 shadow-sm&quot;&gt;
-&lt;div class=&quot;px-4 py-2.5 flex items-center justify-between select-none&quot;&gt;
-&lt;div class=&quot;flex items-center gap-3&quot;&gt;
-&lt;div class=&quot;flex items-center gap-1.5&quot;&gt;
-&lt;span class=&quot;text-[9px] font-bold uppercase text-slate-400 tracking-
-wider&quot;&gt;✓&lt;/span&gt;
-&lt;output id=&quot;scoreCorrect&quot; aria-live=&quot;polite&quot; class=&quot;text-lg font-black text-
-emerald-600 dark:text-emerald-400 font-mono tabular-nums&quot;&gt;0&lt;/output&gt;
-&lt;/div&gt;
-&lt;div class=&quot;w-px h-5 bg-slate-300 dark:bg-slate-700&quot;&gt;&lt;/div&gt;
-&lt;div class=&quot;flex items-center gap-1.5&quot;&gt;
+<!-- Fixed Score Bar -->
+<div class="score-bar bg-slate-300/80 dark:bg-slate-900/80 border-b border-slate-300 dark:border-slate-800 shadow-sm">
+<div class="px-4 py-2.5 flex items-center justify-between select-none">
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1.5">
+<span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">✓</span>
+<output id="scoreCorrect" aria-live="polite" class="text-lg font-black text-emerald-600 dark:text-emerald-400 font-mono tabular-nums">0</output>
+</div>
+<div class="w-px h-5 bg-slate-300 dark:bg-slate-700"></div>
+<div class="flex items-center gap-1.5">
+<span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">✗</span>
+<output id="scoreWrong" aria-live="polite" class="text-lg font-black text-rose-600 dark:text-rose-400 font-mono tabular-nums">0</output>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Série</span>
+<div class="flex items-center gap-1">
+<output id="streakCount" aria-live="polite" class="text-lg font-black text-amber-500 dark:text-amber-400 font-mono tabular-nums">0</output>
+<svg class="w-4 h-4 text-amber-500 dark:text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+<path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"></path>
+</svg>
+</div>
+</div>
+</div>
+</div>
 
-&lt;span class=&quot;text-[9px] font-bold uppercase text-slate-400 tracking-
-wider&quot;&gt;✗&lt;/span&gt;
-&lt;output id=&quot;scoreWrong&quot; aria-live=&quot;polite&quot; class=&quot;text-lg font-black text-rose-
-600 dark:text-rose-400 font-mono tabular-nums&quot;&gt;0&lt;/output&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;div class=&quot;flex items-center gap-2&quot;&gt;
-&lt;span class=&quot;text-[9px] font-bold uppercase text-slate-400 tracking-
-wider&quot;&gt;Série&lt;/span&gt;
-&lt;div class=&quot;flex items-center gap-1&quot;&gt;
-&lt;output id=&quot;streakCount&quot; aria-live=&quot;polite&quot; class=&quot;text-lg font-black text-
-amber-500 dark:text-amber-400 font-mono tabular-nums&quot;&gt;0&lt;/output&gt;
-&lt;svg class=&quot;w-4 h-4 text-amber-500 dark:text-amber-400&quot; fill=&quot;currentColor&quot;
-viewBox=&quot;0 0 20 20&quot;&gt;
-&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-
-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0
-00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05
-6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-
-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293
-1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z&quot; clip-rule=&quot;evenodd&quot;&gt;&lt;/path&gt;
-&lt;/svg&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-y-auto px-4 py-3 space-y-3 scrollbar-hide">
 
-&lt;!-- Scrollable Content --&gt;
-&lt;div class=&quot;flex-1 overflow-y-auto px-4 py-3 space-y-3 scrollbar-hide&quot;&gt;
+<!-- Main Card -->
+<div class="bg-slate-200 dark:bg-slate-900 rounded-2xl shadow-lg shadow-slate-300/50 dark:shadow-black/40 overflow-hidden border border-slate-300 dark:border-slate-800">
+<div class="p-4">
 
-&lt;!-- Main Card --&gt;
-
-&lt;div class=&quot;bg-slate-200 dark:bg-slate-900 rounded-2xl shadow-lg shadow-slate-
-300/50 dark:shadow-black/40 overflow-hidden border border-slate-300 dark:border-slate-
-800&quot;&gt;
-&lt;div class=&quot;p-4&quot;&gt;
-
-&lt;!-- Header --&gt;
-&lt;div class=&quot;flex items-start justify-between mb-3&quot;&gt;
-&lt;div class=&quot;flex flex-col&quot;&gt;
-&lt;h1 class=&quot;text-lg font-black tracking-tight text-slate-800 dark:text-white
-uppercase leading-tight&quot;&gt;
+<!-- Header -->
+<div class="flex items-start justify-between mb-3">
+<div class="flex flex-col">
+<h1 class="text-lg font-black tracking-tight text-slate-800 dark:text-white uppercase leading-tight">
 Trénink počítání
-&lt;/h1&gt;
-&lt;div class=&quot;flex items-center gap-1.5 mt-0.5&quot;&gt;
-&lt;span id=&quot;currentDate&quot; class=&quot;text-[11px] font-medium text-slate-400
-dark:text-slate-500&quot;&gt;&lt;/span&gt;
-&lt;button onclick=&quot;document.documentElement.classList.toggle(&#39;dark&#39;)&quot;
-class=&quot;p-1 rounded-md hover:bg-slate-300 dark:hover:bg-slate-800
-transition-colors&quot;
-aria-label=&quot;Přepnout tmavý/světlý režim&quot;&gt;
-&lt;svg class=&quot;dark:hidden w-3.5 h-3.5 text-amber-500&quot; fill=&quot;none&quot;
-stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
-&lt;path stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; stroke-
-width=&quot;2&quot; d=&quot;M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-
-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018
-0z&quot;&gt;&lt;/path&gt;
-&lt;/svg&gt;
-&lt;svg class=&quot;hidden dark:inline w-3.5 h-3.5 text-slate-400&quot; fill=&quot;none&quot;
-stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
-&lt;path stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; stroke-
-width=&quot;2&quot; d=&quot;M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0
-008.354-5.646z&quot;&gt;&lt;/path&gt;
-&lt;/svg&gt;
+</h1>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span id="currentDate" class="text-[11px] font-medium text-slate-400 dark:text-slate-500"></span>
+<button onclick="document.documentElement.classList.toggle('dark')" class="p-1 rounded-md hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors" aria-label="Přepnout tmavý/světlý režim">
+<svg class="dark:hidden w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+</svg>
+<svg class="hidden dark:inline w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+</svg>
+</button>
+</div>
+</div>
+<button id="settingsToggle" class="p-1.5 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 mt-0.5" title="Nastavení" aria-label="Nastavení operace a cifer">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+</svg>
+</button>
+</div>
 
-&lt;/button&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;button id=&quot;settingsToggle&quot; class=&quot;p-1.5 rounded-lg hover:bg-slate-300
-dark:hover:bg-slate-800 transition-colors text-slate-400 hover:text-slate-600
-dark:hover:text-slate-300 mt-0.5&quot; title=&quot;Nastavení&quot; aria-label=&quot;Nastavení operace a cifer&quot;&gt;
-&lt;svg class=&quot;w-4 h-4&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
-&lt;path stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; stroke-width=&quot;2&quot;
-d=&quot;M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94
-3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0
-00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-
-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724
-1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-
-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z&quot;&gt;&lt;/path&gt;
-&lt;path stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; stroke-width=&quot;2&quot;
-d=&quot;M15 12a3 3 0 11-6 0 3 3 0 016 0z&quot;&gt;&lt;/path&gt;
-&lt;/svg&gt;
-&lt;/button&gt;
-&lt;/div&gt;
+<!-- Settings Panel -->
+<div id="settingsPanel" class="settings-panel mb-3 collapsed">
+<div class="grid grid-cols-3 gap-2">
+<div class="flex flex-col">
+<label for="operace" class="text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1">Operace</label>
+<select id="operace" class="bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer font-bold text-xs">
+<option value="+">+</option>
+<option value="-">−</option>
+<option value="*">×</option>
+<option value="/">÷</option>
+</select>
+</div>
+<div class="flex flex-col">
+<label class="text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1">1. Číslo</label>
+<select id="cislice1" class="bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs"></select>
+</div>
+<div class="flex flex-col">
+<label class="text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1">2. Číslo</label>
+<select id="cislice2" class="bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs"></select>
+</div>
+</div>
+<!-- Division info -->
+<div id="divisionInfo" class="hidden mt-2 text-[10px] text-slate-400 dark:text-slate-500 text-center font-medium">
+Dělení zobrazí přesně 4 desetinná místa. Odpověď na 1–4 des. místa je uznána.
+</div>
+</div>
 
-&lt;!-- Settings Panel --&gt;
-&lt;div id=&quot;settingsPanel&quot; class=&quot;settings-panel mb-3 collapsed&quot;&gt;
-&lt;div class=&quot;grid grid-cols-3 gap-2&quot;&gt;
-&lt;div class=&quot;flex flex-col&quot;&gt;
-&lt;label for=&quot;operace&quot; class=&quot;text-[9px] font-bold uppercase text-slate-500
-mb-1 ml-1&quot;&gt;Operace&lt;/label&gt;
-&lt;select id=&quot;operace&quot; class=&quot;bg-slate-200 dark:bg-slate-800 border border-
-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-
-500 transition-all cursor-pointer font-bold text-xs&quot;&gt;
-&lt;option value=&quot;+&quot;&gt;+&lt;/option&gt;
-&lt;option value=&quot;-&quot;&gt;−&lt;/option&gt;
-&lt;option value=&quot;*&quot;&gt;×&lt;/option&gt;
+<!-- Error container -->
+<div id="chyba" class="text-red-500 text-[10px] font-bold text-center h-4 overflow-hidden mb-1" role="alert"></div>
 
-&lt;option value=&quot;/&quot;&gt;÷&lt;/option&gt;
-&lt;/select&gt;
-&lt;/div&gt;
-&lt;div class=&quot;flex flex-col&quot;&gt;
-&lt;label class=&quot;text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1&quot;&gt;1.
-Číslo&lt;/label&gt;
-&lt;select id=&quot;cislice1&quot; class=&quot;bg-slate-200 dark:bg-slate-800 border border-
-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-
-500 transition-all text-xs&quot;&gt;&lt;/select&gt;
-&lt;/div&gt;
-&lt;div class=&quot;flex flex-col&quot;&gt;
-&lt;label class=&quot;text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1&quot;&gt;2.
-Číslo&lt;/label&gt;
-&lt;select id=&quot;cislice2&quot; class=&quot;bg-slate-200 dark:bg-slate-800 border border-
-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-
-500 transition-all text-xs&quot;&gt;&lt;/select&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;!-- Division info --&gt;
-&lt;div id=&quot;divisionInfo&quot; class=&quot;hidden mt-2 text-[10px] text-slate-400 dark:text-
-slate-500 text-center font-medium&quot;&gt;
-Dělení zobrazí přesně 4 desetinná místa. Odpověď na 1–4 des. místa je
-uznána.
-&lt;/div&gt;
-&lt;/div&gt;
+<!-- Worksheet - compact -->
+<div class="bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 px-4 pb-0 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center">
+<div class="w-full overflow-x-auto scrollbar-hide flex flex-col items-end relative z-10">
+<div id="priklad" style="white-space: break-spaces;" class="math-text font-mono text-lg tracking-tighter text-slate-700 dark:text-slate-200">Zvolte nastavení a stiskněte ▶ Začít</div>
+<div id="cara" class="math-text font-mono text-2xl text-slate-400 dark:text-slate-600 border-t-2 border-slate-400 dark:border-slate-600 w-full mt-0.5 opacity-0 transition-opacity duration-300"></div>
+</div>
+</div>
 
-&lt;!-- Error container --&gt;
-&lt;div id=&quot;chyba&quot; class=&quot;text-red-500 text-[10px] font-bold text-center h-4
-overflow-hidden mb-1&quot; role=&quot;alert&quot;&gt;&lt;/div&gt;
+<!-- Action Area -->
+<div class="space-y-2.5">
+<div class="relative">
+<input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="Váš výsledek" class="w-full pl-3 pr-4 text-lg font-mono font-bold rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right" />
+<div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 transform scale-75 pointer-events-none"></div>
+</div>
+<div id="enterHint" class="text-[9px] text-slate-400 font-medium opacity-0 transition-opacity duration-200 select-none text-center -mt-1">Enter ↵</div>
 
-&lt;!-- Worksheet - compact --&gt;
-
-&lt;div class=&quot;bg-slate-200 dark:bg-slate-800/50 border border-slate-300
-dark:border-slate-800 rounded-xl pt-4 px-4 pb-0 mb-3 worksheet-bg relative overflow-
-hidden flex flex-col justify-center&quot;&gt;
-&lt;div class=&quot;w-full overflow-x-auto scrollbar-hide flex flex-col items-end relative
-z-10&quot;&gt;
-&lt;div id=&quot;priklad&quot; style=&quot;white-space: break-spaces;&quot; class=&quot;math-text font-
-mono text-lg tracking-tighter text-slate-700 dark:text-slate-200&quot;&gt;Zvolte nastavení a stiskněte
-▶ Začít&lt;/div&gt;
-&lt;div id=&quot;cara&quot; class=&quot;math-text font-mono text-2xl text-slate-400 dark:text-
-slate-600 border-t-2 border-slate-400 dark:border-slate-600 w-full mt-0.5 opacity-0
-transition-opacity duration-300&quot;&gt;&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-
-&lt;!-- Action Area --&gt;
-&lt;div class=&quot;space-y-2.5&quot;&gt;
-&lt;div class=&quot;relative&quot;&gt;
-&lt;input type=&quot;text&quot; id=&quot;odpoved&quot; inputmode=&quot;decimal&quot; enterkeyhint=&quot;done&quot;
-autocomplete=&quot;off&quot;
-placeholder=&quot;Váš výsledek&quot;
-class=&quot;w-full pl-3 pr-4 text-lg font-mono font-bold rounded-xl border-2
-border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-
-white focus:border-blue-500 outline-none transition-all shadow-inner text-right&quot; /&gt;
-&lt;div id=&quot;inputIcon&quot; class=&quot;absolute right-3 top-1/2 -translate-y-1/2 opacity-0
-transition-all duration-200 transform scale-75 pointer-events-none&quot;&gt;&lt;/div&gt;
-&lt;/div&gt;
-&lt;div id=&quot;enterHint&quot; class=&quot;text-[9px] text-slate-400 font-medium opacity-0
-transition-opacity duration-200 select-none text-center -mt-1&quot;&gt;Enter ↵&lt;/div&gt;
-
-&lt;button id=&quot;tlacitko&quot; type=&quot;button&quot;
-
-class=&quot;w-full py-3 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-
-white font-black text-base rounded-xl shadow-lg shadow-blue-500/20 transition-all
-uppercase tracking-widest touch-manipulation btn-pulse state-start&quot;&gt;
+<button id="tlacitko" type="button" class="w-full py-3 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-black text-base rounded-xl shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest touch-manipulation btn-pulse state-start">
 ZAČÍT
-&lt;/button&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
+</button>
+</div>
+</div>
+</div>
 
-&lt;!-- History - compact --&gt;
-&lt;div id=&quot;historyContainer&quot; class=&quot;px-1 opacity-0 transition-opacity duration-500
-select-none&quot; aria-live=&quot;polite&quot;&gt;
-&lt;div class=&quot;text-[9px] font-bold uppercase text-slate-400 tracking-wider mb-
-1.5&quot;&gt;Historie&lt;/div&gt;
-&lt;div id=&quot;historyList&quot; class=&quot;flex flex-wrap gap-1.5&quot;&gt;
-&lt;div id=&quot;historyEmpty&quot; class=&quot;text-[11px] text-slate-400 dark:text-slate-500
-italic&quot;&gt;Zatím jste nevyřešil(a) žádný příklad&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
+<!-- History - compact -->
+<div id="historyContainer" class="px-1 opacity-0 transition-opacity duration-500 select-none" aria-live="polite">
+<div class="text-[9px] font-bold uppercase text-slate-400 tracking-wider mb-1.5">Historie</div>
+<div id="historyList" class="flex flex-wrap gap-1.5">
+<div id="historyEmpty" class="text-[11px] text-slate-400 dark:text-slate-500 italic">Zatím jste nevyřešil(a) žádný příklad</div>
+</div>
+</div>
 
-&lt;!-- Bottom spacer for mobile --&gt;
-&lt;div class=&quot;h-4&quot;&gt;&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
+<!-- Bottom spacer for mobile -->
+<div class="h-4"></div>
+</div>
+</div>
 
-&lt;!-- ═══════ ORIGINAL LOGIC ═══════ --&gt;
-&lt;script&gt;
+<!-- ═══════ ORIGINAL LOGIC ═══════ -->
+<script>
 let isProcessing = false;
 
 function formatujCislo(x) {
-
-if (typeof x === &#39;bigint&#39;) return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, &#39; &#39;);
-if (typeof x !== &#39;number&#39;) return String(x);
-if (Number.isInteger(x)) return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, &#39; &#39;);
-const [cela, des] = x.toString().split(&#39;.&#39;);
-const celaFmt = cela.replace(/\B(?=(\d{3})+(?!\d))/g, &#39; &#39;);
+if (typeof x === 'bigint') return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+if (typeof x !== 'number') return String(x);
+if (Number.isInteger(x)) return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const [cela, des] = x.toString().split('.');
+const celaFmt = cela.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 return des ? `${celaFmt}.${des}` : celaFmt;
 }
 
 function normalizuj(vstup) {
-return vstup.trim().replace(/\s+/g, &#39;&#39;).replace(&#39;,&#39;, &#39;.&#39;);
+return vstup.trim().replace(/\s+/g, '').replace(',', '.');
 }
 
 function generujCislo(n) {
@@ -383,24 +300,24 @@ return Math.floor(Math.random() * (max - min + 1)) + min;
 
 let aktualniPriklad = null;
 let zobrazitVysledek = false;
-const operaceEl = document.getElementById(&#39;operace&#39;);
-const cislice1El = document.getElementById(&#39;cislice1&#39;);
-const cislice2El = document.getElementById(&#39;cislice2&#39;);
-const chybaEl = document.getElementById(&#39;chyba&#39;);
-const prikladEl = document.getElementById(&#39;priklad&#39;);
-const caraEl = document.getElementById(&#39;cara&#39;);
-const odpovedEl = document.getElementById(&#39;odpoved&#39;);
-const tlacitkoEl = document.getElementById(&#39;tlacitko&#39;);
+const operaceEl = document.getElementById('operace');
+const cislice1El = document.getElementById('cislice1');
+const cislice2El = document.getElementById('cislice2');
+const chybaEl = document.getElementById('chyba');
+const prikladEl = document.getElementById('priklad');
+const caraEl = document.getElementById('cara');
+const odpovedEl = document.getElementById('odpoved');
+const tlacitkoEl = document.getElementById('tlacitko');
 
-const divisionInfo = document.getElementById(&#39;divisionInfo&#39;);
+const divisionInfo = document.getElementById('divisionInfo');
 
-operaceEl.addEventListener(&#39;change&#39;, () =&gt; {
+operaceEl.addEventListener('change', () => {
 aktualizujCislici2();
-chybaEl.textContent = &#39;&#39;;
-if (operaceEl.value === &#39;/&#39;) {
-divisionInfo.classList.remove(&#39;hidden&#39;);
+chybaEl.textContent = '';
+if (operaceEl.value === '/') {
+divisionInfo.classList.remove('hidden');
 } else {
-divisionInfo.classList.add(&#39;hidden&#39;);
+divisionInfo.classList.add('hidden');
 }
 });
 
@@ -408,33 +325,32 @@ function aktualizujCislici2() {
 const op = operaceEl.value;
 const firstVal = parseInt(cislice1El.value);
 const options = cislice2El.options;
-for (let i = 0; i &lt; options.length; i++) {
+for (let i = 0; i < options.length; i++) {
 const val = parseInt(options[i].value);
-options[i].disabled = (op === &#39;-&#39; &amp;&amp; val &gt; firstVal);
+options[i].disabled = (op === '-' && val > firstVal);
 }
-if (parseInt(cislice2El.value) &gt; firstVal &amp;&amp; op === &#39;-&#39;) {
+if (parseInt(cislice2El.value) > firstVal && op === '-') {
 cislice2El.value = firstVal;
 }
 }
 
 function naplnSelecty() {
-for (let i = 1; i &lt;= 9; i++) {
-cislice1El.innerHTML += `&lt;option value=&quot;${i}&quot;&gt;${i}&lt;/option&gt;`;
-
-cislice2El.innerHTML += `&lt;option value=&quot;${i}&quot;&gt;${i}&lt;/option&gt;`;
+for (let i = 1; i <= 9; i++) {
+cislice1El.innerHTML += `<option value="${i}">${i}</option>`;
+cislice2El.innerHTML += `<option value="${i}">${i}</option>`;
 }
-cislice1El.value = &#39;2&#39;;
-cislice2El.value = &#39;1&#39;;
+cislice1El.value = '2';
+cislice2El.value = '1';
 aktualizujCislici2();
 }
 
-cislice1El.addEventListener(&#39;change&#39;, () =&gt; {
+cislice1El.addEventListener('change', () => {
 aktualizujCislici2();
 });
 
 function zkratNa4Desetinna(cislo) {
 const str = cislo.toString();
-const [cela, des] = str.split(&#39;.&#39;);
+const [cela, des] = str.split('.');
 if (!des) return cela;
 const desZkracena = des.substring(0, 4);
 return desZkracena ? `${cela}.${desZkracena}` : cela;
@@ -444,35 +360,33 @@ function vygenerujPriklad() {
 const op = operaceEl.value;
 const n1 = parseInt(cislice1El.value);
 const n2 = parseInt(cislice2El.value);
-chybaEl.textContent = &#39;&#39;;
+chybaEl.textContent = '';
 
-if (op === &#39;-&#39; &amp;&amp; n1 &lt; n2) {
-chybaEl.textContent = &#39;❌ Při odčítání musí mít první číslo alespoň tolik cifer jako
-druhé.&#39;;
-
+if (op === '-' && n1 < n2) {
+chybaEl.textContent = '❌ Při odčítání musí mít první číslo alespoň tolik cifer jako druhé.';
 return null;
 }
 
 let a, b, pokusy = 0;
-while (pokusy &lt; 1000) {
+while (pokusy < 1000) {
 pokusy++;
 a = generujCislo(n1);
 b = n2 === 1 ? Math.floor(Math.random() * 8) + 2 : generujCislo(n2);
-if (op === &#39;-&#39; &amp;&amp; a &lt;= b) continue;
-if (op === &#39;/&#39; &amp;&amp; b === 0) continue;
+if (op === '-' && a <= b) continue;
+if (op === '/' && b === 0) continue;
 break;
 }
 let vysledek, vysledekZobrazeny;
-if (op === &#39;+&#39;) {
+if (op === '+') {
 vysledek = a + b;
 vysledekZobrazeny = vysledek;
-} else if (op === &#39;-&#39;) {
+} else if (op === '-') {
 vysledek = a - b;
 vysledekZobrazeny = vysledek;
-} else if (op === &#39;*&#39;) {
+} else if (op === '*') {
 vysledek = BigInt(a) * BigInt(b);
 vysledekZobrazeny = vysledek;
-} else if (op === &#39;/&#39;) {
+} else if (op === '/') {
 vysledek = a / b;
 vysledekZobrazeny = zkratNa4Desetinna(vysledek);
 }
@@ -482,15 +396,14 @@ return { a, b, op, vysledek, vysledekZobrazeny };
 function zobrazPriklad(p) {
 const fa = formatujCislo(p.a);
 const fb = formatujCislo(p.b);
-const fv = formatujCislo(p.vysledekZobrazeny !== undefined ? p.vysledekZobrazeny :
-p.vysledek);
-const max = Math.max(fa.length, (p.op + &#39; &#39; + fb).length, fv.length);
-prikladEl.textContent = `${fa.padStart(max)}\n${(p.op + &#39; &#39; + fb).padStart(max)}`;
-caraEl.style.opacity = &#39;0&#39;;
+const fv = formatujCislo(p.vysledekZobrazeny !== undefined ? p.vysledekZobrazeny : p.vysledek);
+const max = Math.max(fa.length, (p.op + ' ' + fb).length, fv.length);
+prikladEl.textContent = `${fa.padStart(max)}\n${(p.op + ' ' + fb).padStart(max)}`;
+caraEl.style.opacity = '0';
 }
 
 function ukazCaru() {
-caraEl.style.opacity = &#39;1&#39;;
+caraEl.style.opacity = '1';
 }
 
 function aktivujPole() {
@@ -503,31 +416,30 @@ tlacitkoEl.disabled = false;
 
 function aktualizujTextTlacitka() {
 if (!aktualniPriklad) {
-tlacitkoEl.textContent = &#39;ZAČÍT&#39;;
+tlacitkoEl.textContent = 'ZAČÍT';
 } else if (!zobrazitVysledek) {
-tlacitkoEl.textContent = &#39;DALŠÍ PŘÍKLAD&#39;;
-
+tlacitkoEl.textContent = 'DALŠÍ PŘÍKLAD';
 } else {
-tlacitkoEl.textContent = &#39;VÝSLEDEK(kontrola)&#39;;
+tlacitkoEl.textContent = 'VÝSLEDEK(kontrola)';
 }
 updateBtnDisable();
 }
 
-odpovedEl.addEventListener(&#39;input&#39;, updateBtnDisable);
+odpovedEl.addEventListener('input', updateBtnDisable);
 
 // Kontrola, zda je vstup platné číslo
 function jePlatneCislo(vstup) {
-if (vstup === &#39;&#39;) return false;
+if (vstup === '') return false;
 const norm = normalizuj(vstup);
-if (norm === &#39;&#39;) return false;
+if (norm === '') return false;
 return /^-?\d+([.,]\d*)?$/.test(norm);
 }
 
 function zkontrolujOdpoved(uzivatelskaOdpoved, priklad) {
 const norm = normalizuj(uzivatelskaOdpoved);
-if (norm === &#39;&#39;) return false;
+if (norm === '') return false;
 
-if (priklad.op === &#39;/&#39;) {
+if (priklad.op === '/') {
 const userNum = parseFloat(norm);
 if (isNaN(userNum)) return false;
 
@@ -535,26 +447,23 @@ const trueTruncated = zkratNa4Desetinna(priklad.vysledek);
 const trueNum = parseFloat(trueTruncated);
 
 const userStr = norm;
-
-const [userCela, userDes = &#39;&#39;] = userStr.split(&#39;.&#39;);
+const [userCela, userDes = ''] = userStr.split('.');
 const userDesTruncated = userDes.substring(0, 4);
 
-const userNumTruncated = parseFloat(userDesTruncated ?
-`${userCela}.${userDesTruncated}` : userCela);
+const userNumTruncated = parseFloat(userDesTruncated ? `${userCela}.${userDesTruncated}` : userCela);
 
 const userDecimals = userDes.length;
-if (userDecimals &gt;= 3 &amp;&amp; userDecimals &lt;= 4) {
-const trueDesTruncated = zkratNa4Desetinna(priklad.vysledek).split(&#39;.&#39;)[1] || &#39;&#39;;
+if (userDecimals >= 3 && userDecimals <= 4) {
+const trueDesTruncated = zkratNa4Desetinna(priklad.vysledek).split('.')[1] || '';
 const trueDesToMatch = trueDesTruncated.substring(0, userDecimals);
-const trueToMatch =
-parseFloat(`${zkratNa4Desetinna(priklad.vysledek).split(&#39;.&#39;)[0]}.${trueDesToMatch}`);
+const trueToMatch = parseFloat(`${zkratNa4Desetinna(priklad.vysledek).split('.')[0]}.${trueDesToMatch}`);
 const userToMatch = userNumTruncated;
 
-return Math.abs(userToMatch - trueToMatch) &lt; 1e-9;
+return Math.abs(userToMatch - trueToMatch) < 1e-9;
 }
 
-return Math.abs(userNumTruncated - trueNum) &lt; 1e-9;
-} else if (typeof priklad.vysledek === &#39;bigint&#39;) {
+return Math.abs(userNumTruncated - trueNum) < 1e-9;
+} else if (typeof priklad.vysledek === 'bigint') {
 try {
 return BigInt(norm) === priklad.vysledek;
 } catch {
@@ -562,7 +471,7 @@ return false;
 }
 } else {
 const num = parseFloat(norm);
-return !isNaN(num) &amp;&amp; Math.abs(num - priklad.vysledek) &lt; 1e-9;
+return !isNaN(num) && Math.abs(num - priklad.vysledek) < 1e-9;
 }
 }
 
@@ -570,20 +479,19 @@ function handleTlacitko(e) {
 if (isProcessing) return;
 isProcessing = true;
 
-if (e &amp;&amp; e.preventDefault) {
+if (e && e.preventDefault) {
 e.preventDefault();
 e.stopPropagation();
 }
-odpovedEl.classList.remove(&#39;zelene&#39;, &#39;cervene&#39;);
+odpovedEl.classList.remove('zelene', 'cervene');
 
 const btnText = tlacitkoEl.textContent.trim();
 const inputText = odpovedEl.value.trim();
 
 // ── ZAČÍT nebo DALŠÍ PŘÍKLAD ──
 if (!zobrazitVysledek) {
-// Kontrola slova &quot;smazat&quot; pouze při ZAČÍT
-if (btnText === &#39;ZAČÍT&#39; &amp;&amp; normalizuj(inputText) === &#39;smazat&#39;) {
-if (typeof window.clearHistory === &#39;function&#39;) {
+if (btnText === 'ZAČÍT' && normalizuj(inputText) === 'smazat') {
+if (typeof window.clearHistory === 'function') {
 window.clearHistory();
 }
 }
@@ -596,16 +504,16 @@ return;
 
 aktualniPriklad = p;
 zobrazPriklad(p);
-odpovedEl.value = &#39;&#39;;
-odpovedEl.placeholder = &#39;Váš výsledek&#39;;
+odpovedEl.value = '';
+odpovedEl.placeholder = 'Váš výsledek';
 zobrazitVysledek = true;
 aktualizujTextTlacitka();
-if (p.op === &#39;/&#39;) {
-divisionInfo.classList.remove(&#39;hidden&#39;);
+if (p.op === '/') {
+divisionInfo.classList.remove('hidden');
 } else {
-divisionInfo.classList.add(&#39;hidden&#39;);
+divisionInfo.classList.add('hidden');
 }
-setTimeout(() =&gt; {
+setTimeout(() => {
 ukazCaru();
 aktivujPole();
 isProcessing = false;
@@ -615,70 +523,68 @@ isProcessing = false;
 else {
 const uziv = inputText;
 
-if (uziv === &#39;&#39;) {
-const vysl = aktualniPriklad.vysledekZobrazeny !== undefined ?
-aktualniPriklad.vysledekZobrazeny : aktualniPriklad.vysledek;
+if (uziv === '') {
+const vysl = aktualniPriklad.vysledekZobrazeny !== undefined ? aktualniPriklad.vysledekZobrazeny : aktualniPriklad.vysledek;
 odpovedEl.value = formatujCislo(vysl);
 zobrazitVysledek = false;
 aktualizujTextTlacitka();
-divisionInfo.classList.add(&#39;hidden&#39;);
+divisionInfo.classList.add('hidden');
 
-setTimeout(() =&gt; {
+setTimeout(() => {
 odpovedEl.focus();
 isProcessing = false;
 }, 50);
 } else if (!jePlatneCislo(uziv)) {
-chybaEl.textContent = &#39;⚠️ Vložil jste nepovolený znak, opravte!&#39;;
+chybaEl.textContent = '⚠️ Vložil jste nepovolený znak, opravte!';
 isProcessing = false;
-setTimeout(() =&gt; odpovedEl.focus(), 100);
+setTimeout(() => odpovedEl.focus(), 100);
 } else {
 const spravne = zkontrolujOdpoved(uziv, aktualniPriklad);
-odpovedEl.classList.add(spravne ? &#39;zelene&#39; : &#39;cervene&#39;);
+odpovedEl.classList.add(spravne ? 'zelene' : 'cervene');
 zobrazitVysledek = false;
 aktualizujTextTlacitka();
-divisionInfo.classList.add(&#39;hidden&#39;);
-setTimeout(() =&gt; isProcessing = false, 150);
+divisionInfo.classList.add('hidden');
+setTimeout(() => isProcessing = false, 150);
 }
 }
 }
 
-tlacitkoEl.addEventListener(&#39;touchstart&#39;, handleTlacitko, { passive: false });
-tlacitkoEl.addEventListener(&#39;click&#39;, (e) =&gt; {
-if (e.pointerType !== &#39;touch&#39;) handleTlacitko(e);
+tlacitkoEl.addEventListener('touchstart', handleTlacitko, { passive: false });
+tlacitkoEl.addEventListener('click', (e) => {
+if (e.pointerType !== 'touch') handleTlacitko(e);
 });
-odpovedEl.addEventListener(&#39;keydown&#39;, (e) =&gt; {
-if (e.key === &#39;Enter&#39;) handleTlacitko(e);
+odpovedEl.addEventListener('keydown', (e) => {
+if (e.key === 'Enter') handleTlacitko(e);
 });
 
 naplnSelecty();
-
 aktualizujTextTlacitka();
 updateBtnDisable();
 setTimeout(aktivujPole, 100);
-&lt;/script&gt;
+</script>
 
-&lt;!-- ═══════ UI ENHANCEMENT LAYER ═══════ --&gt;
-&lt;script&gt;
+<!-- ═══════ UI ENHANCEMENT LAYER ═══════ -->
+<script>
 (function() {
-const STORAGE_KEY = &#39;matika_trenink_v2&#39;;
+const STORAGE_KEY = 'matika_trenink_v2';
 
 function getTodayString() {
 const now = new Date();
 const year = now.getFullYear();
-const month = String(now.getMonth() + 1).padStart(2, &#39;0&#39;);
-const day = String(now.getDate()).padStart(2, &#39;0&#39;);
+const month = String(now.getMonth() + 1).padStart(2, '0');
+const day = String(now.getDate()).padStart(2, '0');
 return `${year}-${month}-${day}`;
 }
 
 function formatDateCzech(dateStr) {
-const [year, month, day] = dateStr.split(&#39;-&#39;);
+const [year, month, day] = dateStr.split('-');
 const months = [
-&#39;ledna&#39;, &#39;února&#39;, &#39;března&#39;, &#39;dubna&#39;, &#39;května&#39;, &#39;června&#39;,
-&#39;července&#39;, &#39;srpna&#39;, &#39;září&#39;, &#39;října&#39;, &#39;listopadu&#39;, &#39;prosince&#39;
+'ledna', 'února', 'března', 'dubna', 'května', 'června',
+'července', 'srpna', 'září', 'října', 'listopadu', 'prosince'
 ];
 const dayNum = parseInt(day, 10);
 const monthIndex = parseInt(month, 10) - 1;
-const weekdays = [&#39;Neděle&#39;, &#39;Pondělí&#39;, &#39;Úterý&#39;, &#39;Středa&#39;, &#39;Čtvrtek&#39;, &#39;Pátek&#39;, &#39;Sobota&#39;];
+const weekdays = ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota'];
 const date = new Date(year, monthIndex, dayNum);
 
 const weekday = weekdays[date.getDay()];
@@ -725,74 +631,69 @@ history = savedState.history || [];
 }
 
 const today = getTodayString();
-const currentDateEl = document.getElementById(&#39;currentDate&#39;);
+const currentDateEl = document.getElementById('currentDate');
 if (currentDateEl) {
 currentDateEl.textContent = formatDateCzech(today);
 }
 
-const btn = document.getElementById(&#39;tlacitko&#39;);
-const input = document.getElementById(&#39;odpoved&#39;);
-const inputIcon = document.getElementById(&#39;inputIcon&#39;);
-const enterHint = document.getElementById(&#39;enterHint&#39;);
-const scoreCorrect = document.getElementById(&#39;scoreCorrect&#39;);
-const scoreWrong = document.getElementById(&#39;scoreWrong&#39;);
-const streakCount = document.getElementById(&#39;streakCount&#39;);
-const historyContainer = document.getElementById(&#39;historyContainer&#39;);
-
-const historyList = document.getElementById(&#39;historyList&#39;);
-const historyEmpty = document.getElementById(&#39;historyEmpty&#39;);
-const settingsToggle = document.getElementById(&#39;settingsToggle&#39;);
-const settingsPanel = document.getElementById(&#39;settingsPanel&#39;);
-const chybaEl = document.getElementById(&#39;chyba&#39;);
-const prikladEl = document.getElementById(&#39;priklad&#39;);
-const caraEl = document.getElementById(&#39;cara&#39;);
-const divisionInfo = document.getElementById(&#39;divisionInfo&#39;);
+const btn = document.getElementById('tlacitko');
+const input = document.getElementById('odpoved');
+const inputIcon = document.getElementById('inputIcon');
+const enterHint = document.getElementById('enterHint');
+const scoreCorrect = document.getElementById('scoreCorrect');
+const scoreWrong = document.getElementById('scoreWrong');
+const streakCount = document.getElementById('streakCount');
+const historyContainer = document.getElementById('historyContainer');
+const historyList = document.getElementById('historyList');
+const historyEmpty = document.getElementById('historyEmpty');
+const settingsToggle = document.getElementById('settingsToggle');
+const settingsPanel = document.getElementById('settingsPanel');
+const chybaEl = document.getElementById('chyba');
+const prikladEl = document.getElementById('priklad');
+const caraEl = document.getElementById('cara');
+const divisionInfo = document.getElementById('divisionInfo');
 
 scoreCorrect.textContent = correct;
 scoreWrong.textContent = wrong;
 streakCount.textContent = streak;
 
-const iconCheck = `&lt;svg class=&quot;w-5 h-5 text-emerald-500&quot; fill=&quot;none&quot;
-stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;&lt;path stroke-linecap=&quot;round&quot; stroke-
-linejoin=&quot;round&quot; stroke-width=&quot;3&quot; d=&quot;M5 13l4 4L19 7&quot;&gt;&lt;/path&gt;&lt;/svg&gt;`;
-const iconCross = `&lt;svg class=&quot;w-5 h-5 text-rose-500&quot; fill=&quot;none&quot;
-stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;&lt;path stroke-linecap=&quot;round&quot; stroke-
-linejoin=&quot;round&quot; stroke-width=&quot;3&quot; d=&quot;M6 18L18 6M6 6l12 12&quot;&gt;&lt;/path&gt;&lt;/svg&gt;`;
+const iconCheck = `<svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>`;
+const iconCross = `<svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>`;
 
-settingsToggle.addEventListener(&#39;click&#39;, () =&gt; {
-settingsPanel.classList.toggle(&#39;collapsed&#39;);
-if (!settingsPanel.classList.contains(&#39;collapsed&#39;) &amp;&amp;
-document.getElementById(&#39;operace&#39;).value === &#39;/&#39;) {
-divisionInfo.classList.remove(&#39;hidden&#39;);
-} else if (settingsPanel.classList.contains(&#39;collapsed&#39;)) {
-divisionInfo.classList.add(&#39;hidden&#39;);
+settingsToggle.addEventListener('click', () => {
+settingsPanel.classList.toggle('collapsed');
+if (!settingsPanel.classList.contains('collapsed') &&
+document.getElementById('operace').value === '/') {
+divisionInfo.classList.remove('hidden');
+} else if (settingsPanel.classList.contains('collapsed')) {
+divisionInfo.classList.add('hidden');
 }
 });
 
-const chybaObserver = new MutationObserver(() =&gt; {
+const chybaObserver = new MutationObserver(() => {
 if (chybaEl.textContent.trim()) {
-settingsPanel.classList.remove(&#39;collapsed&#39;);
+settingsPanel.classList.remove('collapsed');
 }
 });
 chybaObserver.observe(chybaEl, { childList: true });
 
-input.addEventListener(&#39;focus&#39;, () =&gt; {
-if (btn.textContent.trim() === &#39;VÝSLEDEK(kontrola)&#39;) {
-enterHint.style.opacity = &#39;1&#39;;
+input.addEventListener('focus', () => {
+if (btn.textContent.trim() === 'VÝSLEDEK(kontrola)') {
+enterHint.style.opacity = '1';
 }
 });
-input.addEventListener(&#39;blur&#39;, () =&gt; enterHint.style.opacity = &#39;0&#39;);
-input.addEventListener(&#39;input&#39;, () =&gt; {
-if (input.value.length &gt; 0) enterHint.style.opacity = &#39;0&#39;;
+input.addEventListener('blur', () => enterHint.style.opacity = '0');
+input.addEventListener('input', () => {
+if (input.value.length > 0) enterHint.style.opacity = '0';
 });
 
-const btnObserver = new MutationObserver(() =&gt; {
+const btnObserver = new MutationObserver(() => {
 const text = btn.textContent.trim();
-btn.classList.remove(&#39;state-start&#39;, &#39;state-result&#39;, &#39;btn-pulse&#39;, &#39;btn-glow-emerald&#39;);
-if (text === &#39;VÝSLEDEK(kontrola)&#39;) {
-btn.classList.add(&#39;state-result&#39;, &#39;btn-glow-emerald&#39;);
+btn.classList.remove('state-start', 'state-result', 'btn-pulse', 'btn-glow-emerald');
+if (text === 'VÝSLEDEK(kontrola)') {
+btn.classList.add('state-result', 'btn-glow-emerald');
 } else {
-btn.classList.add(&#39;state-start&#39;, &#39;btn-pulse&#39;);
+btn.classList.add('state-start', 'btn-pulse');
 }
 });
 btnObserver.observe(btn, { childList: true, characterData: true, subtree: true });
@@ -800,69 +701,68 @@ btnObserver.observe(btn, { childList: true, characterData: true, subtree: true }
 let processedZelene = false;
 let processedCervene = false;
 
-const inputObserver = new MutationObserver((mutations) =&gt; {
-mutations.forEach((m) =&gt; {
-if (m.type === &#39;attributes&#39; &amp;&amp; m.attributeName === &#39;class&#39;) {
+const inputObserver = new MutationObserver((mutations) => {
+mutations.forEach((m) => {
+if (m.type === 'attributes' && m.attributeName === 'class') {
 const cls = input.classList;
-if (cls.contains(&#39;zelene&#39;)) {
+if (cls.contains('zelene')) {
 if (processedZelene) return;
 processedZelene = true;
 correct++;
 streak++;
 inputIcon.innerHTML = iconCheck;
-inputIcon.style.opacity = &#39;1&#39;;
-inputIcon.style.transform = &#39;translateY(-50%) scale(1)&#39;;
+inputIcon.style.opacity = '1';
+inputIcon.style.transform = 'translateY(-50%) scale(1)';
 updateScores();
 addHistory(true);
 saveState();
-} else if (cls.contains(&#39;cervene&#39;)) {
+} else if (cls.contains('cervene')) {
 if (processedCervene) return;
 processedCervene = true;
 wrong++;
 streak = 0;
 inputIcon.innerHTML = iconCross;
-inputIcon.style.opacity = &#39;1&#39;;
-inputIcon.style.transform = &#39;translateY(-50%) scale(1)&#39;;
-input.classList.add(&#39;shake&#39;);
-setTimeout(() =&gt; input.classList.remove(&#39;shake&#39;), 500);
-
+inputIcon.style.opacity = '1';
+inputIcon.style.transform = 'translateY(-50%) scale(1)';
+input.classList.add('shake');
+setTimeout(() => input.classList.remove('shake'), 500);
 updateScores();
 addHistory(false);
 saveState();
 } else {
 processedZelene = false;
 processedCervene = false;
-inputIcon.style.opacity = &#39;0&#39;;
-inputIcon.style.transform = &#39;translateY(-50%) scale(0.75)&#39;;
+inputIcon.style.opacity = '0';
+inputIcon.style.transform = 'translateY(-50%) scale(0.75)';
 }
 }
 });
 });
-inputObserver.observe(input, { attributes: true, attributeFilter: [&#39;class&#39;] });
+inputObserver.observe(input, { attributes: true, attributeFilter: ['class'] });
 
 function updateScores() {
 scoreCorrect.textContent = correct;
 scoreWrong.textContent = wrong;
 streakCount.textContent = streak;
-streakCount.parentElement.classList.add(&#39;pop&#39;);
-setTimeout(() =&gt; streakCount.parentElement.classList.remove(&#39;pop&#39;), 200);
+streakCount.parentElement.classList.add('pop');
+setTimeout(() => streakCount.parentElement.classList.remove('pop'), 200);
 }
 
 function addHistory(isCorrect) {
-let text = &#39;&#39;;
-if (typeof aktualniPriklad !== &#39;undefined&#39; &amp;&amp; aktualniPriklad) {
+let text = '';
+if (typeof aktualniPriklad !== 'undefined' && aktualniPriklad) {
 const p = aktualniPriklad;
-const fmt = (typeof formatujCislo === &#39;function&#39;) ? formatujCislo : (x) =&gt; String(x);
+const fmt = (typeof formatujCislo === 'function') ? formatujCislo : (x) => String(x);
+const vysl = p.vysledekZobrazeny !== undefined ? p.vysledekZobrazeny : p.vysledek;
 
-const vysl = p.vysledekZobrazeny !== undefined ? p.vysledekZobrazeny :
-p.vysledek;
+// Vždy se ukáže správný výsledek - jak u zelené tak u červené odpovědi
 text = `${fmt(p.a)} ${p.op} ${fmt(p.b)} = ${fmt(vysl)}`;
+
 } else {
-text = prikladEl.textContent.replace(/\n/g, &#39; &#39;).replace(/\s+/g, &#39; &#39;).trim();
+text = prikladEl.textContent.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
 }
-if (!text || text.includes(&#39;Zvolte nastavení&#39;)) return;
+if (!text || text.includes('Zvolte nastavení')) return;
 history.unshift({ text, correct: isCorrect });
-// Bez omezení počtu položek
 renderHistory();
 }
 
@@ -878,65 +778,59 @@ saveState();
 
 function renderHistory() {
 if (history.length === 0) {
-historyEmpty.style.display = &#39;block&#39;;
-historyContainer.style.opacity = &#39;0&#39;;
-historyList.querySelectorAll(&#39;.history-item&#39;).forEach(el =&gt; el.remove());
+historyEmpty.style.display = 'block';
+historyContainer.style.opacity = '0';
+historyList.querySelectorAll('.history-item').forEach(el => el.remove());
 return;
-
 }
-historyEmpty.style.display = &#39;none&#39;;
-historyContainer.style.opacity = &#39;1&#39;;
-historyList.querySelectorAll(&#39;.history-item&#39;).forEach(el =&gt; el.remove());
-history.forEach((h, i) =&gt; {
-const item = document.createElement(&#39;div&#39;);
-item.className = `history-item slide-up px-2.5 py-1 rounded-md text-[11px] font-
-mono font-bold border ${
+historyEmpty.style.display = 'none';
+historyContainer.style.opacity = '1';
+historyList.querySelectorAll('.history-item').forEach(el => el.remove());
+history.forEach((h, i) => {
+const item = document.createElement('div');
+item.className = `history-item slide-up px-2.5 py-1 rounded-md text-[11px] font-mono font-bold border ${
 h.correct
-? &#39;bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-
-emerald-800 text-emerald-700 dark:text-emerald-300&#39;
-: &#39;bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800
-text-rose-700 dark:text-rose-300&#39;
+? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
+: 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300'
 }`;
 item.style.animationDelay = `${i * 50}ms`;
-item.innerHTML = `${h.text} ${h.correct ? &#39;✓&#39; : &#39;✗&#39;}`;
+item.innerHTML = `${h.text} ${h.correct ? '✓' : '✗'}`;
 historyList.appendChild(item);
 });
 }
 
 renderHistory();
 
-const problemObserver = new MutationObserver(() =&gt; {
+const problemObserver = new MutationObserver(() => {
 const txt = prikladEl.textContent;
-if (txt &amp;&amp; !txt.includes(&#39;Zvolte nastavení&#39;)) {
-prikladEl.classList.remove(&#39;fade-in&#39;);
+if (txt && !txt.includes('Zvolte nastavení')) {
+prikladEl.classList.remove('fade-in');
 void prikladEl.offsetWidth;
-prikladEl.classList.add(&#39;fade-in&#39;);
+prikladEl.classList.add('fade-in');
 }
-
 });
 problemObserver.observe(prikladEl, { childList: true });
 
-const caraObserver = new MutationObserver(() =&gt; {
-const isVisible = caraEl.style.opacity === &#39;1&#39;;
+const caraObserver = new MutationObserver(() => {
+const isVisible = caraEl.style.opacity === '1';
 if (isVisible) {
-caraEl.classList.remove(&#39;fade-in&#39;);
+caraEl.classList.remove('fade-in');
 void caraEl.offsetWidth;
-caraEl.classList.add(&#39;fade-in&#39;);
+caraEl.classList.add('fade-in');
 }
 });
-caraObserver.observe(caraEl, { attributes: true, attributeFilter: [&#39;style&#39;] });
+caraObserver.observe(caraEl, { attributes: true, attributeFilter: ['style'] });
 
-const operaceObserver = document.getElementById(&#39;operace&#39;);
-const divisionObserver = new MutationObserver(() =&gt; {
-if (operaceObserver.value === &#39;/&#39; &amp;&amp; !settingsPanel.classList.contains(&#39;collapsed&#39;)) {
-divisionInfo.classList.remove(&#39;hidden&#39;);
+const operaceObserver = document.getElementById('operace');
+const divisionObserver = new MutationObserver(() => {
+if (operaceObserver.value === '/' && !settingsPanel.classList.contains('collapsed')) {
+divisionInfo.classList.remove('hidden');
 } else {
-divisionInfo.classList.add(&#39;hidden&#39;);
+divisionInfo.classList.add('hidden');
 }
 });
-divisionObserver.observe(operaceObserver, { attributes: true, attributeFilter: [&#39;value&#39;]
-});
+divisionObserver.observe(operaceObserver, { attributes: true, attributeFilter: ['value'] });
 })();
-&lt;/script&gt;
-&lt;/body&gt;
-&lt;/html&gt;
+</script>
+</body>
+</html>
