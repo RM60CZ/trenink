@@ -35,7 +35,18 @@
             color: #ffffff !important;
         }
         input {
-            /* Ponecháno výchozí – bez -webkit-appearance: none */
+            /* Ponecháno výchozí */
+        }
+        /* Skrytí "x" pro mazání ve vstupním poli */
+        #odpoved::-webkit-search-cancel-button {
+            -webkit-appearance: none;
+            appearance: none;
+            display: none;
+        }
+        #odpoved::-webkit-search-decoration,
+        #odpoved::-webkit-search-results-button,
+        #odpoved::-webkit-search-results-decoration {
+            display: none;
         }
         .math-text {
             white-space: pre;
@@ -240,7 +251,6 @@
                             <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off"
                                    placeholder="Váš výsledek"
                                    class="w-full pl-3 pr-4 text-lg font-mono font-bold rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right" />
-                            <!-- Ikona byla ponechána, ale nebude se do ní nic vkládat -->
                             <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 transform scale-75 pointer-events-none"></div>
                         </div>
                         <div id="enterHint" class="text-[9px] text-slate-400 font-medium opacity-0 transition-opacity duration-200 select-none text-center -mt-1">Enter ↵</div>
@@ -264,10 +274,9 @@
         </div>
     </div>
 
-    <!-- ═══════ ORIGINAL LOGIC ═══════ -->
+    <!-- ═══════ GLOBÁLNÍ FUNKCE PRO HISTORII (Dostupné okamžitě) ═══════ -->
     <script>
-        let isProcessing = false;
-
+        // Pomocné funkce – dostupné globálně
         function formatujCislo(x) {
             if (typeof x === 'bigint') return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
             if (typeof x !== 'number') return String(x);
@@ -277,18 +286,151 @@
             return des ? `${celaFmt}.${des}` : celaFmt;
         }
 
-        function normalizuj(vstup) {
-            return vstup.trim().replace(/\s+/g, '').replace(',', '.');
+        function zkratNa4Desetinna(cislo) {
+            const str = cislo.toString();
+            const [cela, des] = str.split('.');
+            if (!des) return cela;
+            const desZkracena = des.substring(0, 4); // Jen ořízne, NEZAOKROUHLUJE!
+            return desZkracena ? `${cela}.${desZkracena}` : cela;
         }
 
-        function generujCislo(n) {
-            const min = Math.pow(10, n - 1);
-            const max = Math.pow(10, n) - 1;
-            return Math.floor(Math.random() * (max - min + 1)) + min;
-        }
-
+        // Globální proměnná pro aktuální příklad
         let aktualniPriklad = null;
+
+        // === HISTORIE – Ukládání a načítání ===
+        const STORAGE_KEY = 'matika_trenink_v2';
+
+        function getTodayString() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        }
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return null;
+                const state = JSON.parse(raw);
+                if (state.date !== getTodayString()) {
+                    localStorage.removeItem(STORAGE_KEY);
+                    return null;
+                }
+                return state;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function saveState(correct, wrong, streak, history) {
+            const state = {
+                date: getTodayString(),
+                correct,
+                wrong,
+                streak,
+                history
+            };
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {}
+        }
+
+        // Globální funkce pro přidání do historie (volána z logiky)
+        window.addHistory = function(isCorrect) {
+            if (!aktualniPriklad) return;
+            const p = aktualniPriklad;
+            const vysl = p.vysledekZobrazeny !== undefined ? p.vysledekZobrazeny : p.vysledek;
+            const text = `${formatujCislo(p.a)} ${p.op} ${formatujCislo(p.b)} = ${formatujCislo(vysl)}`;
+            // Načteme aktuální stav
+            const state = loadState() || { correct: 0, wrong: 0, streak: 0, history: [] };
+            if (isCorrect) {
+                state.correct++;
+                state.streak++;
+            } else {
+                state.wrong++;
+                state.streak = 0;
+            }
+            state.history.unshift({ text, correct: isCorrect });
+            saveState(state.correct, state.wrong, state.streak, state.history);
+            // Pokud je DOM připraven, aktualizujeme UI
+            if (document.readyState === 'loading') return;
+            renderHistory(state.history);
+            updateScores(state.correct, state.wrong, state.streak);
+        };
+
+        window.clearHistory = function() {
+            localStorage.removeItem(STORAGE_KEY);
+            if (document.readyState === 'loading') return;
+            renderHistory([]);
+            updateScores(0, 0, 0);
+        };
+
+        // Tyto funkce budou volány až po načtení DOM
+        function renderHistory(history) {
+            const container = document.getElementById('historyContainer');
+            const list = document.getElementById('historyList');
+            const empty = document.getElementById('historyEmpty');
+            if (!container || !list || !empty) return;
+
+            if (history.length === 0) {
+                empty.style.display = 'block';
+                container.style.opacity = '0';
+                while (list.firstChild) list.removeChild(list.firstChild);
+                return;
+            }
+            empty.style.display = 'none';
+            container.style.opacity = '1';
+            while (list.firstChild) list.removeChild(list.firstChild);
+            history.forEach((h, i) => {
+                const item = document.createElement('div');
+                item.className = `history-item px-2.5 py-1 rounded-md text-[11px] font-mono font-bold border ${
+                    h.correct
+                        ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
+                        : 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300'
+                }`;
+                item.textContent = h.text;
+                list.appendChild(item);
+            });
+        }
+
+        function updateScores(correct, wrong, streak) {
+            const scoreCorrect = document.getElementById('scoreCorrect');
+            const scoreWrong = document.getElementById('scoreWrong');
+            const streakCount = document.getElementById('streakCount');
+            if (scoreCorrect) scoreCorrect.textContent = correct;
+            if (scoreWrong) scoreWrong.textContent = wrong;
+            if (streakCount) {
+                streakCount.textContent = streak;
+                streakCount.parentElement.classList.add('pop');
+                setTimeout(() => {
+                    if (streakCount.parentElement) streakCount.parentElement.classList.remove('pop');
+                }, 200);
+            }
+        }
+
+        // Načtení historie po načtení stránky
+        document.addEventListener('DOMContentLoaded', function() {
+            const state = loadState() || { correct: 0, wrong: 0, streak: 0, history: [] };
+            updateScores(state.correct, state.wrong, state.streak);
+            renderHistory(state.history);
+
+            const currentDateEl = document.getElementById('currentDate');
+            if (currentDateEl) {
+                const today = getTodayString();
+                const [year, month, day] = today.split('-');
+                const months = ['ledna', 'února', 'března', 'dubna', 'května', 'června', 'července', 'srpna', 'září', 'října', 'listopadu', 'prosince'];
+                const dayNum = parseInt(day, 10);
+                const monthIndex = parseInt(month, 10) - 1;
+                const weekdays = ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota'];
+                const weekday = weekdays[new Date(year, monthIndex, dayNum).getDay()];
+                currentDateEl.textContent = `${weekday} ${dayNum}. ${months[monthIndex]} ${year}`;
+            }
+        });
+    </script>
+
+    <!-- ═══════ HLAVNÍ LOGIKA APLIKACE ═══════ -->
+    <script>
+        let isProcessing = false;
         let zobrazitVysledek = false;
+
         const operaceEl = document.getElementById('operace');
         const cislice1El = document.getElementById('cislice1');
         const cislice2El = document.getElementById('cislice2');
@@ -299,15 +441,15 @@
         const tlacitkoEl = document.getElementById('tlacitko');
         const divisionInfo = document.getElementById('divisionInfo');
 
-        operaceEl.addEventListener('change', () => {
-            aktualizujCislici2();
-            chybaEl.textContent = '';
-            if (operaceEl.value === '/') {
-                divisionInfo.classList.remove('hidden');
-            } else {
-                divisionInfo.classList.add('hidden');
-            }
-        });
+        function normalizuj(vstup) {
+            return vstup.trim().replace(/\s+/g, '').replace(',', '.');
+        }
+
+        function generujCislo(n) {
+            const min = Math.pow(10, n - 1);
+            const max = Math.pow(10, n) - 1;
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
 
         function aktualizujCislici2() {
             const op = operaceEl.value;
@@ -332,17 +474,19 @@
             aktualizujCislici2();
         }
 
+        operaceEl.addEventListener('change', () => {
+            aktualizujCislici2();
+            chybaEl.textContent = '';
+            if (operaceEl.value === '/') {
+                divisionInfo.classList.remove('hidden');
+            } else {
+                divisionInfo.classList.add('hidden');
+            }
+        });
+
         cislice1El.addEventListener('change', () => {
             aktualizujCislici2();
         });
-
-        function zkratNa4Desetinna(cislo) {
-            const str = cislo.toString();
-            const [cela, des] = str.split('.');
-            if (!des) return cela;
-            const desZkracena = des.substring(0, 4);
-            return desZkracena ? `${cela}.${desZkracena}` : cela;
-        }
 
         function vygenerujPriklad() {
             const op = operaceEl.value;
@@ -376,9 +520,10 @@
                 vysledekZobrazeny = vysledek;
             } else if (op === '/') {
                 vysledek = a / b;
-                vysledekZobrazeny = zkratNa4Desetinna(vysledek);
+                vysledekZobrazeny = zkratNa4Desetinna(vysledek); // Jen ořízne!
             }
-            return { a, b, op, vysledek, vysledekZobrazeny };
+            aktualniPriklad = { a, b, op, vysledek, vysledekZobrazeny };
+            return aktualniPriklad;
         }
 
         function zobrazPriklad(p) {
@@ -477,9 +622,9 @@
 
             if (!zobrazitVysledek) {
                 if (btnText === 'ZAČÍT' && normalizuj(inputText) === 'smazat') {
-                    if (typeof window.clearHistory === 'function') {
-                        window.clearHistory();
-                    }
+                    window.clearHistory();
+                    isProcessing = false;
+                    return;
                 }
                 
                 const p = vygenerujPriklad();
@@ -487,7 +632,6 @@
                     isProcessing = false;
                     return;
                 }
-                aktualniPriklad = p;
                 zobrazPriklad(p);
                 odpovedEl.value = '';
                 odpovedEl.placeholder = 'Váš výsledek';
@@ -527,6 +671,8 @@
                     zobrazitVysledek = false;
                     aktualizujTextTlacitka();
                     divisionInfo.classList.add('hidden');
+                    // Přidáme do historie
+                    window.addHistory(spravne);
                     setTimeout(() => isProcessing = false, 150);
                 }
             }
@@ -546,130 +692,55 @@
         setTimeout(aktivujPole, 100);
     </script>
 
-    <!-- ═══════ UI ENHANCEMENT LAYER (BEZ IKON ✓/✗) ═══════ -->
+    <!-- ═══════ UI ENHANCEMENT (bez ikon, s funkcí ozubeného kolečka) ═══════ -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            (function() {
-                const STORAGE_KEY = 'matika_trenink_v2';
+            const settingsToggle = document.getElementById('settingsToggle');
+            const settingsPanel = document.getElementById('settingsPanel');
+            const divisionInfo = document.getElementById('divisionInfo');
+            const chybaEl = document.getElementById('chyba');
+            const btn = document.getElementById('tlacitko');
+            const enterHint = document.getElementById('enterHint');
+            const input = document.getElementById('odpoved');
 
-                function getTodayString() {
-                    const now = new Date();
-                    const year = now.getFullYear();
-                    const month = String(now.getMonth() + 1).padStart(2, '0');
-                    const day = String(now.getDate()).padStart(2, '0');
-                    return `${year}-${month}-${day}`;
-                }
-
-                function formatDateCzech(dateStr) {
-                    const [year, month, day] = dateStr.split('-');
-                    const months = [
-                        'ledna', 'února', 'března', 'dubna', 'května', 'června',
-                        'července', 'srpna', 'září', 'října', 'listopadu', 'prosince'
-                    ];
-                    const dayNum = parseInt(day, 10);
-                    const monthIndex = parseInt(month, 10) - 1;
-                    const weekdays = ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota'];
-                    const date = new Date(year, monthIndex, dayNum);
-                    const weekday = weekdays[date.getDay()];
-                    return `${weekday} ${dayNum}. ${months[monthIndex]} ${year}`;
-                }
-
-                function loadState() {
-                    try {
-                        const raw = localStorage.getItem(STORAGE_KEY);
-                        if (!raw) return null;
-                        const state = JSON.parse(raw);
-                        const today = getTodayString();
-                        if (state.date !== today) {
-                            localStorage.removeItem(STORAGE_KEY);
-                            return null;
-                        }
-                        return state;
-                    } catch (e) {
-                        return null;
-                    }
-                }
-
-                function saveState() {
-                    const state = {
-                        date: getTodayString(),
-                        correct: correct,
-                        wrong: wrong,
-                        streak: streak,
-                        history: history
-                    };
-                    try {
-                        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-                    } catch (e) {}
-                }
-
-                let correct = 0, wrong = 0, streak = 0, history = [];
-                const savedState = loadState();
-                if (savedState) {
-                    correct = savedState.correct || 0;
-                    wrong = savedState.wrong || 0;
-                    streak = savedState.streak || 0;
-                    history = savedState.history || [];
-                }
-
-                const today = getTodayString();
-                const currentDateEl = document.getElementById('currentDate');
-                if (currentDateEl) {
-                    currentDateEl.textContent = formatDateCzech(today);
-                }
-
-                const btn = document.getElementById('tlacitko');
-                const input = document.getElementById('odpoved');
-                const inputIcon = document.getElementById('inputIcon');
-                const enterHint = document.getElementById('enterHint');
-                const scoreCorrect = document.getElementById('scoreCorrect');
-                const scoreWrong = document.getElementById('scoreWrong');
-                const streakCount = document.getElementById('streakCount');
-                const historyContainer = document.getElementById('historyContainer');
-                const historyList = document.getElementById('historyList');
-                const historyEmpty = document.getElementById('historyEmpty');
-                const settingsToggle = document.getElementById('settingsToggle');
-                const settingsPanel = document.getElementById('settingsPanel');
-                const chybaEl = document.getElementById('chyba');
-                const prikladEl = document.getElementById('priklad');
-                const caraEl = document.getElementById('cara');
-                const divisionInfo = document.getElementById('divisionInfo');
-
-                scoreCorrect.textContent = correct;
-                scoreWrong.textContent = wrong;
-                streakCount.textContent = streak;
-
-                // Ikony jsou definovány, ALE NEPOUŽIJÍ SE
-                const iconCheck = `<svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>`;
-                const iconCross = `<svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>`;
-
+            // Ozubené kolečko
+            if (settingsToggle && settingsPanel) {
                 settingsToggle.addEventListener('click', () => {
                     settingsPanel.classList.toggle('collapsed');
                     if (!settingsPanel.classList.contains('collapsed') && document.getElementById('operace').value === '/') {
-                        divisionInfo.classList.remove('hidden');
+                        divisionInfo?.classList.remove('hidden');
                     } else if (settingsPanel.classList.contains('collapsed')) {
-                        divisionInfo.classList.add('hidden');
+                        divisionInfo?.classList.add('hidden');
                     }
                 });
+            }
 
-                const chybaObserver = new MutationObserver(() => {
-                    if (chybaEl.textContent.trim()) {
+            // Chyba otevře nastavení
+            if (chybaEl) {
+                const observer = new MutationObserver(() => {
+                    if (chybaEl.textContent.trim() && settingsPanel?.classList.contains('collapsed')) {
                         settingsPanel.classList.remove('collapsed');
                     }
                 });
-                chybaObserver.observe(chybaEl, { childList: true });
+                observer.observe(chybaEl, { childList: true });
+            }
 
+            // Enter hint
+            if (input && enterHint && btn) {
                 input.addEventListener('focus', () => {
                     if (btn.textContent.trim() === 'VÝSLEDEK(kontrola)') {
                         enterHint.style.opacity = '1';
                     }
                 });
-                input.addEventListener('blur', () => enterHint.style.opacity = '0';
+                input.addEventListener('blur', () => enterHint.style.opacity = '0');
                 input.addEventListener('input', () => {
                     if (input.value.length > 0) enterHint.style.opacity = '0';
                 });
+            }
 
-                const btnObserver = new MutationObserver(() => {
+            // Tlačítko animace
+            if (btn) {
+                const observer = new MutationObserver(() => {
                     const text = btn.textContent.trim();
                     btn.classList.remove('state-start', 'state-result', 'btn-pulse', 'btn-glow-emerald');
                     if (text === 'VÝSLEDEK(kontrola)') {
@@ -678,133 +749,8 @@
                         btn.classList.add('state-start', 'btn-pulse');
                     }
                 });
-                btnObserver.observe(btn, { childList: true, characterData: true, subtree: true });
-
-                let processedZelene = false;
-                let processedCervene = false;
-
-                const inputObserver = new MutationObserver((mutations) => {
-                    mutations.forEach((m) => {
-                        if (m.type === 'attributes' && m.attributeName === 'class') {
-                            const cls = input.classList;
-                            if (cls.contains('zelene')) {
-                                if (processedZelene) return;
-                                processedZelene = true;
-                                correct++;
-                                streak++;
-                                // ❌ IKONY ZAKÁZÁNY – ŽÁDNÉ VLOŽENÍ DO #inputIcon
-                                updateScores();
-                                addHistory(true);
-                                saveState();
-                            } else if (cls.contains('cervene')) {
-                                if (processedCervene) return;
-                                processedCervene = true;
-                                wrong++;
-                                streak = 0;
-                                // ❌ IKONY ZAKÁZÁNY – ŽÁDNÉ VLOŽENÍ DO #inputIcon
-                                input.classList.add('shake');
-                                setTimeout(() => input.classList.remove('shake'), 500);
-                                updateScores();
-                                addHistory(false);
-                                saveState();
-                            } else {
-                                processedZelene = false;
-                                processedCervene = false;
-                                // inputIcon.style.opacity = '0'; // nepotřebné
-                            }
-                        }
-                    });
-                });
-                inputObserver.observe(input, { attributes: true, attributeFilter: ['class'] });
-
-                function updateScores() {
-                    scoreCorrect.textContent = correct;
-                    scoreWrong.textContent = wrong;
-                    streakCount.textContent = streak;
-                    streakCount.parentElement.classList.add('pop');
-                    setTimeout(() => streakCount.parentElement.classList.remove('pop'), 200);
-                }
-
-                function addHistory(isCorrect) {
-                    let text = '';
-                    if (typeof aktualniPriklad !== 'undefined' && aktualniPriklad) {
-                        const p = aktualniPriklad;
-                        const fmt = (typeof formatujCislo === 'function') ? formatujCislo : (x) => String(x);
-                        const vysl = p.vysledekZobrazeny !== undefined ? p.vysledekZobrazeny : p.vysledek;
-                        text = `${fmt(p.a)} ${p.op} ${fmt(p.b)} = ${fmt(vysl)}`;
-                    } else {
-                        text = prikladEl.textContent.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
-                    }
-                    if (!text || text.includes('Zvolte nastavení')) return;
-                    history.unshift({ text, correct: isCorrect });
-                    renderHistory();
-                }
-
-                window.clearHistory = function() {
-                    history = [];
-                    correct = 0;
-                    wrong = 0;
-                    streak = 0;
-                    updateScores();
-                    renderHistory();
-                    saveState();
-                };
-
-                function renderHistory() {
-                    if (history.length === 0) {
-                        historyEmpty.style.display = 'block';
-                        historyContainer.style.opacity = '0';
-                        historyList.querySelectorAll('.history-item').forEach(el => el.remove());
-                        return;
-                    }
-                    historyEmpty.style.display = 'none';
-                    historyContainer.style.opacity = '1';
-                    historyList.querySelectorAll('.history-item').forEach(el => el.remove());
-                    history.forEach((h, i) => {
-                        const item = document.createElement('div');
-                        item.className = `history-item slide-up px-2.5 py-1 rounded-md text-[11px] font-mono font-bold border ${
-                            h.correct
-                                ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
-                                : 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300'
-                        }`;
-                        item.style.animationDelay = `${i * 50}ms`;
-                        item.innerHTML = `${h.text} ${h.correct ? '✓' : '✗'}`;
-                    });
-                    historyList.appendChild(item);
-                }
-
-                renderHistory();
-
-                const problemObserver = new MutationObserver(() => {
-                    const txt = prikladEl.textContent;
-                    if (txt && !txt.includes('Zvolte nastavení')) {
-                        prikladEl.classList.remove('fade-in');
-                        void prikladEl.offsetWidth;
-                        prikladEl.classList.add('fade-in');
-                    }
-                });
-                problemObserver.observe(prikladEl, { childList: true });
-
-                const caraObserver = new MutationObserver(() => {
-                    const isVisible = caraEl.style.opacity === '1';
-                    if (isVisible) {
-                        caraEl.classList.remove('fade-in');
-                        void caraEl.offsetWidth;
-                        caraEl.classList.add('fade-in');
-                    }
-                });
-                caraObserver.observe(caraEl, { attributes: true, attributeFilter: ['style'] });
-
-                const operaceObserver = document.getElementById('operace');
-                const divisionObserver = new MutationObserver(() => {
-                    if (operaceObserver.value === '/' && !settingsPanel.classList.contains('collapsed')) {
-                        divisionInfo.classList.remove('hidden');
-                    } else {
-                        divisionInfo.classList.add('hidden');
-                    }
-                });
-                divisionObserver.observe(operaceObserver, { attributes: true, attributeFilter: ['value'] });
-            })();
+                observer.observe(btn, { childList: true, characterData: true, subtree: true });
+            }
         });
     </script>
 </body>
