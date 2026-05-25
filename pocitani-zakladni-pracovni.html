@@ -35,7 +35,7 @@
             color: #ffffff !important;
         }
         input {
-            /* Vstupní pole bez zrušení výchozího vzhledu a bez zaoblení */
+            /* Ponecháno výchozí – bez -webkit-appearance: none */
         }
         .math-text {
             white-space: pre;
@@ -240,6 +240,7 @@
                             <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off"
                                    placeholder="Váš výsledek"
                                    class="w-full pl-3 pr-4 text-lg font-mono font-bold rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right" />
+                            <!-- Ikona byla ponechána, ale nebude se do ní nic vkládat -->
                             <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 transform scale-75 pointer-events-none"></div>
                         </div>
                         <div id="enterHint" class="text-[9px] text-slate-400 font-medium opacity-0 transition-opacity duration-200 select-none text-center -mt-1">Enter ↵</div>
@@ -545,7 +546,7 @@
         setTimeout(aktivujPole, 100);
     </script>
 
-    <!-- ═══════ UI ENHANCEMENT LAYER (OPRAVENÝ – SPOUŠTÍ SE AŽ PO NAČTENÍ DOM) ═══════ -->
+    <!-- ═══════ UI ENHANCEMENT LAYER (BEZ IKON ✓/✗) ═══════ -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             (function() {
@@ -638,6 +639,7 @@
                 scoreWrong.textContent = wrong;
                 streakCount.textContent = streak;
 
+                // Ikony jsou definovány, ALE NEPOUŽIJÍ SE
                 const iconCheck = `<svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>`;
                 const iconCross = `<svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>`;
 
@@ -662,7 +664,7 @@
                         enterHint.style.opacity = '1';
                     }
                 });
-                input.addEventListener('blur', () => enterHint.style.opacity = '0');
+                input.addEventListener('blur', () => enterHint.style.opacity = '0';
                 input.addEventListener('input', () => {
                     if (input.value.length > 0) enterHint.style.opacity = '0';
                 });
@@ -690,9 +692,7 @@
                                 processedZelene = true;
                                 correct++;
                                 streak++;
-                                inputIcon.innerHTML = iconCheck;
-                                inputIcon.style.opacity = '1';
-                                inputIcon.style.transform = 'translateY(-50%) scale(1)';
+                                // ❌ IKONY ZAKÁZÁNY – ŽÁDNÉ VLOŽENÍ DO #inputIcon
                                 updateScores();
                                 addHistory(true);
                                 saveState();
@@ -701,9 +701,7 @@
                                 processedCervene = true;
                                 wrong++;
                                 streak = 0;
-                                inputIcon.innerHTML = iconCross;
-                                inputIcon.style.opacity = '1';
-                                inputIcon.style.transform = 'translateY(-50%) scale(1)';
+                                // ❌ IKONY ZAKÁZÁNY – ŽÁDNÉ VLOŽENÍ DO #inputIcon
                                 input.classList.add('shake');
                                 setTimeout(() => input.classList.remove('shake'), 500);
                                 updateScores();
@@ -712,8 +710,7 @@
                             } else {
                                 processedZelene = false;
                                 processedCervene = false;
-                                inputIcon.style.opacity = '0';
-                                inputIcon.style.transform = 'translateY(-50%) scale(0.75)';
+                                // inputIcon.style.opacity = '0'; // nepotřebné
                             }
                         }
                     });
@@ -772,8 +769,8 @@
                         }`;
                         item.style.animationDelay = `${i * 50}ms`;
                         item.innerHTML = `${h.text} ${h.correct ? '✓' : '✗'}`;
-                        historyList.appendChild(item);
                     });
+                    historyList.appendChild(item);
                 }
 
                 renderHistory();
