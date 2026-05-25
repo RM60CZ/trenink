@@ -37,12 +37,8 @@ input {
   -webkit-appearance: none;
   border-radius: 0.75rem;
 }
-.math-text {
-  white-space: pre;
-  line-height: 1.25;
-  display: block;
-  font-variant-numeric: tabular-nums;
-}
+
+/* ── WORKSHEET ── */
 .worksheet-bg {
   background-color: #e2e8f0;
   background-image: radial-gradient(circle, #94a3b8 1px, transparent 1px);
@@ -52,130 +48,114 @@ input {
   background-color: rgba(30, 41, 59, 0.4);
   background-image: radial-gradient(circle, #334155 1px, transparent 1px);
 }
-.btn-pulse {
-  animation: pulse-blue 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+/* ── PŘÍKLAD – pevný font, zarovnání vpravo ── */
+#prikladWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;   /* zarovnání vpravo = jednotky pod jednotkami */
+  width: 100%;
+  overflow-x: auto;
 }
-@keyframes pulse-blue {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.45); }
-  50%       { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+.math-line {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: #334155;
+  letter-spacing: 0.04em;
 }
-.btn-glow-emerald {
-  animation: glow-emerald 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+.dark .math-line { color: #e2e8f0; }
+.math-line.operator-line { color: #475569; }
+.dark .math-line.operator-line { color: #94a3b8; }
+.math-line.result-line {
+  color: #1e40af;
+  border-top: 2.5px solid #64748b;
+  margin-top: 2px;
+  padding-top: 3px;
+  min-width: 4ch;
 }
-@keyframes glow-emerald {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45); }
-  50%       { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+.dark .math-line.result-line {
+  color: #93c5fd;
+  border-top-color: #475569;
 }
-#tlacitko { position: relative; }
-#tlacitko.state-start::before {
-  content: '▶';
-  display: inline-block;
-  margin-right: 0.4rem;
-  font-size: 0.8em;
-}
-#tlacitko.state-result::before {
-  content: '✓';
-  display: inline-block;
-  margin-right: 0.4rem;
-  font-size: 0.85em;
-  font-weight: 900;
-}
-.shake {
-  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-}
-@keyframes shake {
-  10%, 90% { transform: translate3d(-1px,0,0); }
-  20%, 80% { transform: translate3d(2px,0,0); }
-  30%, 50%, 70% { transform: translate3d(-3px,0,0); }
-  40%, 60% { transform: translate3d(3px,0,0); }
-}
-.slide-up {
-  animation: slideUp 0.3s ease-out forwards;
-}
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(8px) scale(0.96); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-.fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(3px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.pop {
-  animation: pop 0.2s ease-out;
-}
-@keyframes pop {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.2); }
-  100% { transform: scale(1); }
-}
-.settings-panel {
-  max-height: 150px;
-  opacity: 1;
-  overflow: hidden;
-  transition: max-height 0.3s ease, opacity 0.25s ease, margin 0.3s ease;
-}
-.settings-panel.collapsed {
-  max-height: 0;
-  opacity: 0;
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
-  pointer-events: none;
-}
-.scrollbar-hide::-webkit-scrollbar { display: none; }
-.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-@media (prefers-reduced-motion: reduce) {
-  .shake, .pop, .slide-up, .fade-in { animation: none !important; }
-  #tlacitko.btn-pulse, #tlacitko.btn-glow-emerald { animation: none !important; }
-}
-.score-bar {
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+.math-line.placeholder-line {
+  color: #94a3b8;
+  font-style: italic;
 }
 
-/* ── MIC BUTTON ── */
-#micBtn {
-  transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
-  flex-shrink: 0;
+/* ── ANIMACE ── */
+.btn-pulse { animation: pulse-blue 2.5s cubic-bezier(0.4,0,0.6,1) infinite; }
+@keyframes pulse-blue {
+  0%,100% { box-shadow: 0 0 0 0 rgba(37,99,235,0.45); }
+  50%     { box-shadow: 0 0 0 10px rgba(37,99,235,0); }
 }
-#micBtn:active { transform: scale(0.93); }
+.btn-glow-emerald { animation: glow-emerald 2.5s cubic-bezier(0.4,0,0.6,1) infinite; }
+@keyframes glow-emerald {
+  0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.45); }
+  50%     { box-shadow: 0 0 0 10px rgba(16,185,129,0); }
+}
+.shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+@keyframes shake {
+  10%,90%     { transform: translate3d(-1px,0,0); }
+  20%,80%     { transform: translate3d(2px,0,0); }
+  30%,50%,70% { transform: translate3d(-3px,0,0); }
+  40%,60%     { transform: translate3d(3px,0,0); }
+}
+.slide-up { animation: slideUp 0.3s ease-out forwards; }
+@keyframes slideUp {
+  from { opacity:0; transform:translateY(8px) scale(0.96); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+.fade-in { animation: fadeIn 0.3s ease-out forwards; }
+@keyframes fadeIn {
+  from { opacity:0; transform:translateY(3px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.pop { animation: pop 0.2s ease-out; }
+@keyframes pop {
+  0%   { transform:scale(1); }
+  50%  { transform:scale(1.2); }
+  100% { transform:scale(1); }
+}
+
+/* ── SETTINGS ── */
+.settings-panel {
+  max-height: 150px; opacity:1; overflow:hidden;
+  transition: max-height 0.3s ease, opacity 0.25s ease, margin 0.3s ease;
+}
+.settings-panel.collapsed { max-height:0; opacity:0; margin-top:0!important; margin-bottom:0!important; pointer-events:none; }
+
+/* ── SCROLLBAR ── */
+.scrollbar-hide::-webkit-scrollbar { display:none; }
+.scrollbar-hide { -ms-overflow-style:none; scrollbar-width:none; }
+
+/* ── SCORE BAR ── */
+.score-bar { position:sticky; top:0; z-index:40; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+
+/* ── MIC ── */
+#micBtn { transition: background 0.2s, box-shadow 0.2s, transform 0.15s; flex-shrink:0; }
+#micBtn:active { transform:scale(0.93); }
 #micBtn.listening {
-  background-color: #dc2626 !important;
-  border-color: #ef4444 !important;
-  color: #fff !important;
+  background-color:#dc2626!important; border-color:#ef4444!important; color:#fff!important;
   animation: mic-pulse 1.2s ease-in-out infinite;
 }
-#micBtn.disabled-mic {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
 @keyframes mic-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.55); }
-  50%       { box-shadow: 0 0 0 10px rgba(220,38,38,0); }
+  0%,100% { box-shadow:0 0 0 0 rgba(220,38,38,0.55); }
+  50%     { box-shadow:0 0 0 10px rgba(220,38,38,0); }
 }
 
 /* ── VOICE OVERLAY ── */
-#voiceOverlay {
-  pointer-events: none;
-  transition: opacity 0.25s;
-  min-height: 1.2rem;
-}
+#voiceOverlay { pointer-events:none; transition:opacity 0.25s; min-height:1.2rem; }
 
 /* ── VOICE HELP ── */
-#voiceHelp {
-  transition: max-height 0.35s ease, opacity 0.3s ease;
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
-}
-#voiceHelp.open {
-  max-height: 220px;
-  opacity: 1;
+#voiceHelp { transition: max-height 0.35s ease, opacity 0.3s ease; max-height:0; opacity:0; overflow:hidden; }
+#voiceHelp.open { max-height:220px; opacity:1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .shake,.pop,.slide-up,.fade-in { animation:none!important; }
+  #tlacitko.btn-pulse, #tlacitko.btn-glow-emerald { animation:none!important; }
 }
 </style>
 </head>
@@ -270,10 +250,10 @@ input {
         <div id="chyba" class="text-red-500 text-[10px] font-bold text-center h-4 overflow-hidden mb-1" role="alert"></div>
 
         <!-- Worksheet -->
-        <div class="bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 px-4 pb-0 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center">
-          <div class="w-full overflow-x-auto scrollbar-hide flex flex-col items-end relative z-10">
-            <div id="priklad" style="white-space:break-spaces;" class="math-text font-mono text-lg tracking-tighter text-slate-700 dark:text-slate-200">Zvolte nastavení a stiskněte ▶ Začít</div>
-            <div id="cara" class="math-text font-mono text-2xl text-slate-400 dark:text-slate-600 border-t-2 border-slate-400 dark:border-slate-600 w-full mt-0.5 opacity-0 transition-opacity duration-300"></div>
+        <div class="bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 px-5 pb-3 mb-3 worksheet-bg relative overflow-hidden">
+          <div id="prikladWrap">
+            <!-- řádky se generují dynamicky -->
+            <div class="math-line placeholder-line">Zvolte nastavení a stiskněte ▶ Začít</div>
           </div>
         </div>
 
@@ -285,7 +265,7 @@ input {
             <div class="relative flex-1">
               <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off"
                 placeholder="Váš výsledek"
-                class="w-full pl-3 pr-10 text-lg font-mono font-bold rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right" />
+                class="w-full pl-3 pr-10 text-lg font-mono font-bold rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right" style="padding-top:0.6rem;padding-bottom:0.6rem;" />
               <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 transform scale-75 pointer-events-none"></div>
             </div>
 
@@ -322,8 +302,8 @@ input {
           <div id="enterHint" class="text-[9px] text-slate-400 font-medium opacity-0 transition-opacity duration-200 select-none text-center">Enter ↵</div>
 
           <button id="tlacitko" type="button"
-            class="w-full py-3 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-black text-base rounded-xl shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest touch-manipulation btn-pulse state-start">
-            ZAČÍT
+            class="w-full py-3 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-black text-base rounded-xl shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest touch-manipulation btn-pulse">
+            ▶ ZAČÍT
           </button>
         </div>
 
@@ -344,15 +324,15 @@ input {
 
 <!-- ═══════ CORE LOGIC ═══════ -->
 <script>
-let isProcessing = false;
-
+/* ─────────────────────────────────────────────
+   POMOCNÉ FUNKCE
+───────────────────────────────────────────── */
 function formatujCislo(x) {
-  if (typeof x === 'bigint') return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  if (typeof x === 'bigint') return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
   if (typeof x !== 'number') return String(x);
-  if (Number.isInteger(x)) return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  if (Number.isInteger(x))   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
   const [cela, des] = x.toString().split('.');
-  const celaFmt = cela.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-  return des ? `${celaFmt}.${des}` : celaFmt;
+  return `${cela.replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f')}.${des}`;
 }
 
 function normalizuj(vstup) {
@@ -365,19 +345,95 @@ function generujCislo(n) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function zkratNa4Desetinna(cislo) {
+  const str = cislo.toString();
+  const [cela, des] = str.split('.');
+  if (!des) return cela;
+  return `${cela}.${des.substring(0, 4)}`;
+}
+
+/* ─────────────────────────────────────────────
+   ZOBRAZENÍ PŘÍKLADU – zarovnání vpravo
+   Každý řádek je samostatný <div> se stejným
+   font-size → monospace zaručuje pixel-perfect
+   zarovnání jednotek pod jednotkami.
+───────────────────────────────────────────── */
+function zobrazPriklad(p) {
+  const wrap = document.getElementById('prikladWrap');
+  wrap.innerHTML = '';
+
+  const fa  = formatujCislo(p.a);
+  const fb  = formatujCislo(p.b);
+  const op  = p.op === '*' ? '×' : p.op === '/' ? '÷' : p.op;
+
+  /* délka operátorového řádku: "op fb" */
+  const opLine = `${op} ${fb}`;
+
+  /* všechny řádky mají stejnou délku (šířku) – zarovnáme paddingem vlevo */
+  const maxLen = Math.max(fa.length, opLine.length);
+
+  const pad = (s) => s.padStart(maxLen, '\u2007'); /* figure space = šířka číslice v mono */
+
+  /* řádek 1: první číslo */
+  const r1 = document.createElement('div');
+  r1.className = 'math-line';
+  r1.textContent = pad(fa);
+  wrap.appendChild(r1);
+
+  /* řádek 2: operátor + druhé číslo */
+  const r2 = document.createElement('div');
+  r2.className = 'math-line operator-line';
+  r2.textContent = pad(opLine);
+  wrap.appendChild(r2);
+
+  /* řádek 3: výsledek (skrytý = tečky, zobrazí se po kontrole) */
+  const r3 = document.createElement('div');
+  r3.className = 'math-line result-line';
+  r3.id = 'vysledekRadek';
+  r3.textContent = pad('…');
+  wrap.appendChild(r3);
+}
+
+function odhalVysledek(p) {
+  const r3 = document.getElementById('vysledekRadek');
+  if (!r3) return;
+  const vysl = p.vysledekZobrazeny ?? p.vysledek;
+  const fv   = formatujCislo(vysl);
+
+  /* zarovnání na stejnou délku jako ostatní řádky */
+  const fa   = formatujCislo(p.a);
+  const op   = p.op === '*' ? '×' : p.op === '/' ? '÷' : p.op;
+  const opLine = `${op} ${formatujCislo(p.b)}`;
+  const maxLen = Math.max(fa.length, opLine.length, fv.length);
+  const pad = (s) => s.padStart(maxLen, '\u2007');
+
+  /* znovu zarovnáme i ostatní řádky */
+  const wrap = document.getElementById('prikladWrap');
+  const divs = wrap.querySelectorAll('.math-line');
+  if (divs[0]) divs[0].textContent = pad(fa);
+  if (divs[1]) divs[1].textContent = pad(opLine);
+  r3.textContent = pad(fv);
+  r3.classList.add('fade-in');
+}
+
+/* ─────────────────────────────────────────────
+   STAV APLIKACE
+───────────────────────────────────────────── */
 let aktualniPriklad = null;
 let zobrazitVysledek = false;
+let isProcessing = false;
 
-const operaceEl   = document.getElementById('operace');
-const cislice1El  = document.getElementById('cislice1');
-const cislice2El  = document.getElementById('cislice2');
-const chybaEl     = document.getElementById('chyba');
-const prikladEl   = document.getElementById('priklad');
-const caraEl      = document.getElementById('cara');
-const odpovedEl   = document.getElementById('odpoved');
-const tlacitkoEl  = document.getElementById('tlacitko');
-const divisionInfo= document.getElementById('divisionInfo');
+const operaceEl    = document.getElementById('operace');
+const cislice1El   = document.getElementById('cislice1');
+const cislice2El   = document.getElementById('cislice2');
+const chybaEl      = document.getElementById('chyba');
+const odpovedEl    = document.getElementById('odpoved');
+const tlacitkoEl   = document.getElementById('tlacitko');
+const divisionInfo = document.getElementById('divisionInfo');
 
+/* ─────────────────────────────────────────────
+   SELECTY
+───────────────────────────────────────────── */
 operaceEl.addEventListener('change', () => {
   aktualizujCislici2();
   chybaEl.textContent = '';
@@ -402,23 +458,18 @@ function naplnSelecty() {
   cislice2El.value = '1';
   aktualizujCislici2();
 }
-
 cislice1El.addEventListener('change', aktualizujCislici2);
 
-function zkratNa4Desetinna(cislo) {
-  const str = cislo.toString();
-  const [cela, des] = str.split('.');
-  if (!des) return cela;
-  return `${cela}.${des.substring(0, 4)}`;
-}
-
+/* ─────────────────────────────────────────────
+   GENEROVÁNÍ PŘÍKLADU
+───────────────────────────────────────────── */
 function vygenerujPriklad() {
   const op = operaceEl.value;
   const n1 = parseInt(cislice1El.value);
   const n2 = parseInt(cislice2El.value);
   chybaEl.textContent = '';
   if (op === '-' && n1 < n2) {
-    chybaEl.textContent = '❌ Při odčítání musí mít první číslo alespoň tolik cifer jako druhé.';
+    chybaEl.textContent = '❌ Při odčítání musí mít první číslo alespoň tolik cifer.';
     return null;
   }
   let a, b, pokusy = 0;
@@ -431,33 +482,25 @@ function vygenerujPriklad() {
     break;
   }
   let vysledek, vysledekZobrazeny;
-  if (op === '+')      { vysledek = a + b;                  vysledekZobrazeny = vysledek; }
-  else if (op === '-') { vysledek = a - b;                  vysledekZobrazeny = vysledek; }
-  else if (op === '*') { vysledek = BigInt(a) * BigInt(b);  vysledekZobrazeny = vysledek; }
-  else if (op === '/') { vysledek = a / b;                  vysledekZobrazeny = zkratNa4Desetinna(vysledek); }
+  if      (op === '+') { vysledek = a + b; vysledekZobrazeny = vysledek; }
+  else if (op === '-') { vysledek = a - b; vysledekZobrazeny = vysledek; }
+  else if (op === '*') { vysledek = BigInt(a) * BigInt(b); vysledekZobrazeny = vysledek; }
+  else if (op === '/') { vysledek = a / b; vysledekZobrazeny = zkratNa4Desetinna(vysledek); }
   return { a, b, op, vysledek, vysledekZobrazeny };
 }
 
-function zobrazPriklad(p) {
-  const fa = formatujCislo(p.a);
-  const fb = formatujCislo(p.b);
-  const max = Math.max(fa.length, (p.op + ' ' + fb).length);
-  prikladEl.textContent = `${fa.padStart(max)}\n${(p.op + ' ' + fb).padStart(max)}`;
-  caraEl.style.opacity = '0';
-}
-
-function ukazCaru()  { caraEl.style.opacity = '1'; }
-function aktivujPole() { odpovedEl.focus(); }
-
+/* ─────────────────────────────────────────────
+   TLAČÍTKO – label
+───────────────────────────────────────────── */
 function aktualizujTextTlacitka() {
-  if (!aktualniPriklad)       tlacitkoEl.textContent = 'ZAČÍT';
+  if (!aktualniPriklad)       tlacitkoEl.textContent = '▶ ZAČÍT';
   else if (!zobrazitVysledek) tlacitkoEl.textContent = 'DALŠÍ PŘÍKLAD';
-  else                        tlacitkoEl.textContent = 'VÝSLEDEK(kontrola)';
-  tlacitkoEl.disabled = false;
+  else                        tlacitkoEl.textContent = '✓ VÝSLEDEK (kontrola)';
 }
 
-odpovedEl.addEventListener('input', () => { tlacitkoEl.disabled = false; });
-
+/* ─────────────────────────────────────────────
+   VALIDACE
+───────────────────────────────────────────── */
 function jePlatneCislo(vstup) {
   const norm = normalizuj(vstup);
   return norm !== '' && /^-?\d+([.,]\d*)?$/.test(norm);
@@ -488,7 +531,12 @@ function zkontrolujOdpoved(uzivatelskaOdpoved, priklad) {
   }
 }
 
-function handleTlacitko(e) {
+/* ─────────────────────────────────────────────
+   HLAVNÍ HANDLER TLAČÍTKA
+   Exportujeme jako window.handleTlacitko
+   aby ho mohl volat i hlasový modul přímo.
+───────────────────────────────────────────── */
+window.handleTlacitko = function handleTlacitko(e) {
   if (isProcessing) return;
   isProcessing = true;
   if (e && e.preventDefault) { e.preventDefault(); e.stopPropagation(); }
@@ -496,6 +544,7 @@ function handleTlacitko(e) {
 
   const inputText = odpovedEl.value.trim();
 
+  /* ── FÁZE 1: Generuj nový příklad ── */
   if (!zobrazitVysledek) {
     const p = vygenerujPriklad();
     if (!p) { isProcessing = false; return; }
@@ -506,43 +555,49 @@ function handleTlacitko(e) {
     zobrazitVysledek = true;
     aktualizujTextTlacitka();
     divisionInfo.classList.toggle('hidden', p.op !== '/');
-    setTimeout(() => { ukazCaru(); aktivujPole(); isProcessing = false; }, 50);
+    setTimeout(() => { odpovedEl.focus(); isProcessing = false; }, 80);
+
+  /* ── FÁZE 2: Zkontroluj odpověď ── */
   } else {
     if (inputText === '') {
+      /* prázdné pole → ukaž správný výsledek bez bodování */
       const vysl = aktualniPriklad.vysledekZobrazeny ?? aktualniPriklad.vysledek;
       odpovedEl.value = formatujCislo(vysl);
+      odhalVysledek(aktualniPriklad);
       zobrazitVysledek = false;
       aktualizujTextTlacitka();
       divisionInfo.classList.add('hidden');
-      setTimeout(() => { odpovedEl.focus(); isProcessing = false; }, 50);
+      setTimeout(() => { odpovedEl.focus(); isProcessing = false; }, 80);
     } else if (!jePlatneCislo(inputText)) {
-      chybaEl.textContent = '⚠️ Vložil jste nepovolený znak, opravte!';
+      chybaEl.textContent = '⚠️ Nepovolený znak – opravte vstup.';
       isProcessing = false;
       setTimeout(() => odpovedEl.focus(), 100);
     } else {
       const spravne = zkontrolujOdpoved(inputText, aktualniPriklad);
       odpovedEl.classList.add(spravne ? 'zelene' : 'cervene');
+      odhalVysledek(aktualniPriklad);
       zobrazitVysledek = false;
       aktualizujTextTlacitka();
       divisionInfo.classList.add('hidden');
-      setTimeout(() => isProcessing = false, 150);
+      /* uvolníme isProcessing s malým zpožděním – UI observer musí stihnout zaznamenat změnu třídy */
+      setTimeout(() => { isProcessing = false; }, 200);
     }
   }
-}
+};
 
-tlacitkoEl.addEventListener('touchstart', handleTlacitko, { passive: false });
-tlacitkoEl.addEventListener('click', (e) => { if (e.pointerType !== 'touch') handleTlacitko(e); });
-odpovedEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleTlacitko(e); });
+tlacitkoEl.addEventListener('touchstart', window.handleTlacitko, { passive: false });
+tlacitkoEl.addEventListener('click', (e) => { if (e.pointerType !== 'touch') window.handleTlacitko(e); });
+odpovedEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') window.handleTlacitko(e); });
 
 naplnSelecty();
 aktualizujTextTlacitka();
-setTimeout(aktivujPole, 100);
+setTimeout(() => odpovedEl.focus(), 100);
 </script>
 
 <!-- ═══════ UI ENHANCEMENT LAYER ═══════ -->
 <script>
 (function () {
-  const STORAGE_KEY = 'matika_trenink_v2';
+  const STORAGE_KEY = 'matika_trenink_v3';
 
   function getTodayString() {
     const n = new Date();
@@ -553,8 +608,8 @@ setTimeout(aktivujPole, 100);
     const [year, month, day] = dateStr.split('-');
     const months   = ['ledna','února','března','dubna','května','června','července','srpna','září','října','listopadu','prosince'];
     const weekdays = ['Neděle','Pondělí','Úterý','Středa','Čtvrtek','Pátek','Sobota'];
-    const date = new Date(year, parseInt(month)-1, parseInt(day));
-    return `${weekdays[date.getDay()]} ${parseInt(day)}. ${months[parseInt(month)-1]} ${year}`;
+    const date = new Date(+year, +month-1, +day);
+    return `${weekdays[date.getDay()]} ${+day}. ${months[+month-1]} ${year}`;
   }
 
   function loadState() {
@@ -578,7 +633,6 @@ setTimeout(aktivujPole, 100);
   const currentDateEl    = document.getElementById('currentDate');
   if (currentDateEl) currentDateEl.textContent = formatDateCzech(getTodayString());
 
-  const btn              = document.getElementById('tlacitko');
   const input            = document.getElementById('odpoved');
   const inputIcon        = document.getElementById('inputIcon');
   const enterHint        = document.getElementById('enterHint');
@@ -591,8 +645,7 @@ setTimeout(aktivujPole, 100);
   const settingsToggle   = document.getElementById('settingsToggle');
   const settingsPanel    = document.getElementById('settingsPanel');
   const chybaEl2         = document.getElementById('chyba');
-  const prikladEl2       = document.getElementById('priklad');
-  const caraEl2          = document.getElementById('cara');
+  const tlacitkoEl2      = document.getElementById('tlacitko');
   const divisionInfo2    = document.getElementById('divisionInfo');
 
   scoreCorrect.textContent = correct;
@@ -613,48 +666,54 @@ setTimeout(aktivujPole, 100);
   });
   chybaObserver.observe(chybaEl2, { childList: true });
 
-  input.addEventListener('focus', () => { if (btn.textContent.trim() === 'VÝSLEDEK(kontrola)') enterHint.style.opacity = '1'; });
+  /* Enter hint */
+  input.addEventListener('focus', () => { if (tlacitkoEl2.textContent.includes('VÝSLEDEK')) enterHint.style.opacity = '1'; });
   input.addEventListener('blur',  () => enterHint.style.opacity = '0');
   input.addEventListener('input', () => { if (input.value.length > 0) enterHint.style.opacity = '0'; });
 
+  /* Tlačítko – animace */
   const btnObserver = new MutationObserver(() => {
-    const text = btn.textContent.trim();
-    btn.classList.remove('state-start','state-result','btn-pulse','btn-glow-emerald');
-    if (text === 'VÝSLEDEK(kontrola)') btn.classList.add('state-result','btn-glow-emerald');
-    else btn.classList.add('state-start','btn-pulse');
+    const text = tlacitkoEl2.textContent.trim();
+    tlacitkoEl2.classList.remove('btn-pulse','btn-glow-emerald');
+    if (text.includes('VÝSLEDEK')) tlacitkoEl2.classList.add('btn-glow-emerald');
+    else tlacitkoEl2.classList.add('btn-pulse');
   });
-  btnObserver.observe(btn, { childList: true, characterData: true, subtree: true });
+  btnObserver.observe(tlacitkoEl2, { childList: true, characterData: true, subtree: true });
 
-  let processedZelene = false, processedCervene = false;
+  /* ─────────────────────────────────────────
+     SLEDOVÁNÍ TŘÍDY INPUT → bodování + historie
+  ───────────────────────────────────────── */
+  let lastInputClass = '';
 
-  const inputObserver = new MutationObserver((mutations) => {
-    mutations.forEach((m) => {
-      if (m.type !== 'attributes' || m.attributeName !== 'class') return;
-      const cls = input.classList;
-      if (cls.contains('zelene')) {
-        if (processedZelene) return;
-        processedZelene = true;
-        correct++; streak++;
-        inputIcon.innerHTML = iconCheck;
-        inputIcon.style.opacity = '1';
-        inputIcon.style.transform = 'translateY(-50%) scale(1)';
-        updateScores(); addHistory(true); saveState();
-      } else if (cls.contains('cervene')) {
-        if (processedCervene) return;
-        processedCervene = true;
-        wrong++; streak = 0;
-        inputIcon.innerHTML = iconCross;
-        inputIcon.style.opacity = '1';
-        inputIcon.style.transform = 'translateY(-50%) scale(1)';
-        input.classList.add('shake');
-        setTimeout(() => input.classList.remove('shake'), 500);
-        updateScores(); addHistory(false); saveState();
-      } else {
-        processedZelene = false; processedCervene = false;
-        inputIcon.style.opacity = '0';
-        inputIcon.style.transform = 'translateY(-50%) scale(0.75)';
-      }
-    });
+  const inputObserver = new MutationObserver(() => {
+    const cls = input.classList;
+    const nowClass = cls.contains('zelene') ? 'zelene' : cls.contains('cervene') ? 'cervene' : '';
+
+    if (nowClass === lastInputClass) return;   /* žádná změna */
+    lastInputClass = nowClass;
+
+    if (nowClass === 'zelene') {
+      correct++; streak++;
+      inputIcon.innerHTML = iconCheck;
+      inputIcon.style.opacity = '1';
+      inputIcon.style.transform = 'translateY(-50%) scale(1)';
+      updateScores();
+      addHistory(true);
+      saveState();
+    } else if (nowClass === 'cervene') {
+      wrong++; streak = 0;
+      inputIcon.innerHTML = iconCross;
+      inputIcon.style.opacity = '1';
+      inputIcon.style.transform = 'translateY(-50%) scale(1)';
+      input.classList.add('shake');
+      setTimeout(() => input.classList.remove('shake'), 500);
+      updateScores();
+      addHistory(false);
+      saveState();
+    } else {
+      inputIcon.style.opacity = '0';
+      inputIcon.style.transform = 'translateY(-50%) scale(0.75)';
+    }
   });
   inputObserver.observe(input, { attributes: true, attributeFilter: ['class'] });
 
@@ -667,16 +726,11 @@ setTimeout(aktivujPole, 100);
   }
 
   function addHistory(isCorrect) {
-    let text = '';
-    if (typeof aktualniPriklad !== 'undefined' && aktualniPriklad) {
-      const p    = aktualniPriklad;
-      const fmt  = (typeof formatujCislo === 'function') ? formatujCislo : String;
-      const vysl = p.vysledekZobrazeny ?? p.vysledek;
-      text = `${fmt(p.a)} ${p.op} ${fmt(p.b)} = ${fmt(vysl)}`;
-    } else {
-      text = prikladEl2.textContent.replace(/\n/g,' ').replace(/\s+/g,' ').trim();
-    }
-    if (!text || text.includes('Zvolte nastavení')) return;
+    if (typeof aktualniPriklad === 'undefined' || !aktualniPriklad) return;
+    const p   = aktualniPriklad;
+    const vysl = p.vysledekZobrazeny ?? p.vysledek;
+    const op  = p.op === '*' ? '×' : p.op === '/' ? '÷' : p.op;
+    const text = `${formatujCislo(p.a)} ${op} ${formatujCislo(p.b)} = ${formatujCislo(vysl)}`;
     history.unshift({ text, correct: isCorrect });
     renderHistory();
   }
@@ -703,28 +757,13 @@ setTimeout(aktivujPole, 100);
           ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
           : 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300'
       }`;
-      item.style.animationDelay = `${i * 50}ms`;
+      item.style.animationDelay = `${i * 40}ms`;
       item.textContent = `${h.text} ${h.correct ? '✓' : '✗'}`;
       historyList.appendChild(item);
     });
   }
 
   renderHistory();
-
-  const problemObserver = new MutationObserver(() => {
-    const txt = prikladEl2.textContent;
-    if (txt && !txt.includes('Zvolte nastavení')) {
-      prikladEl2.classList.remove('fade-in'); void prikladEl2.offsetWidth; prikladEl2.classList.add('fade-in');
-    }
-  });
-  problemObserver.observe(prikladEl2, { childList: true });
-
-  const caraObserver = new MutationObserver(() => {
-    if (caraEl2.style.opacity === '1') {
-      caraEl2.classList.remove('fade-in'); void caraEl2.offsetWidth; caraEl2.classList.add('fade-in');
-    }
-  });
-  caraObserver.observe(caraEl2, { attributes: true, attributeFilter: ['style'] });
 })();
 </script>
 
@@ -732,22 +771,15 @@ setTimeout(aktivujPole, 100);
 <script>
 (function () {
 
-  /* ── reference na DOM ── */
   const micBtn       = document.getElementById('micBtn');
   const micIcon      = document.getElementById('micIcon');
   const voiceOverlay = document.getElementById('voiceOverlay');
   const voiceHelp    = document.getElementById('voiceHelp');
   const odpovedInput = document.getElementById('odpoved');
-  const hlavniBtn    = document.getElementById('tlacitko');
 
-  /* ── podpora ── */
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    micBtn.style.display = 'none';
-    return;
-  }
+  if (!SpeechRecognition) { micBtn.style.display = 'none'; return; }
 
-  /* ── SVG ikony ── */
   const SVG_MIC = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
@@ -757,12 +789,11 @@ setTimeout(aktivujPole, 100);
     <rect x="5" y="5" width="14" height="14" rx="2"/>
   </svg>`;
 
-  /* ── stav ── */
-  let recognition  = null;
-  let isListening  = false;
-  let helpShown    = false;
+  let recognition = null;
+  let isListening = false;
+  let helpShown   = false;
 
-  /* ── overlay helper ── */
+  /* ── overlay ── */
   let overlayTimer = null;
   function ukazOverlay(text, persist = false, ms = 2000) {
     voiceOverlay.textContent = text;
@@ -775,7 +806,7 @@ setTimeout(aktivujPole, 100);
     clearTimeout(overlayTimer);
   }
 
-  /* ── převod slovních číslovek ── */
+  /* ── slovní číslovky → číslo ── */
   const SLOVNI = {
     'nula':0,'jedna':1,'jednou':1,'jeden':1,'jedno':1,
     'dvě':2,'dva':2,'dvou':2,'dvěma':2,
@@ -795,9 +826,9 @@ setTimeout(aktivujPole, 100);
     for (const s of slova) {
       if (SLOVNI[s] !== undefined) {
         const h = SLOVNI[s];
-        if (h >= 1000) { sekce = (sekce === 0 ? 1 : sekce) * h; vysledek += sekce; sekce = 0; }
-        else if (h >= 100) { sekce = (sekce === 0 ? 1 : sekce) * h; }
-        else sekce += h;
+        if      (h >= 1000) { sekce = (sekce === 0 ? 1 : sekce) * h; vysledek += sekce; sekce = 0; }
+        else if (h >= 100)  { sekce = (sekce === 0 ? 1 : sekce) * h; }
+        else                { sekce += h; }
       } else if (/^\d+$/.test(s)) {
         sekce += parseInt(s);
       } else return null;
@@ -806,63 +837,55 @@ setTimeout(aktivujPole, 100);
   }
 
   function prevedNaCislo(text) {
-    /* přímý číselný zápis */
     const norm = text.replace(/\s+/g,'').replace(',','.').replace('−','-').replace('–','-');
     if (/^-?\d+(\.\d+)?$/.test(norm)) return norm;
-
-    /* záporné: "mínus ..." */
     const minusM = text.match(/^(?:mínus|minus)\s+(.+)$/i);
     if (minusM) { const v = prevedNaCislo(minusM[1]); if (v !== null) return `-${v}`; }
-
-    /* desetinné: "nula čárka pět" */
     const carkaM = text.match(/^(.+?)\s*(?:čárka|tečka|bod)\s*(.+)$/i);
     if (carkaM) {
       const c = slovniNaCislo(carkaM[1].trim());
       const d = slovniNaCislo(carkaM[2].trim());
       if (c !== null && d !== null) return `${c}.${d}`;
     }
-
     const n = slovniNaCislo(text);
     return n !== null ? String(n) : null;
   }
 
-  /* ── zpracování finálního hlasového výstupu ── */
+  /* ── zpracování hlasového výstupu ── */
   function zpracujHlas(text) {
     const t = text.toLowerCase().trim();
 
-    /* ── ZPĚT – smaže poslední číslici zprava ── */
-    if (/^zpět$/.test(t) || /^zpet$/.test(t)) {
+    /* ZPĚT */
+    if (/^(zpět|zpet)$/.test(t)) {
       const cur = odpovedInput.value;
-      if (cur.length > 0) {
-        odpovedInput.value = cur.slice(0, -1);
-        ukazOverlay(`⌫ "${odpovedInput.value || '(prázdné)'}"`, false, 1200);
-      } else {
-        ukazOverlay('⌫ Pole je již prázdné', false, 1200);
-      }
+      odpovedInput.value = cur.slice(0, -1);
+      odpovedInput.classList.remove('zelene', 'cervene');
+      ukazOverlay(odpovedInput.value ? `⌫ ${odpovedInput.value}` : '⌫ (prázdné)', false, 1200);
       return;
     }
 
-    /* ── DÁL – potvrdit výsledek → vygenerovat další ── */
-    if (/^(dál|dal|dál|pokračuj)$/.test(t)) {
-      ukazOverlay('✔ Potvrzuji…', false, 800);
+    /* DÁL – volá přímo window.handleTlacitko, ne .click() */
+    if (/^(dál|dal|pokračuj)$/.test(t)) {
+      ukazOverlay('✔ Potvrzuji…', false, 600);
 
-      /* Krok 1: VÝSLEDEK(kontrola) */
-      hlavniBtn.click();
+      /* Krok 1: VÝSLEDEK (kontrola) */
+      window.handleTlacitko(null);
 
-      /* Krok 2: po vyhodnocení → DALŠÍ PŘÍKLAD */
+      /* Krok 2: po dokončení prvního kroku → DALŠÍ PŘÍKLAD */
       setTimeout(() => {
-        hlavniBtn.click();
-        /* Krok 3: vypnutí mikrofonu */
+        window.handleTlacitko(null);
+
+        /* Krok 3: vypnout mikrofon */
         setTimeout(() => {
           zastavListening();
           skryjOverlay();
-        }, 200);
-      }, 500);
+        }, 150);
+      }, 350);
 
       return;
     }
 
-    /* ── ČÍSLO – zapíše do pole ── */
+    /* ČÍSLO */
     const cislo = prevedNaCislo(t);
     if (cislo !== null) {
       odpovedInput.value = cislo;
@@ -871,16 +894,15 @@ setTimeout(aktivujPole, 100);
       return;
     }
 
-    /* ── neznámý příkaz ── */
     ukazOverlay(`❓ "${text}"`, false, 2000);
   }
 
-  /* ── vytvoř recognition instanci ── */
+  /* ── recognition instance ── */
   function vytvorRecognition() {
     const r = new SpeechRecognition();
-    r.lang            = 'cs-CZ';
-    r.continuous      = true;   /* nepřestává po jednom výsledku – čeká na "dál" */
-    r.interimResults  = true;
+    r.lang           = 'cs-CZ';
+    r.continuous     = true;
+    r.interimResults = true;
     r.maxAlternatives = 2;
 
     r.onstart = () => {
@@ -891,7 +913,6 @@ setTimeout(aktivujPole, 100);
     };
 
     r.onend = () => {
-      /* pokud ještě chceme poslouchat (nebylo voláno abort/stop záměrně), restartuj */
       if (isListening) {
         try { r.start(); } catch {}
       } else {
@@ -904,9 +925,9 @@ setTimeout(aktivujPole, 100);
     r.onerror = (e) => {
       if (e.error === 'aborted') return;
       const msg = {
-        'not-allowed' : '🚫 Mikrofon není povolen',
-        'no-speech'   : '🔇 Nic neslyšeno, zkuste znovu',
-        'network'     : '🌐 Chyba sítě',
+        'not-allowed': '🚫 Mikrofon není povolen',
+        'no-speech'  : '🔇 Nic neslyšeno',
+        'network'    : '🌐 Chyba sítě',
       }[e.error] || `⚠️ ${e.error}`;
       ukazOverlay(msg, false, 2500);
       isListening = false;
@@ -918,11 +939,8 @@ setTimeout(aktivujPole, 100);
       let interim = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const transcript = e.results[i][0].transcript;
-        if (e.results[i].isFinal) {
-          zpracujHlas(transcript.trim());
-        } else {
-          interim += transcript;
-        }
+        if (e.results[i].isFinal) zpracujHlas(transcript.trim());
+        else interim += transcript;
       }
       if (interim) ukazOverlay(`🎤 ${interim}`, true);
     };
@@ -930,7 +948,6 @@ setTimeout(aktivujPole, 100);
     return r;
   }
 
-  /* ── start / stop ── */
   function spustListening() {
     if (!helpShown) {
       helpShown = true;
@@ -944,10 +961,7 @@ setTimeout(aktivujPole, 100);
 
   function zastavListening() {
     isListening = false;
-    if (recognition) {
-      try { recognition.abort(); } catch {}
-      recognition = null;
-    }
+    if (recognition) { try { recognition.abort(); } catch {} recognition = null; }
     micBtn.classList.remove('listening');
     micIcon.innerHTML = SVG_MIC;
   }
@@ -956,26 +970,20 @@ setTimeout(aktivujPole, 100);
   micBtn.addEventListener('click', (e) => {
     e.preventDefault();
 
-    /* Scénář 1: pole má číslo → nic neudělat */
+    /* Scénář 1: pole má číslo → nic */
     if (odpovedInput.value.trim() !== '') {
       ukazOverlay('⚠️ Pole není prázdné', false, 1500);
       return;
     }
 
-    /* Scénář 2: pole je prázdné */
-    if (isListening) {
-      zastavListening();       /* manuální zastavení */
-    } else {
-      spustListening();
-    }
+    /* Scénář 2: pole prázdné → toggle */
+    if (isListening) zastavListening();
+    else spustListening();
   });
 
-  /* ── klávesová zkratka Alt+M ── */
+  /* Alt+M */
   document.addEventListener('keydown', (e) => {
-    if (e.altKey && e.key.toLowerCase() === 'm') {
-      e.preventDefault();
-      micBtn.click();
-    }
+    if (e.altKey && e.key.toLowerCase() === 'm') { e.preventDefault(); micBtn.click(); }
   });
 
 })();
