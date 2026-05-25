@@ -45,8 +45,8 @@ display: block;
 font-variant-numeric: tabular-nums;
 }
 .worksheet-bg {
-background-color: #e2e8f0; 
-background-image: radial-gradient(circle, #94a3b8 1px, transparent 1px); 
+background-color: #e2e8f0;
+background-image: radial-gradient(circle, #94a3b8 1px, transparent 1px);
 background-size: 24px 24px;
 }
 .dark .worksheet-bg {
@@ -135,7 +135,6 @@ scrollbar-width: none;
 #tlacitko.btn-pulse, #tlacitko.btn-glow-emerald { animation: none !important; }
 }
 
-/* Fixed score bar */
 .score-bar {
 position: sticky;
 top: 0;
@@ -143,11 +142,46 @@ z-index: 40;
 backdrop-filter: blur(12px);
 -webkit-backdrop-filter: blur(12px);
 }
+
+/* ── HLAS – mikrofon tlačítko ── */
+#micBtn {
+transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+flex-shrink: 0;
+}
+#micBtn:active { transform: scale(0.93); }
+
+/* Naslouchání – pulzující červený kruh */
+#micBtn.listening {
+background-color: #dc2626 !important;
+border-color: #ef4444 !important;
+animation: mic-pulse 1.2s ease-in-out infinite;
+}
+@keyframes mic-pulse {
+0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.55); }
+50%        { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+}
+
+/* Překryv s rozpoznaným textem */
+#voiceOverlay {
+pointer-events: none;
+transition: opacity 0.25s;
+}
+
+/* Nápovědný panel hlasu */
+#voiceHelp {
+transition: max-height 0.3s ease, opacity 0.25s ease;
+max-height: 0;
+opacity: 0;
+overflow: hidden;
+}
+#voiceHelp.open {
+max-height: 200px;
+opacity: 1;
+}
 </style>
 </head>
 <body class="bg-slate-200 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300 font-sans">
 
-<!-- App Container - max height 100dvh with flex column -->
 <div class="w-full max-w-md mx-auto flex flex-col min-h-[100dvh]">
 
 <!-- Fixed Score Bar -->
@@ -230,7 +264,6 @@ Trénink počítání
 <select id="cislice2" class="bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs"></select>
 </div>
 </div>
-<!-- Division info -->
 <div id="divisionInfo" class="hidden mt-2 text-[10px] text-slate-400 dark:text-slate-500 text-center font-medium">
 Dělení zobrazí přesně 4 desetinná místa. Odpověď na 1–4 des. místa je uznána.
 </div>
@@ -239,7 +272,7 @@ Dělení zobrazí přesně 4 desetinná místa. Odpověď na 1–4 des. místa j
 <!-- Error container -->
 <div id="chyba" class="text-red-500 text-[10px] font-bold text-center h-4 overflow-hidden mb-1" role="alert"></div>
 
-<!-- Worksheet - compact -->
+<!-- Worksheet -->
 <div class="bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 px-4 pb-0 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center">
 <div class="w-full overflow-x-auto scrollbar-hide flex flex-col items-end relative z-10">
 <div id="priklad" style="white-space: break-spaces;" class="math-text font-mono text-lg tracking-tighter text-slate-700 dark:text-slate-200">Zvolte nastavení a stiskněte ▶ Začít</div>
@@ -249,10 +282,48 @@ Dělení zobrazí přesně 4 desetinná místa. Odpověď na 1–4 des. místa j
 
 <!-- Action Area -->
 <div class="space-y-2.5">
-<div class="relative">
-<input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="Váš výsledek" class="w-full pl-3 pr-4 text-lg font-mono font-bold rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right" />
+
+<!-- Input + mic button -->
+<div class="relative flex items-center gap-2">
+<div class="relative flex-1">
+<input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="Váš výsledek" class="w-full pl-3 pr-10 text-lg font-mono font-bold rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right" />
 <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 transform scale-75 pointer-events-none"></div>
 </div>
+
+<!-- Mikrofon tlačítko -->
+<button id="micBtn"
+  title="Hlasové ovládání"
+  aria-label="Spustit hlasové ovládání"
+  class="w-11 h-11 rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:border-blue-400 hover:text-blue-500 dark:hover:text-blue-400 transition-all shadow-inner">
+  <!-- Ikona mikrofonu -->
+  <svg id="micIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+      d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+      d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
+  </svg>
+</button>
+</div>
+
+<!-- Hlasový overlay – zobrazí rozpoznaný text -->
+<div id="voiceOverlay" class="opacity-0 text-center text-[11px] font-mono font-bold text-blue-500 dark:text-blue-400 h-4 overflow-hidden transition-opacity duration-200 select-none"></div>
+
+<!-- Nápověda hlasových příkazů -->
+<div id="voiceHelp" class="rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/40 px-3 py-2.5">
+<div class="text-[9px] font-bold uppercase text-blue-400 tracking-wider mb-1.5">🎤 Hlasové příkazy (cs-CZ)</div>
+<div class="grid grid-cols-2 gap-x-4 gap-y-0.5">
+  <div class="text-[10px] text-blue-700 dark:text-blue-300"><span class="font-bold">"číslo"</span> – vyplní odpověď</div>
+  <div class="text-[10px] text-blue-700 dark:text-blue-300"><span class="font-bold">"začít"</span> – nový příklad</div>
+  <div class="text-[10px] text-blue-700 dark:text-blue-300"><span class="font-bold">"další"</span> – další příklad</div>
+  <div class="text-[10px] text-blue-700 dark:text-blue-300"><span class="font-bold">"výsledek"</span> – zkontrolovat</div>
+  <div class="text-[10px] text-blue-700 dark:text-blue-300"><span class="font-bold">"potvrdit"</span> – zkontrolovat</div>
+  <div class="text-[10px] text-blue-700 dark:text-blue-300"><span class="font-bold">"smazat"</span> – vymaže pole</div>
+  <div class="text-[10px] text-blue-700 dark:text-blue-300"><span class="font-bold">"nula čárka X"</span> – desetinné</div>
+  <div class="text-[10px] text-blue-700 dark:text-blue-300"><span class="font-bold">"mínus X"</span> – záporné č.</div>
+</div>
+<div class="mt-1.5 text-[9px] text-blue-400 dark:text-blue-500">Vyžaduje Chrome / Edge a povolení mikrofonu</div>
+</div>
+
 <div id="enterHint" class="text-[9px] text-slate-400 font-medium opacity-0 transition-opacity duration-200 select-none text-center -mt-1">Enter ↵</div>
 
 <button id="tlacitko" type="button" class="w-full py-3 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-black text-base rounded-xl shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest touch-manipulation btn-pulse state-start">
@@ -262,7 +333,7 @@ ZAČÍT
 </div>
 </div>
 
-<!-- History - compact -->
+<!-- History -->
 <div id="historyContainer" class="px-1 opacity-0 transition-opacity duration-500 select-none" aria-live="polite">
 <div class="text-[9px] font-bold uppercase text-slate-400 tracking-wider mb-1.5">Historie</div>
 <div id="historyList" class="flex flex-wrap gap-1.5">
@@ -270,7 +341,6 @@ ZAČÍT
 </div>
 </div>
 
-<!-- Bottom spacer for mobile -->
 <div class="h-4"></div>
 </div>
 </div>
@@ -308,16 +378,15 @@ const prikladEl = document.getElementById('priklad');
 const caraEl = document.getElementById('cara');
 const odpovedEl = document.getElementById('odpoved');
 const tlacitkoEl = document.getElementById('tlacitko');
-
 const divisionInfo = document.getElementById('divisionInfo');
 
 operaceEl.addEventListener('change', () => {
 aktualizujCislici2();
 chybaEl.textContent = '';
 if (operaceEl.value === '/') {
-divisionInfo.classList.remove('hidden');
+  divisionInfo.classList.remove('hidden');
 } else {
-divisionInfo.classList.add('hidden');
+  divisionInfo.classList.add('hidden');
 }
 });
 
@@ -326,18 +395,18 @@ const op = operaceEl.value;
 const firstVal = parseInt(cislice1El.value);
 const options = cislice2El.options;
 for (let i = 0; i < options.length; i++) {
-const val = parseInt(options[i].value);
-options[i].disabled = (op === '-' && val > firstVal);
+  const val = parseInt(options[i].value);
+  options[i].disabled = (op === '-' && val > firstVal);
 }
 if (parseInt(cislice2El.value) > firstVal && op === '-') {
-cislice2El.value = firstVal;
+  cislice2El.value = firstVal;
 }
 }
 
 function naplnSelecty() {
 for (let i = 1; i <= 9; i++) {
-cislice1El.innerHTML += `<option value="${i}">${i}</option>`;
-cislice2El.innerHTML += `<option value="${i}">${i}</option>`;
+  cislice1El.innerHTML += `<option value="${i}">${i}</option>`;
+  cislice2El.innerHTML += `<option value="${i}">${i}</option>`;
 }
 cislice1El.value = '2';
 cislice2El.value = '1';
@@ -363,32 +432,32 @@ const n2 = parseInt(cislice2El.value);
 chybaEl.textContent = '';
 
 if (op === '-' && n1 < n2) {
-chybaEl.textContent = '❌ Při odčítání musí mít první číslo alespoň tolik cifer jako druhé.';
-return null;
+  chybaEl.textContent = '❌ Při odčítání musí mít první číslo alespoň tolik cifer jako druhé.';
+  return null;
 }
 
 let a, b, pokusy = 0;
 while (pokusy < 1000) {
-pokusy++;
-a = generujCislo(n1);
-b = n2 === 1 ? Math.floor(Math.random() * 8) + 2 : generujCislo(n2);
-if (op === '-' && a <= b) continue;
-if (op === '/' && b === 0) continue;
-break;
+  pokusy++;
+  a = generujCislo(n1);
+  b = n2 === 1 ? Math.floor(Math.random() * 8) + 2 : generujCislo(n2);
+  if (op === '-' && a <= b) continue;
+  if (op === '/' && b === 0) continue;
+  break;
 }
 let vysledek, vysledekZobrazeny;
 if (op === '+') {
-vysledek = a + b;
-vysledekZobrazeny = vysledek;
+  vysledek = a + b;
+  vysledekZobrazeny = vysledek;
 } else if (op === '-') {
-vysledek = a - b;
-vysledekZobrazeny = vysledek;
+  vysledek = a - b;
+  vysledekZobrazeny = vysledek;
 } else if (op === '*') {
-vysledek = BigInt(a) * BigInt(b);
-vysledekZobrazeny = vysledek;
+  vysledek = BigInt(a) * BigInt(b);
+  vysledekZobrazeny = vysledek;
 } else if (op === '/') {
-vysledek = a / b;
-vysledekZobrazeny = zkratNa4Desetinna(vysledek);
+  vysledek = a / b;
+  vysledekZobrazeny = zkratNa4Desetinna(vysledek);
 }
 return { a, b, op, vysledek, vysledekZobrazeny };
 }
@@ -416,18 +485,17 @@ tlacitkoEl.disabled = false;
 
 function aktualizujTextTlacitka() {
 if (!aktualniPriklad) {
-tlacitkoEl.textContent = 'ZAČÍT';
+  tlacitkoEl.textContent = 'ZAČÍT';
 } else if (!zobrazitVysledek) {
-tlacitkoEl.textContent = 'DALŠÍ PŘÍKLAD';
+  tlacitkoEl.textContent = 'DALŠÍ PŘÍKLAD';
 } else {
-tlacitkoEl.textContent = 'VÝSLEDEK(kontrola)';
+  tlacitkoEl.textContent = 'VÝSLEDEK(kontrola)';
 }
 updateBtnDisable();
 }
 
 odpovedEl.addEventListener('input', updateBtnDisable);
 
-// Kontrola, zda je vstup platné číslo
 function jePlatneCislo(vstup) {
 if (vstup === '') return false;
 const norm = normalizuj(vstup);
@@ -440,38 +508,27 @@ const norm = normalizuj(uzivatelskaOdpoved);
 if (norm === '') return false;
 
 if (priklad.op === '/') {
-const userNum = parseFloat(norm);
-if (isNaN(userNum)) return false;
-
-const trueTruncated = zkratNa4Desetinna(priklad.vysledek);
-const trueNum = parseFloat(trueTruncated);
-
-const userStr = norm;
-const [userCela, userDes = ''] = userStr.split('.');
-const userDesTruncated = userDes.substring(0, 4);
-
-const userNumTruncated = parseFloat(userDesTruncated ? `${userCela}.${userDesTruncated}` : userCela);
-
-const userDecimals = userDes.length;
-if (userDecimals >= 3 && userDecimals <= 4) {
-const trueDesTruncated = zkratNa4Desetinna(priklad.vysledek).split('.')[1] || '';
-const trueDesToMatch = trueDesTruncated.substring(0, userDecimals);
-const trueToMatch = parseFloat(`${zkratNa4Desetinna(priklad.vysledek).split('.')[0]}.${trueDesToMatch}`);
-const userToMatch = userNumTruncated;
-
-return Math.abs(userToMatch - trueToMatch) < 1e-9;
-}
-
-return Math.abs(userNumTruncated - trueNum) < 1e-9;
+  const userNum = parseFloat(norm);
+  if (isNaN(userNum)) return false;
+  const trueTruncated = zkratNa4Desetinna(priklad.vysledek);
+  const trueNum = parseFloat(trueTruncated);
+  const userStr = norm;
+  const [userCela, userDes = ''] = userStr.split('.');
+  const userDesTruncated = userDes.substring(0, 4);
+  const userNumTruncated = parseFloat(userDesTruncated ? `${userCela}.${userDesTruncated}` : userCela);
+  const userDecimals = userDes.length;
+  if (userDecimals >= 3 && userDecimals <= 4) {
+    const trueDesTruncated = zkratNa4Desetinna(priklad.vysledek).split('.')[1] || '';
+    const trueDesToMatch = trueDesTruncated.substring(0, userDecimals);
+    const trueToMatch = parseFloat(`${zkratNa4Desetinna(priklad.vysledek).split('.')[0]}.${trueDesToMatch}`);
+    return Math.abs(userNumTruncated - trueToMatch) < 1e-9;
+  }
+  return Math.abs(userNumTruncated - trueNum) < 1e-9;
 } else if (typeof priklad.vysledek === 'bigint') {
-try {
-return BigInt(norm) === priklad.vysledek;
-} catch {
-return false;
-}
+  try { return BigInt(norm) === priklad.vysledek; } catch { return false; }
 } else {
-const num = parseFloat(norm);
-return !isNaN(num) && Math.abs(num - priklad.vysledek) < 1e-9;
+  const num = parseFloat(norm);
+  return !isNaN(num) && Math.abs(num - priklad.vysledek) < 1e-9;
 }
 }
 
@@ -480,72 +537,57 @@ if (isProcessing) return;
 isProcessing = true;
 
 if (e && e.preventDefault) {
-e.preventDefault();
-e.stopPropagation();
+  e.preventDefault();
+  e.stopPropagation();
 }
 odpovedEl.classList.remove('zelene', 'cervene');
 
 const btnText = tlacitkoEl.textContent.trim();
 const inputText = odpovedEl.value.trim();
 
-// ── ZAČÍT nebo DALŠÍ PŘÍKLAD ──
 if (!zobrazitVysledek) {
-if (btnText === 'ZAČÍT' && normalizuj(inputText) === 'smazat') {
-if (typeof window.clearHistory === 'function') {
-window.clearHistory();
-}
-}
-
-const p = vygenerujPriklad();
-if (!p) {
-isProcessing = false;
-return;
-}
-
-aktualniPriklad = p;
-zobrazPriklad(p);
-odpovedEl.value = '';
-odpovedEl.placeholder = 'Váš výsledek';
-zobrazitVysledek = true;
-aktualizujTextTlacitka();
-if (p.op === '/') {
-divisionInfo.classList.remove('hidden');
+  if (btnText === 'ZAČÍT' && normalizuj(inputText) === 'smazat') {
+    if (typeof window.clearHistory === 'function') window.clearHistory();
+  }
+  const p = vygenerujPriklad();
+  if (!p) { isProcessing = false; return; }
+  aktualniPriklad = p;
+  zobrazPriklad(p);
+  odpovedEl.value = '';
+  odpovedEl.placeholder = 'Váš výsledek';
+  zobrazitVysledek = true;
+  aktualizujTextTlacitka();
+  if (p.op === '/') {
+    divisionInfo.classList.remove('hidden');
+  } else {
+    divisionInfo.classList.add('hidden');
+  }
+  setTimeout(() => {
+    ukazCaru();
+    aktivujPole();
+    isProcessing = false;
+  }, 50);
 } else {
-divisionInfo.classList.add('hidden');
-}
-setTimeout(() => {
-ukazCaru();
-aktivujPole();
-isProcessing = false;
-}, 50);
-}
-// ── VÝSLEDEK(kontrola) ──
-else {
-const uziv = inputText;
-
-if (uziv === '') {
-const vysl = aktualniPriklad.vysledekZobrazeny !== undefined ? aktualniPriklad.vysledekZobrazeny : aktualniPriklad.vysledek;
-odpovedEl.value = formatujCislo(vysl);
-zobrazitVysledek = false;
-aktualizujTextTlacitka();
-divisionInfo.classList.add('hidden');
-
-setTimeout(() => {
-odpovedEl.focus();
-isProcessing = false;
-}, 50);
-} else if (!jePlatneCislo(uziv)) {
-chybaEl.textContent = '⚠️ Vložil jste nepovolený znak, opravte!';
-isProcessing = false;
-setTimeout(() => odpovedEl.focus(), 100);
-} else {
-const spravne = zkontrolujOdpoved(uziv, aktualniPriklad);
-odpovedEl.classList.add(spravne ? 'zelene' : 'cervene');
-zobrazitVysledek = false;
-aktualizujTextTlacitka();
-divisionInfo.classList.add('hidden');
-setTimeout(() => isProcessing = false, 150);
-}
+  const uziv = inputText;
+  if (uziv === '') {
+    const vysl = aktualniPriklad.vysledekZobrazeny !== undefined ? aktualniPriklad.vysledekZobrazeny : aktualniPriklad.vysledek;
+    odpovedEl.value = formatujCislo(vysl);
+    zobrazitVysledek = false;
+    aktualizujTextTlacitka();
+    divisionInfo.classList.add('hidden');
+    setTimeout(() => { odpovedEl.focus(); isProcessing = false; }, 50);
+  } else if (!jePlatneCislo(uziv)) {
+    chybaEl.textContent = '⚠️ Vložil jste nepovolený znak, opravte!';
+    isProcessing = false;
+    setTimeout(() => odpovedEl.focus(), 100);
+  } else {
+    const spravne = zkontrolujOdpoved(uziv, aktualniPriklad);
+    odpovedEl.classList.add(spravne ? 'zelene' : 'cervene');
+    zobrazitVysledek = false;
+    aktualizujTextTlacitka();
+    divisionInfo.classList.add('hidden');
+    setTimeout(() => isProcessing = false, 150);
+  }
 }
 }
 
@@ -569,132 +611,101 @@ setTimeout(aktivujPole, 100);
 const STORAGE_KEY = 'matika_trenink_v2';
 
 function getTodayString() {
-const now = new Date();
-const year = now.getFullYear();
-const month = String(now.getMonth() + 1).padStart(2, '0');
-const day = String(now.getDate()).padStart(2, '0');
-return `${year}-${month}-${day}`;
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 }
 
 function formatDateCzech(dateStr) {
-const [year, month, day] = dateStr.split('-');
-const months = [
-'ledna', 'února', 'března', 'dubna', 'května', 'června',
-'července', 'srpna', 'září', 'října', 'listopadu', 'prosince'
-];
-const dayNum = parseInt(day, 10);
-const monthIndex = parseInt(month, 10) - 1;
-const weekdays = ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota'];
-const date = new Date(year, monthIndex, dayNum);
-
-const weekday = weekdays[date.getDay()];
-return `${weekday} ${dayNum}. ${months[monthIndex]} ${year}`;
+  const [year, month, day] = dateStr.split('-');
+  const months = ['ledna','února','března','dubna','května','června','července','srpna','září','října','listopadu','prosince'];
+  const weekdays = ['Neděle','Pondělí','Úterý','Středa','Čtvrtek','Pátek','Sobota'];
+  const date = new Date(year, parseInt(month)-1, parseInt(day));
+  return `${weekdays[date.getDay()]} ${parseInt(day)}. ${months[parseInt(month)-1]} ${year}`;
 }
 
 function loadState() {
-try {
-const raw = localStorage.getItem(STORAGE_KEY);
-if (!raw) return null;
-const state = JSON.parse(raw);
-const today = getTodayString();
-if (state.date !== today) {
-localStorage.removeItem(STORAGE_KEY);
-return null;
-}
-return state;
-} catch (e) {
-return null;
-}
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const state = JSON.parse(raw);
+    if (state.date !== getTodayString()) { localStorage.removeItem(STORAGE_KEY); return null; }
+    return state;
+  } catch(e) { return null; }
 }
 
 function saveState() {
-const state = {
-date: getTodayString(),
-correct: correct,
-wrong: wrong,
-streak: streak,
-history: history
-};
-
-try {
-localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-} catch (e) {}
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      date: getTodayString(), correct, wrong, streak, history
+    }));
+  } catch(e) {}
 }
 
 let correct = 0, wrong = 0, streak = 0, history = [];
 const savedState = loadState();
 if (savedState) {
-correct = savedState.correct || 0;
-wrong = savedState.wrong || 0;
-streak = savedState.streak || 0;
-history = savedState.history || [];
+  correct = savedState.correct || 0;
+  wrong   = savedState.wrong  || 0;
+  streak  = savedState.streak || 0;
+  history = savedState.history || [];
 }
 
-const today = getTodayString();
 const currentDateEl = document.getElementById('currentDate');
-if (currentDateEl) {
-currentDateEl.textContent = formatDateCzech(today);
-}
+if (currentDateEl) currentDateEl.textContent = formatDateCzech(getTodayString());
 
-const btn = document.getElementById('tlacitko');
-const input = document.getElementById('odpoved');
-const inputIcon = document.getElementById('inputIcon');
-const enterHint = document.getElementById('enterHint');
-const scoreCorrect = document.getElementById('scoreCorrect');
-const scoreWrong = document.getElementById('scoreWrong');
-const streakCount = document.getElementById('streakCount');
-const historyContainer = document.getElementById('historyContainer');
-const historyList = document.getElementById('historyList');
-const historyEmpty = document.getElementById('historyEmpty');
-const settingsToggle = document.getElementById('settingsToggle');
-const settingsPanel = document.getElementById('settingsPanel');
-const chybaEl = document.getElementById('chyba');
-const prikladEl = document.getElementById('priklad');
-const caraEl = document.getElementById('cara');
-const divisionInfo = document.getElementById('divisionInfo');
+const btn             = document.getElementById('tlacitko');
+const input           = document.getElementById('odpoved');
+const inputIcon       = document.getElementById('inputIcon');
+const enterHint       = document.getElementById('enterHint');
+const scoreCorrect    = document.getElementById('scoreCorrect');
+const scoreWrong      = document.getElementById('scoreWrong');
+const streakCount     = document.getElementById('streakCount');
+const historyContainer= document.getElementById('historyContainer');
+const historyList     = document.getElementById('historyList');
+const historyEmpty    = document.getElementById('historyEmpty');
+const settingsToggle  = document.getElementById('settingsToggle');
+const settingsPanel   = document.getElementById('settingsPanel');
+const chybaEl2        = document.getElementById('chyba');
+const prikladEl2      = document.getElementById('priklad');
+const caraEl2         = document.getElementById('cara');
+const divisionInfo2   = document.getElementById('divisionInfo');
 
 scoreCorrect.textContent = correct;
-scoreWrong.textContent = wrong;
-streakCount.textContent = streak;
+scoreWrong.textContent   = wrong;
+streakCount.textContent  = streak;
 
 const iconCheck = `<svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>`;
 const iconCross = `<svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>`;
 
 settingsToggle.addEventListener('click', () => {
-settingsPanel.classList.toggle('collapsed');
-if (!settingsPanel.classList.contains('collapsed') &&
-document.getElementById('operace').value === '/') {
-divisionInfo.classList.remove('hidden');
-} else if (settingsPanel.classList.contains('collapsed')) {
-divisionInfo.classList.add('hidden');
-}
+  settingsPanel.classList.toggle('collapsed');
+  const op = document.getElementById('operace').value;
+  if (!settingsPanel.classList.contains('collapsed') && op === '/') {
+    divisionInfo2.classList.remove('hidden');
+  } else if (settingsPanel.classList.contains('collapsed')) {
+    divisionInfo2.classList.add('hidden');
+  }
 });
 
 const chybaObserver = new MutationObserver(() => {
-if (chybaEl.textContent.trim()) {
-settingsPanel.classList.remove('collapsed');
-}
+  if (chybaEl2.textContent.trim()) settingsPanel.classList.remove('collapsed');
 });
-chybaObserver.observe(chybaEl, { childList: true });
+chybaObserver.observe(chybaEl2, { childList: true });
 
 input.addEventListener('focus', () => {
-if (btn.textContent.trim() === 'VÝSLEDEK(kontrola)') {
-enterHint.style.opacity = '1';
-}
+  if (btn.textContent.trim() === 'VÝSLEDEK(kontrola)') enterHint.style.opacity = '1';
 });
-input.addEventListener('blur', () => enterHint.style.opacity = '0');
-input.addEventListener('input', () => {
-if (input.value.length > 0) enterHint.style.opacity = '0';
-});
+input.addEventListener('blur',  () => enterHint.style.opacity = '0');
+input.addEventListener('input', () => { if (input.value.length > 0) enterHint.style.opacity = '0'; });
 
 const btnObserver = new MutationObserver(() => {
-const text = btn.textContent.trim();
-btn.classList.remove('state-start', 'state-result', 'btn-pulse', 'btn-glow-emerald');
-if (text === 'VÝSLEDEK(kontrola)') {
-btn.classList.add('state-result', 'btn-glow-emerald');
-} else {
-btn.classList.add('state-start', 'btn-pulse');
-}
+  const text = btn.textContent.trim();
+  btn.classList.remove('state-start','state-result','btn-pulse','btn-glow-emerald');
+  if (text === 'VÝSLEDEK(kontrola)') {
+    btn.classList.add('state-result','btn-glow-emerald');
+  } else {
+    btn.classList.add('state-start','btn-pulse');
+  }
 });
 btnObserver.observe(btn, { childList: true, characterData: true, subtree: true });
 
@@ -702,135 +713,392 @@ let processedZelene = false;
 let processedCervene = false;
 
 const inputObserver = new MutationObserver((mutations) => {
-mutations.forEach((m) => {
-if (m.type === 'attributes' && m.attributeName === 'class') {
-const cls = input.classList;
-if (cls.contains('zelene')) {
-if (processedZelene) return;
-processedZelene = true;
-correct++;
-streak++;
-inputIcon.innerHTML = iconCheck;
-inputIcon.style.opacity = '1';
-inputIcon.style.transform = 'translateY(-50%) scale(1)';
-updateScores();
-addHistory(true);
-saveState();
-} else if (cls.contains('cervene')) {
-if (processedCervene) return;
-processedCervene = true;
-wrong++;
-streak = 0;
-inputIcon.innerHTML = iconCross;
-inputIcon.style.opacity = '1';
-inputIcon.style.transform = 'translateY(-50%) scale(1)';
-input.classList.add('shake');
-setTimeout(() => input.classList.remove('shake'), 500);
-updateScores();
-addHistory(false);
-saveState();
-} else {
-processedZelene = false;
-processedCervene = false;
-inputIcon.style.opacity = '0';
-inputIcon.style.transform = 'translateY(-50%) scale(0.75)';
-}
-}
-});
+  mutations.forEach((m) => {
+    if (m.type !== 'attributes' || m.attributeName !== 'class') return;
+    const cls = input.classList;
+    if (cls.contains('zelene')) {
+      if (processedZelene) return;
+      processedZelene = true;
+      correct++; streak++;
+      inputIcon.innerHTML = iconCheck;
+      inputIcon.style.opacity = '1';
+      inputIcon.style.transform = 'translateY(-50%) scale(1)';
+      updateScores(); addHistory(true); saveState();
+    } else if (cls.contains('cervene')) {
+      if (processedCervene) return;
+      processedCervene = true;
+      wrong++; streak = 0;
+      inputIcon.innerHTML = iconCross;
+      inputIcon.style.opacity = '1';
+      inputIcon.style.transform = 'translateY(-50%) scale(1)';
+      input.classList.add('shake');
+      setTimeout(() => input.classList.remove('shake'), 500);
+      updateScores(); addHistory(false); saveState();
+    } else {
+      processedZelene = false;
+      processedCervene = false;
+      inputIcon.style.opacity = '0';
+      inputIcon.style.transform = 'translateY(-50%) scale(0.75)';
+    }
+  });
 });
 inputObserver.observe(input, { attributes: true, attributeFilter: ['class'] });
 
 function updateScores() {
-scoreCorrect.textContent = correct;
-scoreWrong.textContent = wrong;
-streakCount.textContent = streak;
-streakCount.parentElement.classList.add('pop');
-setTimeout(() => streakCount.parentElement.classList.remove('pop'), 200);
+  scoreCorrect.textContent = correct;
+  scoreWrong.textContent   = wrong;
+  streakCount.textContent  = streak;
+  streakCount.parentElement.classList.add('pop');
+  setTimeout(() => streakCount.parentElement.classList.remove('pop'), 200);
 }
 
 function addHistory(isCorrect) {
-let text = '';
-if (typeof aktualniPriklad !== 'undefined' && aktualniPriklad) {
-const p = aktualniPriklad;
-const fmt = (typeof formatujCislo === 'function') ? formatujCislo : (x) => String(x);
-const vysl = p.vysledekZobrazeny !== undefined ? p.vysledekZobrazeny : p.vysledek;
-
-// Vždy se ukáže správný výsledek - jak u zelené tak u červené odpovědi
-text = `${fmt(p.a)} ${p.op} ${fmt(p.b)} = ${fmt(vysl)}`;
-
-} else {
-text = prikladEl.textContent.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
-}
-if (!text || text.includes('Zvolte nastavení')) return;
-history.unshift({ text, correct: isCorrect });
-renderHistory();
+  let text = '';
+  if (typeof aktualniPriklad !== 'undefined' && aktualniPriklad) {
+    const p   = aktualniPriklad;
+    const fmt = (typeof formatujCislo === 'function') ? formatujCislo : (x) => String(x);
+    const vysl = p.vysledekZobrazeny !== undefined ? p.vysledekZobrazeny : p.vysledek;
+    text = `${fmt(p.a)} ${p.op} ${fmt(p.b)} = ${fmt(vysl)}`;
+  } else {
+    text = prikladEl2.textContent.replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+  }
+  if (!text || text.includes('Zvolte nastavení')) return;
+  history.unshift({ text, correct: isCorrect });
+  renderHistory();
 }
 
 window.clearHistory = function() {
-history = [];
-correct = 0;
-wrong = 0;
-streak = 0;
-updateScores();
-renderHistory();
-saveState();
+  history = []; correct = 0; wrong = 0; streak = 0;
+  updateScores(); renderHistory(); saveState();
 };
 
 function renderHistory() {
-if (history.length === 0) {
-historyEmpty.style.display = 'block';
-historyContainer.style.opacity = '0';
-historyList.querySelectorAll('.history-item').forEach(el => el.remove());
-return;
-}
-historyEmpty.style.display = 'none';
-historyContainer.style.opacity = '1';
-historyList.querySelectorAll('.history-item').forEach(el => el.remove());
-history.forEach((h, i) => {
-const item = document.createElement('div');
-item.className = `history-item slide-up px-2.5 py-1 rounded-md text-[11px] font-mono font-bold border ${
-h.correct
-? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
-: 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300'
-}`;
-item.style.animationDelay = `${i * 50}ms`;
-item.innerHTML = `${h.text} ${h.correct ? '✓' : '✗'}`;
-historyList.appendChild(item);
-});
+  if (history.length === 0) {
+    historyEmpty.style.display = 'block';
+    historyContainer.style.opacity = '0';
+    historyList.querySelectorAll('.history-item').forEach(el => el.remove());
+    return;
+  }
+  historyEmpty.style.display = 'none';
+  historyContainer.style.opacity = '1';
+  historyList.querySelectorAll('.history-item').forEach(el => el.remove());
+  history.forEach((h, i) => {
+    const item = document.createElement('div');
+    item.className = `history-item slide-up px-2.5 py-1 rounded-md text-[11px] font-mono font-bold border ${
+      h.correct
+        ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
+        : 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300'
+    }`;
+    item.style.animationDelay = `${i * 50}ms`;
+    item.textContent = `${h.text} ${h.correct ? '✓' : '✗'}`;
+    historyList.appendChild(item);
+  });
 }
 
 renderHistory();
 
 const problemObserver = new MutationObserver(() => {
-const txt = prikladEl.textContent;
-if (txt && !txt.includes('Zvolte nastavení')) {
-prikladEl.classList.remove('fade-in');
-void prikladEl.offsetWidth;
-prikladEl.classList.add('fade-in');
-}
+  const txt = prikladEl2.textContent;
+  if (txt && !txt.includes('Zvolte nastavení')) {
+    prikladEl2.classList.remove('fade-in');
+    void prikladEl2.offsetWidth;
+    prikladEl2.classList.add('fade-in');
+  }
 });
-problemObserver.observe(prikladEl, { childList: true });
+problemObserver.observe(prikladEl2, { childList: true });
 
 const caraObserver = new MutationObserver(() => {
-const isVisible = caraEl.style.opacity === '1';
-if (isVisible) {
-caraEl.classList.remove('fade-in');
-void caraEl.offsetWidth;
-caraEl.classList.add('fade-in');
-}
+  if (caraEl2.style.opacity === '1') {
+    caraEl2.classList.remove('fade-in');
+    void caraEl2.offsetWidth;
+    caraEl2.classList.add('fade-in');
+  }
 });
-caraObserver.observe(caraEl, { attributes: true, attributeFilter: ['style'] });
+caraObserver.observe(caraEl2, { attributes: true, attributeFilter: ['style'] });
 
-const operaceObserver = document.getElementById('operace');
-const divisionObserver = new MutationObserver(() => {
-if (operaceObserver.value === '/' && !settingsPanel.classList.contains('collapsed')) {
-divisionInfo.classList.remove('hidden');
-} else {
-divisionInfo.classList.add('hidden');
-}
-});
-divisionObserver.observe(operaceObserver, { attributes: true, attributeFilter: ['value'] });
 })();
 </script>
+
+<!-- ═══════ HLASOVÉ OVLÁDÁNÍ ═══════ -->
+<script>
+(function () {
+
+  /* ── reference ── */
+  const micBtn       = document.getElementById('micBtn');
+  const micIcon      = document.getElementById('micIcon');
+  const voiceOverlay = document.getElementById('voiceOverlay');
+  const voiceHelp    = document.getElementById('voiceHelp');
+  const odpovedInput = document.getElementById('odpoved');
+  const hlavniBtn    = document.getElementById('tlacitko');
+
+  /* ── kontrola podpory ── */
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    /* Prohlížeč nepodporuje – skryjeme mikrofon */
+    micBtn.style.display = 'none';
+    return;
+  }
+
+  /* ── zobraz nápovědu po prvním kliknutí ── */
+  let helpShown = false;
+
+  /* ── ikona mikrofonu (aktivní = červený stop) ── */
+  const SVG_MIC = `
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
+    </svg>`;
+
+  const SVG_STOP = `
+    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+      <rect x="5" y="5" width="14" height="14" rx="2"/>
+    </svg>`;
+
+  /* ── stav ── */
+  let recognition   = null;
+  let isListening   = false;
+  let restartPending = false;  /* příznak pro automatický restart */
+
+  /* ── vytvoř recognition instanci ── */
+  function vytvorRecognition() {
+    const r = new SpeechRecognition();
+    r.lang           = 'cs-CZ';
+    r.continuous     = false;   /* jeden výsledek → zastavení */
+    r.interimResults = true;    /* průběžné výsledky pro overlay */
+    r.maxAlternatives = 3;
+
+    r.onstart = () => {
+      isListening = true;
+      micBtn.classList.add('listening');
+      micIcon.innerHTML = SVG_STOP;
+      ukazOverlay('🎤 Poslouchám…', true);
+    };
+
+    r.onend = () => {
+      isListening = false;
+      micBtn.classList.remove('listening');
+      micIcon.innerHTML = SVG_MIC;
+      if (!restartPending) {
+        skryjOverlay();
+      }
+      restartPending = false;
+    };
+
+    r.onerror = (e) => {
+      isListening = false;
+      restartPending = false;
+      micBtn.classList.remove('listening');
+      micIcon.innerHTML = SVG_MIC;
+      const msg = {
+        'not-allowed'  : '🚫 Mikrofon není povolen',
+        'no-speech'    : '🔇 Nic neslyšeno',
+        'network'      : '🌐 Chyba sítě',
+        'aborted'      : '',
+      }[e.error] || `⚠️ Chyba: ${e.error}`;
+      if (msg) ukazOverlay(msg, false, 2500);
+      else skryjOverlay();
+    };
+
+    r.onresult = (e) => {
+      let interim = '';
+      let final   = '';
+
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) {
+          final += t;
+        } else {
+          interim += t;
+        }
+      }
+
+      /* průběžný text */
+      if (interim) ukazOverlay(`🎤 ${interim}`, true);
+
+      /* finální zpracování */
+      if (final.trim()) {
+        zpracujHlas(final.trim());
+      }
+    };
+
+    return r;
+  }
+
+  /* ── pomocné funkce overlay ── */
+  let overlayTimer = null;
+  function ukazOverlay(text, persist = false, ms = 2000) {
+    voiceOverlay.textContent = text;
+    voiceOverlay.style.opacity = '1';
+    clearTimeout(overlayTimer);
+    if (!persist) {
+      overlayTimer = setTimeout(skryjOverlay, ms);
+    }
+  }
+  function skryjOverlay() {
+    voiceOverlay.style.opacity = '0';
+    clearTimeout(overlayTimer);
+  }
+
+  /* ── převod českých číslovek ── */
+  const SLOVNI_CISLA = {
+    'nula':0,'jedna':1,'jednou':1,'jeden':1,'jedno':1,
+    'dvě':2,'dva':2,'dvou':2,'dvěma':2,
+    'tři':3,'čtyři':4,'pět':5,'šest':6,'sedm':7,'osm':8,'devět':9,
+    'deset':10,'jedenáct':11,'dvanáct':12,'třináct':13,'čtrnáct':14,
+    'patnáct':15,'šestnáct':16,'sedmnáct':17,'osmnáct':18,'devatenáct':19,
+    'dvacet':20,'třicet':30,'čtyřicet':40,'padesát':50,
+    'šedesát':60,'sedmdesát':70,'osmdesát':80,'devadesát':90,
+    'sto':100,'dvěstě':200,'třista':300,'čtyřista':400,'pětset':500,
+    'šestset':600,'sedmset':700,'osmset':800,'devětset':900,
+    'tisíc':1000,'milion':1000000,'miliarda':1000000000,
+  };
+
+  /**
+   * Pokusí se převést slovní vyjádření čísla na číslo.
+   * Vrátí string nebo null.
+   */
+  function prevedNaCislo(text) {
+    /* Zkusíme přímý parse (Chrome často vrátí číslici) */
+    const norm = text.replace(/\s+/g,'').replace(',','.').replace('−','-').replace('–','-');
+    if (/^-?\d+(\.\d+)?$/.test(norm)) return norm;
+
+    /* Desetinné číslo: "nula čárka pět" → "0.5" */
+    const carkaMach = text.match(/^(.+?)\s*(?:čárka|tečka|bod)\s*(.+)$/i);
+    if (carkaMach) {
+      const celaStr = carkaMach[1].trim();
+      const desStr  = carkaMach[2].trim();
+      const celaNum = slovniNaCislo(celaStr);
+      const desNum  = slovniNaCislo(desStr);
+      if (celaNum !== null && desNum !== null) {
+        return `${celaNum}.${String(desNum)}`;
+      }
+    }
+
+    /* Záporné: "mínus ..." → "-..." */
+    const minusMach = text.match(/^(?:mínus|minus)\s+(.+)$/i);
+    if (minusMach) {
+      const inner = prevedNaCislo(minusMach[1]);
+      if (inner !== null) return `-${inner}`;
+    }
+
+    const n = slovniNaCislo(text);
+    if (n !== null) return String(n);
+    return null;
+  }
+
+  function slovniNaCislo(text) {
+    const slova = text.toLowerCase().trim().split(/\s+/);
+    let vysledek = 0;
+    let aktualniSekce = 0; /* pro tvorbu velkých čísel */
+
+    for (const slovo of slova) {
+      if (SLOVNI_CISLA[slovo] !== undefined) {
+        const h = SLOVNI_CISLA[slovo];
+        if (h === 1000 || h === 1000000 || h === 1000000000) {
+          aktualniSekce = (aktualniSekce === 0 ? 1 : aktualniSekce) * h;
+          vysledek += aktualniSekce;
+          aktualniSekce = 0;
+        } else if (h >= 100) {
+          aktualniSekce = (aktualniSekce === 0 ? 1 : aktualniSekce) * h;
+        } else {
+          aktualniSekce += h;
+        }
+      } else if (/^\d+$/.test(slovo)) {
+        aktualniSekce += parseInt(slovo);
+      } else {
+        return null; /* neznámé slovo */
+      }
+    }
+    return vysledek + aktualniSekce;
+  }
+
+  /* ── hlavní zpracování rozpoznaného hlasu ── */
+  function zpracujHlas(text) {
+    const t = text.toLowerCase().trim();
+    ukazOverlay(`✔ "${text}"`, false, 2000);
+
+    /* ── příkazy ── */
+
+    /* SMAZAT pole */
+    if (/^smazat$/.test(t)) {
+      odpovedInput.value = '';
+      odpovedInput.classList.remove('zelene','cervene');
+      ukazOverlay('🗑 Smazáno', false, 1500);
+      return;
+    }
+
+    /* ZAČÍT / DALŠÍ */
+    if (/^(začít|začni|start|další|dál|next)$/.test(t)) {
+      hlavniBtn.click();
+      return;
+    }
+
+    /* VÝSLEDEK / POTVRDIT / OK */
+    if (/^(výsledek|potvrdit|potvrď|zkontrolovat|zkontroluj|ok|hotovo)$/.test(t)) {
+      hlavniBtn.click();
+      return;
+    }
+
+    /* ČÍSLO – pokus o převod */
+    const cislo = prevedNaCislo(t);
+    if (cislo !== null) {
+      odpovedInput.value = cislo;
+      odpovedInput.classList.remove('zelene','cervene');
+      /* krátká prodleva a auto-potvrzení */
+      ukazOverlay(`✔ Zadáno: ${cislo}`, false, 1800);
+      setTimeout(() => {
+        /* klikneme na tlačítko jen pokud je stav "VÝSLEDEK(kontrola)" */
+        if (hlavniBtn.textContent.trim() === 'VÝSLEDEK(kontrola)') {
+          hlavniBtn.click();
+        }
+      }, 600);
+      return;
+    }
+
+    /* Neznámý příkaz */
+    ukazOverlay(`❓ Nerozuměl jsem: "${text}"`, false, 2500);
+  }
+
+  /* ── start / stop hlasového rozpoznávání ── */
+  function toggleListening() {
+    if (isListening) {
+      recognition && recognition.abort();
+      return;
+    }
+    /* Zobraz nápovědu při první aktivaci */
+    if (!helpShown) {
+      helpShown = true;
+      voiceHelp.classList.add('open');
+      setTimeout(() => voiceHelp.classList.remove('open'), 6000);
+    }
+    recognition = vytvorRecognition();
+    try {
+      recognition.start();
+    } catch (err) {
+      ukazOverlay('⚠️ Nelze spustit mikrofon', false, 2500);
+    }
+  }
+
+  /* ── události tlačítka mikrofonu ── */
+  micBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    toggleListening();
+  });
+
+  /* Klávesová zkratka: Alt + M */
+  document.addEventListener('keydown', (e) => {
+    if (e.altKey && e.key.toLowerCase() === 'm') {
+      e.preventDefault();
+      toggleListening();
+    }
+  });
+
+})();
+</script>
+
 </body>
 </html>
