@@ -35,8 +35,8 @@
             color: #ffffff !important;
         }
         input {
-            -webkit-appearance: none;
-            border-radius: 0.75rem;
+            /* -webkit-appearance: none; — ZRUŠENO DLE POŽADAVKU */
+            /* border-radius: 0.75rem; — ODSTRANĚNO "x" DLE POŽADAVKU */
         }
         .math-text {
             white-space: pre;
@@ -682,7 +682,7 @@
                     enterHint.style.opacity = '1';
                 }
             });
-            input.addEventListener('blur', () => enterHint.style.opacity = '0');
+            input.addEventListener('blur', () => enterHint.style.opacity = '0';
             input.addEventListener('input', () => {
                 if (input.value.length > 0) enterHint.style.opacity = '0';
             });
