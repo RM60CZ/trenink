@@ -93,7 +93,7 @@
 <script>
 // === GLOBÁLNÍ PROMĚNNÉ === //
 let currentProblem = null;
-const STORAGE_KEY = 'matika_final_v1';
+const STORAGE_KEY = 'matika_final_v2';
 
 // === POMOCNÉ FUNKCE === //
 function getToday() {
@@ -104,14 +104,16 @@ function getToday() {
 function loadState() {
   try {
     const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (data && data.date === getToday()) return data;
+    if (data && data.date === getToday()) {
+      return data;
+    }
   } catch(e) {}
-  localStorage.removeItem(STORAGE_KEY);
-  return { history: [], correct: 0, wrong: 0 };
+  // Pokud není validní data pro dnešek, vytvoř nový stav
+  return { history: [] };
 }
 
-function saveState(state) {
-  state.date = getToday();
+function saveState(history) {
+  const state = { date: getToday(), history };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
@@ -125,21 +127,12 @@ function formatNumber(x) {
 }
 
 function cleanDivisionResult(numStr) {
-  // Přijme řetězec ve tvaru "12.3400" → vrátí "12.34"
   if (!numStr.includes('.')) return numStr;
   let [cela, des] = numStr.split('.');
   des = des.padEnd(4, '0').substring(0, 4); // zajistí 4 místa, pak ořízne
-  // Odstraní koncové nuly
   des = des.replace(/0+$/, '');
   if (des === '') return cela;
   return `${cela}.${des}`;
-}
-
-function addHistory(text, isCorrect) {
-  const state = loadState();
-  state.history.push({ text, correct: isCorrect });
-  saveState(state);
-  renderHistory();
 }
 
 function renderHistory() {
@@ -151,6 +144,7 @@ function renderHistory() {
     container.innerHTML = '<div class="text-sm text-slate-400 italic">Žádné záznamy</div>';
     return;
   }
+  // Historie se zobrazuje v pořadí: nejnovější nahoře
   state.history.slice().reverse().forEach(h => {
     const div = document.createElement('div');
     div.className = `p-2 rounded font-mono text-sm ${
@@ -165,7 +159,6 @@ function renderHistory() {
 
 // === HLAVNÍ LOGIKA === //
 document.addEventListener('DOMContentLoaded', () => {
-  // UI elementy
   const settingsToggle = document.getElementById('settingsToggle');
   const settingsPanel = document.getElementById('settingsPanel');
   const operaceEl = document.getElementById('operace');
@@ -174,12 +167,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const odpovedEl = document.getElementById('odpoved');
   const tlacitkoEl = document.getElementById('tlacitko');
 
-  // Ozubené kolečko
   settingsToggle.addEventListener('click', () => {
     settingsPanel.classList.toggle('collapsed');
   });
 
-  // Dělení info
   operaceEl.addEventListener('change', () => {
     if (operaceEl.value === '/') {
       divisionInfo.classList.remove('hidden');
@@ -188,17 +179,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Načtení historie
   renderHistory();
 
-  // Generování čísla
   function generateNumber(digits) {
     const min = Math.pow(10, digits - 1);
     const max = Math.pow(10, digits) - 1;
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  // Hlavní tlačítko
   tlacitkoEl.addEventListener('click', () => {
     const mode = tlacitkoEl.textContent.trim();
 
@@ -226,8 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
         displayResult = result;
       } else if (op === '/') {
         result = a / b;
-        // Zobrazíme jako řetězec s přesně 4 des. místy, pak vyčistíme
-        const temp = result.toFixed(10); // dostatek desetinných míst
+        const temp = result.toFixed(10);
         const truncated = temp.split('.')[0] + '.' + temp.split('.')[1].substring(0, 4);
         displayResult = cleanDivisionResult(truncated);
       }
@@ -243,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (mode === 'KONTROLA') {
       const userAnswer = odpovedEl.value.trim();
       if (!userAnswer) {
-        // Uživatel nic nezadal → ukážeme správný výsledek, ale NEUKLÁDÁME do historie
+        // Uživatel nic nezadal → ukážeme výsledek, ALE NEUKLÁDÁME do historie
         if (currentProblem) {
           odpovedEl.value = formatNumber(currentProblem.displayResult);
           tlacitkoEl.textContent = 'DALŠÍ PŘÍKLAD';
@@ -261,10 +248,8 @@ document.addEventListener('DOMContentLoaded', () => {
       // Kontrola správnosti
       let isCorrect = false;
       if (currentProblem.op === '/') {
-        const userNum = parseFloat(normalized);
-        const expectedStr = currentProblem.displayResult.toString();
-        const expectedClean = cleanDivisionResult(expectedStr);
         const userClean = cleanDivisionResult(normalized);
+        const expectedClean = cleanDivisionResult(String(currentProblem.displayResult));
         isCorrect = userClean === expectedClean;
       } else if (typeof currentProblem.result === 'bigint') {
         try {
@@ -277,12 +262,15 @@ document.addEventListener('DOMContentLoaded', () => {
         isCorrect = Math.abs(userNum - currentProblem.result) < 1e-9;
       }
 
-      // Barevné označení
+      // Barevné označení inputu
       odpovedEl.classList.add(isCorrect ? 'zelene' : 'cervene');
 
-      // Uložení do historie – JEN pokud byla zadána odpověď!
+      // ✅ TEĎ SE HISTORIE UKLÁDÁ – JEN KDYŽ BYLA ODPOVĚĎ ZADÁNA
       const fullText = `${formatNumber(currentProblem.a)} ${currentProblem.op} ${formatNumber(currentProblem.b)} = ${formatNumber(currentProblem.displayResult)}`;
-      addHistory(fullText, isCorrect);
+      const state = loadState();
+      state.history.push({ text: fullText, correct: isCorrect });
+      saveState(state.history);
+      renderHistory(); // okamžité vykreslení
 
       // Změna tlačítka
       tlacitkoEl.textContent = isCorrect ? '✓ SPRÁVNĚ!' : '✗ CHYBA!';
@@ -292,7 +280,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Enter klávesa
   odpovedEl.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       tlacitkoEl.click();
