@@ -140,7 +140,6 @@ input{-webkit-appearance:none;border-radius:.75rem}
 
 <script>
 (function(){
-// ─── Helpers ───
 const $=id=>document.getElementById(id);
 const fmt=x=>{
   if(typeof x==='bigint')return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');
@@ -153,32 +152,27 @@ const norm=s=>s.trim().replace(/\s+/g,'').replace(',','.');
 const genNum=n=>{const mn=10**(n-1),mx=10**n-1;return Math.floor(Math.random()*(mx-mn+1))+mn};
 const trunc4=n=>{const[c,d]=(n+'').split('.');return d?c+'.'+d.substring(0,4):c};
 
-// ─── State ───
 const KEY='matika_trenink_v2';
 let correct=0,wrong=0,streak=0,history=[],aktualniPriklad=null,zobrazitVysledek=false,isProcessing=false;
 
-// ─── Elements ───
 const operaceEl=$('operace'),cis1=$('cislice1'),cis2=$('cislice2'),chybaEl=$('chyba');
 const prikladEl=$('priklad'),caraEl=$('cara'),odpovedEl=$('odpoved'),btnEl=$('tlacitko');
 const divInfo=$('divisionInfo'),inputIcon=$('inputIcon'),enterHint=$('enterHint');
 const scoreC=$('scoreCorrect'),scoreW=$('scoreWrong'),streakEl=$('streakCount');
 const histCont=$('historyContainer'),histList=$('historyList'),histEmpty=$('historyEmpty');
 
-// ─── Date ───
 const today=new Date();
 const czMonths=['ledna','února','března','dubna','května','června','července','srpna','září','října','listopadu','prosince'];
 const czDays=['Neděle','Pondělí','Úterý','Středa','Čtvrtek','Pátek','Sobota'];
 $('currentDate').textContent=`${czDays[today.getDay()]} ${today.getDate()}. ${czMonths[today.getMonth()]} ${today.getFullYear()}`;
 const todayStr=today.toISOString().slice(0,10);
 
-// ─── LocalStorage ───
 function load(){
   try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.date===todayStr){correct=s.correct||0;wrong=s.wrong||0;streak=s.streak||0;history=s.history||[]}}catch(e){}
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify({date:todayStr,correct,wrong,streak,history}))}catch(e){}}
 load();
 
-// ─── Selects ───
 for(let i=1;i<=9;i++){cis1.innerHTML+=`<option value="${i}">${i}</option>`;cis2.innerHTML+=`<option value="${i}">${i}</option>`}
 cis1.value='2';cis2.value='1';
 
@@ -191,7 +185,6 @@ updateCis2();
 operaceEl.addEventListener('change',()=>{updateCis2();chybaEl.textContent='';divInfo.classList.toggle('hidden',operaceEl.value!=='/');});
 cis1.addEventListener('change',updateCis2);
 
-// ─── Generate ───
 function generate(){
   const op=operaceEl.value,n1=+cis1.value,n2=+cis2.value;
   chybaEl.textContent='';
@@ -216,71 +209,48 @@ function showProblem(p){
   caraEl.style.opacity='0';
 }
 
-// ─── Division helpers ───
-
-// Spočítá počet smysluplných desetinných míst které uživatel zadal
-// "smysluplných" = ořízne koncové nuly AŽ NA počet des. míst správného výsledku
-function getSignificantDecimals(userStr, correctResult){
-  const n=norm(userStr);
-  const[,ud='']=n.split('.');
-  const[,cd='']=trunc4(correctResult).split('.');
-  const correctDec=cd.length; // kolik des. míst má skutečný výsledek (max 4)
-  // Ořízni koncové nuly jen pokud přesahují počet des. míst výsledku
-  let trimmed=ud;
-  while(trimmed.length>correctDec&&trimmed.endsWith('0'))trimmed=trimmed.slice(0,-1);
-  return trimmed.length;
-}
-
-// Vrátí číslo místa kde se uživatel poprvé spletl (1-based), nebo 0 pokud chyba v celém čísle
-function firstErrorPosition(userStr, correctResult){
-  const n=norm(userStr);
-  const trueStr=trunc4(correctResult); // např. "1.4358"
-  const[uc,ud='']=n.split('.');
-  const[tc,td='']=trueStr.split('.');
-  // Porovnej celé číslo
-  if(uc!==tc)return 0;
-  // Porovnej des. místa jedno po druhém
-  const maxLen=Math.max(ud.length,td.length);
-  for(let i=0;i<maxLen;i++){
-    const uDigit=ud[i]||'0';
-    const tDigit=td[i]||'0';
-    if(uDigit!==tDigit)return i+1;
-  }
-  return -1; // shoduje se (nemělo by nastat pokud check vrátil false)
-}
-
-// ─── Check answer ───
+// ─── Závorka pro dělení ───
+// Vrátí {ok, bracket}
+// bracket u správné odpovědi = počet des. míst které uživatel skutečně zadal
+//   (koncové nuly se nepočítají pokud výsledek má méně des. míst)
+// bracket u špatné odpovědi = číslo des. místa kde se poprvé spletl
+//   (0 = chyba v celé části)
 function checkDivision(userStr, p){
   const n=norm(userStr);
-  if(!n)return{valid:false};
-  const[uc,ud='']=n.split('.');
-  const trueStr=trunc4(p.vysledek);
+  const trueStr=trunc4(p.vysledek);          // např. "1.4358" nebo "2.74"
   const[tc,td='']=trueStr.split('.');
+  const[uc,ud='']=n.split('.');
 
-  // Celé číslo musí souhlasit
-  if(uc!==tc)return{valid:true,ok:false,bracket:0};
+  // Celá část musí souhlasit
+  if(uc!==tc) return{ok:false,bracket:0};
 
-  // Počet zadaných des. míst (po oříznutí nadbytečných nul)
-  const sigDec=getSignificantDecimals(userStr,p.vysledek);
+  // Počet des. míst výsledku (max 4)
+  const correctDecLen=td.length;
 
-  // Porovnej zadaná místa s výsledkem
-  const trueDecFull=td.padEnd(4,'0'); // výsledek vždy na 4 místa
-  let userDecTrimmed=ud.substring(0,Math.max(ud.length,0));
-
-  // Najdi první chybu
-  for(let i=0;i<ud.length;i++){
-    const tDigit=trueDecFull[i]||'0';
-    if(ud[i]!==tDigit)return{valid:true,ok:false,bracket:i+1};
+  // Počet des. míst které uživatel zadal – ořízni koncové nuly
+  // ale jen pokud přesahují correctDecLen
+  let userDec=ud;
+  while(userDec.length>correctDecLen&&userDec.endsWith('0')){
+    userDec=userDec.slice(0,-1);
   }
-  // Vše souhlasí → správně, závorka = sigDec
-  return{valid:true,ok:true,bracket:sigDec};
+  const userDecLen=userDec.length;
+
+  // Porovnej cifru po cifře
+  // Výsledek doplníme nulami na délku userDec pro férové srovnání
+  const truePadded=td.padEnd(Math.max(userDecLen,correctDecLen),'0');
+
+  for(let i=0;i<userDec.length;i++){
+    if(userDec[i]!==truePadded[i]) return{ok:false,bracket:i+1};
+  }
+
+  // Vše souhlasí
+  return{ok:true,bracket:userDecLen};
 }
 
 function check(input,p){
   const n=norm(input);if(!n)return false;
   if(p.op==='/'){
-    const r=checkDivision(input,p);
-    return r.valid&&r.ok;
+    return checkDivision(input,p).ok;
   }else if(typeof p.vysledek==='bigint'){
     try{return BigInt(n)===p.vysledek}catch{return false}
   }else{
@@ -288,8 +258,12 @@ function check(input,p){
   }
 }
 
-// ─── UI Updates ───
-function updateScores(){scoreC.textContent=correct;scoreW.textContent=wrong;streakEl.textContent=streak;streakEl.parentElement.classList.add('pop');setTimeout(()=>streakEl.parentElement.classList.remove('pop'),200)}
+function updateScores(){
+  scoreC.textContent=correct;scoreW.textContent=wrong;streakEl.textContent=streak;
+  streakEl.parentElement.classList.add('pop');
+  setTimeout(()=>streakEl.parentElement.classList.remove('pop'),200);
+}
+
 function updateBtn(){
   btnEl.classList.remove('btn-pulse','btn-glow');
   if(!zobrazitVysledek){btnEl.textContent='▶ '+(aktualniPriklad?'DALŠÍ PŘÍKLAD':'ZAČÍT');btnEl.classList.add('btn-pulse')}
@@ -315,13 +289,12 @@ function addHist(ok, bracket){
   const v=p.vysledekZ!==undefined?p.vysledekZ:p.vysledek;
   const opStr=p.op==='*'?'×':p.op==='/'?'÷':p.op;
   // Závorka pouze pro dělení
-  const bracketStr=(p.op==='/'&&bracket!==undefined)?`(${bracket})`:'';
+  const bracketStr=(p.op==='/')? `(${bracket})`:'';
   const text=`${fmt(p.a)} ${opStr} ${fmt(p.b)} = ${fmt(v)}${bracketStr}`;
   history.unshift({text,correct:ok});
   renderHistory();
 }
 
-// ─── Main Handler ───
 function handle(e){
   if(isProcessing)return;isProcessing=true;
   if(e)e.preventDefault();
@@ -337,7 +310,6 @@ function handle(e){
   }else{
     const val=odpovedEl.value.trim();
     if(!val){
-      // Prázdný input → zobraz výsledek bez barvení, bez záznamu do historie
       odpovedEl.value=fmt(aktualniPriklad.vysledekZ!==undefined?aktualniPriklad.vysledekZ:aktualniPriklad.vysledek);
       zobrazitVysledek=false;updateBtn();divInfo.classList.add('hidden');
       setTimeout(()=>{odpovedEl.focus();isProcessing=false},50);
@@ -347,8 +319,7 @@ function handle(e){
       let ok,bracket;
       if(aktualniPriklad.op==='/'){
         const r=checkDivision(val,aktualniPriklad);
-        ok=r.ok;
-        bracket=r.bracket;
+        ok=r.ok;bracket=r.bracket;
       }else{
         ok=check(val,aktualniPriklad);
         bracket=undefined;
@@ -371,7 +342,6 @@ function handle(e){
   }
 }
 
-// ─── Events ───
 btnEl.addEventListener('touchstart',handle,{passive:false});
 btnEl.addEventListener('click',e=>{if(e.pointerType!=='touch')handle(e)});
 odpovedEl.addEventListener('keydown',e=>{if(e.key==='Enter')handle(e)});
@@ -380,11 +350,9 @@ odpovedEl.addEventListener('blur',()=>enterHint.style.opacity='0');
 odpovedEl.addEventListener('input',()=>{if(odpovedEl.value)enterHint.style.opacity='0'});
 $('settingsToggle').addEventListener('click',()=>{$('settingsPanel').classList.toggle('collapsed')});
 
-// ─── Observers ───
 new MutationObserver(()=>{if(chybaEl.textContent.trim())$('settingsPanel').classList.remove('collapsed')}).observe(chybaEl,{childList:true});
 new MutationObserver(()=>{const t=prikladEl.textContent;if(t&&!t.includes('Zvolte')){prikladEl.classList.remove('fade-in');void prikladEl.offsetWidth;prikladEl.classList.add('fade-in')}}).observe(prikladEl,{childList:true});
 
-// ─── Init ───
 updateScores();updateBtn();renderHistory();
 setTimeout(()=>odpovedEl.focus(),100);
 })();
