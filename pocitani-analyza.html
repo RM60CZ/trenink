@@ -177,7 +177,7 @@ const norm=s=>s.trim().replace(/\s+/g,'').replace(',','.');
 const genNum=n=>{const mn=10**(n-1),mx=10**n-1;return Math.floor(Math.random()*(mx-mn+1))+mn};
 const trunc4=n=>{const[c,d]=(n+'').split('.');return d?c+'.'+d.substring(0,4):c};
 
-const KEY='matika_trenink_v2';
+const KEY='matika_trenink_v3';
 let correct=0,wrong=0,streak=0,history=[],aktualniPriklad=null,zobrazitVysledek=false,isProcessing=false;
 
 const operaceEl=$('operace'),cis1=$('cislice1'),cis2=$('cislice2'),chybaEl=$('chyba');
@@ -253,7 +253,11 @@ function check(input,p){
   const n=norm(input);if(!n)return false;
   if(p.op==='/'){return checkDivision(input,p).ok}
   else if(typeof p.vysledek==='bigint'){try{return BigInt(n)===p.vysledek}catch{return false}}
-  else{const num=parseFloat(n);return!isNaN(num)&&Math.abs(num-p.vysledek)<1e-9}
+  else{
+    // Pro + a - povolíme i desetinné odpovědi (ale výsledek je celý, takže musí souhlasit)
+    const num=parseFloat(n);
+    return!isNaN(num)&&Math.abs(num-p.vysledek)<1e-9;
+  }
 }
 
 function updateScores(){
@@ -304,8 +308,7 @@ function handle(e,fromVoice){
     if(!aktualniPriklad&&norm(odpovedEl.value)==='smazat'){history=[];correct=wrong=streak=0;updateScores();renderHistory();save()}
     const p=generate();if(!p){isProcessing=false;return}
     aktualniPriklad=p;showProblem(p);odpovedEl.value='';odpovedEl.placeholder='Váš výsledek';
-    // Reset akumulátoru při novém příkladu
-    speechAccum=0;
+    speechAccum=0;speechHasDecimal=false;
     zobrazitVysledek=true;updateBtn();divInfo.classList.toggle('hidden',p.op!=='/');
     updateMicVisibility();
     setTimeout(()=>{
@@ -359,10 +362,12 @@ function handle(e,fromVoice){
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 let recognition=null,micListening=false,micAutoRestart=true;
 
-// Akumulátor pro skládání čísel přes více promluv (3 miliony + 576 000)
+// Akumulátor pro skládání čísel přes více promluv
 let speechAccum=0;
+let speechHasDecimal=false;   // přepnuto na true jakmile zazní oddělovač
+let speechDecStr='';          // číslice za desetinnou čárkou
 
-// Debounce pro "zpět" – zabrání vícenásobnému smazání
+// Debounce pro "zpět"
 let zpetLastTime=0;
 
 function updateMicVisibility(){
@@ -373,18 +378,19 @@ function updateMicVisibility(){
 
 function currentOp(){return aktualniPriklad?aktualniPriklad.op:null}
 
-// ── Slovník českých číslovek ──
+// ── Kompletní slovník českých číslovek (do miliard) ──
 const WORD_MAP={
-  'nula':0,'nulu':0,'nuly':0,
-  'jedna':1,'jeden':1,'jedno':1,'jednu':1,'jedničku':1,'jedné':1,
-  'dvě':2,'dva':2,'dvou':2,'dvěma':2,
-  'tři':3,'třech':3,'třemi':3,
+  // 0–19
+  'nula':0,'nulu':0,'nuly':0,'nul':0,
+  'jedna':1,'jeden':1,'jedno':1,'jednu':1,'jedničku':1,'jedné':1,'jednoho':1,
+  'dvě':2,'dva':2,'dvou':2,'dvěma':2,'dvěma':2,
+  'tři':3,'třech':3,'třemi':3,'třemi':3,
   'čtyři':4,'čtyřech':4,'čtyřmi':4,
   'pět':5,'pěti':5,
   'šest':6,'šesti':6,
   'sedm':7,'sedmi':7,
   'osm':8,'osmi':8,
-  'devět':9,'devíti':9,'devět':9,
+  'devět':9,'devíti':9,
   'deset':10,'deseti':10,
   'jedenáct':11,'jedenácti':11,
   'dvanáct':12,'dvanácti':12,
@@ -395,6 +401,7 @@ const WORD_MAP={
   'sedmnáct':17,'sedmnácti':17,
   'osmnáct':18,'osmnácti':18,
   'devatenáct':19,'devatenácti':19,
+  // desítky
   'dvacet':20,'dvaceti':20,
   'třicet':30,'třiceti':30,
   'čtyřicet':40,'čtyřiceti':40,
@@ -403,82 +410,140 @@ const WORD_MAP={
   'sedmdesát':70,'sedmdesáti':70,
   'osmdesát':80,'osmdesáti':80,
   'devadesát':90,'devadesáti':90,
-  'sto':100,'sta':100,'stu':100,'stem':100,
+  // stovky
+  'sto':100,'sta':100,'stu':100,'stem':100,'set':100,
   'dvěstě':200,'dvěsta':200,
-  'třista':300,'třista':300,
+  'třista':300,'třísta':300,
   'čtyřista':400,'čtyřsta':400,
-  'pětset':500,'pětsset':500,
-  'šestset':600,
-  'sedmset':700,
-  'osmset':800,
-  'devětset':900,'devítset':900,
-  'tisíc':1000,'tisíce':1000,'tisíců':1000,'tisíci':1000,'tisícům':1000,
-  'milión':1000000,'milion':1000000,'milióny':1000000,'miliony':1000000,
-  'miliónů':1000000,'milionů':1000000,'milionu':1000000,'miliónu':1000000,
-  'miliarda':1000000000,'miliardy':1000000000,'miliard':1000000000
+  'pětset':500,'pětsset':500,'pět set':500,
+  'šestset':600,'šest set':600,
+  'sedmset':700,'sedm set':700,
+  'osmset':800,'osm set':800,
+  'devětset':900,'devět set':900,'devítset':900,
+  // tisíce
+  'tisíc':1000,'tisíce':1000,'tisíců':1000,'tisíci':1000,'tisícům':1000,'tisícem':1000,
+  // miliony
+  'milión':1e6,'milion':1e6,
+  'milióny':1e6,'miliony':1e6,
+  'miliónů':1e6,'milionů':1e6,
+  'milionu':1e6,'miliónu':1e6,
+  'miliónem':1e6,'milionem':1e6,
+  'miliónům':1e6,'milionům':1e6,
+  // miliardy
+  'miliarda':1e9,'miliardy':1e9,'miliard':1e9,'miliardě':1e9,
+  'miliard':1e9,'miliardám':1e9,'miliardou':1e9,'miliardách':1e9,
 };
 
-// Převod pole slov na celé číslo pomocí akumulace
-// Algoritmus: projde slova, rozpozná násobitele (tisíc, milion…) a sčítá segmenty
+// Složená slova: "dvacetpět" → "dvacet pět"
+function expandCompound(t){
+  return t
+    .replace(/dvacetjeden/g,'dvacet jedna')
+    .replace(/dvacetdvě|dvacetdva/g,'dvacet dvě')
+    .replace(/dvacettři/g,'dvacet tři')
+    .replace(/dvacetčtyři/g,'dvacet čtyři')
+    .replace(/dvacetpět/g,'dvacet pět')
+    .replace(/dvacetšest/g,'dvacet šest')
+    .replace(/dvacetsedm/g,'dvacet sedm')
+    .replace(/dvacetozm/g,'dvacet osm')
+    .replace(/dvacetdevět/g,'dvacet devět');
+}
+
 function wordsToInt(words){
-  let total=0,segment=0,valid=true;
+  // Zpracuje pole slov na celé číslo
+  // Podporuje strukturu: [miliardy] [miliony] [tisíce] [stovky+desítky+jednotky]
+  let total=0,segment=0;
   for(const w of words){
+    if(w==='')continue;
     const v=WORD_MAP[w];
-    if(v===undefined){valid=false;break}
-    if(v>=1000000000){segment=(segment||1)*v;total+=segment;segment=0}
-    else if(v>=1000){segment=(segment||1)*v;total+=segment;segment=0}
-    else if(v>=100){segment=(segment||1)*v}
-    else{segment+=v}
+    if(v===undefined)return null;
+
+    if(v>=1e9){
+      // "miliarda" – násobilka * miliardu
+      segment=(segment||1)*v;
+      total+=segment;
+      segment=0;
+    }else if(v>=1e6){
+      // "milion" – násobilka * milion
+      segment=(segment||1)*v;
+      total+=segment;
+      segment=0;
+    }else if(v>=1000){
+      // "tisíc"
+      segment=(segment||1)*v;
+      total+=segment;
+      segment=0;
+    }else if(v>=100){
+      // stovky – násobilka * 100
+      segment=(segment||1)*v;
+    }else{
+      // desítky + jednotky prostě přičítáme do segmentu
+      segment+=v;
+    }
   }
-  if(!valid)return null;
   return total+segment;
 }
 
-// Převod řečeného textu na číslo
-// allowDecimal: true pouze pro dělení
+// Detekce desetinného oddělovače
+const DEC_SEP_RE=/\bcelá\b|\bcelé\b|\bcely\b|\bcelých\b|\bceli\b|\bčárka\b|\bcarka\b|\btečka\b|\btecka\b|\bbod\b/;
+
+// Jsou to slova pro desetinné cifry (po oddělovači)?
+function wordToDigit(w){
+  const v=WORD_MAP[w];
+  if(v!==undefined&&v>=0&&v<=9)return String(v);
+  if(/^\d$/.test(w))return w;
+  return null;
+}
+
+/**
+ * Převede surový text na číslo.
+ * allowDecimal: true = povol desetinnou část (pro ÷)
+ * Pro +, -, × také nyní povolíme desetinný oddělovač,
+ * ale výsledkem musí být celé číslo (kontrola v check()).
+ */
 function speechToNumber(raw, allowDecimal){
   let t=raw.trim().toLowerCase();
+  t=expandCompound(t);
 
   // Záporné číslo
   let negative=false;
-  t=t.replace(/^(mínus|minus)\s*/,'');
-  if(t!==raw.trim().toLowerCase())negative=true;
+  const negMatch=t.match(/^(mínus|minus)\s*/);
+  if(negMatch){negative=true;t=t.slice(negMatch[0].length)}
 
-  // Desetinný oddělovač – pouze pokud allowDecimal
-  const decSep=allowDecimal
-    ? /\bcelá\b|\bcelé\b|\bcely\b|\bcelých\b|\bceli\b|\bčárka\b|\bcarka\b|\btečka\b|\btecka\b/
-    : null;
+  // Hledáme desetinný oddělovač
+  const decMatch=t.match(DEC_SEP_RE);
+  if(decMatch){
+    const sepIdx=t.indexOf(decMatch[0]);
+    const intPart=t.slice(0,sepIdx).trim();
+    const decPart=t.slice(sepIdx+decMatch[0].length).trim();
 
-  if(allowDecimal && decSep && decSep.test(t)){
-    const parts=t.split(decSep);
-    const intWords=parts[0].trim().split(/\s+/).filter(Boolean);
-    const decWords=parts.slice(1).join(' ').trim().split(/\s+/).filter(Boolean);
+    const intWords=intPart.split(/\s+/).filter(Boolean);
+    const decWords=decPart.split(/\s+/).filter(Boolean);
 
-    const intVal=wordsToInt(intWords);
+    const intVal=intWords.length?wordsToInt(intWords):0;
     if(intVal===null)return null;
 
-    // Desetinná část – každé slovo = jedna cifra
+    // Desetinná část: každé slovo = jedna cifra
     const decStr=decWords.map(w=>{
       if(/^\d$/.test(w))return w;
       const v=WORD_MAP[w];
       return(v!==undefined&&v>=0&&v<=9)?String(v):'?';
     }).join('');
-
     if(decStr.includes('?'))return null;
-    const result=(negative?-intVal:intVal)+(decStr?'.'+decStr:'');
-    return String(result);
+
+    const result=String(negative?-intVal:intVal)+(decStr?'.'+decStr:'');
+    return result;
   }
 
-  // Jen celé číslo ze slov
+  // Jen celé číslo
   const words=t.split(/\s+/).filter(Boolean);
   const intVal=wordsToInt(words);
   if(intVal!==null){
     return String(negative?-intVal:intVal);
   }
 
-  // Případně číslice přímo z rozpoznávání ("576000")
+  // Číslice přímo z ASR
   const cleaned=t.replace(/\s+/g,'');
-  if(/^\d+$/.test(cleaned))return cleaned;
+  if(/^\d+([.,]\d+)?$/.test(cleaned))return cleaned.replace(',','.');
 
   return null;
 }
@@ -534,11 +599,15 @@ function buildRecognition(){
         zpetLastTime=now;
         const cur=odpovedEl.value;
         if(cur.length>0){
-          // Smaž poslední cifru (nebo celou desetinnou část za tečkou)
           odpovedEl.value=cur.slice(0,-1);
-          // Aktualizuj akumulátor podle nové hodnoty v inputu
-          const parsed=parseInt(odpovedEl.value||'0',10);
-          speechAccum=isNaN(parsed)?0:parsed;
+          // Aktualizuj akumulátor
+          if(!speechHasDecimal){
+            const parsed=parseInt(odpovedEl.value||'0',10);
+            speechAccum=isNaN(parsed)?0:parsed;
+          }else{
+            if(speechDecStr.length>0)speechDecStr=speechDecStr.slice(0,-1);
+            else{speechHasDecimal=false;speechDecStr=''}
+          }
         }
       }
       return;
@@ -554,29 +623,70 @@ function buildRecognition(){
       return;
     }
 
-    // ── Číslo ──
-    const allowDec=currentOp()==='/';
-    const converted=speechToNumber(raw,allowDec);
+    // ── Detekuj desetinný oddělovač v průběhu ──
+    const hasDecSep=DEC_SEP_RE.test(raw);
+
+    // Operace
+    const op=currentOp();
+
+    if(hasDecSep){
+      // Přepni na desetinný režim
+      speechHasDecimal=true;
+
+      // Zpracuj celou část před oddělovačem
+      const sepIdx=raw.search(DEC_SEP_RE);
+      const intPart=raw.slice(0,sepIdx).trim();
+      const decPart=raw.slice(raw.search(DEC_SEP_RE)).replace(DEC_SEP_RE,'').trim();
+
+      if(intPart){
+        const converted=speechToNumber(intPart,false);
+        if(converted!==null){
+          speechAccum=parseFloat(converted)||0;
+        }
+      }
+
+      // Desetinná část
+      const decWords=decPart.split(/\s+/).filter(Boolean);
+      speechDecStr=decWords.map(w=>{
+        if(/^\d$/.test(w))return w;
+        const v=WORD_MAP[w];
+        return(v!==undefined&&v>=0&&v<=9)?String(v):'';
+      }).join('');
+
+      odpovedEl.value=String(speechAccum)+(speechDecStr?'.'+speechDecStr:'.');
+      return;
+    }
+
+    // Pokud jsme v desetinném režimu a přišla jen desetinná část
+    if(speechHasDecimal){
+      const decWords=raw.split(/\s+/).filter(Boolean);
+      const digits=decWords.map(w=>{
+        if(/^\d$/.test(w))return w;
+        const v=WORD_MAP[w];
+        return(v!==undefined&&v>=0&&v<=9)?String(v):'';
+      }).filter(Boolean);
+      if(digits.length){
+        speechDecStr+=digits.join('');
+        odpovedEl.value=String(speechAccum)+'.'+speechDecStr;
+      }
+      return;
+    }
+
+    // ── Celé číslo – akumulace ──
+    const converted=speechToNumber(raw,false);
     if(converted===null)return;
 
     const newNum=parseFloat(converted);
-    if(isNaN(newNum))return;
+    if(isNaN(newNum)||newNum<0)return;
 
-    // Jen pro celá čísla akumulujeme přes promluvy
-    if(!allowDec&&Number.isInteger(newNum)&&newNum>0){
-      // Pokud nové číslo je menší než akumulátor → přičti (3 000 000 + 576 000)
-      // Pokud je větší nebo stejné → začni znovu (uživatel začal nový pokus)
-      if(speechAccum>0&&newNum<speechAccum){
-        speechAccum+=newNum;
-      }else{
-        speechAccum=newNum;
-      }
-      odpovedEl.value=String(speechAccum);
+    // Akumulace: nové číslo menší → přičti (3 000 000 + 576 000)
+    // Nové číslo větší nebo stejné → začni znovu
+    if(speechAccum>0&&newNum<speechAccum){
+      speechAccum+=newNum;
     }else{
-      // Desetinné nebo záporné – prostě přepiš
-      speechAccum=0;
-      odpovedEl.value=converted;
+      speechAccum=newNum;
     }
+    odpovedEl.value=String(speechAccum);
   };
 
   return r;
