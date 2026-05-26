@@ -34,15 +34,10 @@ input{-webkit-appearance:none;border-radius:.75rem}
 .scrollbar-hide::-webkit-scrollbar{display:none}
 .scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}
 .score-bar{position:sticky;top:0;z-index:40;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-
-/* Mikrofon tlačítko */
 #micBtn{transition:all .2s;display:none}
 #micBtn.visible{display:flex}
-#micBtn.listening{box-shadow:0 0 0 3px rgba(239,68,68,.5);border-color:#ef4444!important}
 @keyframes mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.6)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
-#micBtn.listening{animation:mic-pulse 1.2s infinite}
-
-/* Rámeček inputu při naslouchání */
+#micBtn.listening{animation:mic-pulse 1.2s infinite;border-color:#ef4444!important}
 #odpoved.mic-active{border-color:#ef4444!important;box-shadow:0 0 0 2px rgba(239,68,68,.25)}
 </style>
 </head>
@@ -64,7 +59,6 @@ input{-webkit-appearance:none;border-radius:.75rem}
     </div>
   </div>
   <div class="flex items-center gap-3">
-    <!-- HLAS checkbox -->
     <label class="flex items-center gap-1.5 cursor-pointer select-none">
       <span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Hlas</span>
       <div class="relative">
@@ -146,10 +140,9 @@ input{-webkit-appearance:none;border-radius:.75rem}
   </div>
   <div id="enterHint" class="text-[9px] text-slate-400 font-medium opacity-0 transition-opacity duration-200 select-none text-center -mt-1">Enter ↵</div>
 
-  <!-- Mikrofon tlačítko -->
   <button id="micBtn" type="button"
-    class="visible w-full py-2 flex items-center justify-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-sm transition-all touch-manipulation">
-    <svg id="micIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    class="w-full py-2 flex items-center justify-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-sm transition-all touch-manipulation">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4M12 3a4 4 0 014 4v4a4 4 0 01-8 0V7a4 4 0 014-4z"/>
     </svg>
     <span id="micLabel">Mikrofon</span>
@@ -251,10 +244,9 @@ function checkDivision(userStr,p){
   const correctDecLen=td.length;
   let userDec=ud;
   while(userDec.length>correctDecLen&&userDec.endsWith('0'))userDec=userDec.slice(0,-1);
-  const userDecLen=userDec.length;
-  const truePadded=td.padEnd(Math.max(userDecLen,correctDecLen),'0');
+  const truePadded=td.padEnd(Math.max(userDec.length,correctDecLen),'0');
   for(let i=0;i<userDec.length;i++){if(userDec[i]!==truePadded[i])return{ok:false,bracket:i+1}}
-  return{ok:true,bracket:userDecLen};
+  return{ok:true,bracket:userDec.length};
 }
 
 function check(input,p){
@@ -306,25 +298,20 @@ function handle(e,fromVoice){
   odpovedEl.classList.remove('zelene','cervene');
   inputIcon.style.opacity='0';
 
-  // Pokud voláno fyzicky (ne z hlasu) – zastav mikrofon
-  if(!fromVoice && micListening){
-    stopMic(false);
-  }
+  if(!fromVoice&&micListening)stopMic(false);
 
   if(!zobrazitVysledek){
     if(!aktualniPriklad&&norm(odpovedEl.value)==='smazat'){history=[];correct=wrong=streak=0;updateScores();renderHistory();save()}
     const p=generate();if(!p){isProcessing=false;return}
     aktualniPriklad=p;showProblem(p);odpovedEl.value='';odpovedEl.placeholder='Váš výsledek';
+    // Reset akumulátoru při novém příkladu
+    speechAccum=0;
     zobrazitVysledek=true;updateBtn();divInfo.classList.toggle('hidden',p.op!=='/');
     updateMicVisibility();
     setTimeout(()=>{
       caraEl.style.opacity='1';
-      // Auto-spustit mikrofon pokud HLAS zapnut a input je prázdný (placeholder)
-      if(hlasCheck.checked&&!odpovedEl.value){
-        setTimeout(()=>startMic(),100);
-      }else{
-        odpovedEl.focus();
-      }
+      if(hlasCheck.checked){setTimeout(()=>startMic(),100)}
+      else{odpovedEl.focus()}
       isProcessing=false;
     },50);
   }else{
@@ -357,12 +344,8 @@ function handle(e,fromVoice){
       zobrazitVysledek=false;updateBtn();divInfo.classList.add('hidden');
       updateMicVisibility();
 
-      // Pokud hlas zapnut – po krátké pauze auto-další příklad
       if(fromVoice&&hlasCheck.checked){
-        setTimeout(()=>{
-          isProcessing=false;
-          handle(null,true);
-        },1200);
+        setTimeout(()=>{isProcessing=false;handle(null,true)},1200);
       }else{
         setTimeout(()=>isProcessing=false,150);
       }
@@ -374,12 +357,130 @@ function handle(e,fromVoice){
 // SPEECH RECOGNITION
 // ─────────────────────────────────────────
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-let recognition=null,micListening=false,micAutoRestart=true,interimVal='';
+let recognition=null,micListening=false,micAutoRestart=true;
+
+// Akumulátor pro skládání čísel přes více promluv (3 miliony + 576 000)
+let speechAccum=0;
+
+// Debounce pro "zpět" – zabrání vícenásobnému smazání
+let zpetLastTime=0;
 
 function updateMicVisibility(){
-  const shouldShow=hlasCheck.checked&&zobrazitVysledek&&aktualniPriklad;
-  micBtn.style.display=shouldShow?'flex':'none';
-  if(!shouldShow&&micListening)stopMic(false);
+  const show=hlasCheck.checked&&zobrazitVysledek&&aktualniPriklad;
+  micBtn.style.display=show?'flex':'none';
+  if(!show&&micListening)stopMic(false);
+}
+
+function currentOp(){return aktualniPriklad?aktualniPriklad.op:null}
+
+// ── Slovník českých číslovek ──
+const WORD_MAP={
+  'nula':0,'nulu':0,'nuly':0,
+  'jedna':1,'jeden':1,'jedno':1,'jednu':1,'jedničku':1,'jedné':1,
+  'dvě':2,'dva':2,'dvou':2,'dvěma':2,
+  'tři':3,'třech':3,'třemi':3,
+  'čtyři':4,'čtyřech':4,'čtyřmi':4,
+  'pět':5,'pěti':5,
+  'šest':6,'šesti':6,
+  'sedm':7,'sedmi':7,
+  'osm':8,'osmi':8,
+  'devět':9,'devíti':9,'devět':9,
+  'deset':10,'deseti':10,
+  'jedenáct':11,'jedenácti':11,
+  'dvanáct':12,'dvanácti':12,
+  'třináct':13,'třinácti':13,
+  'čtrnáct':14,'čtrnácti':14,
+  'patnáct':15,'patnácti':15,
+  'šestnáct':16,'šestnácti':16,
+  'sedmnáct':17,'sedmnácti':17,
+  'osmnáct':18,'osmnácti':18,
+  'devatenáct':19,'devatenácti':19,
+  'dvacet':20,'dvaceti':20,
+  'třicet':30,'třiceti':30,
+  'čtyřicet':40,'čtyřiceti':40,
+  'padesát':50,'padesáti':50,
+  'šedesát':60,'šedesáti':60,
+  'sedmdesát':70,'sedmdesáti':70,
+  'osmdesát':80,'osmdesáti':80,
+  'devadesát':90,'devadesáti':90,
+  'sto':100,'sta':100,'stu':100,'stem':100,
+  'dvěstě':200,'dvěsta':200,
+  'třista':300,'třista':300,
+  'čtyřista':400,'čtyřsta':400,
+  'pětset':500,'pětsset':500,
+  'šestset':600,
+  'sedmset':700,
+  'osmset':800,
+  'devětset':900,'devítset':900,
+  'tisíc':1000,'tisíce':1000,'tisíců':1000,'tisíci':1000,'tisícům':1000,
+  'milión':1000000,'milion':1000000,'milióny':1000000,'miliony':1000000,
+  'miliónů':1000000,'milionů':1000000,'milionu':1000000,'miliónu':1000000,
+  'miliarda':1000000000,'miliardy':1000000000,'miliard':1000000000
+};
+
+// Převod pole slov na celé číslo pomocí akumulace
+// Algoritmus: projde slova, rozpozná násobitele (tisíc, milion…) a sčítá segmenty
+function wordsToInt(words){
+  let total=0,segment=0,valid=true;
+  for(const w of words){
+    const v=WORD_MAP[w];
+    if(v===undefined){valid=false;break}
+    if(v>=1000000000){segment=(segment||1)*v;total+=segment;segment=0}
+    else if(v>=1000){segment=(segment||1)*v;total+=segment;segment=0}
+    else if(v>=100){segment=(segment||1)*v}
+    else{segment+=v}
+  }
+  if(!valid)return null;
+  return total+segment;
+}
+
+// Převod řečeného textu na číslo
+// allowDecimal: true pouze pro dělení
+function speechToNumber(raw, allowDecimal){
+  let t=raw.trim().toLowerCase();
+
+  // Záporné číslo
+  let negative=false;
+  t=t.replace(/^(mínus|minus)\s*/,'');
+  if(t!==raw.trim().toLowerCase())negative=true;
+
+  // Desetinný oddělovač – pouze pokud allowDecimal
+  const decSep=allowDecimal
+    ? /\bcelá\b|\bcelé\b|\bcely\b|\bcelých\b|\bceli\b|\bčárka\b|\bcarka\b|\btečka\b|\btecka\b/
+    : null;
+
+  if(allowDecimal && decSep && decSep.test(t)){
+    const parts=t.split(decSep);
+    const intWords=parts[0].trim().split(/\s+/).filter(Boolean);
+    const decWords=parts.slice(1).join(' ').trim().split(/\s+/).filter(Boolean);
+
+    const intVal=wordsToInt(intWords);
+    if(intVal===null)return null;
+
+    // Desetinná část – každé slovo = jedna cifra
+    const decStr=decWords.map(w=>{
+      if(/^\d$/.test(w))return w;
+      const v=WORD_MAP[w];
+      return(v!==undefined&&v>=0&&v<=9)?String(v):'?';
+    }).join('');
+
+    if(decStr.includes('?'))return null;
+    const result=(negative?-intVal:intVal)+(decStr?'.'+decStr:'');
+    return String(result);
+  }
+
+  // Jen celé číslo ze slov
+  const words=t.split(/\s+/).filter(Boolean);
+  const intVal=wordsToInt(words);
+  if(intVal!==null){
+    return String(negative?-intVal:intVal);
+  }
+
+  // Případně číslice přímo z rozpoznávání ("576000")
+  const cleaned=t.replace(/\s+/g,'');
+  if(/^\d+$/.test(cleaned))return cleaned;
+
+  return null;
 }
 
 function buildRecognition(){
@@ -402,7 +503,6 @@ function buildRecognition(){
     micBtn.classList.remove('listening');
     micLabel.textContent='Mikrofon';
     odpovedEl.classList.remove('mic-active');
-    // Automatický restart pokud máme stále poslouchat
     if(micAutoRestart&&hlasCheck.checked&&zobrazitVysledek){
       setTimeout(()=>{if(!micListening&&hlasCheck.checked&&zobrazitVysledek)r.start()},300);
     }
@@ -410,125 +510,76 @@ function buildRecognition(){
 
   r.onerror=e=>{
     if(e.error==='not-allowed'||e.error==='service-not-available'){
-      micAutoRestart=false;
-      hlasCheck.checked=false;
-      updateMicVisibility();
+      micAutoRestart=false;hlasCheck.checked=false;updateMicVisibility();
       chybaEl.textContent='⚠️ Mikrofon není dostupný';
     }
     micListening=false;
   };
 
   r.onresult=e=>{
-    let interim='',final='';
+    let interim='',finalText='';
     for(let i=e.resultIndex;i<e.results.length;i++){
       const t=e.results[i][0].transcript;
-      if(e.results[i].isFinal)final+=t;
+      if(e.results[i].isFinal)finalText+=t;
       else interim+=t;
     }
 
-    // Zpracuj průběžný text
-    const raw=(final||interim).trim().toLowerCase();
+    const raw=(finalText||interim).trim().toLowerCase();
     if(!raw)return;
 
-    // ── Příkaz ZPĚT – smaž poslední číslici ──
+    // ── ZPĚT – debounce 800ms ──
     if(/\bzpět\b|\bzpet\b/.test(raw)){
-      const cur=odpovedEl.value;
-      if(cur.length>0)odpovedEl.value=cur.slice(0,-1);
-      return;
-    }
-
-    // ── Příkaz DALŠÍ – odešli odpověď ──
-    if(/\bdalší\b|\bdalsi\b/.test(raw)){
-      if(final){
-        // Zastav, odešli
-        micAutoRestart=false;
-        stopMic(false);
-        setTimeout(()=>{
-          micAutoRestart=true;
-          handle(null,true);
-        },200);
+      const now=Date.now();
+      if(now-zpetLastTime>800){
+        zpetLastTime=now;
+        const cur=odpovedEl.value;
+        if(cur.length>0){
+          // Smaž poslední cifru (nebo celou desetinnou část za tečkou)
+          odpovedEl.value=cur.slice(0,-1);
+          // Aktualizuj akumulátor podle nové hodnoty v inputu
+          const parsed=parseInt(odpovedEl.value||'0',10);
+          speechAccum=isNaN(parsed)?0:parsed;
+        }
       }
       return;
     }
 
-    // ── Normalizuj číslo ──
-    const converted=speechToNumber(raw);
-    if(converted!==null){
+    // ── DALŠÍ – odešli ──
+    if(/\bdalší\b|\bdalsi\b/.test(raw)){
+      if(finalText){
+        micAutoRestart=false;
+        stopMic(false);
+        setTimeout(()=>{micAutoRestart=true;handle(null,true)},200);
+      }
+      return;
+    }
+
+    // ── Číslo ──
+    const allowDec=currentOp()==='/';
+    const converted=speechToNumber(raw,allowDec);
+    if(converted===null)return;
+
+    const newNum=parseFloat(converted);
+    if(isNaN(newNum))return;
+
+    // Jen pro celá čísla akumulujeme přes promluvy
+    if(!allowDec&&Number.isInteger(newNum)&&newNum>0){
+      // Pokud nové číslo je menší než akumulátor → přičti (3 000 000 + 576 000)
+      // Pokud je větší nebo stejné → začni znovu (uživatel začal nový pokus)
+      if(speechAccum>0&&newNum<speechAccum){
+        speechAccum+=newNum;
+      }else{
+        speechAccum=newNum;
+      }
+      odpovedEl.value=String(speechAccum);
+    }else{
+      // Desetinné nebo záporné – prostě přepiš
+      speechAccum=0;
       odpovedEl.value=converted;
-      interimVal=converted;
     }
   };
 
   return r;
-}
-
-// Převod mluveného textu na číslici
-function speechToNumber(s){
-  // Nejdřív zkus přímý formát "dvě celé tři čtyři" → "2.34"
-  // nebo už rozpoznaná číslice "1234"
-  let t=s.trim().toLowerCase();
-
-  // Nahraď slovní desetinné oddělovače
-  t=t.replace(/\bcelá\b|\bcelé\b|\bcely\b|\bcelych\b|\bceli\b/g,'.');
-  t=t.replace(/\bčárka\b|\bcarká\b|\bcarka\b|\btečka\b|\btecka\b/g,'.');
-  t=t.replace(/\bmínus\b|\bminus\b/g,'-');
-
-  // Slovní číslovky → cifry
-  const map={
-    'nula':0,'jedna':1,'jedničku':1,'jeden':1,'jedno':1,'jednu':1,
-    'dvě':2,'dva':2,'dvou':2,'dví':2,
-    'tři':3,'čtyři':4,'pět':5,'šest':6,'sedm':7,'osm':8,'devět':9,
-    'deset':10,'jedenáct':11,'dvanáct':12,'třináct':13,'čtrnáct':14,
-    'patnáct':15,'šestnáct':16,'sedmnáct':17,'osmnáct':18,'devatenáct':19,
-    'dvacet':20,'třicet':30,'čtyřicet':40,'padesát':50,
-    'šedesát':60,'sedmdesát':70,'osmdesát':80,'devadesát':90,
-    'sto':100,'dvěstě':200,'třista':300,'čtyřista':400,'pětset':500,
-    'šestset':600,'sedmset':700,'osmset':800,'devětset':900,
-    'tisíc':1000,'milión':1000000,'milion':1000000
-  };
-
-  // Pokud text obsahuje tečku (desetinnou), rozděl
-  if(t.includes('.')){
-    const parts=t.split('.');
-    const intPart=parseWordsToInt(parts[0].trim(),map);
-    // Des. část – každé slovo = jedna cifra
-    const decPart=parts.slice(1).join(' ').trim().split(/\s+/).map(w=>{
-      const v=map[w];
-      return(v!==undefined&&v>=0&&v<=9)?v:w.replace(/\D/g,'');
-    }).join('');
-    if(intPart!==null&&decPart!==''){
-      return intPart+'.'+decPart;
-    }
-    if(intPart!==null)return String(intPart);
-  }
-
-  // Jen celé číslo
-  const intOnly=parseWordsToInt(t,map);
-  if(intOnly!==null)return String(intOnly);
-
-  // Možná už je to číslice přímo
-  const cleaned=t.replace(/\s+/g,'').replace(',','.');
-  if(/^-?\d+([.,]\d+)?$/.test(cleaned))return cleaned;
-
-  return null;
-}
-
-function parseWordsToInt(s,map){
-  // Pokud je to čistá číslice
-  const direct=s.replace(/\s+/g,'');
-  if(/^\d+$/.test(direct))return parseInt(direct);
-
-  const words=s.split(/\s+/).filter(Boolean);
-  let total=0,current=0,valid=true;
-  for(const w of words){
-    const v=map[w];
-    if(v===undefined){valid=false;break}
-    if(v>=1000){current=(current||1)*v;total+=current;current=0}
-    else if(v>=100){current=(current||1)*v}
-    else{current+=v}
-  }
-  if(!valid)return null;
-  return total+current;
 }
 
 function startMic(){
@@ -539,37 +590,25 @@ function startMic(){
   try{recognition.start()}catch(e){}
 }
 
-function stopMic(resetRecognition){
+function stopMic(reset){
   micAutoRestart=false;
-  if(recognition&&micListening){
-    try{recognition.stop()}catch(e){}
-  }
-  if(resetRecognition){recognition=null}
+  if(recognition&&micListening){try{recognition.stop()}catch(e){}}
+  if(reset){recognition=null}
   micListening=false;
   micBtn.classList.remove('listening');
   micLabel.textContent='Mikrofon';
   odpovedEl.classList.remove('mic-active');
 }
 
-// Checkbox HLAS
 hlasCheck.addEventListener('change',()=>{
   updateMicVisibility();
   if(!hlasCheck.checked){stopMic(true)}
-  else if(zobrazitVysledek&&aktualniPriklad&&!odpovedEl.value){
-    setTimeout(()=>startMic(),100);
-  }
+  else if(zobrazitVysledek&&aktualniPriklad){setTimeout(()=>startMic(),100)}
 });
 
-// Mikrofon tlačítko – toggle
-micBtn.addEventListener('click',()=>{
-  if(micListening){stopMic(false)}
-  else{startMic()}
-});
-micBtn.addEventListener('touchstart',e=>{e.stopPropagation()},{passive:true});
+micBtn.addEventListener('click',()=>{if(micListening)stopMic(false);else startMic()});
+micBtn.addEventListener('touchstart',e=>e.stopPropagation(),{passive:true});
 
-// ─────────────────────────────────────────
-// MAIN HANDLERS
-// ─────────────────────────────────────────
 btnEl.addEventListener('touchstart',e=>handle(e,false),{passive:false});
 btnEl.addEventListener('click',e=>{if(e.pointerType!=='touch')handle(e,false)});
 odpovedEl.addEventListener('keydown',e=>{if(e.key==='Enter')handle(e,false)});
