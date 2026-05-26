@@ -143,11 +143,11 @@ input{-webkit-appearance:none;border-radius:.75rem}
 // ─── Helpers ───
 const $=id=>document.getElementById(id);
 const fmt=x=>{
-if(typeof x==='bigint')return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');
-if(typeof x!=='number')return String(x);
-if(Number.isInteger(x))return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');
-const[c,d]=x.toString().split('.');
-return d?c.replace(/\B(?=(\d{3})+(?!\d))/g,' ')+'.'+d:c.replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+  if(typeof x==='bigint')return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+  if(typeof x!=='number')return String(x);
+  if(Number.isInteger(x))return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+  const[c,d]=x.toString().split('.');
+  return d?c.replace(/\B(?=(\d{3})+(?!\d))/g,' ')+'.'+d:c.replace(/\B(?=(\d{3})+(?!\d))/g,' ');
 };
 const norm=s=>s.trim().replace(/\s+/g,'').replace(',','.');
 const genNum=n=>{const mn=10**(n-1),mx=10**n-1;return Math.floor(Math.random()*(mx-mn+1))+mn};
@@ -173,7 +173,7 @@ const todayStr=today.toISOString().slice(0,10);
 
 // ─── LocalStorage ───
 function load(){
-try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.date===todayStr){correct=s.correct||0;wrong=s.wrong||0;streak=s.streak||0;history=s.history||[]}}catch(e){}
+  try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.date===todayStr){correct=s.correct||0;wrong=s.wrong||0;streak=s.streak||0;history=s.history||[]}}catch(e){}
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify({date:todayStr,correct,wrong,streak,history}))}catch(e){}}
 load();
@@ -183,9 +183,9 @@ for(let i=1;i<=9;i++){cis1.innerHTML+=`<option value="${i}">${i}</option>`;cis2.
 cis1.value='2';cis2.value='1';
 
 function updateCis2(){
-const op=operaceEl.value,v1=+cis1.value;
-[...cis2.options].forEach(o=>{o.disabled=(op==='-'&&+o.value>v1)});
-if(+cis2.value>v1&&op==='-')cis2.value=v1;
+  const op=operaceEl.value,v1=+cis1.value;
+  [...cis2.options].forEach(o=>{o.disabled=(op==='-'&&+o.value>v1)});
+  if(+cis2.value>v1&&op==='-')cis2.value=v1;
 }
 updateCis2();
 operaceEl.addEventListener('change',()=>{updateCis2();chybaEl.textContent='';divInfo.classList.toggle('hidden',operaceEl.value!=='/');});
@@ -193,108 +193,182 @@ cis1.addEventListener('change',updateCis2);
 
 // ─── Generate ───
 function generate(){
-const op=operaceEl.value,n1=+cis1.value,n2=+cis2.value;
-chybaEl.textContent='';
-if(op==='-'&&n1<n2){chybaEl.textContent='❌ Při odčítání musí mít 1. číslo ≥ cifer než 2.';return null}
-let a,b,i=0;
-while(i++<1000){
-a=genNum(n1);b=n2===1?Math.floor(Math.random()*8)+2:genNum(n2);
-if(op==='-'&&a<=b)continue;if(op==='/'&&b===0)continue;break;
-}
-let vysledek,vysledekZ;
-if(op==='+'){vysledek=vysledekZ=a+b}
-else if(op==='-'){vysledek=vysledekZ=a-b}
-else if(op==='*'){vysledek=vysledekZ=BigInt(a)*BigInt(b)}
-else{vysledek=a/b;vysledekZ=trunc4(vysledek)}
-return{a,b,op,vysledek,vysledekZ};
+  const op=operaceEl.value,n1=+cis1.value,n2=+cis2.value;
+  chybaEl.textContent='';
+  if(op==='-'&&n1<n2){chybaEl.textContent='❌ Při odčítání musí mít 1. číslo ≥ cifer než 2.';return null}
+  let a,b,i=0;
+  while(i++<1000){
+    a=genNum(n1);b=n2===1?Math.floor(Math.random()*8)+2:genNum(n2);
+    if(op==='-'&&a<=b)continue;if(op==='/'&&b===0)continue;break;
+  }
+  let vysledek,vysledekZ;
+  if(op==='+'){vysledek=vysledekZ=a+b}
+  else if(op==='-'){vysledek=vysledekZ=a-b}
+  else if(op==='*'){vysledek=vysledekZ=BigInt(a)*BigInt(b)}
+  else{vysledek=a/b;vysledekZ=trunc4(vysledek)}
+  return{a,b,op,vysledek,vysledekZ};
 }
 
 function showProblem(p){
-const fa=fmt(p.a),fb=fmt(p.b);
-const max=Math.max(fa.length,(p.op+' '+fb).length);
-prikladEl.textContent=`${fa.padStart(max)}\n${(p.op+' '+fb).padStart(max)}`;
-caraEl.style.opacity='0';
+  const fa=fmt(p.a),fb=fmt(p.b);
+  const max=Math.max(fa.length,(p.op+' '+fb).length);
+  prikladEl.textContent=`${fa.padStart(max)}\n${(p.op+' '+fb).padStart(max)}`;
+  caraEl.style.opacity='0';
+}
+
+// ─── Division helpers ───
+
+// Spočítá počet smysluplných desetinných míst které uživatel zadal
+// "smysluplných" = ořízne koncové nuly AŽ NA počet des. míst správného výsledku
+function getSignificantDecimals(userStr, correctResult){
+  const n=norm(userStr);
+  const[,ud='']=n.split('.');
+  const[,cd='']=trunc4(correctResult).split('.');
+  const correctDec=cd.length; // kolik des. míst má skutečný výsledek (max 4)
+  // Ořízni koncové nuly jen pokud přesahují počet des. míst výsledku
+  let trimmed=ud;
+  while(trimmed.length>correctDec&&trimmed.endsWith('0'))trimmed=trimmed.slice(0,-1);
+  return trimmed.length;
+}
+
+// Vrátí číslo místa kde se uživatel poprvé spletl (1-based), nebo 0 pokud chyba v celém čísle
+function firstErrorPosition(userStr, correctResult){
+  const n=norm(userStr);
+  const trueStr=trunc4(correctResult); // např. "1.4358"
+  const[uc,ud='']=n.split('.');
+  const[tc,td='']=trueStr.split('.');
+  // Porovnej celé číslo
+  if(uc!==tc)return 0;
+  // Porovnej des. místa jedno po druhém
+  const maxLen=Math.max(ud.length,td.length);
+  for(let i=0;i<maxLen;i++){
+    const uDigit=ud[i]||'0';
+    const tDigit=td[i]||'0';
+    if(uDigit!==tDigit)return i+1;
+  }
+  return -1; // shoduje se (nemělo by nastat pokud check vrátil false)
 }
 
 // ─── Check answer ───
-function check(input,p){
-const n=norm(input);if(!n)return false;
-if(p.op==='/'){
-const uNum=parseFloat(n);if(isNaN(uNum))return false;
-const trueNum=parseFloat(trunc4(p.vysledek));
-const[uc,ud='']=n.split('.');
-const ut=parseFloat((ud.substring(0,4)?uc+'.'+ud.substring(0,4):uc));
-if(ud.length>=3&&ud.length<=4){
-const td=trunc4(p.vysledek).split('.')[1]||'';
-const tm=parseFloat(trunc4(p.vysledek).split('.')[0]+'.'+td.substring(0,ud.length));
-return Math.abs(ut-tm)<1e-9;
+function checkDivision(userStr, p){
+  const n=norm(userStr);
+  if(!n)return{valid:false};
+  const[uc,ud='']=n.split('.');
+  const trueStr=trunc4(p.vysledek);
+  const[tc,td='']=trueStr.split('.');
+
+  // Celé číslo musí souhlasit
+  if(uc!==tc)return{valid:true,ok:false,bracket:0};
+
+  // Počet zadaných des. míst (po oříznutí nadbytečných nul)
+  const sigDec=getSignificantDecimals(userStr,p.vysledek);
+
+  // Porovnej zadaná místa s výsledkem
+  const trueDecFull=td.padEnd(4,'0'); // výsledek vždy na 4 místa
+  let userDecTrimmed=ud.substring(0,Math.max(ud.length,0));
+
+  // Najdi první chybu
+  for(let i=0;i<ud.length;i++){
+    const tDigit=trueDecFull[i]||'0';
+    if(ud[i]!==tDigit)return{valid:true,ok:false,bracket:i+1};
+  }
+  // Vše souhlasí → správně, závorka = sigDec
+  return{valid:true,ok:true,bracket:sigDec};
 }
-return Math.abs(ut-trueNum)<1e-9;
-}else if(typeof p.vysledek==='bigint'){
-try{return BigInt(n)===p.vysledek}catch{return false}
-}else{const num=parseFloat(n);return!isNaN(num)&&Math.abs(num-p.vysledek)<1e-9}
+
+function check(input,p){
+  const n=norm(input);if(!n)return false;
+  if(p.op==='/'){
+    const r=checkDivision(input,p);
+    return r.valid&&r.ok;
+  }else if(typeof p.vysledek==='bigint'){
+    try{return BigInt(n)===p.vysledek}catch{return false}
+  }else{
+    const num=parseFloat(n);return!isNaN(num)&&Math.abs(num-p.vysledek)<1e-9;
+  }
 }
 
 // ─── UI Updates ───
 function updateScores(){scoreC.textContent=correct;scoreW.textContent=wrong;streakEl.textContent=streak;streakEl.parentElement.classList.add('pop');setTimeout(()=>streakEl.parentElement.classList.remove('pop'),200)}
 function updateBtn(){
-btnEl.classList.remove('btn-pulse','btn-glow');
-if(!zobrazitVysledek){btnEl.textContent='▶ '+(aktualniPriklad?'DALŠÍ PŘÍKLAD':'ZAČÍT');btnEl.classList.add('btn-pulse')}
-else{btnEl.textContent='✓ VÝSLEDEK(kontrola)';btnEl.classList.add('btn-glow')}
-}
-function renderHistory(){
-if(!history.length){histEmpty.style.display='block';histCont.style.opacity='0';histList.querySelectorAll('.hi').forEach(e=>e.remove());return}
-histEmpty.style.display='none';histCont.style.opacity='1';
-histList.querySelectorAll('.hi').forEach(e=>e.remove());
-history.forEach((h,i)=>{
-const d=document.createElement('div');
-d.className=`hi slide-up px-2.5 py-1 rounded-md text-[11px] font-mono font-bold border ${h.correct?'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300':'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300'}`;
-d.style.animationDelay=i*50+'ms';
-d.textContent=h.text+' '+(h.correct?'✓':'✗');
-histList.appendChild(d);
-});
+  btnEl.classList.remove('btn-pulse','btn-glow');
+  if(!zobrazitVysledek){btnEl.textContent='▶ '+(aktualniPriklad?'DALŠÍ PŘÍKLAD':'ZAČÍT');btnEl.classList.add('btn-pulse')}
+  else{btnEl.textContent='✓ VÝSLEDEK(kontrola)';btnEl.classList.add('btn-glow')}
 }
 
-function addHist(ok){
-if(!aktualniPriklad)return;
-const p=aktualniPriklad,v=p.vysledekZ!==undefined?p.vysledekZ:p.vysledek;
-const text=`${fmt(p.a)} ${p.op} ${fmt(p.b)} = ${fmt(v)}`;
-history.unshift({text,correct:ok});
-renderHistory();
+function renderHistory(){
+  if(!history.length){histEmpty.style.display='block';histCont.style.opacity='0';histList.querySelectorAll('.hi').forEach(e=>e.remove());return}
+  histEmpty.style.display='none';histCont.style.opacity='1';
+  histList.querySelectorAll('.hi').forEach(e=>e.remove());
+  history.forEach((h,i)=>{
+    const d=document.createElement('div');
+    d.className=`hi slide-up px-2.5 py-1 rounded-md text-[11px] font-mono font-bold border ${h.correct?'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300':'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300'}`;
+    d.style.animationDelay=i*50+'ms';
+    d.textContent=h.text+' '+(h.correct?'✓':'✗');
+    histList.appendChild(d);
+  });
+}
+
+function addHist(ok, bracket){
+  if(!aktualniPriklad)return;
+  const p=aktualniPriklad;
+  const v=p.vysledekZ!==undefined?p.vysledekZ:p.vysledek;
+  const opStr=p.op==='*'?'×':p.op==='/'?'÷':p.op;
+  // Závorka pouze pro dělení
+  const bracketStr=(p.op==='/'&&bracket!==undefined)?`(${bracket})`:'';
+  const text=`${fmt(p.a)} ${opStr} ${fmt(p.b)} = ${fmt(v)}${bracketStr}`;
+  history.unshift({text,correct:ok});
+  renderHistory();
 }
 
 // ─── Main Handler ───
 function handle(e){
-if(isProcessing)return;isProcessing=true;
-if(e)e.preventDefault();
-odpovedEl.classList.remove('zelene','cervene');
-inputIcon.style.opacity='0';
+  if(isProcessing)return;isProcessing=true;
+  if(e)e.preventDefault();
+  odpovedEl.classList.remove('zelene','cervene');
+  inputIcon.style.opacity='0';
 
-if(!zobrazitVysledek){
-if(!aktualniPriklad&&norm(odpovedEl.value)==='smazat'){history=[];correct=wrong=streak=0;updateScores();renderHistory();save()}
-const p=generate();if(!p){isProcessing=false;return}
-aktualniPriklad=p;showProblem(p);odpovedEl.value='';odpovedEl.placeholder='Váš výsledek';
-zobrazitVysledek=true;updateBtn();divInfo.classList.toggle('hidden',p.op!=='/');
-setTimeout(()=>{caraEl.style.opacity='1';odpovedEl.focus();isProcessing=false},50);
-}else{
-const val=odpovedEl.value.trim();
-if(!val){
-odpovedEl.value=fmt(aktualniPriklad.vysledekZ!==undefined?aktualniPriklad.vysledekZ:aktualniPriklad.vysledek);
-zobrazitVysledek=false;updateBtn();divInfo.classList.add('hidden');
-setTimeout(()=>{odpovedEl.focus();isProcessing=false},50);
-}else if(!/^-?\d+([.,]\d*)?$/.test(norm(val))){
-chybaEl.textContent='⚠️ Nepovolený znak!';isProcessing=false;odpovedEl.focus();
-}else{
-const ok=check(val,aktualniPriklad);
-odpovedEl.classList.add(ok?'zelene':'cervene');
-if(ok){correct++;streak++;inputIcon.innerHTML='<svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>'}
-else{wrong++;streak=0;inputIcon.innerHTML='<svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>';odpovedEl.classList.add('shake');setTimeout(()=>odpovedEl.classList.remove('shake'),500)}
-inputIcon.style.opacity='1';
-updateScores();addHist(ok);save();
-zobrazitVysledek=false;updateBtn();divInfo.classList.add('hidden');
-setTimeout(()=>isProcessing=false,150);
-}
-}
+  if(!zobrazitVysledek){
+    if(!aktualniPriklad&&norm(odpovedEl.value)==='smazat'){history=[];correct=wrong=streak=0;updateScores();renderHistory();save()}
+    const p=generate();if(!p){isProcessing=false;return}
+    aktualniPriklad=p;showProblem(p);odpovedEl.value='';odpovedEl.placeholder='Váš výsledek';
+    zobrazitVysledek=true;updateBtn();divInfo.classList.toggle('hidden',p.op!=='/');
+    setTimeout(()=>{caraEl.style.opacity='1';odpovedEl.focus();isProcessing=false},50);
+  }else{
+    const val=odpovedEl.value.trim();
+    if(!val){
+      // Prázdný input → zobraz výsledek bez barvení, bez záznamu do historie
+      odpovedEl.value=fmt(aktualniPriklad.vysledekZ!==undefined?aktualniPriklad.vysledekZ:aktualniPriklad.vysledek);
+      zobrazitVysledek=false;updateBtn();divInfo.classList.add('hidden');
+      setTimeout(()=>{odpovedEl.focus();isProcessing=false},50);
+    }else if(!/^-?\d+([.,]\d*)?$/.test(norm(val))){
+      chybaEl.textContent='⚠️ Nepovolený znak!';isProcessing=false;odpovedEl.focus();
+    }else{
+      let ok,bracket;
+      if(aktualniPriklad.op==='/'){
+        const r=checkDivision(val,aktualniPriklad);
+        ok=r.ok;
+        bracket=r.bracket;
+      }else{
+        ok=check(val,aktualniPriklad);
+        bracket=undefined;
+      }
+      odpovedEl.classList.add(ok?'zelene':'cervene');
+      if(ok){
+        correct++;streak++;
+        inputIcon.innerHTML='<svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>';
+      }else{
+        wrong++;streak=0;
+        inputIcon.innerHTML='<svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>';
+        odpovedEl.classList.add('shake');
+        setTimeout(()=>odpovedEl.classList.remove('shake'),500);
+      }
+      inputIcon.style.opacity='1';
+      updateScores();addHist(ok,bracket);save();
+      zobrazitVysledek=false;updateBtn();divInfo.classList.add('hidden');
+      setTimeout(()=>isProcessing=false,150);
+    }
+  }
 }
 
 // ─── Events ───
@@ -306,7 +380,7 @@ odpovedEl.addEventListener('blur',()=>enterHint.style.opacity='0');
 odpovedEl.addEventListener('input',()=>{if(odpovedEl.value)enterHint.style.opacity='0'});
 $('settingsToggle').addEventListener('click',()=>{$('settingsPanel').classList.toggle('collapsed')});
 
-// ─── Observers (minimal) ───
+// ─── Observers ───
 new MutationObserver(()=>{if(chybaEl.textContent.trim())$('settingsPanel').classList.remove('collapsed')}).observe(chybaEl,{childList:true});
 new MutationObserver(()=>{const t=prikladEl.textContent;if(t&&!t.includes('Zvolte')){prikladEl.classList.remove('fade-in');void prikladEl.offsetWidth;prikladEl.classList.add('fade-in')}}).observe(prikladEl,{childList:true});
 
