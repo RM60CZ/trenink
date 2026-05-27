@@ -160,7 +160,6 @@ const fmt=x=>{
   const[c,d]=x.toString().split('.');
   return d?c.replace(/\B(?=(\d{3})+(?!\d))/g,' ')+'.'+d:c.replace(/\B(?=(\d{3})+(?!\d))/g,' ');
 };
-// Formátuje čistý číselný řetězec s oddělovači tisíců
 function fmtInputStr(s){
   s=s.replace(/\s/g,'');
   const neg=s.startsWith('-');
@@ -313,6 +312,8 @@ function handle(e,fromVoice){
   if(e)e.preventDefault();
   odpovedEl.classList.remove('zelene','cervene');
   inputIcon.style.opacity='0';
+  
+  // Uživatelské tlačítko / Enter zastaví probíhající poslouchání.
   if(!fromVoice&&micListening)stopMic(false);
 
   if(!zobrazitVysledek){
@@ -325,6 +326,7 @@ function handle(e,fromVoice){
     updateMicVisibility();
     setTimeout(()=>{
       caraEl.style.opacity='1';
+      // Zahájení nového příkladu -> zapíná mikrofon, pokud je zaškrtnutý
       if(hlasCheck.checked){setTimeout(()=>startMic(),100)}
       else{odpovedEl.focus()}
       isProcessing=false;
@@ -360,18 +362,16 @@ function handle(e,fromVoice){
       updateScores();addHist(ok,normVal);save();
       zobrazitVysledek=false;updateBtn();divInfo.classList.add('hidden');
       updateMicVisibility();
-      if(fromVoice&&hlasCheck.checked){
-        setTimeout(()=>{isProcessing=false;handle(null,true)},1200);
-      }else{
-        setTimeout(()=>isProcessing=false,150);
-      }
+      
+      // Provedena kontrola a systém čeká na stisk tlačítka DALŠÍ (nebo Enter)
+      setTimeout(()=>isProcessing=false,150);
     }
   }
 }
 
 // ═══════════════════════════════════════════════════════════════
 // HLASOVÝ VSTUP 
-// Absolutně imunní proti interpunkci a tvarům slov od Googlu
+// Skládá na pozadí tiše, ukáže a odešle pouze při slovech "ano"/"jo".
 // ═══════════════════════════════════════════════════════════════
 
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -390,7 +390,7 @@ function spReset(){
 
 function spFlush(){
   let raw = spBufInt;
-  if (!raw && !spDecMode) return; // nic v bufferu
+  if (!raw && !spDecMode) return;
   if (!raw) raw = '0';
   if (spDecMode) raw += '.' + (spBufDec || '0');
   odpovedEl.value = fmtInputStr(raw);
@@ -564,59 +564,52 @@ function buildRecognition(){
 
     let raw = finalText.trim().toLowerCase();
 
-    // 1) KOMPLETNÍ OČIŠTĚNÍ OD INTERPUNKCE (tečky, čárky atd.)
+    // Odstranění interpunkce
     raw = raw.replace(/[.,?!;:_]/g, '');
 
-    // 2) KONTROLA VYMAZÁNÍ
     if(/znovu|znova|smazat|vymazat|zrušit|zrusit/.test(raw)){
       spReset();
       return;
     }
 
-    // 3) KONTROLA ODESLÁNÍ
-    if(/další|dalsi|hotovo|zkontroluj/.test(raw)){
-      micAutoRestart=false;
-      stopMic(false);
-      setTimeout(()=>{micAutoRestart=true;handle(null,true)},200);
-      return;
+    // Detekce spouštěcího slova "ano" nebo "jo"
+    let shouldSubmit = false;
+    if(/\b(ano|jo|joo)\b/.test(raw)){
+      shouldSubmit = true;
+      raw = raw.replace(/\b(ano|jo|joo)\b/g, ' ');
     }
 
-    // 4) DETEKCE SLOVA PRO ZOBRAZENÍ VÝSLEDKU
-    // Přidány všechny požadované tvary
-    let shouldShow = false;
-    if(/ukázat|ukazat|ukažte|ukazte|ukaž|ukaš/.test(raw)){
-      shouldShow = true;
-      // Odstraníme z textu samotná spouštěcí slova, ať nám nekazí počítání čísel
-      raw = raw.replace(/ukázat|ukazat|ukažte|ukazte|ukaž|ukaš/g, ' ');
-    }
-
-    // 5) PŘEDZPRACOVÁNÍ TEXTU
+    // Předzpracování
     raw = expandCompound(raw);
     raw = raw.trim();
 
-    // Pokud už žádný text nezbyl (člověk řekl jen samotné spouštěcí slovo bez čísel),
-    // jenom aktualizujeme políčko a končíme.
-    if(!raw && shouldShow) {
-      spFlush();
-      return;
-    }
+    // Hledání čísel v textu (skryté tvoření čísla v bufferu)
+    if(raw) {
+      if(DEC_RE.test(raw)){
+        const m = raw.match(DEC_RE);
+        const sepIdx = raw.indexOf(m[0]);
+        const before = raw.slice(0, sepIdx).trim();
+        const after = raw.slice(sepIdx + m[0].length).trim();
 
-    // 6) ZPRACOVÁNÍ ČÍSEL A DESETINNÉ ČÁRKY
-    if(DEC_RE.test(raw)){
-      const m = raw.match(DEC_RE);
-      const sepIdx = raw.indexOf(m[0]);
-      const before = raw.slice(0, sepIdx).trim();
-      const after = raw.slice(sepIdx + m[0].length).trim();
+        if(before){
+          const words = before.split(/\s+/).filter(Boolean);
+          parseVoiceTokens(words).forEach(v => { spBufInt += String(v) });
+        }
+        
+        spDecMode=true;
 
-      if(before){
-        const words = before.split(/\s+/).filter(Boolean);
-        parseVoiceTokens(words).forEach(v => { spBufInt += String(v) });
-      }
-      
-      spDecMode=true;
-
-      if(after){
-        const words = after.split(/\s+/).filter(Boolean);
+        if(after){
+          const words = after.split(/\s+/).filter(Boolean);
+          words.forEach(w => {
+            if(WV[w]!==undefined && WV[w]>=0 && WV[w]<=9){
+              spBufDec += String(WV[w]);
+            } else if(/^\d+$/.test(w)){
+              spBufDec += w;
+            }
+          });
+        }
+      } else if (spDecMode) {
+        const words = raw.split(/\s+/).filter(Boolean);
         words.forEach(w => {
           if(WV[w]!==undefined && WV[w]>=0 && WV[w]<=9){
             spBufDec += String(WV[w]);
@@ -624,26 +617,22 @@ function buildRecognition(){
             spBufDec += w;
           }
         });
+      } else {
+        const words = raw.split(/\s+/).filter(Boolean);
+        parseVoiceTokens(words).forEach(v => {
+          spBufInt += String(v);
+        });
       }
-    } else if (spDecMode) {
-      const words = raw.split(/\s+/).filter(Boolean);
-      words.forEach(w => {
-        if(WV[w]!==undefined && WV[w]>=0 && WV[w]<=9){
-          spBufDec += String(WV[w]);
-        } else if(/^\d+$/.test(w)){
-          spBufDec += w;
-        }
-      });
-    } else {
-      const words = raw.split(/\s+/).filter(Boolean);
-      parseVoiceTokens(words).forEach(v => {
-        spBufInt += String(v);
-      });
     }
 
-    // 7) PROPIS DO POLÍČKA
-    if (shouldShow) {
-      spFlush();
+    // Až po zaslechnutí "ano" nebo "jo" proces propíše číslo, vypne mic a odešle ke kontrole.
+    if (shouldSubmit) {
+      spFlush(); // Vykreslí tiše složené číslo na obrazovku
+      micAutoRestart = false; // Zabrání okamžitému znovuzapnutí mikrofonu
+      stopMic(false); // Okamžitě vypne mikrofon
+      
+      // Simuluje kontrolu čísla stejně jako manuální stisk
+      setTimeout(() => handle(null, false), 100); 
     }
   };
 
