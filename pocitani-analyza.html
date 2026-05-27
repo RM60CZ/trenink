@@ -432,7 +432,7 @@ const IGNORE_WORDS=new Set([
   'miliarda','miliardy','miliard','miliardě','miliardám','miliardou','miliardách',
 ]);
 
-const DEC_RE=/\b(celá|celé|celých|cely|celi|čárka|čárku)\b/;
+const DEC_RE=/\b(celá|celé|celých|celych|cely|celi|cela|čárka|čárku|carka|carku)\b/;
 
 function parseVoiceTokens(words){
   const result=[]; 
@@ -448,7 +448,7 @@ function parseVoiceTokens(words){
       const phrase=words.slice(i,i+len).join(' ');
       const val=evalPhrase(phrase,words,i,len);
       if(val!==null){
-        if(val>=0){
+        if((typeof val==='number'&&val>=0)||(typeof val==='string'&&/^\d+$/.test(val))){
           result.push(val);
           i+=len;
           matched=true;
@@ -462,7 +462,8 @@ function parseVoiceTokens(words){
 }
 
 function evalPhrase(phrase, words, startIdx, len) {
-  if (/^\d+$/.test(phrase)) return parseInt(phrase, 10);
+  // Pokud systém zachytí čísla rovnou jako cifry (včetně nul na začátku jako 05), předáme je jako text!
+  if (/^\d+$/.test(phrase)) return phrase; 
   if (WV[phrase] !== undefined) return WV[phrase];
 
   if (len >= 2) {
@@ -559,10 +560,16 @@ function buildRecognition(){
 
     let raw = finalText.trim().toLowerCase();
 
-    // Odstranění interpunkce
-    raw = raw.replace(/[.,?!;:_]/g, '');
+    // Vyřeší mezeru uprostřed čísel, které nativně diktuje STT (např "1 000" změní na "1000")
+    raw = raw.replace(/(\d)\s+(?=\d)/g, '$1');
 
-    // Striktní zakázání slova ukázat (aby vůbec nic neudělalo, kdyby ho prohlížeč zachytil)
+    // Místo nativních teček a čárek vsuneme klíčové slovo "čárka" (např "4,5" bude "4 čárka 5")
+    raw = raw.replace(/[,.]/g, ' čárka ');
+
+    // Teprve teď vymažeme nepotřebnou interpunkci
+    raw = raw.replace(/[?!;:_]/g, '');
+
+    // Striktní zakázání slova ukázat
     raw = raw.replace(/\b(ukázat|ukazat|ukažte|ukazte|ukaž|ukaš)\b/g, ' ');
 
     if(/znovu|znova|smazat|vymazat|zrušit|zrusit/.test(raw)){
@@ -581,7 +588,7 @@ function buildRecognition(){
     raw = expandCompound(raw);
     raw = raw.trim();
 
-    // Hledání čísel v textu (skryté tvoření čísla v bufferu)
+    // Hledání čísel v textu
     if(raw) {
       if(DEC_RE.test(raw)){
         const m = raw.match(DEC_RE);
@@ -598,37 +605,22 @@ function buildRecognition(){
 
         if(after){
           const words = after.split(/\s+/).filter(Boolean);
-          words.forEach(w => {
-            if(WV[w]!==undefined && WV[w]>=0 && WV[w]<=9){
-              spBufDec += String(WV[w]);
-            } else if(/^\d+$/.test(w)){
-              spBufDec += w;
-            }
-          });
+          parseVoiceTokens(words).forEach(v => { spBufDec += String(v) });
         }
       } else if (spDecMode) {
         const words = raw.split(/\s+/).filter(Boolean);
-        words.forEach(w => {
-          if(WV[w]!==undefined && WV[w]>=0 && WV[w]<=9){
-            spBufDec += String(WV[w]);
-          } else if(/^\d+$/.test(w)){
-            spBufDec += w;
-          }
-        });
+        parseVoiceTokens(words).forEach(v => { spBufDec += String(v) });
       } else {
         const words = raw.split(/\s+/).filter(Boolean);
-        parseVoiceTokens(words).forEach(v => {
-          spBufInt += String(v);
-        });
+        parseVoiceTokens(words).forEach(v => { spBufInt += String(v) });
       }
     }
 
-    // Až po zaslechnutí "ano" nebo "jo" systém číslo vykreslí a vypne mikrofon.
-    // Neprovádí se žádná automatická kontrola výsledku!
+    // Zobrazení do kolonky a vypnutí mikráku na "ano/jo"
     if (shouldShowAndStop) {
-      spFlush(); // Vykreslí tiše složené číslo na obrazovku
-      micAutoRestart = false; // Zabrání okamžitému znovuzapnutí mikrofonu
-      stopMic(false); // Okamžitě vypne mikrofon
+      spFlush(); 
+      micAutoRestart = false; 
+      stopMic(false); 
     }
   };
 
