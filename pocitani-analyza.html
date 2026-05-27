@@ -390,7 +390,7 @@ function spReset(){
   odpovedEl.value='';
 }
 
-// Zobrazení do inputu - zformátuje se s mezerami přes existující fmtInputStr
+// Zobrazení do inputu - zformátuje se s mezerami
 function spFlush(){
   let raw = spBufInt;
   if(spDecMode) {
@@ -445,9 +445,6 @@ const IGNORE_WORDS=new Set([
 ]);
 
 const DEC_RE=/\bcelá\b|\bcelé\b|\bcelých\b|\bcely\b|\bceli\b/;
-const RESET_RE=/\bznovu\b|\bznova\b|\btlesk(nutí)?\b/;
-const NEXT_RE=/\bdalší\b|\bdalsi\b/;
-const SHOW_RE=/\b(ukaš|ukaž)( se)?\b/i; // Nové pravidlo pro "ukaš / ukaž"
 
 function parseVoiceTokens(words){
   const result=[]; 
@@ -565,13 +562,13 @@ function buildRecognition(){
     let raw=finalText.trim().toLowerCase();
 
     // Vymazat čísla i input
-    if(RESET_RE.test(raw)){
+    if(raw.includes('znovu') || raw.includes('znova') || raw.includes('tlesk')){
       spReset();
       return;
     }
 
     // Další příklad / Vyhodnocení
-    if(NEXT_RE.test(raw)){
+    if(raw.includes('další') || raw.includes('dalsi')){
       micAutoRestart=false;
       stopMic(false);
       setTimeout(()=>{micAutoRestart=true;handle(null,true)},200);
@@ -580,10 +577,10 @@ function buildRecognition(){
 
     // Zjistit, jestli zaznělo "ukaš" / "ukaž"
     let shouldShow = false;
-    if(SHOW_RE.test(raw)){
+    if(raw.includes('ukaš') || raw.includes('ukaž')){
       shouldShow = true;
-      // Odstraníme slovo "ukaš/ukaž" z textu, abychom nezmátli zpracování čísel okolo
-      raw = raw.replace(SHOW_RE, ' ');
+      // Odstraníme slova ukaš/ukaž z textu, abychom nenarušili výpočet číslic
+      raw = raw.replace(/ukaš( se)?/g, ' ').replace(/ukaž( se)?/g, ' ');
     }
 
     raw=expandCompound(raw);
