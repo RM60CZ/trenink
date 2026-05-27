@@ -250,7 +250,6 @@ function check(input,p){
   else{const num=parseFloat(n);return!isNaN(num)&&Math.abs(num-p.vysledek)<1e-9}
 }
 
-// Najde pořadí první špatné číslice zleva (1-based) pro +,-,*
 function findFirstWrongDigit(userInput,p){
   const n=norm(userInput);
   let cs,us;
@@ -321,7 +320,6 @@ function handle(e,fromVoice){
     const p=generate();if(!p){isProcessing=false;return}
     aktualniPriklad=p;showProblem(p);
     odpovedEl.value='';odpovedEl.placeholder='Váš výsledek';
-    // Reset hlasového bufferu
     spReset();
     zobrazitVysledek=true;updateBtn();divInfo.classList.toggle('hidden',p.op!=='/');
     updateMicVisibility();
@@ -343,7 +341,6 @@ function handle(e,fromVoice){
       chybaEl.textContent='⚠️ Nepovolený znak!';isProcessing=false;
       if(!fromVoice)odpovedEl.focus();
     }else{
-      // Zformátuj s oddělovači tisíců
       odpovedEl.value=fmtInputStr(normVal);
       let ok;
       if(aktualniPriklad.op==='/'){
@@ -374,8 +371,7 @@ function handle(e,fromVoice){
 
 // ═══════════════════════════════════════════════════════════════
 // HLASOVÝ VSTUP
-// Princip: každé rozpoznané číslo (0–999) se převede na číslice
-// a PŘIPOJÍ ZPRAVA do bufferu. Zobrazí se až po povelu "ukaš/ukaž".
+// Nyní odolné proti automatické interpunkci prohlížeče!
 // ═══════════════════════════════════════════════════════════════
 
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -386,19 +382,16 @@ let spBufDec='';
 let spDecMode=false; 
 
 function spReset(){
-  spBufInt='';spBufDec='';spDecMode=false;
+  spBufInt='';
+  spBufDec='';
+  spDecMode=false;
   odpovedEl.value='';
 }
 
-// Zobrazení do inputu - zformátuje se s mezerami
 function spFlush(){
   let raw = spBufInt;
-  if(spDecMode) {
-    raw += '.' + (spBufDec || '0');
-  }
-  if(raw) {
-    odpovedEl.value = fmtInputStr(raw);
-  }
+  if (spDecMode) raw += '.' + (spBufDec || '0');
+  if (raw) odpovedEl.value = fmtInputStr(raw);
 }
 
 const WV={
@@ -439,12 +432,10 @@ const WV={
 const IGNORE_WORDS=new Set([
   'tisíc','tisíce','tisíců','tisíci','tisícům','tisícem','tisících',
   'milion','milión','miliony','milióny','milionu','miliónu','milionů','miliónů',
-  'milionem','miliónem','milionům','miliónům',
   'miliarda','miliardy','miliard','miliardě','miliardám','miliardou','miliardách',
-  'bilion','biliony','biliarda','biliardy',
 ]);
 
-const DEC_RE=/\bcelá\b|\bcelé\b|\bcelých\b|\bcely\b|\bceli\b/;
+const DEC_RE=/\bcelá\b|\bcelé\b|\bcelých\b|\bcely\b|\bceli\b|\bčárka\b|\bčárku\b/;
 
 function parseVoiceTokens(words){
   const result=[]; 
@@ -460,11 +451,11 @@ function parseVoiceTokens(words){
       const phrase=words.slice(i,i+len).join(' ');
       const val=evalPhrase(phrase,words,i,len);
       if(val!==null){
-        if(val>=0&&val<=999){
+        if(val>=0){ // Přijme jakékoliv platné číslo
           result.push(val);
-          i+=len;matched=true;break;
-        }else{
-          i++;matched=true;break;
+          i+=len;
+          matched=true;
+          break;
         }
       }
     }
@@ -473,33 +464,46 @@ function parseVoiceTokens(words){
   return result;
 }
 
-function evalPhrase(phrase,words,startIdx,len){
-  if(WV[phrase]!==undefined)return WV[phrase];
-  if(len>=2){
-    const w0=words[startIdx],w1=words[startIdx+1];
-    if(w1==='set'&&WV[w0]!==undefined&&WV[w0]>=2&&WV[w0]<=9) return WV[w0]*100;
-    if((w1==='sto'||w1==='sta'||w1==='stu')&&WV[w0]!==undefined&&WV[w0]>=2&&WV[w0]<=4) return WV[w0]*100;
-    if(WV[w0]!==undefined&&WV[w0]>=20&&WV[w0]<=90&&WV[w1]!==undefined&&WV[w1]>=1&&WV[w1]<=9) return WV[w0]+WV[w1];
+function evalPhrase(phrase, words, startIdx, len) {
+  // 1) Pokud nám Google vrátil už rovnou číslice (např. "25"), použijeme je rovnou!
+  if (/^\d+$/.test(phrase)) return parseInt(phrase, 10);
+  // 2) Přímá shoda v našem slovníku
+  if (WV[phrase] !== undefined) return WV[phrase];
+
+  if (len >= 2) {
+    const w0 = words[startIdx], w1 = words[startIdx+1];
+    if ((w1==='set'||w1==='sto'||w1==='sta'||w1==='stu'||w1==='stě') && WV[w0] !== undefined && WV[w0] >= 2 && WV[w0] <= 9) {
+      return WV[w0]*100;
+    }
+    if (WV[w0] !== undefined && WV[w0] >= 20 && WV[w0] <= 90 && WV[w1] !== undefined && WV[w1] >= 1 && WV[w1] <= 9) {
+      return WV[w0] + WV[w1];
+    }
+    if (w0==='sto' || w0==='sta' || w0==='stu' || w0==='stě') {
+      if (WV[w1] !== undefined && WV[w1] <= 99) return 100 + WV[w1];
+      if (/^\d+$/.test(w1)) return 100 + parseInt(w1, 10);
+    }
   }
-  if(len>=3){
-    const w0=words[startIdx],w1=words[startIdx+1];
-    const isHundred=(w1==='set'&&WV[w0]>=2&&WV[w0]<=9)||((w1==='sto'||w1==='sta')&&WV[w0]>=2&&WV[w0]<=4);
-    if(isHundred){
-      const hundreds=WV[w0]*100;
-      if(len===3){
-        const w2=words[startIdx+2];
-        if(WV[w2]!==undefined&&WV[w2]<=99)return hundreds+WV[w2];
+  if (len >= 3) {
+    const w0 = words[startIdx], w1 = words[startIdx+1], w2 = words[startIdx+2];
+    const isHundred = (w1==='set'||w1==='sto'||w1==='sta'||w1==='stu'||w1==='stě') && WV[w0] >= 2 && WV[w0] <= 9;
+    if (isHundred) {
+      const hundreds = WV[w0] * 100;
+      if (len === 3) {
+        if (WV[w2] !== undefined && WV[w2] <= 99) return hundreds + WV[w2];
+        if (/^\d+$/.test(w2)) return hundreds + parseInt(w2, 10);
       }
-      if(len===4){
-        const w2=words[startIdx+2],w3=words[startIdx+3];
-        if(WV[w2]!==undefined&&WV[w2]>=20&&WV[w2]<=90&&WV[w3]!==undefined&&WV[w3]>=1&&WV[w3]<=9) return hundreds+WV[w2]+WV[w3];
+      if (len === 4) {
+        const w3 = words[startIdx+3];
+        if (WV[w2] !== undefined && WV[w2] >= 20 && WV[w2] <= 90 && WV[w3] !== undefined && WV[w3] >= 1 && WV[w3] <= 9) {
+          return hundreds + WV[w2] + WV[w3];
+        }
       }
     }
-    if(w0==='sto'||w0==='sta'||w0==='stu'){
-      if(len===2&&WV[w1]!==undefined&&WV[w1]<=99)return 100+WV[w1];
-      if(len===3){
-        const w2=words[startIdx+2];
-        if(WV[w1]!==undefined&&WV[w1]>=20&&WV[w1]<=90&&WV[w2]!==undefined&&WV[w2]>=1&&WV[w2]<=9) return 100+WV[w1]+WV[w2];
+    if (w0==='sto' || w0==='sta' || w0==='stu' || w0==='stě') {
+      if (len === 3) {
+        if (WV[w1] !== undefined && WV[w1] >= 20 && WV[w1] <= 90 && WV[w2] !== undefined && WV[w2] >= 1 && WV[w2] <= 9) {
+          return 100 + WV[w1] + WV[w2];
+        }
       }
     }
   }
@@ -507,7 +511,8 @@ function evalPhrase(phrase,words,startIdx,len){
 }
 
 function expandCompound(t){
-  t=t.replace(/dvěstě/g,'dvěstě').replace(/třista/g,'třista').replace(/čtyřista/g,'čtyřista')
+  // Pokud Google z něčeho udělá "dvěstě", rozdělíme to, aby náš systém fungoval
+  t=t.replace(/dvěstě/g,'dvě stě').replace(/třista/g,'tři sta').replace(/čtyřista/g,'čtyři sta')
      .replace(/([a-záčďéěíňóřšťúůýž]+)set\b/g,'$1 set')
      .replace(/(dvacet|třicet|čtyřicet|padesát|šedesát|sedmdesát|osmdesát|devadesát)(jedna|jeden|dvě|dva|tři|čtyři|pět|šest|sedm|osm|devět)/g,'$1 $2');
   return t;
@@ -555,80 +560,90 @@ function buildRecognition(){
   r.onresult=e=>{
     let finalText='';
     for(let i=e.resultIndex;i<e.results.length;i++){
-      if(e.results[i].isFinal)finalText+=e.results[i][0].transcript+' ';
+      if(e.results[i].isFinal) finalText+=e.results[i][0].transcript+' ';
     }
     if(!finalText.trim())return;
 
-    let raw=finalText.trim().toLowerCase();
+    let raw = finalText.trim().toLowerCase();
 
-    // Vymazat čísla i input
-    if(raw.includes('znovu') || raw.includes('znova') || raw.includes('tlesk')){
+    // 1) OČISTIT INTERPUNKCI - Google může poslat tečku nebo čárku ("ukaž.", "25.")
+    raw = raw.replace(/[.,?!;:_]/g, '');
+
+    // 2) KONTROLA VYMAZÁNÍ
+    if(raw.includes('znovu') || raw.includes('znova') || raw.includes('smazat') || raw.includes('vymazat')){
       spReset();
       return;
     }
 
-    // Další příklad / Vyhodnocení
-    if(raw.includes('další') || raw.includes('dalsi')){
+    // 3) KONTROLA ODESLÁNÍ / DALŠÍ
+    if(raw.includes('další') || raw.includes('dalsi') || raw.includes('zkontroluj') || raw.includes('hotovo')){
       micAutoRestart=false;
       stopMic(false);
       setTimeout(()=>{micAutoRestart=true;handle(null,true)},200);
       return;
     }
 
-    // Zjistit, jestli zaznělo "ukaš" / "ukaž"
+    // 4) DETEKCE SLOVA "UKAŽ"
     let shouldShow = false;
-    if(raw.includes('ukaš') || raw.includes('ukaž')){
+    if(raw.includes('ukaš') || raw.includes('ukaž') || raw.includes('uka')){
       shouldShow = true;
-      // Odstraníme slova ukaš/ukaž z textu, abychom nenarušili výpočet číslic
-      raw = raw.replace(/ukaš( se)?/g, ' ').replace(/ukaž( se)?/g, ' ');
+      // Vymažeme ta slova z řetězce, aby nekazila čísla
+      raw = raw.replace(/ukaš( se)?/g, ' ').replace(/ukaž( se)?/g, ' ').replace(/uka\b/g, ' ');
     }
 
-    raw=expandCompound(raw);
+    // 5) ROZDĚLENÍ SLOŽENIN
+    raw = expandCompound(raw);
+    raw = raw.trim();
 
-    // Zpracování desetinného oddělovače
+    // Pokud nezbyl žádný text a jen jsme měli ukázat, tak ukážeme a končíme
+    if(!raw && shouldShow) {
+      spFlush();
+      return;
+    }
+
+    // 6) ZPRACOVÁNÍ ČÍSEL A DESETINNÉ ČÁRKY
     if(DEC_RE.test(raw)){
-      const m=raw.match(DEC_RE);
-      const sepIdx=raw.indexOf(m[0]);
-      const before=raw.slice(0,sepIdx).trim();
-      const after=raw.slice(sepIdx+m[0].length).trim();
+      const m = raw.match(DEC_RE);
+      const sepIdx = raw.indexOf(m[0]);
+      const before = raw.slice(0, sepIdx).trim();
+      const after = raw.slice(sepIdx + m[0].length).trim();
 
       if(before){
-        const words=before.split(/\s+/).filter(Boolean);
-        const tokens=parseVoiceTokens(words);
-        tokens.forEach(v=>{spBufInt+=String(v)});
+        const words = before.split(/\s+/).filter(Boolean);
+        parseVoiceTokens(words).forEach(v => { spBufInt += String(v) });
       }
+      
       spDecMode=true;
 
       if(after){
-        const words=after.split(/\s+/).filter(Boolean);
-        words.forEach(w=>{
-          if(WV[w]!==undefined&&WV[w]>=0&&WV[w]<=9){
-            spBufDec+=String(WV[w]);
-          }else if(/^\d$/.test(w)){
-            spBufDec+=w;
+        const words = after.split(/\s+/).filter(Boolean);
+        words.forEach(w => {
+          if(WV[w]!==undefined && WV[w]>=0 && WV[w]<=9){
+            spBufDec += String(WV[w]);
+          } else if(/^\d+$/.test(w)){
+            spBufDec += w;
           }
         });
       }
-    } else if(spDecMode){
+    } else if (spDecMode) {
       // Režim ZA desetinnou tečkou
-      const words=raw.split(/\s+/).filter(Boolean);
-      words.forEach(w=>{
-        if(WV[w]!==undefined&&WV[w]>=0&&WV[w]<=9){
-          spBufDec+=String(WV[w]);
-        }else if(/^\d$/.test(w)){
-          spBufDec+=w;
+      const words = raw.split(/\s+/).filter(Boolean);
+      words.forEach(w => {
+        if(WV[w]!==undefined && WV[w]>=0 && WV[w]<=9){
+          spBufDec += String(WV[w]);
+        } else if(/^\d+$/.test(w)){
+          spBufDec += w;
         }
       });
     } else {
-      // Normální režim
-      const words=raw.split(/\s+/).filter(Boolean);
-      const tokens=parseVoiceTokens(words);
-      tokens.forEach(v=>{
-        spBufInt+=String(v);
+      // Normální režim (celá čísla)
+      const words = raw.split(/\s+/).filter(Boolean);
+      parseVoiceTokens(words).forEach(v => {
+        spBufInt += String(v);
       });
     }
 
-    // Propsat do viditelného inputu POUZE tehdy, pokud padlo kouzelné slovo
+    // 7) NAPSAT DO POLÍČKA, POKUD JSME ZAZNAMENALI SLOVO "UKAŽ"
     if (shouldShow) {
       spFlush();
     }
