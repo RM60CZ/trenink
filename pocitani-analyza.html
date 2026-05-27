@@ -313,7 +313,6 @@ function handle(e,fromVoice){
   odpovedEl.classList.remove('zelene','cervene');
   inputIcon.style.opacity='0';
   
-  // Uživatelské tlačítko / Enter zastaví probíhající poslouchání.
   if(!fromVoice&&micListening)stopMic(false);
 
   if(!zobrazitVysledek){
@@ -326,7 +325,6 @@ function handle(e,fromVoice){
     updateMicVisibility();
     setTimeout(()=>{
       caraEl.style.opacity='1';
-      // Zahájení nového příkladu -> zapíná mikrofon, pokud je zaškrtnutý
       if(hlasCheck.checked){setTimeout(()=>startMic(),100)}
       else{odpovedEl.focus()}
       isProcessing=false;
@@ -362,8 +360,6 @@ function handle(e,fromVoice){
       updateScores();addHist(ok,normVal);save();
       zobrazitVysledek=false;updateBtn();divInfo.classList.add('hidden');
       updateMicVisibility();
-      
-      // Provedena kontrola a systém čeká na stisk tlačítka DALŠÍ (nebo Enter)
       setTimeout(()=>isProcessing=false,150);
     }
   }
@@ -371,7 +367,6 @@ function handle(e,fromVoice){
 
 // ═══════════════════════════════════════════════════════════════
 // HLASOVÝ VSTUP 
-// Skládá na pozadí tiše, ukáže a odešle pouze při slovech "ano"/"jo".
 // ═══════════════════════════════════════════════════════════════
 
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -567,15 +562,18 @@ function buildRecognition(){
     // Odstranění interpunkce
     raw = raw.replace(/[.,?!;:_]/g, '');
 
+    // Striktní zakázání slova ukázat (aby vůbec nic neudělalo, kdyby ho prohlížeč zachytil)
+    raw = raw.replace(/\b(ukázat|ukazat|ukažte|ukazte|ukaž|ukaš)\b/g, ' ');
+
     if(/znovu|znova|smazat|vymazat|zrušit|zrusit/.test(raw)){
       spReset();
       return;
     }
 
-    // Detekce spouštěcího slova "ano" nebo "jo"
-    let shouldSubmit = false;
+    // Detekce spouštěcího slova "ano" nebo "jo" pro zobrazení a zastavení
+    let shouldShowAndStop = false;
     if(/\b(ano|jo|joo)\b/.test(raw)){
-      shouldSubmit = true;
+      shouldShowAndStop = true;
       raw = raw.replace(/\b(ano|jo|joo)\b/g, ' ');
     }
 
@@ -625,14 +623,12 @@ function buildRecognition(){
       }
     }
 
-    // Až po zaslechnutí "ano" nebo "jo" proces propíše číslo, vypne mic a odešle ke kontrole.
-    if (shouldSubmit) {
+    // Až po zaslechnutí "ano" nebo "jo" systém číslo vykreslí a vypne mikrofon.
+    // Neprovádí se žádná automatická kontrola výsledku!
+    if (shouldShowAndStop) {
       spFlush(); // Vykreslí tiše složené číslo na obrazovku
       micAutoRestart = false; // Zabrání okamžitému znovuzapnutí mikrofonu
       stopMic(false); // Okamžitě vypne mikrofon
-      
-      // Simuluje kontrolu čísla stejně jako manuální stisk
-      setTimeout(() => handle(null, false), 100); 
     }
   };
 
