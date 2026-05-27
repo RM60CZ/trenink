@@ -1,3 +1,4 @@
+html
 <!DOCTYPE html>
 <html lang="cs" class="dark">
 <head>
@@ -14,7 +15,6 @@ tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Inter','syst
 .zelene{background:#15803d!important;border-color:#22c55e!important;color:#fff!important}
 .cervene{background:#b91c1c!important;border-color:#ef4444!important;color:#fff!important}
 input{-webkit-appearance:none;border-radius:.75rem}
-.math-text{white-space:pre;line-height:1.25;display:block;font-variant-numeric:tabular-nums}
 .worksheet-bg{background-color:#e2e8f0;background-image:radial-gradient(circle,#94a3b8 1px,transparent 1px);background-size:24px 24px}
 .dark .worksheet-bg{background-color:rgba(30,41,59,.4);background-image:radial-gradient(circle,#334155 1px,transparent 1px)}
 .btn-pulse{animation:pulse-blue 2.5s infinite}
@@ -119,16 +119,18 @@ input{-webkit-appearance:none;border-radius:.75rem}
 
 <div id="chyba" class="text-red-500 text-[10px] font-bold text-center h-4 overflow-hidden mb-1" role="alert"></div>
 
-<div class="bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 px-4 pb-0 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center">
-<div class="w-full overflow-x-auto scrollbar-hide flex flex-col items-end relative z-10">
-  <div id="priklad" style="font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace; white-space: break-spaces;" class="math-text text-lg font-bold tracking-tight text-slate-700 dark:text-slate-200">Zvolte nastavení a stiskněte ▶ Začít</div>
-  <div id="cara" style="font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;" class="math-text text-2xl text-slate-400 dark:text-slate-600 border-t-2 border-slate-400 dark:border-slate-600 w-full mt-0.5 opacity-0 transition-opacity duration-300"></div>
+<div class="bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl px-6 pt-6 pb-4 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center min-h-[140px]">
+<div class="w-full flex flex-col items-end relative z-10">
+  <div id="priklad" class="flex flex-col items-end text-4xl font-black tracking-tight text-slate-800 dark:text-slate-100 tabular-nums w-full">
+     <div class="text-lg font-bold text-center w-full text-slate-500 mb-2">Zvolte nastavení a stiskněte ▶ Začít</div>
+  </div>
+  <div id="cara" class="w-full mt-3 opacity-0 transition-opacity duration-300 border-t-[3px] border-slate-400 dark:border-slate-600 rounded-full"></div>
 </div>
 </div>
 
 <div class="space-y-2.5">
   <div class="relative">
-    <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="Váš výsledek" class="w-full pl-3 pr-4 text-xl font-bold rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right tabular-nums tracking-wide"/>
+    <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="Váš výsledek" class="w-full pl-3 pr-4 text-2xl font-black rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right tabular-nums tracking-wide"/>
     <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 scale-75 pointer-events-none"></div>
   </div>
   <div id="enterHint" class="text-[9px] text-slate-400 font-medium opacity-0 transition-opacity duration-200 select-none text-center -mt-1">Enter ↵</div>
@@ -153,8 +155,6 @@ input{-webkit-appearance:none;border-radius:.75rem}
 <script>
 (function(){
 const $=id=>document.getElementById(id);
-
-// Funkce pro formátování čísel pro uživatele (zobrazí se jako 4,5 místo 4.5)
 const fmt=x=>{
   if(typeof x==='bigint')return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');
   if(typeof x!=='number')return String(x);
@@ -162,7 +162,6 @@ const fmt=x=>{
   const[c,d]=x.toString().split('.');
   return d?c.replace(/\B(?=(\d{3})+(?!\d))/g,' ')+','+d:c.replace(/\B(?=(\d{3})+(?!\d))/g,' ');
 };
-
 function fmtInputStr(s){
   s=s.replace(/\s/g,'');
   const neg=s.startsWith('-');
@@ -171,12 +170,11 @@ function fmtInputStr(s){
   const r=ip.replace(/\B(?=(\d{3})+(?!\d))/g,' ');
   return(neg?'-':'')+r+(dp!==undefined?','+dp:'');
 }
-
 const norm=s=>s.trim().replace(/\s+/g,'').replace(',','.');
 const genNum=n=>{const mn=10**(n-1),mx=10**n-1;return Math.floor(Math.random()*(mx-mn+1))+mn};
 const trunc4=n=>{const[c,d]=(n+'').split('.');return d?c+'.'+d.substring(0,4):c};
 
-const KEY='matika_trenink_v3';
+const KEY='matika_trenink_v4';
 let correct=0,wrong=0,streak=0,history=[],aktualniPriklad=null,zobrazitVysledek=false,isProcessing=false;
 
 const operaceEl=$('operace'),cis1=$('cislice1'),cis2=$('cislice2'),chybaEl=$('chyba');
@@ -225,10 +223,17 @@ function generate(){
   return{a,b,op,vysledek,vysledekZ};
 }
 
+// Zobrazení příkladu přes bezpečný bezpatkový systémový font (zarovnáno doprava pomocí flexu)
 function showProblem(p){
   const fa=fmt(p.a),fb=fmt(p.b);
-  const max=Math.max(fa.length,(p.op+' '+fb).length);
-  prikladEl.textContent=`${fa.padStart(max)}\n${(p.op+' '+fb).padStart(max)}`;
+  const opStr=p.op==='*'?'×':p.op==='/'?'÷':p.op;
+  prikladEl.innerHTML = `
+    <div class="pr-1">${fa}</div>
+    <div class="flex items-center justify-end gap-5 w-full text-slate-600 dark:text-slate-400 pr-1 mt-1">
+      <span class="text-3xl font-black">${opStr}</span>
+      <span class="text-slate-800 dark:text-slate-100">${fb}</span>
+    </div>
+  `;
   caraEl.style.opacity='0';
 }
 
@@ -324,7 +329,6 @@ function handle(e,fromVoice){
     const p=generate();if(!p){isProcessing=false;return}
     aktualniPriklad=p;showProblem(p);
     odpovedEl.value='';odpovedEl.placeholder='Váš výsledek';
-    spReset();
     zobrazitVysledek=true;updateBtn();divInfo.classList.toggle('hidden',p.op!=='/');
     updateMicVisibility();
     setTimeout(()=>{
@@ -353,10 +357,10 @@ function handle(e,fromVoice){
         ok=check(normVal,aktualniPriklad);
       }
       odpovedEl.classList.add(ok?'zelene':'cervene');
-      if(ok){correct++;streak++;inputIcon.innerHTML='<svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>'}
+      if(ok){correct++;streak++;inputIcon.innerHTML='<svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>'}
       else{
         wrong++;streak=0;
-        inputIcon.innerHTML='<svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>';
+        inputIcon.innerHTML='<svg class="w-6 h-6 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>';
         odpovedEl.classList.add('shake');
         setTimeout(()=>odpovedEl.classList.remove('shake'),500);
       }
@@ -370,153 +374,11 @@ function handle(e,fromVoice){
 }
 
 // ═══════════════════════════════════════════════════════════════
-// HLASOVÝ VSTUP 
+// HLASOVÝ VSTUP (Kompletně a bezpečně přepsáno)
 // ═══════════════════════════════════════════════════════════════
 
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 let recognition=null,micListening=false,micAutoRestart=true;
-
-let spBufInt='';   
-let spBufDec='';   
-let spDecMode=false; 
-
-function spReset(){
-  spBufInt='';
-  spBufDec='';
-  spDecMode=false;
-  odpovedEl.value='';
-}
-
-function spFlush(){
-  let raw = spBufInt;
-  if (!raw && !spDecMode) return;
-  if (!raw) raw = '0';
-  if (spDecMode) raw += '.' + (spBufDec || '0');
-  // Přidá hodnotu, která se vizuálně naformátuje (s čárkou jako 4,5)
-  odpovedEl.value = fmtInputStr(raw);
-}
-
-const WV={
-  'žádná':0,'zadna':0,
-  'nula':0,'nulu':0,'nuly':0,
-  'jedna':1,'jeden':1,'jedno':1,'jednu':1,'jedné':1,
-  'dvě':2,'dva':2,'dvou':2,
-  'tři':3,'třech':3,
-  'čtyři':4,'čtyřech':4,
-  'pět':5,'pěti':5,
-  'šest':6,'šesti':6,
-  'sedm':7,'sedmi':7,
-  'osm':8,'osmi':8,
-  'devět':9,'devíti':9,
-  'deset':10,'deseti':10,
-  'jedenáct':11,'jedenácti':11,
-  'dvanáct':12,'dvanácti':12,
-  'třináct':13,'třinácti':13,
-  'čtrnáct':14,'čtrnácti':14,
-  'patnáct':15,'patnácti':15,
-  'šestnáct':16,'šestnácti':16,
-  'sedmnáct':17,'sedmnácti':17,
-  'osmnáct':18,'osmnácti':18,
-  'devatenáct':19,'devatenácti':19,
-  'dvacet':20,'dvaceti':20,
-  'třicet':30,'třiceti':30,
-  'čtyřicet':40,'čtyřiceti':40,
-  'padesát':50,'padesáti':50,
-  'šedesát':60,'šedesáti':60,
-  'sedmdesát':70,'sedmdesáti':70,
-  'osmdesát':80,'osmdesáti':80,
-  'devadesát':90,'devadesáti':90,
-  'sto':100,'sta':100,'stu':100,'stem':100,'stě':100,
-  'dvěstě':200,'dvěsta':200,
-  'třista':300,'třísta':300,
-  'čtyřista':400,'čtyřsta':400,
-};
-
-const IGNORE_WORDS=new Set([
-  'tisíc','tisíce','tisíců','tisíci','tisícům','tisícem','tisících',
-  'milion','milión','miliony','milióny','milionu','miliónu','milionů','miliónů',
-  'miliarda','miliardy','miliard','miliardě','miliardám','miliardou','miliardách',
-]);
-
-// Speciální regex bez použití chybujícího \b pro češtinu
-const DEC_RE=/(?:^|\s)(celá|celé|celých|celych|cely|celi|cela|čárka|čárku|carka|carku|tečka|tečku|tecka|tecku)(?:\s|$)/;
-
-function parseVoiceTokens(words){
-  const result=[]; 
-  let i=0;
-  while(i<words.length){
-    const w=words[i];
-    if(!w){i++;continue;}
-    if(IGNORE_WORDS.has(w)){i++;continue;}
-
-    let matched=false;
-    for(let len=4;len>=1;len--){
-      if(i+len>words.length)continue;
-      const phrase=words.slice(i,i+len).join(' ');
-      const val=evalPhrase(phrase,words,i,len);
-      if(val!==null){
-        if((typeof val==='number'&&val>=0)||(typeof val==='string'&&/^\d+$/.test(val))){
-          result.push(val);
-          i+=len;
-          matched=true;
-          break;
-        }
-      }
-    }
-    if(!matched)i++;
-  }
-  return result;
-}
-
-function evalPhrase(phrase, words, startIdx, len) {
-  if (/^\d+$/.test(phrase)) return phrase; 
-  if (WV[phrase] !== undefined) return WV[phrase];
-
-  if (len >= 2) {
-    const w0 = words[startIdx], w1 = words[startIdx+1];
-    if ((w1==='set'||w1==='sto'||w1==='sta'||w1==='stu'||w1==='stě') && WV[w0] !== undefined && WV[w0] >= 2 && WV[w0] <= 9) {
-      return WV[w0]*100;
-    }
-    if (WV[w0] !== undefined && WV[w0] >= 20 && WV[w0] <= 90 && WV[w1] !== undefined && WV[w1] >= 1 && WV[w1] <= 9) {
-      return WV[w0] + WV[w1];
-    }
-    if (w0==='sto' || w0==='sta' || w0==='stu' || w0==='stě') {
-      if (WV[w1] !== undefined && WV[w1] <= 99) return 100 + WV[w1];
-      if (/^\d+$/.test(w1)) return 100 + parseInt(w1, 10);
-    }
-  }
-  if (len >= 3) {
-    const w0 = words[startIdx], w1 = words[startIdx+1], w2 = words[startIdx+2];
-    const isHundred = (w1==='set'||w1==='sto'||w1==='sta'||w1==='stu'||w1==='stě') && WV[w0] >= 2 && WV[w0] <= 9;
-    if (isHundred) {
-      const hundreds = WV[w0] * 100;
-      if (len === 3) {
-        if (WV[w2] !== undefined && WV[w2] <= 99) return hundreds + WV[w2];
-        if (/^\d+$/.test(w2)) return hundreds + parseInt(w2, 10);
-      }
-      if (len === 4) {
-        const w3 = words[startIdx+3];
-        if (WV[w2] !== undefined && WV[w2] >= 20 && WV[w2] <= 90 && WV[w3] !== undefined && WV[w3] >= 1 && WV[w3] <= 9) {
-          return hundreds + WV[w2] + WV[w3];
-        }
-      }
-    }
-    if (w0==='sto' || w0==='sta' || w0==='stu' || w0==='stě') {
-      if (len === 3) {
-        if (WV[w1] !== undefined && WV[w1] >= 20 && WV[w1] <= 90 && WV[w2] !== undefined && WV[w2] >= 1 && WV[w2] <= 9) {
-          return 100 + WV[w1] + WV[w2];
-        }
-      }
-    }
-  }
-  return null;
-}
-
-function expandCompound(t){
-  return t.replace(/dvěstě/g,'dvě stě').replace(/třista/g,'tři sta').replace(/čtyřista/g,'čtyři sta')
-     .replace(/([a-záčďéěíňóřšťúůýž]+)set\b/g,'$1 set')
-     .replace(/(dvacet|třicet|čtyřicet|padesát|šedesát|sedmdesát|osmdesát|devadesát)(jedna|jeden|dvě|dva|tři|čtyři|pět|šest|sedm|osm|devět)/g,'$1 $2');
-}
 
 function updateMicVisibility(){
   const show=hlasCheck.checked&&zobrazitVysledek&&aktualniPriklad;
@@ -558,68 +420,87 @@ function buildRecognition(){
   };
 
   r.onresult=e=>{
-    let finalText='';
+    let text='';
     for(let i=e.resultIndex;i<e.results.length;i++){
-      if(e.results[i].isFinal) finalText+=e.results[i][0].transcript+' ';
+      if(e.results[i].isFinal) text+=e.results[i][0].transcript+' ';
     }
-    if(!finalText.trim())return;
+    if(!text.trim())return;
 
-    let raw = finalText.trim().toLowerCase();
+    let lower=text.toLowerCase().trim();
 
-    // Vyřeší mezeru uprostřed čísel, které nativně diktuje STT
-    raw = raw.replace(/(\d)\s+(?=\d)/g, '$1');
-
-    // Místo nativních teček a čárek vsuneme bezpečné slovo "čárka" obalené mezerou
-    raw = raw.replace(/[,.]/g, ' čárka ');
-
-    raw = raw.replace(/[?!;:_]/g, '');
-    raw = raw.replace(/\b(ukázat|ukazat|ukažte|ukazte|ukaž|ukaš)\b/g, ' ');
-
-    if(/znovu|znova|smazat|vymazat|zrušit|zrusit/.test(raw)){
-      spReset();
+    // Příkazy pro zrušení
+    if(/znovu|znova|smazat|vymazat|zrušit|zrusit/.test(lower)){
+      odpovedEl.value='';
       return;
     }
 
-    let shouldShowAndStop = false;
-    if(/\b(ano|jo|joo)\b/.test(raw)){
-      shouldShowAndStop = true;
-      raw = raw.replace(/\b(ano|jo|joo)\b/g, ' ');
+    // Detekce slova "ano / jo" 
+    let isSubmit = false;
+    // Přidány prázdné mezery okolo celého řetězce, aby hledání hranic slov nemělo problémy
+    lower = ' ' + lower + ' ';
+    if (/\s+(ano|jo|joo)\s+/.test(lower)) {
+        isSubmit = true;
+        lower = lower.replace(/\s+(ano|jo|joo)\s+/g, ' ');
     }
 
-    raw = expandCompound(raw);
-    raw = raw.trim();
+    // Změníme reálné symboly tečky/čárky na slovo " dec "
+    lower = lower.replace(/[,.]/g, ' dec ');
+    
+    // Změníme diktovaná slova (čárka, tečka, celá...) na slovo " dec "
+    // Obaleno mezerami namísto vadného \b, které padalo na českém "č" a "ť"!
+    lower = lower.replace(/\s+(celá|celé|celých|celych|cely|celi|cela|čárka|čárku|carka|carku|tečka|tečku|tecka|tecku)\s+/g, ' dec ');
 
-    if(raw) {
-      const match = raw.match(DEC_RE);
-      if(match){
-        const sepIdx = match.index;
-        const before = raw.slice(0, sepIdx).trim();
-        const after = raw.slice(sepIdx + match[0].length).trim();
+    // Slovník pro jednotlivé cifry (čísla typu 42 telefon obvykle napíše rovnou jako "42")
+    const wmap = {
+        'žádná':'0', 'zadna':'0', 'nula':'0', 'nulu':'0', 'nuly':'0',
+        'jedna':'1', 'jeden':'1', 'jedno':'1', 'jednu':'1', 'jedné':'1',
+        'dvě':'2', 'dva':'2', 'dvou':'2',
+        'tři':'3', 'třech':'3',
+        'čtyři':'4', 'čtyřech':'4',
+        'pět':'5', 'pěti':'5',
+        'šest':'6', 'šesti':'6',
+        'sedm':'7', 'sedmi':'7',
+        'osm':'8', 'osmi':'8',
+        'devět':'9', 'devíti':'9',
+        'deset':'10'
+    };
 
-        if(before){
-          const words = before.split(/\s+/).filter(Boolean);
-          parseVoiceTokens(words).forEach(v => { spBufInt += String(v) });
+    let tokens = lower.split(/\s+/).filter(Boolean);
+    let parsed = '';
+    
+    // Čte slovíčko po slovíčku a co dává smysl, přidá na konec
+    for (let w of tokens) {
+        if (w === 'dec') {
+            if (!parsed.includes(',')) parsed += ',';
         }
+        else if (wmap[w]) {
+            parsed += wmap[w];
+        }
+        else if (/^\d+$/.test(w)) {
+            parsed += w;
+        }
+    }
+
+    // Aplikace do kolonky
+    if (parsed) {
+        let current = odpovedEl.value.replace(/\s/g, '').replace(/\./g,',');
+        current += parsed;
         
-        spDecMode=true;
-
-        if(after){
-          const words = after.split(/\s+/).filter(Boolean);
-          parseVoiceTokens(words).forEach(v => { spBufDec += String(v) });
-        }
-      } else if (spDecMode) {
-        const words = raw.split(/\s+/).filter(Boolean);
-        parseVoiceTokens(words).forEach(v => { spBufDec += String(v) });
-      } else {
-        const words = raw.split(/\s+/).filter(Boolean);
-        parseVoiceTokens(words).forEach(v => { spBufInt += String(v) });
-      }
+        let parts = current.split(',');
+        let intP = parts[0] || '0';
+        let decP = parts[1];
+        
+        let result = intP.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        if (decP !== undefined) result += ',' + decP;
+        
+        odpovedEl.value = result;
     }
 
-    if (shouldShowAndStop) {
-      spFlush(); 
-      micAutoRestart = false; 
-      stopMic(false); 
+    // Ihned odeslat, pokud řekl "ano" a kolonka není prázdná
+    if (isSubmit && odpovedEl.value) {
+        micAutoRestart = false;
+        stopMic(false);
+        setTimeout(() => { handle(null, true); }, 150);
     }
   };
 
