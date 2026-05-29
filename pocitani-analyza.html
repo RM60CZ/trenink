@@ -118,8 +118,7 @@ input{-webkit-appearance:none;border-radius:.75rem}
 
 <div id="chyba" class="text-red-500 text-[10px] font-bold text-center h-4 overflow-hidden mb-1" role="alert"></div>
 
-<!-- Horní prvek nyní dostal přesný matematický vnitřní pravý okraj (pr-[41px]), aby lícoval s inputem -->
-<div class="bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 pl-4 pr-[41px] pb-1 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center">
+<div id="upperBox" class="bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 pl-4 pr-4 pb-1 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center">
 <div id="problemContainer" class="w-full overflow-x-auto scrollbar-hide flex flex-col items-end relative z-10 transition-all">
   <div id="priklad" class="math-text text-4xl font-semibold tracking-normal text-slate-700 dark:text-slate-200 tabular-nums" style="white-space: break-spaces;">Zvolte nastavení a stiskněte ▶ Začít</div>
   <div id="cara" class="math-text text-4xl text-slate-400 dark:text-slate-600 border-t-[3px] border-slate-400 dark:border-slate-600 w-full mt-1 opacity-0 transition-opacity duration-300"></div>
@@ -128,8 +127,8 @@ input{-webkit-appearance:none;border-radius:.75rem}
 
 <div class="space-y-2.5">
   <div class="relative">
-    <!-- Input nyní jasně definuje bezpečné odsazení pr-10, aby ho nepřekrývala zelená fajfka -->
-    <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="Váš výsledek" class="w-full pl-4 pr-10 py-1 text-4xl font-semibold rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right tabular-nums tracking-normal"/>
+    <!-- Odsazení vpravo řeší čistě proměnná v JS, proto tu není pr-* -->
+    <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="Váš výsledek" class="w-full pl-4 py-1 text-4xl font-semibold rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right tabular-nums tracking-normal"/>
     <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 scale-75 pointer-events-none"></div>
   </div>
   <div id="enterHint" class="text-[9px] text-slate-400 font-medium opacity-0 transition-opacity duration-200 select-none text-center -mt-1">Enter ↵</div>
@@ -153,26 +152,37 @@ input{-webkit-appearance:none;border-radius:.75rem}
 
 <script>
 (function(){
-const $=id=>document.getElementById(id);
 
+// ==========================================================
+// ZDE NASTAVUJEŠ POSUN VÝSLEDKU V INPUTU DOLEVA (V PIXELECH)
+// ==========================================================
+const POSUN_VYSLEDKU_VLEVO_PX = 0;
+
+const $=id=>document.getElementById(id);
+const odpovedEl=$('odpoved');
+
+// Aplikujeme tvé nastavení pouze a jen na pravý okraj inputu
+odpovedEl.style.paddingRight = POSUN_VYSLEDKU_VLEVO_PX + 'px';
+
+// Pevné mezery pro absolutně stabilní zobrazení čísel
 const fmt=x=>{
-  if(typeof x==='bigint')return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+  if(typeof x==='bigint')return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'\xA0');
   if(typeof x!=='number')return String(x);
-  if(Number.isInteger(x))return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+  if(Number.isInteger(x))return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'\xA0');
   const[c,d]=x.toString().split('.');
-  return d?c.replace(/\B(?=(\d{3})+(?!\d))/g,' ')+','+d:c.replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+  return d?c.replace(/\B(?=(\d{3})+(?!\d))/g,'\xA0')+','+d:c.replace(/\B(?=(\d{3})+(?!\d))/g,'\xA0');
 };
 
 function fmtInputStr(s){
-  s=s.replace(/\s/g,'');
+  s=s.replace(/\s|\xA0/g,'');
   const neg=s.startsWith('-');
   const abs=neg?s.slice(1):s;
   const[ip,dp]=abs.split('.');
-  const r=ip.replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+  const r=ip.replace(/\B(?=(\d{3})+(?!\d))/g,'\xA0');
   return(neg?'-':'')+r+(dp!==undefined?','+dp:'');
 }
 
-const norm=s=>s.trim().replace(/\s+/g,'').replace(',','.');
+const norm=s=>s.trim().replace(/\s|\xA0+/g,'').replace(',','.');
 const genNum=n=>{const mn=10**(n-1),mx=10**n-1;return Math.floor(Math.random()*(mx-mn+1))+mn};
 const trunc4=n=>{const[c,d]=(n+'').split('.');return d?c+'.'+d.substring(0,4):c};
 
@@ -180,7 +190,8 @@ const KEY='matika_trenink_v4';
 let correct=0,wrong=0,streak=0,history=[],aktualniPriklad=null,zobrazitVysledek=false,isProcessing=false;
 
 const operaceEl=$('operace'),cis1=$('cislice1'),cis2=$('cislice2'),chybaEl=$('chyba');
-const prikladEl=$('priklad'),caraEl=$('cara'),odpovedEl=$('odpoved'),btnEl=$('tlacitko');
+const prikladEl=$('priklad'),caraEl=$('cara'),btnEl=$('tlacitko');
+const upperBox=$('upperBox');
 const inputIcon=$('inputIcon'),enterHint=$('enterHint');
 const scoreC=$('scoreCorrect'),scoreW=$('scoreWrong'),streakEl=$('streakCount');
 const histCont=$('historyContainer'),histList=$('historyList'),histEmpty=$('historyEmpty');
@@ -232,6 +243,7 @@ function showProblem(p){
   prikladEl.style.whiteSpace = 'normal';
   prikladEl.classList.remove('math-text');
   
+  // Zadání se jednoduše vykreslí zarovnané doprava, dál se s ním nemanipuluje
   prikladEl.innerHTML=`
     <div class="flex justify-end gap-3 w-full">
       <div class="flex flex-col text-right select-none">
@@ -588,9 +600,6 @@ function buildRecognition(){
     raw = raw.replace(/[?!;:_]/g, '');
     raw = raw.replace(/\b(ukázat|ukazat|ukažte|ukazte|ukaž|ukaš)\b/g, ' ');
 
-    // -------------------------------------------------------------
-    // MAGICKÁ SLOVA PRO 3 NULY
-    // -------------------------------------------------------------
     raw = raw.replace(/\b(nuly|zero|zirou|zírou)\b/g, ' nula nula nula ');
 
     if(/znovu|znova|smazat|vymazat|zrušit|zrusit/.test(raw)){
@@ -684,6 +693,7 @@ new MutationObserver(()=>{const t=prikladEl.textContent;if(t&&!t.includes('Zvolt
 
 updateScores();updateBtn();renderHistory();updateMicVisibility();
 setTimeout(()=>odpovedEl.focus(),100);
+
 })();
 </script>
 </body>
