@@ -127,7 +127,7 @@ input{-webkit-appearance:none;border-radius:.75rem}
 
 <div class="space-y-2.5">
   <div class="relative">
-    <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="Váš výsledek" class="w-full pl-3 py-1 text-4xl font-semibold rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right tabular-nums tracking-wide"/>
+    <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="Váš výsledek" class="w-full px-3 py-1 text-4xl font-semibold rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right tabular-nums tracking-wide"/>
     <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 scale-75 pointer-events-none"></div>
   </div>
   <div id="enterHint" class="text-[9px] text-slate-400 font-medium opacity-0 transition-opacity duration-200 select-none text-center -mt-1">Enter ↵</div>
@@ -152,10 +152,11 @@ input{-webkit-appearance:none;border-radius:.75rem}
 <script>
 (function(){
 // ==========================================================
-// NASTAVENÍ POSUNU VÝSLEDKU (V PIXELECH)
-// Zvětšením čísla posunete výsledek více DOLEVA.
+// NASTAVENÍ POSUNU PŘÍKLADU ZLEVA (V PIXELECH)
+// Číslo určuje, o kolik pixelů se CELÝ příklad (čísla i znaménko)
+// posune DOLEVA, aby lícoval s výsledkem v inputu.
 // ==========================================================
-const POSUN_VYSLEDKU_ZPRAVA_PX = 25;
+const POSUN_PRIKLADU_ZPRAVA_PX = 15;
 
 const $=id=>document.getElementById(id);
 
@@ -189,9 +190,6 @@ const inputIcon=$('inputIcon'),enterHint=$('enterHint');
 const scoreC=$('scoreCorrect'),scoreW=$('scoreWrong'),streakEl=$('streakCount');
 const histCont=$('historyContainer'),histList=$('historyList'),histEmpty=$('historyEmpty');
 const hlasCheck=$('hlasCheck'),micBtn=$('micBtn'),micLabel=$('micLabel');
-
-// Aplikace posunu výsledku
-odpovedEl.style.paddingRight = POSUN_VYSLEDKU_ZPRAVA_PX + 'px';
 
 const today=new Date();
 const czMonths=['ledna','února','března','dubna','května','června','července','srpna','září','října','listopadu','prosince'];
@@ -236,12 +234,12 @@ function showProblem(p){
   const fa=fmt(p.a),fb=fmt(p.b);
   const opUI=p.op==='*'?'x':p.op==='/'?':':p.op==='-'?'−':'+';
   
-  // Zrušíme white-space: break-spaces; aby se správně vykreslila flex struktura
   prikladEl.style.whiteSpace = 'normal';
   prikladEl.classList.remove('math-text');
   
+  // Zde se nově aplikuje posun celého příkladu
   prikladEl.innerHTML=`
-    <div class="flex justify-end gap-3 w-full">
+    <div class="flex justify-end gap-3 w-full" style="padding-right: ${POSUN_PRIKLADU_ZPRAVA_PX}px;">
       <div class="flex flex-col text-right select-none">
         <div class="invisible">0</div>
         <div>${opUI}</div>
@@ -378,11 +376,11 @@ function handle(e,fromVoice){
       odpovedEl.classList.add(ok?'zelene':'cervene');
       if(ok){
         correct++;streak++;
-        inputIcon.innerHTML=''; // Odstraněna ✓ ikona
+        inputIcon.innerHTML=''; 
       }
       else{
         wrong++;streak=0;
-        inputIcon.innerHTML=''; // Odstraněna ✗ ikona
+        inputIcon.innerHTML=''; 
         odpovedEl.classList.add('shake');
         setTimeout(()=>odpovedEl.classList.remove('shake'),500);
       }
@@ -396,7 +394,7 @@ function handle(e,fromVoice){
 }
 
 // ═══════════════════════════════════════════════════════════════
-// HLASOVÝ VSTUP (Kompletní a robustní verze)
+// HLASOVÝ VSTUP 
 // ═══════════════════════════════════════════════════════════════
 
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -590,16 +588,15 @@ function buildRecognition(){
 
     let raw = finalText.trim().toLowerCase();
 
-    // Předzpracování chyb Googlu a formátování
     raw = raw.replace(/(\d)\s+(?=\d)/g, '$1');
     raw = raw.replace(/[,.]/g, ' čárka ');
     raw = raw.replace(/[?!;:_]/g, '');
     raw = raw.replace(/\b(ukázat|ukazat|ukažte|ukazte|ukaž|ukaš)\b/g, ' ');
 
-    // -------------------------------------------------------------
-    // ZDE JE PŘIDÁNA OPRAVA: slovo "nuly" se ihned přemění na "nula nula nula" (000)
-    // -------------------------------------------------------------
     raw = raw.replace(/\bnuly\b/g, ' nula nula nula ');
+    
+    // Trik se slovem zero/zirou/zírou
+    raw = raw.replace(/\b(zero|zirou|zírou)\b/g, ' 000 ');
 
     if(/znovu|znova|smazat|vymazat|zrušit|zrusit/.test(raw)){
       spReset();
