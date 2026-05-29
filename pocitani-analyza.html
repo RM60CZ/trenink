@@ -118,7 +118,8 @@ input{-webkit-appearance:none;border-radius:.75rem}
 
 <div id="chyba" class="text-red-500 text-[10px] font-bold text-center h-4 overflow-hidden mb-1" role="alert"></div>
 
-<div class="bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 px-4 pb-1 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center">
+<!-- ZDE JE ZMĚNA: z px-4 (padding left i right) je nyní pl-4 pr-0, takže vpravo není žádná vycpávka -->
+<div class="bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 pl-4 pr-0 pb-1 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center">
 <div id="problemContainer" class="w-full overflow-x-auto scrollbar-hide flex flex-col items-end relative z-10 transition-all">
   <div id="priklad" class="math-text text-4xl font-semibold tracking-tight text-slate-700 dark:text-slate-200 tabular-nums" style="white-space: break-spaces;">Zvolte nastavení a stiskněte ▶ Začít</div>
   <div id="cara" class="math-text text-4xl text-slate-400 dark:text-slate-600 border-t-[3px] border-slate-400 dark:border-slate-600 w-full mt-1 opacity-0 transition-opacity duration-300"></div>
@@ -152,9 +153,9 @@ input{-webkit-appearance:none;border-radius:.75rem}
 <script>
 (function(){
 // ==========================================================
-// NASTAVENÍ POSUNU PŘÍKLADU ZLEVA (V PIXELECH)
-// Zvětšením čísla posunete celé zadání (čísla i znaménko) DOLEVA, 
-// aby lícovalo s inputem pod ním.
+// NASTAVENÍ POSUNU PŘÍKLADU ZPRAVA (V PIXELECH)
+// 0 znamená absolutně u pravého okraje. 
+// Číslo (např. 15) posune zadání o daný počet pixelů doleva.
 // ==========================================================
 const POSUN_PRIKLADU_ZPRAVA_PX = 0;
 
@@ -192,7 +193,7 @@ const scoreC=$('scoreCorrect'),scoreW=$('scoreWrong'),streakEl=$('streakCount');
 const histCont=$('historyContainer'),histList=$('historyList'),histEmpty=$('historyEmpty');
 const hlasCheck=$('hlasCheck'),micBtn=$('micBtn'),micLabel=$('micLabel');
 
-// Aplikace posunu CELÉHO ZADÁNÍ (input už posun nemá)
+// ZDE se posun aplikuje čistě jako vzdálenost zprava
 problemContainer.style.paddingRight = POSUN_PRIKLADU_ZPRAVA_PX + 'px';
 
 const today=new Date();
