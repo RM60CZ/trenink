@@ -243,14 +243,14 @@ function showProblem(p){
   prikladEl.style.whiteSpace = 'normal';
   prikladEl.classList.remove('math-text');
   
-  // Zadání se jednoduše vykreslí zarovnané doprava, dál se s ním nemanipuluje
+  // Přidána třída translate-x-4 na wrapper čísel, aby se posunuly zcela na pravý okraj kontejneru
   prikladEl.innerHTML=`
     <div class="flex justify-end gap-3 w-full">
       <div class="flex flex-col text-right select-none">
         <div class="invisible">0</div>
         <div>${opUI}</div>
       </div>
-      <div class="flex flex-col text-right">
+      <div class="flex flex-col text-right translate-x-4">
         <div>${fa}</div>
         <div>${fb}</div>
       </div>
