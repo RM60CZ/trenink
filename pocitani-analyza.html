@@ -10,6 +10,14 @@
 tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Inter','system-ui','sans-serif']}}}}
 </script>
 <style>
+/* ======================================================================= */
+/* ZDE SI NASTAVTE PIXELY PRO POSUN VÝSLEDKU DOLEVA (0px = úplně vpravo)   */
+/* ======================================================================= */
+#odpoved {
+  padding-right: 18px !important; 
+}
+/* ======================================================================= */
+
 *{margin:0;padding:0;box-sizing:border-box}
 .zelene{background:#15803d!important;border-color:#22c55e!important;color:#fff!important}
 .cervene{background:#b91c1c!important;border-color:#ef4444!important;color:#fff!important}
@@ -127,7 +135,6 @@ input{-webkit-appearance:none;border-radius:.75rem}
 
 <div class="space-y-2.5">
   <div class="relative">
-    <!-- Odsazení vpravo řeší čistě proměnná v JS, proto tu není pr-* -->
     <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="Váš výsledek" class="w-full pl-4 py-1 text-4xl font-semibold rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right tabular-nums tracking-normal"/>
     <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 scale-75 pointer-events-none"></div>
   </div>
@@ -153,16 +160,8 @@ input{-webkit-appearance:none;border-radius:.75rem}
 <script>
 (function(){
 
-// ==========================================================
-// ZDE NASTAVUJEŠ POSUN VÝSLEDKU V INPUTU DOLEVA (V PIXELECH)
-// ==========================================================
-const POSUN_VYSLEDKU_VLEVO_PX = 50;
-
 const $=id=>document.getElementById(id);
 const odpovedEl=$('odpoved');
-
-// Aplikujeme tvé nastavení pouze a jen na pravý okraj inputu
-odpovedEl.style.paddingRight = POSUN_VYSLEDKU_VLEVO_PX + 'px';
 
 // Pevné mezery pro absolutně stabilní zobrazení čísel
 const fmt=x=>{
@@ -243,14 +242,13 @@ function showProblem(p){
   prikladEl.style.whiteSpace = 'normal';
   prikladEl.classList.remove('math-text');
   
-  // Přidána třída translate-x-4 na wrapper čísel, aby se posunuly zcela na pravý okraj kontejneru
   prikladEl.innerHTML=`
     <div class="flex justify-end gap-3 w-full">
       <div class="flex flex-col text-right select-none">
         <div class="invisible">0</div>
         <div>${opUI}</div>
       </div>
-      <div class="flex flex-col text-right translate-x-4">
+      <div class="flex flex-col text-right">
         <div>${fa}</div>
         <div>${fb}</div>
       </div>
@@ -594,12 +592,10 @@ function buildRecognition(){
 
     let raw = finalText.trim().toLowerCase();
 
-    // Předzpracování chyb a formátování
     raw = raw.replace(/(\d)\s+(?=\d)/g, '$1');
     raw = raw.replace(/[,.]/g, ' čárka ');
     raw = raw.replace(/[?!;:_]/g, '');
     raw = raw.replace(/\b(ukázat|ukazat|ukažte|ukazte|ukaž|ukaš)\b/g, ' ');
-
     raw = raw.replace(/\b(nuly|zero|zirou|zírou)\b/g, ' nula nula nula ');
 
     if(/znovu|znova|smazat|vymazat|zrušit|zrusit/.test(raw)){
