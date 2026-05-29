@@ -118,7 +118,8 @@ input{-webkit-appearance:none;border-radius:.75rem}
 
 <div id="chyba" class="text-red-500 text-[10px] font-bold text-center h-4 overflow-hidden mb-1" role="alert"></div>
 
-<div class="bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 pl-4 pr-0 pb-1 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center">
+<!-- Horní prvek nyní dostal přesný matematický vnitřní pravý okraj (pr-[41px]), aby lícoval s inputem -->
+<div class="bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 pl-4 pr-[41px] pb-1 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center">
 <div id="problemContainer" class="w-full overflow-x-auto scrollbar-hide flex flex-col items-end relative z-10 transition-all">
   <div id="priklad" class="math-text text-4xl font-semibold tracking-normal text-slate-700 dark:text-slate-200 tabular-nums" style="white-space: break-spaces;">Zvolte nastavení a stiskněte ▶ Začít</div>
   <div id="cara" class="math-text text-4xl text-slate-400 dark:text-slate-600 border-t-[3px] border-slate-400 dark:border-slate-600 w-full mt-1 opacity-0 transition-opacity duration-300"></div>
@@ -127,7 +128,8 @@ input{-webkit-appearance:none;border-radius:.75rem}
 
 <div class="space-y-2.5">
   <div class="relative">
-    <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="Váš výsledek" class="w-full pl-3 py-1 text-4xl font-semibold rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right tabular-nums tracking-normal"/>
+    <!-- Input nyní jasně definuje bezpečné odsazení pr-10, aby ho nepřekrývala zelená fajfka -->
+    <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="Váš výsledek" class="w-full pl-4 pr-10 py-1 text-4xl font-semibold rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all shadow-inner text-right tabular-nums tracking-normal"/>
     <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 scale-75 pointer-events-none"></div>
   </div>
   <div id="enterHint" class="text-[9px] text-slate-400 font-medium opacity-0 transition-opacity duration-200 select-none text-center -mt-1">Enter ↵</div>
@@ -151,13 +153,6 @@ input{-webkit-appearance:none;border-radius:.75rem}
 
 <script>
 (function(){
-// ==========================================================
-// NASTAVENÍ POSUNU PŘÍKLADU ZPRAVA (V PIXELECH)
-// 0 znamená absolutně u pravého okraje. 
-// Číslo (např. 15) posune zadání o daný počet pixelů doleva.
-// ==========================================================
-const POSUN_PRIKLADU_ZPRAVA_PX = 0;
-
 const $=id=>document.getElementById(id);
 
 const fmt=x=>{
@@ -185,15 +180,11 @@ const KEY='matika_trenink_v4';
 let correct=0,wrong=0,streak=0,history=[],aktualniPriklad=null,zobrazitVysledek=false,isProcessing=false;
 
 const operaceEl=$('operace'),cis1=$('cislice1'),cis2=$('cislice2'),chybaEl=$('chyba');
-const problemContainer=$('problemContainer');
 const prikladEl=$('priklad'),caraEl=$('cara'),odpovedEl=$('odpoved'),btnEl=$('tlacitko');
 const inputIcon=$('inputIcon'),enterHint=$('enterHint');
 const scoreC=$('scoreCorrect'),scoreW=$('scoreWrong'),streakEl=$('streakCount');
 const histCont=$('historyContainer'),histList=$('historyList'),histEmpty=$('historyEmpty');
 const hlasCheck=$('hlasCheck'),micBtn=$('micBtn'),micLabel=$('micLabel');
-
-// ZDE se posun aplikuje čistě jako vzdálenost zprava
-problemContainer.style.paddingRight = POSUN_PRIKLADU_ZPRAVA_PX + 'px';
 
 const today=new Date();
 const czMonths=['ledna','února','března','dubna','května','června','července','srpna','září','října','listopadu','prosince'];
