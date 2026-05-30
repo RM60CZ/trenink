@@ -169,16 +169,9 @@ const inputWrapper=$('inputWrapper');
 let textOffset = 0;
 function applyTextOffset(px) { 
   textOffset = px; 
-  // Input má šířku 100% + 80px, posouváme ho doprava pomocí right
-  // takže část textu zmizí za pravým okrajem wrapperu
-  // Když px=0, right=0 (text zcela vpravo ve wrapperu)
-  // Když px=30, right=-30px (input posunut doprava, text se posune doleva)
   odpovedEl.style.right = px + 'px';
 }
-// Výchozí hodnota - text napravo, neposunutý
-applyTextOffset(30);
-
-// Pro debug: window.applyTextOffset = applyTextOffset; // odkomentujte pro test v konzoli
+applyTextOffset(0);
 
 const fmt=x=>{
   if(typeof x==='bigint')return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'\xA0');
@@ -478,23 +471,44 @@ function handle(e,fromVoice){
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 let recognition=null,micListening=false,micAutoRestart=true;
 
-let spBufInt='';   
-let spBufDec='';   
-let spDecMode=false; 
+let spBuf = []; // pole čísel a desetinné tečky
 
 function spReset(){
-  spBufInt='';
-  spBufDec='';
-  spDecMode=false;
+  spBuf = [];
   odpovedEl.value='';
 }
 
 function spFlush(){
-  let raw = spBufInt;
-  if (!raw && !spDecMode) return;
-  if (!raw) raw = '0';
-  if (spDecMode) raw += '.' + (spBufDec || '0');
-  odpovedEl.value = fmtInputStr(raw);
+  if (!spBuf.length) return;
+  
+  let dotIndex = spBuf.indexOf('.');
+  let intParts, decParts;
+  
+  if (dotIndex === -1) {
+    intParts = spBuf;
+    decParts = [];
+  } else {
+    intParts = spBuf.slice(0, dotIndex);
+    decParts = spBuf.slice(dotIndex + 1);
+  }
+  
+  // Spojení celé části - čísla za sebe jako stringy
+  let intStr = intParts.map(x => String(x)).join('');
+  // Spojení desetinné části - čísla za sebe jako stringy
+  let decStr = decParts.map(x => String(x)).join('');
+  
+  // Odstranění přebytečných nul zleva v celé části (kromě jedné nuly)
+  intStr = intStr.replace(/^0+(?=\d)/, '');
+  if (intStr === '') intStr = '0';
+  
+  let result;
+  if (dotIndex === -1) {
+    result = intStr;
+  } else {
+    result = intStr + '.' + decStr;
+  }
+  
+  odpovedEl.value = fmtInputStr(result);
 }
 
 const WV={
@@ -686,30 +700,31 @@ function buildRecognition(){
     raw = expandCompound(raw);
     raw = raw.trim();
 
-    if(raw) {
-      const match = raw.match(DEC_RE);
-      if(match){
-        const sepIdx = match.index;
-        const before = raw.slice(0, sepIdx).trim();
-        const after = raw.slice(sepIdx + match[0].length).trim();
-
-        if(before){
-          const words = before.split(/\s+/).filter(Boolean);
-          parseVoiceTokens(words).forEach(v => { spBufInt += String(v) });
-        }
-        
-        spDecMode=true;
-
-        if(after){
-          const words = after.split(/\s+/).filter(Boolean);
-          parseVoiceTokens(words).forEach(v => { spBufDec += String(v) });
-        }
-      } else if (spDecMode) {
+    // Zjistit, zda text obsahuje slovo pro desetinnou čárku
+    const decMatch = raw.match(DEC_RE);
+    let hasDec = false;
+    
+    if (decMatch) {
+      hasDec = true;
+      // Zpracovat část před desetinnou čárkou
+      const before = raw.slice(0, decMatch.index).trim();
+      if (before) {
+        const words = before.split(/\s+/).filter(Boolean);
+        parseVoiceTokens(words).forEach(v => { spBuf.push(v); });
+      }
+      // Přidat desetinnou tečku
+      spBuf.push('.');
+      // Zpracovat část po desetinné čárce
+      const after = raw.slice(decMatch.index + decMatch[0].length).trim();
+      if (after) {
+        const words = after.split(/\s+/).filter(Boolean);
+        parseVoiceTokens(words).forEach(v => { spBuf.push(v); });
+      }
+    } else {
+      // Není desetinná čárka - celé číslo
+      if (raw) {
         const words = raw.split(/\s+/).filter(Boolean);
-        parseVoiceTokens(words).forEach(v => { spBufDec += String(v) });
-      } else {
-        const words = raw.split(/\s+/).filter(Boolean);
-        parseVoiceTokens(words).forEach(v => { spBufInt += String(v) });
+        parseVoiceTokens(words).forEach(v => { spBuf.push(v); });
       }
     }
 
