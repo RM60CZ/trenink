@@ -158,6 +158,13 @@ input{-webkit-appearance:none;border-radius:.75rem}
 const $=id=>document.getElementById(id);
 const odpovedEl=$('odpoved');
 
+// ═══════════════════════════════════════════════════════════════
+// PROMĚNNÁ PRO POSUN TEXTU V INPUTU DOLEVA
+// ═══════════════════════════════════════════════════════════════
+let textOffset = 0;
+function applyTextOffset(px) { textOffset = px; odpovedEl.style.paddingRight = px + 'px'; }
+applyTextOffset(0);
+
 const fmt=x=>{
   if(typeof x==='bigint')return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'\xA0');
   if(typeof x!=='number')return String(x);
@@ -196,12 +203,40 @@ const czDays=['Neděle','Pondělí','Úterý','Středa','Čtvrtek','Pátek','Sob
 $('currentDate').textContent=`${czDays[today.getDay()]} ${today.getDate()}. ${czMonths[today.getMonth()]} ${today.getFullYear()}`;
 const todayStr=today.toISOString().slice(0,10);
 
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.date===todayStr){correct=s.correct||0;wrong=s.wrong||0;streak=s.streak||0;history=s.history||[]}}catch(e){}}
-function save(){try{localStorage.setItem(KEY,JSON.stringify({date:todayStr,correct,wrong,streak,history}))}catch(e){}}
+// ═══════════════════════════════════════════════════════════════
+// NAČTENÍ DAT (skóre + historie) – rozšířeno o nastavení
+// ═══════════════════════════════════════════════════════════════
+function load(){
+  try{
+    const s=JSON.parse(localStorage.getItem(KEY));
+    if(s&&s.date===todayStr){
+      correct=s.correct||0;wrong=s.wrong||0;streak=s.streak||0;history=s.history||[];
+    }
+    // Obnovení posledního nastavení operace a číslic (nezávisle na datu)
+    if(s&&s.operace!=null)operaceEl.value=s.operace;
+    if(s&&s.cislice1!=null)cis1.value=s.cislice1;
+    if(s&&s.cislice2!=null)cis2.value=s.cislice2;
+  }catch(e){}
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ULOŽENÍ DAT – rozšířeno o nastavení
+// ═══════════════════════════════════════════════════════════════
+function save(){
+  try{
+    localStorage.setItem(KEY,JSON.stringify({
+      date:todayStr,correct,wrong,streak,history,
+      operace:operaceEl.value,
+      cislice1:cis1.value,
+      cislice2:cis2.value
+    }));
+  }catch(e){}
+}
 load();
 
 for(let i=1;i<=9;i++){cis1.innerHTML+=`<option value="${i}">${i}</option>`;cis2.innerHTML+=`<option value="${i}">${i}</option>`}
-cis1.value='2';cis2.value='1';
+// Výchozí hodnoty se použijí jen pokud nebyly načteny z localStorage
+if(!localStorage.getItem(KEY)||!JSON.parse(localStorage.getItem(KEY)).cislice1){cis1.value='2';cis2.value='1'}
 
 function updateCis2(){
   const op=operaceEl.value,v1=+cis1.value;
@@ -209,8 +244,13 @@ function updateCis2(){
   if(+cis2.value>v1&&op==='-')cis2.value=v1;
 }
 updateCis2();
-operaceEl.addEventListener('change',()=>{updateCis2();chybaEl.textContent='';});
-cis1.addEventListener('change',updateCis2);
+
+// ═══════════════════════════════════════════════════════════════
+// UDÁLOSTI PRO ULOŽENÍ NASTAVENÍ PŘI ZMĚNĚ
+// ═══════════════════════════════════════════════════════════════
+operaceEl.addEventListener('change',()=>{updateCis2();chybaEl.textContent='';save();});
+cis1.addEventListener('change',()=>{updateCis2();save();});
+cis2.addEventListener('change',save);
 
 function generate(){
   const op=operaceEl.value,n1=+cis1.value,n2=+cis2.value;
