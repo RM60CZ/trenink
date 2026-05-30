@@ -14,6 +14,8 @@ tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Inter','syst
 .zelene{background:#15803d!important;border-color:#22c55e!important;color:#fff!important}
 .cervene{background:#b91c1c!important;border-color:#ef4444!important;color:#fff!important}
 input{-webkit-appearance:none;border-radius:.75rem}
+#inputWrapper{position:relative;overflow:hidden}
+#odpoved{position:relative;right:0;transition:right 0.15s ease}
 .math-text{white-space:pre;line-height:1.25;display:block;font-variant-numeric:tabular-nums}
 .worksheet-bg{background-color:#e2e8f0;background-image:radial-gradient(circle,#94a3b8 1px,transparent 1px);background-size:24px 24px}
 .dark .worksheet-bg{background-color:rgba(30,41,59,.4);background-image:radial-gradient(circle,#334155 1px,transparent 1px)}
@@ -128,7 +130,10 @@ input{-webkit-appearance:none;border-radius:.75rem}
 <div class="space-y-2.5">
   <div class="relative bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-300 dark:border-slate-700 focus-within:border-blue-500 transition-all shadow-inner overflow-hidden flex">
     
-    <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="Váš výsledek" class="w-full pl-4 pr0 py-1 text-4xl font-semibold bg-transparent text-slate-800 dark:text-white outline-none text-right tabular-nums tracking-normal"/>
+    <!-- WRAPPER s overflow:hidden pro posun textu -->
+    <div id="inputWrapper" class="w-full">
+      <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="Váš výsledek" class="w-[calc(100%+80px)] pl-4 pr-4 py-1 text-4xl font-semibold bg-transparent text-slate-800 dark:text-white outline-none text-right tabular-nums tracking-normal"/>
+    </div>
     
     <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 scale-75 pointer-events-none"></div>
   </div>
@@ -156,17 +161,24 @@ input{-webkit-appearance:none;border-radius:.75rem}
 
 const $=id=>document.getElementById(id);
 const odpovedEl=$('odpoved');
+const inputWrapper=$('inputWrapper');
 
 // ═══════════════════════════════════════════════════════════════
 // PROMĚNNÁ PRO POSUN TEXTU V INPUTU DOLEVA
 // ═══════════════════════════════════════════════════════════════
-let textOffset = 80;
+let textOffset = 0;
 function applyTextOffset(px) { 
   textOffset = px; 
-  odpovedEl.style.textIndent = '-' + px + 'px'; 
-  odpovedEl.style.paddingRight = px + 'px'; 
+  // Input má šířku 100% + 80px, posouváme ho doprava pomocí right
+  // takže část textu zmizí za pravým okrajem wrapperu
+  // Když px=0, right=0 (text zcela vpravo ve wrapperu)
+  // Když px=30, right=-30px (input posunut doprava, text se posune doleva)
+  odpovedEl.style.right = px + 'px';
 }
+// Výchozí hodnota - text napravo, neposunutý
 applyTextOffset(0);
+
+// Pro debug: window.applyTextOffset = applyTextOffset; // odkomentujte pro test v konzoli
 
 const fmt=x=>{
   if(typeof x==='bigint')return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'\xA0');
@@ -395,7 +407,7 @@ function handle(e,fromVoice){
   if(isProcessing)return;isProcessing=true;
   if(e)e.preventDefault();
   
-  const parentDiv = odpovedEl.parentElement;
+  const parentDiv = odpovedEl.parentElement.parentElement; // upraveno kvůli wrapperu
   parentDiv.classList.remove('zelene','cervene');
   odpovedEl.classList.remove('text-white');
   
@@ -624,14 +636,14 @@ function buildRecognition(){
     micListening=true;
     micBtn.classList.add('listening');
     micLabel.textContent='Poslouchám…';
-    odpovedEl.parentElement.classList.add('mic-active');
+    odpovedEl.parentElement.parentElement.classList.add('mic-active');
   };
 
   r.onend=()=>{
     micListening=false;
     micBtn.classList.remove('listening');
     micLabel.textContent='Mikrofon';
-    odpovedEl.parentElement.classList.remove('mic-active');
+    odpovedEl.parentElement.parentElement.classList.remove('mic-active');
     if(micAutoRestart&&hlasCheck.checked&&zobrazitVysledek){
       setTimeout(()=>{if(!micListening&&hlasCheck.checked&&zobrazitVysledek)r.start()},300);
     }
@@ -726,7 +738,7 @@ function stopMic(reset){
   micListening=false;
   micBtn.classList.remove('listening');
   micLabel.textContent='Mikrofon';
-  odpovedEl.parentElement.classList.remove('mic-active');
+  odpovedEl.parentElement.parentElement.classList.remove('mic-active');
 }
 
 hlasCheck.addEventListener('change',()=>{
