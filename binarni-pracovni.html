@@ -35,7 +35,7 @@
         .header-icons { display: flex; gap: 12px; }
         .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-color); }
 
-        .settings-group { display: none; flex-direction: column; gap: 8px; margin-top: 4px; }
+        .settings-group { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
         select {
             width: 100%; padding: 6px; border-radius: 6px;
             border: 1px solid var(--border-color); background: var(--container-bg);
@@ -82,10 +82,12 @@
 
         .history-container { border-top: 1px solid var(--border-color); padding-top: 10px; }
         .history-title { font-size: 14px; font-weight: bold; margin-bottom: 8px; }
-        .history-list { display: flex; flex-direction: column; gap: 4px; }
+        
+        /* Historie se nyní skládá vedle sebe a zalomí se až na konci řádku */
+        .history-list { display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; }
         .history-item {
             padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 14px;
-            color: white; display: inline-block; width: fit-content;
+            color: white; display: inline-block;
         }
         .history-item.correct { background-color: var(--success); }
         .history-item.error { background-color: var(--error); }
@@ -153,12 +155,10 @@
     let currentFocusIdx = 0;
 
     function initApp() {
-        // Obnovení motivu
         const savedTheme = localStorage.getItem('binTrainTheme') || 'light';
         document.body.dataset.theme = savedTheme;
         document.getElementById('theme-btn').innerText = savedTheme === 'dark' ? '☀️' : '🌙';
 
-        // Generování možností bitů
         const bitSelect = document.getElementById('bits');
         for (let i = 5; i <= 15; i++) {
             let opt = document.createElement('option');
@@ -166,7 +166,6 @@
             bitSelect.appendChild(opt);
         }
 
-        // Obnovení parametrů
         const savedDir = localStorage.getItem('binTrainDir');
         if (savedDir) document.getElementById('direction').value = savedDir;
         
@@ -190,7 +189,7 @@
 
     function toggleSettings() {
         const panel = document.getElementById('settings-panel');
-        panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
+        panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
     }
 
     function updateInfo() {
@@ -210,7 +209,7 @@
             const secret = document.getElementById('secret-input').value.trim().toLowerCase();
             if (secret === 'historie') localStorage.removeItem('binTrainHistory');
             document.getElementById('secret-input').style.display = 'none';
-            document.getElementById('settings-panel').style.display = 'none'; // Skryje nastavení při startu
+            document.getElementById('settings-panel').style.display = 'none'; 
             startGame();
         } else if (state === 'playing') {
             checkAnswer();
@@ -260,6 +259,11 @@
             input.inputMode = 'numeric';
             input.maxLength = 1;
             input.className = 'box';
+
+            // Přidání mezery po každých 5 chlívečcích odzadu
+            if ((expectedLength - 1 - i) % 5 === 0 && i !== expectedLength - 1) {
+                input.style.marginRight = '12px';
+            }
             
             input.addEventListener('focus', () => { currentFocusIdx = i; });
             input.addEventListener('input', function() {
@@ -292,23 +296,23 @@
         const boxes = Array.from(document.getElementById('boxes-container').children);
         const userInput = boxes.map(b => b.value).join('');
 
-        if (direction === 'dec2bin' && userInput.length < expectedLength) {
-            alert('Vyplňte všechny chlívečky.'); return;
-        }
-        if (userInput.length === 0) return;
+        if (userInput.trim() === '') return; // Reaguje pouze pokud je něco zapsáno
 
         state = 'evaluated';
         document.getElementById('main-btn').innerText = "DALŠÍ";
 
-        const isCorrect = (userInput === expectedAnswer || parseInt(userInput) === parseInt(expectedAnswer));
+        // Kontrola pomocí parsování čísla na odpovídající soustavu (ignoruje chybějící přední nuly)
+        const inputBase = direction === 'dec2bin' ? 2 : 10;
+        const isCorrect = parseInt(userInput, inputBase) === currentDecValue;
         
         boxes.forEach((box) => {
             box.disabled = true; 
             if (box.value !== "") box.classList.add(isCorrect ? 'correct' : 'error');
         });
 
-        const binStr = (direction === 'dec2bin') ? expectedAnswer : document.getElementById('question-display').innerText;
-        const decStr = (direction === 'dec2bin') ? currentDecValue : expectedAnswer;
+        // V historii se ukáže přesně to, co bylo reálně napsáno (i když chyběly nuly)
+        const binStr = (direction === 'dec2bin') ? userInput : document.getElementById('question-display').innerText;
+        const decStr = (direction === 'dec2bin') ? currentDecValue : userInput;
         saveToHistory(`${binStr}=${decStr}`, isCorrect);
     }
 
