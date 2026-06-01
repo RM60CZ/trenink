@@ -85,7 +85,7 @@
         .history-title { font-size: 14px; font-weight: bold; margin-bottom: 8px; }
         
         .history-list { 
-            display: flex; flex-direction: row; flex-wrap: wrap; /* Změněno na wrap pro zalamování řádků */
+            display: flex; flex-direction: row; flex-wrap: wrap; 
             gap: 6px; padding-bottom: 8px;
         }
         .history-item {
@@ -178,6 +178,7 @@
 
         if(state === 'init') {
             document.getElementById('settings-panel').style.display = 'flex';
+            document.getElementById('secret-input').focus(); 
         }
 
         checkHistoryDate();
@@ -212,7 +213,7 @@
     function handleMainAction() {
         if (state === 'init') {
             const secret = document.getElementById('secret-input').value.trim().toLowerCase();
-            if (secret === 'historie') localStorage.removeItem('binTrainHistory');
+            if (secret === 'zrušit') localStorage.removeItem('binTrainHistory'); 
             document.getElementById('secret-input').style.display = 'none';
             document.getElementById('settings-panel').style.display = 'none'; 
             startGame();
@@ -222,6 +223,14 @@
             startGame();
         }
     }
+
+    // Enter klávesa se vždy zachová přesně jako modré tlačítko
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault(); // Zabrání výchozímu chování (např. dvojité spuštění, pokud jsi na tlačítku Tabem)
+            handleMainAction();
+        }
+    });
 
     function startGame() {
         state = 'playing';
