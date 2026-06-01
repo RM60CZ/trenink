@@ -35,7 +35,7 @@
         .header-icons { display: flex; gap: 12px; }
         .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-color); }
 
-        .settings-group { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+        .settings-group { display: none; flex-direction: column; gap: 8px; margin-top: 4px; }
         select {
             width: 100%; padding: 6px; border-radius: 6px;
             border: 1px solid var(--border-color); background: var(--container-bg);
@@ -80,17 +80,25 @@
             border: none; font-size: 16px; font-weight: bold; cursor: pointer;
         }
 
-        .history-container { border-top: 1px solid var(--border-color); padding-top: 10px; }
+        .history-container { border-top: 1px solid var(--border-color); padding-top: 10px; overflow: hidden; }
         .history-title { font-size: 14px; font-weight: bold; margin-bottom: 8px; }
         
-        /* Historie se nyní skládá vedle sebe a zalomí se až na konci řádku */
-        .history-list { display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; }
+        /* Úprava pro jeden řádek s posuvníkem (scrollbar) */
+        .history-list { 
+            display: flex; flex-direction: row; flex-wrap: nowrap; 
+            gap: 6px; overflow-x: auto; padding-bottom: 8px; white-space: nowrap;
+        }
         .history-item {
-            padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 14px;
-            color: white; display: inline-block;
+            flex-shrink: 0; padding: 4px 8px; border-radius: 4px; 
+            font-family: monospace; font-size: 14px; color: white;
         }
         .history-item.correct { background-color: var(--success); }
         .history-item.error { background-color: var(--error); }
+        
+        /* Zjemnění posuvníku */
+        .history-list::-webkit-scrollbar { height: 6px; }
+        .history-list::-webkit-scrollbar-track { background: var(--btn-bg); border-radius: 4px; }
+        .history-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
     </style>
 </head>
 <body data-theme="light">
@@ -171,6 +179,11 @@
         
         const savedBits = localStorage.getItem('binTrainBits');
         if (savedBits) document.getElementById('bits').value = savedBits;
+
+        // Pokud zapneme poprvé, chceme nastavení ukázat
+        if(state === 'init') {
+            document.getElementById('settings-panel').style.display = 'flex';
+        }
 
         checkHistoryDate();
         updateInfo();
@@ -260,7 +273,7 @@
             input.maxLength = 1;
             input.className = 'box';
 
-            // Přidání mezery po každých 5 chlívečcích odzadu
+            // Mezera pro každých 5 chlívečků (zprava doleva)
             if ((expectedLength - 1 - i) % 5 === 0 && i !== expectedLength - 1) {
                 input.style.marginRight = '12px';
             }
@@ -296,12 +309,11 @@
         const boxes = Array.from(document.getElementById('boxes-container').children);
         const userInput = boxes.map(b => b.value).join('');
 
-        if (userInput.trim() === '') return; // Reaguje pouze pokud je něco zapsáno
+        if (userInput.trim() === '') return;
 
         state = 'evaluated';
         document.getElementById('main-btn').innerText = "DALŠÍ";
 
-        // Kontrola pomocí parsování čísla na odpovídající soustavu (ignoruje chybějící přední nuly)
         const inputBase = direction === 'dec2bin' ? 2 : 10;
         const isCorrect = parseInt(userInput, inputBase) === currentDecValue;
         
@@ -310,7 +322,6 @@
             if (box.value !== "") box.classList.add(isCorrect ? 'correct' : 'error');
         });
 
-        // V historii se ukáže přesně to, co bylo reálně napsáno (i když chyběly nuly)
         const binStr = (direction === 'dec2bin') ? userInput : document.getElementById('question-display').innerText;
         const decStr = (direction === 'dec2bin') ? currentDecValue : userInput;
         saveToHistory(`${binStr}=${decStr}`, isCorrect);
@@ -326,7 +337,7 @@
 
     function saveToHistory(text, isCorrect) {
         let history = JSON.parse(localStorage.getItem('binTrainHistory') || '[]');
-        history.unshift({ text, isCorrect });
+        history.unshift({ text, isCorrect }); // Dává automaticky nejnovější na první místo v poli
         localStorage.setItem('binTrainHistory', JSON.stringify(history));
         renderHistory();
     }
