@@ -63,7 +63,7 @@
         .box:focus { border-color: var(--primary-bg); }
         .box.correct { background-color: var(--success); color: white; border-color: var(--success); }
         .box.error { background-color: var(--error); color: white; border-color: var(--error); }
-        .box:disabled { opacity: 1; } /* Zamezí zešednutí textu při zamknutí */
+        .box:disabled { opacity: 1; }
 
         .keypad { display: grid; gap: 6px; width: 100%; display: none; }
         .keypad.bin { grid-template-columns: 1fr 1fr; }
@@ -81,23 +81,20 @@
             border: none; font-size: 16px; font-weight: bold; cursor: pointer;
         }
 
-        .history-container { border-top: 1px solid var(--border-color); padding-top: 10px; overflow: hidden; }
+        .history-container { border-top: 1px solid var(--border-color); padding-top: 10px; }
         .history-title { font-size: 14px; font-weight: bold; margin-bottom: 8px; }
         
         .history-list { 
-            display: flex; flex-direction: row; flex-wrap: nowrap; 
-            gap: 6px; overflow-x: auto; padding-bottom: 8px; white-space: nowrap;
+            display: flex; flex-direction: row; flex-wrap: wrap; /* Změněno na wrap pro zalamování řádků */
+            gap: 6px; padding-bottom: 8px;
         }
         .history-item {
-            flex-shrink: 0; padding: 4px 8px; border-radius: 4px; 
+            padding: 4px 8px; border-radius: 4px; 
             font-family: monospace; font-size: 14px; color: white;
+            display: inline-block;
         }
         .history-item.correct { background-color: var(--success); }
         .history-item.error { background-color: var(--error); }
-        
-        .history-list::-webkit-scrollbar { height: 6px; }
-        .history-list::-webkit-scrollbar-track { background: var(--btn-bg); border-radius: 4px; }
-        .history-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
     </style>
 </head>
 <body data-theme="light">
@@ -304,15 +301,13 @@
         state = 'evaluated';
         document.getElementById('main-btn').innerText = "DALŠÍ";
 
-        // Pokud není nic vyplněno -> vyplní systém
         if (userInput.trim() === '') {
             const fullAnswer = expectedAnswer.padStart(expectedLength, '0');
             boxes.forEach((box, idx) => {
                 box.value = fullAnswer[idx]; 
                 box.disabled = true; 
-                // Záměrně nepřiřadíme correct ani error třídu, takže zůstane nepodbarvené
             });
-            return; // Nezapisuje se do historie
+            return; 
         }
 
         const inputBase = direction === 'dec2bin' ? 2 : 10;
@@ -323,14 +318,11 @@
             if (box.value !== "") box.classList.add(isCorrect ? 'correct' : 'error');
         });
 
-        // Tvorba zápisu do historie
         let binStr, decStr;
         if (isCorrect) {
-            // Správně: Zapíše se přesně to, co uživatel zadal (i bez nul)
             binStr = (direction === 'dec2bin') ? userInput : document.getElementById('question-display').innerText;
             decStr = (direction === 'dec2bin') ? currentDecValue : userInput;
         } else {
-            // Špatně: Zapíše se SPRÁVNÁ odpověď, ale bude obarvena červeně
             binStr = (direction === 'dec2bin') ? expectedAnswer : document.getElementById('question-display').innerText;
             decStr = (direction === 'dec2bin') ? currentDecValue : expectedAnswer;
         }
