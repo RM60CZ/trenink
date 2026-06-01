@@ -35,7 +35,7 @@
         .header-icons { display: flex; gap: 12px; }
         .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-color); }
 
-        .settings-group { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+        .settings-group { display: none; flex-direction: column; gap: 8px; margin-top: 4px; }
         select {
             width: 100%; padding: 6px; border-radius: 6px;
             border: 1px solid var(--border-color); background: var(--container-bg);
@@ -63,6 +63,7 @@
         .box:focus { border-color: var(--primary-bg); }
         .box.correct { background-color: var(--success); color: white; border-color: var(--success); }
         .box.error { background-color: var(--error); color: white; border-color: var(--error); }
+        .box.autofill { background-color: #8e8e93; color: white; border-color: #8e8e93; } /* Barva pro autovyplnění */
 
         .keypad { display: grid; gap: 6px; width: 100%; display: none; }
         .keypad.bin { grid-template-columns: 1fr 1fr; }
@@ -80,17 +81,23 @@
             border: none; font-size: 16px; font-weight: bold; cursor: pointer;
         }
 
-        .history-container { border-top: 1px solid var(--border-color); padding-top: 10px; }
+        .history-container { border-top: 1px solid var(--border-color); padding-top: 10px; overflow: hidden; }
         .history-title { font-size: 14px; font-weight: bold; margin-bottom: 8px; }
         
-        /* Historie se nyní skládá vedle sebe a zalomí se až na konci řádku */
-        .history-list { display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; }
+        .history-list { 
+            display: flex; flex-direction: row; flex-wrap: nowrap; 
+            gap: 6px; overflow-x: auto; padding-bottom: 8px; white-space: nowrap;
+        }
         .history-item {
-            padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 14px;
-            color: white; display: inline-block;
+            flex-shrink: 0; padding: 4px 8px; border-radius: 4px; 
+            font-family: monospace; font-size: 14px; color: white;
         }
         .history-item.correct { background-color: var(--success); }
         .history-item.error { background-color: var(--error); }
+        
+        .history-list::-webkit-scrollbar { height: 6px; }
+        .history-list::-webkit-scrollbar-track { background: var(--btn-bg); border-radius: 4px; }
+        .history-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
     </style>
 </head>
 <body data-theme="light">
@@ -172,6 +179,10 @@
         const savedBits = localStorage.getItem('binTrainBits');
         if (savedBits) document.getElementById('bits').value = savedBits;
 
+        if(state === 'init') {
+            document.getElementById('settings-panel').style.display = 'flex';
+        }
+
         checkHistoryDate();
         updateInfo();
         renderHistory();
@@ -181,7 +192,6 @@
         const body = document.body;
         const isDark = body.dataset.theme === 'dark';
         const newTheme = isDark ? 'light' : 'dark';
-        
         body.dataset.theme = newTheme;
         document.getElementById('theme-btn').innerText = newTheme === 'dark' ? '☀️' : '🌙';
         localStorage.setItem('binTrainTheme', newTheme);
@@ -195,10 +205,8 @@
     function updateInfo() {
         const bits = parseInt(document.getElementById('bits').value);
         const direction = document.getElementById('direction').value;
-        
         localStorage.setItem('binTrainBits', bits);
         localStorage.setItem('binTrainDir', direction);
-
         const maxNum = Math.pow(2, bits) - 1;
         document.getElementById('info').innerText = `Rozsah: 0 až ${maxNum}`;
         if (state === 'playing') startGame(); 
@@ -244,7 +252,6 @@
             document.getElementById('keypad-bin').style.display = 'none';
             document.getElementById('keypad-dec').style.display = 'grid';
         }
-
         renderBoxes();
     }
 
@@ -260,7 +267,7 @@
             input.maxLength = 1;
             input.className = 'box';
 
-            // Přidání mezery po každých 5 chlívečcích odzadu
+            // Přesná logika pro mezery (skupiny po 5 odzadu). Tvoří přesně 2-5-5 pro 12 bitů.
             if ((expectedLength - 1 - i) % 5 === 0 && i !== expectedLength - 1) {
                 input.style.marginRight = '12px';
             }
@@ -271,7 +278,6 @@
                     container.children[i + 1].focus();
                 }
             });
-
             container.appendChild(input);
         }
         if (container.children.length > 0) container.children[0].focus();
@@ -296,12 +302,22 @@
         const boxes = Array.from(document.getElementById('boxes-container').children);
         const userInput = boxes.map(b => b.value).join('');
 
-        if (userInput.trim() === '') return; // Reaguje pouze pokud je něco zapsáno
-
         state = 'evaluated';
         document.getElementById('main-btn').innerText = "DALŠÍ";
 
-        // Kontrola pomocí parsování čísla na odpovídající soustavu (ignoruje chybějící přední nuly)
+        // Pokud je políčko úplně prázdné
+        if (userInput.trim() === '') {
+            // Vytvoříme plnou odpověď včetně předních nul pro obě možnosti
+            const fullAnswer = expectedAnswer.padStart(expectedLength, '0');
+            boxes.forEach((box, idx) => {
+                box.value = fullAnswer[idx]; // Vyplníme
+                box.disabled = true; // Zamkneme
+                box.classList.add('autofill'); // Zvýrazníme (bez zápisu do historie)
+            });
+            return; // Konec funkce, do historie se nic neukládá
+        }
+
+        // Pokud uživatel něco zadal, kontrolujeme (ignoruje chybějící přední nuly)
         const inputBase = direction === 'dec2bin' ? 2 : 10;
         const isCorrect = parseInt(userInput, inputBase) === currentDecValue;
         
@@ -310,7 +326,7 @@
             if (box.value !== "") box.classList.add(isCorrect ? 'correct' : 'error');
         });
 
-        // V historii se ukáže přesně to, co bylo reálně napsáno (i když chyběly nuly)
+        // Do historie se pošle přesně to, co uživatel zadal (třeba i bez nul, jak to napsal)
         const binStr = (direction === 'dec2bin') ? userInput : document.getElementById('question-display').innerText;
         const decStr = (direction === 'dec2bin') ? currentDecValue : userInput;
         saveToHistory(`${binStr}=${decStr}`, isCorrect);
@@ -326,7 +342,7 @@
 
     function saveToHistory(text, isCorrect) {
         let history = JSON.parse(localStorage.getItem('binTrainHistory') || '[]');
-        history.unshift({ text, isCorrect });
+        history.unshift({ text, isCorrect }); // Nový výsledek je automaticky jako první vlevo
         localStorage.setItem('binTrainHistory', JSON.stringify(history));
         renderHistory();
     }
