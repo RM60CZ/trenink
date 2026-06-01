@@ -63,7 +63,7 @@
         .box:focus { border-color: var(--primary-bg); }
         .box.correct { background-color: var(--success); color: white; border-color: var(--success); }
         .box.error { background-color: var(--error); color: white; border-color: var(--error); }
-        .box.autofill { background-color: #8e8e93; color: white; border-color: #8e8e93; } /* Barva pro autovyplnění */
+        .box:disabled { opacity: 1; } /* Zamezí zešednutí textu při zamknutí */
 
         .keypad { display: grid; gap: 6px; width: 100%; display: none; }
         .keypad.bin { grid-template-columns: 1fr 1fr; }
@@ -267,7 +267,6 @@
             input.maxLength = 1;
             input.className = 'box';
 
-            // Přesná logika pro mezery (skupiny po 5 odzadu). Tvoří přesně 2-5-5 pro 12 bitů.
             if ((expectedLength - 1 - i) % 5 === 0 && i !== expectedLength - 1) {
                 input.style.marginRight = '12px';
             }
@@ -305,19 +304,17 @@
         state = 'evaluated';
         document.getElementById('main-btn').innerText = "DALŠÍ";
 
-        // Pokud je políčko úplně prázdné
+        // Pokud není nic vyplněno -> vyplní systém
         if (userInput.trim() === '') {
-            // Vytvoříme plnou odpověď včetně předních nul pro obě možnosti
             const fullAnswer = expectedAnswer.padStart(expectedLength, '0');
             boxes.forEach((box, idx) => {
-                box.value = fullAnswer[idx]; // Vyplníme
-                box.disabled = true; // Zamkneme
-                box.classList.add('autofill'); // Zvýrazníme (bez zápisu do historie)
+                box.value = fullAnswer[idx]; 
+                box.disabled = true; 
+                // Záměrně nepřiřadíme correct ani error třídu, takže zůstane nepodbarvené
             });
-            return; // Konec funkce, do historie se nic neukládá
+            return; // Nezapisuje se do historie
         }
 
-        // Pokud uživatel něco zadal, kontrolujeme (ignoruje chybějící přední nuly)
         const inputBase = direction === 'dec2bin' ? 2 : 10;
         const isCorrect = parseInt(userInput, inputBase) === currentDecValue;
         
@@ -326,9 +323,18 @@
             if (box.value !== "") box.classList.add(isCorrect ? 'correct' : 'error');
         });
 
-        // Do historie se pošle přesně to, co uživatel zadal (třeba i bez nul, jak to napsal)
-        const binStr = (direction === 'dec2bin') ? userInput : document.getElementById('question-display').innerText;
-        const decStr = (direction === 'dec2bin') ? currentDecValue : userInput;
+        // Tvorba zápisu do historie
+        let binStr, decStr;
+        if (isCorrect) {
+            // Správně: Zapíše se přesně to, co uživatel zadal (i bez nul)
+            binStr = (direction === 'dec2bin') ? userInput : document.getElementById('question-display').innerText;
+            decStr = (direction === 'dec2bin') ? currentDecValue : userInput;
+        } else {
+            // Špatně: Zapíše se SPRÁVNÁ odpověď, ale bude obarvena červeně
+            binStr = (direction === 'dec2bin') ? expectedAnswer : document.getElementById('question-display').innerText;
+            decStr = (direction === 'dec2bin') ? currentDecValue : expectedAnswer;
+        }
+
         saveToHistory(`${binStr}=${decStr}`, isCorrect);
     }
 
@@ -342,7 +348,7 @@
 
     function saveToHistory(text, isCorrect) {
         let history = JSON.parse(localStorage.getItem('binTrainHistory') || '[]');
-        history.unshift({ text, isCorrect }); // Nový výsledek je automaticky jako první vlevo
+        history.unshift({ text, isCorrect }); 
         localStorage.setItem('binTrainHistory', JSON.stringify(history));
         renderHistory();
     }
