@@ -41,7 +41,7 @@ input{-webkit-appearance:none;border-radius:.75rem}
 @keyframes mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.6)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
 #micBtn.listening{animation:mic-pulse 1.2s infinite;border-color:#ef4444!important}
 #odpoved.mic-active{border-color:#ef4444!important;box-shadow:0 0 0 2px rgba(239,68,68,.25)}
-#odpoved::placeholder{white-space:nowrap;overflow:visible;text-overflow:clip;font-size:1.5rem}
+#odpoved::placeholder{font-size:1.5rem}
 @media(max-width:400px){#odpoved::placeholder{font-size:1rem}}
 </style>
 </head>
@@ -135,7 +135,7 @@ input{-webkit-appearance:none;border-radius:.75rem}
   <div class="relative bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-300 dark:border-slate-700 focus-within:border-blue-500 transition-all shadow-inner overflow-hidden flex">
     
     <div id="inputWrapper" class="w-full">
-      <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="Historie - z....t" class="w-[calc(100%+80px)] pl-4 pr-4 py-1 text-2xl sm:text-3xl font-semibold bg-transparent text-slate-800 dark:text-white outline-none text-right tabular-nums tracking-normal"/>
+      <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="historie" class="w-[calc(100%+80px)] pl-4 pr-4 py-1 text-2xl sm:text-3xl font-semibold bg-transparent text-slate-800 dark:text-white outline-none text-right tabular-nums tracking-normal"/>
     </div>
     
     <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 scale-75 pointer-events-none"></div>
@@ -166,12 +166,29 @@ const $=id=>document.getElementById(id);
 const odpovedEl=$('odpoved');
 const inputWrapper=$('inputWrapper');
 
-let textOffset = 0;
-function applyTextOffset(px) { 
-  textOffset = px; 
-  odpovedEl.style.right = px + 'px';
-}
-applyTextOffset(0);
+// Skryté pole pro ukládání skutečné hodnoty
+let actualValue = '';
+let isMasking = false;
+
+odpovedEl.addEventListener('input', function(e) {
+  if (!aktualniPriklad && !zobrazitVysledek) {
+    const inputValue = this.value;
+    // Zkontroluj, jestli uživatel píše "zrušit" (bez ohledu na velikost písmen)
+    if (inputValue.toLowerCase() === 'zrušit' || 
+        (inputValue.length <= 6 && 'zrušit'.startsWith(inputValue.toLowerCase())) ||
+        inputValue.toLowerCase().includes('zrušit')) {
+      
+      if (!isMasking) {
+        actualValue = inputValue;
+        isMasking = true;
+      }
+      
+      // Přepiš zobrazenou hodnotu na hvězdičky
+      const maskedValue = '*'.repeat(actualValue.length);
+      this.value = maskedValue;
+    }
+  }
+});
 
 const fmt=x=>{
   if(typeof x==='bigint')return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'\xA0');
@@ -422,11 +439,15 @@ function handle(e,fromVoice){
   if(!fromVoice&&micListening)stopMic(false);
 
   if(!zobrazitVysledek){
-    const inputVal = odpovedEl.value.trim().toLowerCase();
+    // Použijeme actualValue pokud je maskování aktivní, jinak hodnotu z inputu
+    const inputVal = (isMasking ? actualValue : odpovedEl.value.trim()).toLowerCase();
+    
     if(!aktualniPriklad && inputVal === 'zrušit'){
       history=[];correct=wrong=streak=0;
       updateScores();renderHistory();save();
       odpovedEl.value='';
+      actualValue='';
+      isMasking=false;
       chybaEl.textContent='✅ Historie smazána';
       setTimeout(()=>chybaEl.textContent='',2000);
       isProcessing=false;
@@ -437,6 +458,8 @@ function handle(e,fromVoice){
     const p=generate();if(!p){isProcessing=false;return}
     aktualniPriklad=p;showProblem(p);
     odpovedEl.value='';odpovedEl.placeholder='Váš výsledek';
+    actualValue='';
+    isMasking=false;
     spReset();
     zobrazitVysledek=true;updateBtn();
     updateMicVisibility();
@@ -791,7 +814,7 @@ new MutationObserver(()=>{const t=prikladEl.textContent;if(t&&t!==''&&!t.include
 updateScores();updateBtn();renderHistory();updateMicVisibility();
 
 odpovedEl.setAttribute('inputmode', 'text');
-odpovedEl.placeholder = 'Historie - z....t';
+odpovedEl.placeholder = 'historie';
 
 setTimeout(()=>btnEl.focus(),100);
 
