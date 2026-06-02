@@ -41,6 +41,8 @@ input{-webkit-appearance:none;border-radius:.75rem}
 @keyframes mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.6)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
 #micBtn.listening{animation:mic-pulse 1.2s infinite;border-color:#ef4444!important}
 #odpoved.mic-active{border-color:#ef4444!important;box-shadow:0 0 0 2px rgba(239,68,68,.25)}
+#odpoved::placeholder{white-space:nowrap;overflow:visible;text-overflow:clip;font-size:1.5rem}
+@media(max-width:400px){#odpoved::placeholder{font-size:1.2rem}}
 </style>
 </head>
 <body class="bg-slate-200 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300 font-sans">
@@ -90,15 +92,12 @@ input{-webkit-appearance:none;border-radius:.75rem}
     <span id="currentDate" class="text-[11px] font-medium text-slate-400 dark:text-slate-500"></span>
   </div>
 </div>
-<!-- ZMĚNA 6: Přesunuté tlačítko dark/light módu do pravého horního rohu vedle ozubeného kolečka -->
 <div class="flex items-center gap-1">
   <button id="settingsToggle" class="p-1.5 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors text-slate-400">
     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
   </button>
   <button id="themeToggle" class="p-1.5 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors">
-    <!-- Světlá obrazovka → měsíc (pro přepnutí na tmavou) -->
     <svg id="themeIconMoon" class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-    <!-- Tmavá obrazovka → slunce (pro přepnutí na světlou) -->
     <svg id="themeIconSun" class="hidden w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
   </button>
 </div>
@@ -127,7 +126,6 @@ input{-webkit-appearance:none;border-radius:.75rem}
 
 <div id="upperBox" class="bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 pl-4 pr-4 pb-1 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center">
 <div id="problemContainer" class="w-full overflow-x-auto scrollbar-hide flex flex-col items-end relative z-10 transition-all">
-  <!-- ZMĚNA 1: Odstraněn text "Zvolte nastavení..." – prázdné pole v úvodní obrazovce -->
   <div id="priklad" class="math-text text-4xl font-semibold tracking-normal text-slate-700 dark:text-slate-200 tabular-nums" style="white-space: break-spaces;"></div>
   <div id="cara" class="math-text text-4xl text-slate-400 dark:text-slate-600 border-t-[3px] border-slate-400 dark:border-slate-600 w-full mt-1 opacity-0 transition-opacity duration-300"></div>
 </div>
@@ -136,10 +134,8 @@ input{-webkit-appearance:none;border-radius:.75rem}
 <div class="space-y-2.5">
   <div class="relative bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-300 dark:border-slate-700 focus-within:border-blue-500 transition-all shadow-inner overflow-hidden flex">
     
-    <!-- WRAPPER s overflow:hidden pro posun textu -->
     <div id="inputWrapper" class="w-full">
-      <!-- ZMĚNA 2: Na úvodní obrazovce inputmode="text", na ostatních se přepne na "decimal" -->
-      <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="Historie – z…t" class="w-[calc(100%+80px)] pl-4 pr-4 py-1 text-4xl font-semibold bg-transparent text-slate-800 dark:text-white outline-none text-right tabular-nums tracking-normal"/>
+      <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="Historie – zrušit" class="w-[calc(100%+80px)] pl-4 pr-4 py-1 text-2xl sm:text-4xl font-semibold bg-transparent text-slate-800 dark:text-white outline-none text-right tabular-nums tracking-normal"/>
     </div>
     
     <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 scale-75 pointer-events-none"></div>
@@ -149,7 +145,6 @@ input{-webkit-appearance:none;border-radius:.75rem}
     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4M12 3a4 4 0 014 4v4a4 4 0 01-8 0V7a4 4 0 014-4z"/></svg>
     <span id="micLabel">Mikrofon</span>
   </button>
-  <!-- ZMĚNA 6: Odstraněn trojúhelníček ▶, text tlačítka "START" -->
   <button id="tlacitko" type="button" class="w-full py-3 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-black text-base rounded-xl shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest touch-manipulation btn-pulse">START</button>
 </div>
 </div>
@@ -171,9 +166,6 @@ const $=id=>document.getElementById(id);
 const odpovedEl=$('odpoved');
 const inputWrapper=$('inputWrapper');
 
-// ═══════════════════════════════════════════════════════════════
-// PROMĚNNÁ PRO POSUN TEXTU V INPUTU DOLEVA
-// ═══════════════════════════════════════════════════════════════
 let textOffset = 0;
 function applyTextOffset(px) { 
   textOffset = px; 
@@ -213,7 +205,6 @@ const scoreC=$('scoreCorrect'),scoreW=$('scoreWrong'),streakEl=$('streakCount');
 const histCont=$('historyContainer'),histList=$('historyList'),histEmpty=$('historyEmpty');
 const hlasCheck=$('hlasCheck'),micBtn=$('micBtn'),micLabel=$('micLabel');
 
-// ZMĚNA 6: Theme toggle prvky
 const themeToggle=$('themeToggle');
 const themeIconSun=$('themeIconSun');
 const themeIconMoon=$('themeIconMoon');
@@ -224,17 +215,12 @@ const czDays=['Neděle','Pondělí','Úterý','Středa','Čtvrtek','Pátek','Sob
 $('currentDate').textContent=`${czDays[today.getDay()]} ${today.getDate()}. ${czMonths[today.getMonth()]} ${today.getFullYear()}`;
 const todayStr=today.toISOString().slice(0,10);
 
-// ═══════════════════════════════════════════════════════════════
-// ZMĚNA 6: Funkce pro přepínání motivu a aktualizaci ikon
-// ═══════════════════════════════════════════════════════════════
 function updateThemeIcons(){
   const isDark=document.documentElement.classList.contains('dark');
   if(isDark){
-    // Tmavá obrazovka → ukaz slunce (pro přepnutí na světlou)
     themeIconSun.classList.remove('hidden');
     themeIconMoon.classList.add('hidden');
   }else{
-    // Světlá obrazovka → ukaz měsíc (pro přepnutí na tmavou)
     themeIconMoon.classList.remove('hidden');
     themeIconSun.classList.add('hidden');
   }
@@ -245,15 +231,9 @@ function toggleTheme(){
   updateThemeIcons();
 }
 
-// Inicializace ikon motivu
 updateThemeIcons();
-
-// ZMĚNA 6: Event listener pro theme toggle
 themeToggle.addEventListener('click', toggleTheme);
 
-// ═══════════════════════════════════════════════════════════════
-// NAČTENÍ DAT (skóre + historie + nastavení)
-// ═══════════════════════════════════════════════════════════════
 function load(){
   try{
     const raw = localStorage.getItem(KEY);
@@ -265,7 +245,6 @@ function load(){
         streak = s.streak || 0;
         history = s.history || [];
       }
-      // Nastavení operace a číslic (vždy, nezávisle na datu)
       if(s.operace) operaceEl.value = s.operace;
       if(s.cislice1) cis1.value = s.cislice1;
       if(s.cislice2) cis2.value = s.cislice2;
@@ -273,9 +252,6 @@ function load(){
   }catch(e){}
 }
 
-// ═══════════════════════════════════════════════════════════════
-// ULOŽENÍ DAT (skóre + historie + nastavení)
-// ═══════════════════════════════════════════════════════════════
 function save(){
   try{
     localStorage.setItem(KEY, JSON.stringify({
@@ -288,19 +264,16 @@ function save(){
   }catch(e){}
 }
 
-// Naplnění selectů
 for(let i=1;i<=9;i++){
   cis1.innerHTML += `<option value="${i}">${i}</option>`;
   cis2.innerHTML += `<option value="${i}">${i}</option>`;
 }
 
-// Výchozí hodnoty (pokud nejsou v localStorage)
 if(!localStorage.getItem(KEY)){
   cis1.value = '2';
   cis2.value = '1';
   operaceEl.value = '+';
 } else {
-  // Načti vše z localStorage
   load();
 }
 
@@ -311,9 +284,6 @@ function updateCis2(){
 }
 updateCis2();
 
-// ═══════════════════════════════════════════════════════════════
-// UKLÁDÁNÍ PŘI ZMĚNĚ SELECTŮ
-// ═══════════════════════════════════════════════════════════════
 operaceEl.addEventListener('change', ()=>{ updateCis2(); chybaEl.textContent=''; save(); });
 cis1.addEventListener('change', ()=>{ updateCis2(); save(); });
 cis2.addEventListener('change', save);
@@ -356,9 +326,7 @@ function showProblem(p){
   `;
   caraEl.style.opacity='0';
   
-  // ZMĚNA 2: Při generování úlohy přepnout inputmode na "decimal" (numerická klávesnice)
   odpovedEl.setAttribute('inputmode', 'decimal');
-  // ZMĚNA 2: Změnit placeholder na "Váš výsledek" pro výpočetní obrazovky
   odpovedEl.placeholder='Váš výsledek';
 }
 
@@ -406,7 +374,6 @@ function updateScores(){
 
 function updateBtn(){
   btnEl.classList.remove('btn-pulse','btn-glow');
-  // ZMĚNA 6: Odstraněn trojúhelníček ▶, text bez něj
   if(!zobrazitVysledek){btnEl.textContent=aktualniPriklad?'DALŠÍ PŘÍKLAD':'START';btnEl.classList.add('btn-pulse')}
   else{btnEl.textContent='✓ VÝSLEDEK(kontrola)';btnEl.classList.add('btn-glow')}
 }
@@ -446,7 +413,7 @@ function handle(e,fromVoice){
   if(isProcessing)return;isProcessing=true;
   if(e)e.preventDefault();
   
-  const parentDiv = odpovedEl.parentElement.parentElement; // upraveno kvůli wrapperu
+  const parentDiv = odpovedEl.parentElement.parentElement;
   parentDiv.classList.remove('zelene','cervene');
   odpovedEl.classList.remove('text-white');
   
@@ -455,7 +422,19 @@ function handle(e,fromVoice){
   if(!fromVoice&&micListening)stopMic(false);
 
   if(!zobrazitVysledek){
-    if(!aktualniPriklad&&norm(odpovedEl.value)==='smazat'){history=[];correct=wrong=streak=0;updateScores();renderHistory();save()}
+    // ZMĚNA 2: Zkontrolovat, zda uživatel zadal "zrušit" (case insensitive)
+    const inputVal = odpovedEl.value.trim().toLowerCase();
+    if(!aktualniPriklad && inputVal === 'zrušit'){
+      history=[];correct=wrong=streak=0;
+      updateScores();renderHistory();save();
+      odpovedEl.value='';
+      chybaEl.textContent='✅ Historie smazána';
+      setTimeout(()=>chybaEl.textContent='',2000);
+      isProcessing=false;
+      setTimeout(()=>btnEl.focus(),50);
+      return;
+    }
+    
     const p=generate();if(!p){isProcessing=false;return}
     aktualniPriklad=p;showProblem(p);
     odpovedEl.value='';odpovedEl.placeholder='Váš výsledek';
@@ -510,14 +489,10 @@ function handle(e,fromVoice){
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// HLASOVÝ VSTUP 
-// ═══════════════════════════════════════════════════════════════
-
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 let recognition=null,micListening=false,micAutoRestart=true;
 
-let spBuf = []; // pole čísel a desetinné tečky
+let spBuf = [];
 
 function spReset(){
   spBuf = [];
@@ -538,12 +513,9 @@ function spFlush(){
     decParts = spBuf.slice(dotIndex + 1);
   }
   
-  // Spojení celé části - čísla za sebe jako stringy
   let intStr = intParts.map(x => String(x)).join('');
-  // Spojení desetinné části - čísla za sebe jako stringy
   let decStr = decParts.map(x => String(x)).join('');
   
-  // Odstranění přebytečných nul zleva v celé části (kromě jedné nuly)
   intStr = intStr.replace(/^0+(?=\d)/, '');
   if (intStr === '') intStr = '0';
   
@@ -746,28 +718,23 @@ function buildRecognition(){
     raw = expandCompound(raw);
     raw = raw.trim();
 
-    // Zjistit, zda text obsahuje slovo pro desetinnou čárku
     const decMatch = raw.match(DEC_RE);
     let hasDec = false;
     
     if (decMatch) {
       hasDec = true;
-      // Zpracovat část před desetinnou čárkou
       const before = raw.slice(0, decMatch.index).trim();
       if (before) {
         const words = before.split(/\s+/).filter(Boolean);
         parseVoiceTokens(words).forEach(v => { spBuf.push(v); });
       }
-      // Přidat desetinnou tečku
       spBuf.push('.');
-      // Zpracovat část po desetinné čárce
       const after = raw.slice(decMatch.index + decMatch[0].length).trim();
       if (after) {
         const words = after.split(/\s+/).filter(Boolean);
         parseVoiceTokens(words).forEach(v => { spBuf.push(v); });
       }
     } else {
-      // Není desetinná čárka - celé číslo
       if (raw) {
         const words = raw.split(/\s+/).filter(Boolean);
         parseVoiceTokens(words).forEach(v => { spBuf.push(v); });
@@ -824,12 +791,11 @@ new MutationObserver(()=>{const t=prikladEl.textContent;if(t&&t!==''&&!t.include
 
 updateScores();updateBtn();renderHistory();updateMicVisibility();
 
-// ZMĚNA 2: Inicializace úvodní obrazovky – nastavit textový inputmode a placeholder
-// Na úvodní obrazovce (není aktivní úloha) chceme textovou klávesnici
+// Inicializace úvodní obrazovky
 odpovedEl.setAttribute('inputmode', 'text');
-odpovedEl.placeholder = 'Historie – z…t';
+odpovedEl.placeholder = 'Historie – zrušit';
 
-// ZMĚNA 3: Fokus na modré tlačítko, ne na input (na úvodní obrazovce)
+// Fokus na modré tlačítko
 setTimeout(()=>btnEl.focus(),100);
 
 })();
