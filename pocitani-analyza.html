@@ -1,159 +1,3 @@
-<!DOCTYPE html>
-<html lang="cs" class="dark">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover"/>
-<title>Trénink počítání</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Inter','system-ui','sans-serif']}}}}
-</script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-.zelene{background:#15803d!important;border-color:#22c55e!important;color:#fff!important}
-.cervene{background:#b91c1c!important;border-color:#ef4444!important;color:#fff!important}
-input{-webkit-appearance:none;border-radius:.75rem}
-#inputWrapper{position:relative;overflow:hidden}
-#odpoved{position:relative;right:0;transition:right 0.15s ease;text-align:center!important}
-#odpoved::placeholder{text-align:center!important;font-size:1.5rem}
-@media(max-width:400px){#odpoved::placeholder{font-size:1rem}}
-.math-text{white-space:pre;line-height:1.25;display:block;font-variant-numeric:tabular-nums}
-.worksheet-bg{background-color:#e2e8f0;background-image:radial-gradient(circle,#94a3b8 1px,transparent 1px);background-size:24px 24px}
-.dark .worksheet-bg{background-color:rgba(30,41,59,.4);background-image:radial-gradient(circle,#334155 1px,transparent 1px)}
-.btn-pulse{animation:pulse-blue 2.5s infinite}
-@keyframes pulse-blue{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,.45)}50%{box-shadow:0 0 0 10px rgba(37,99,235,0)}}
-.btn-glow{animation:glow 2.5s infinite}
-@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.45)}50%{box-shadow:0 0 0 10px rgba(16,185,129,0)}}
-.shake{animation:shake .5s both}
-@keyframes shake{10%,90%{transform:translate3d(-1px,0,0)}20%,80%{transform:translate3d(2px,0,0)}30%,50%,70%{transform:translate3d(-3px,0,0)}40%,60%{transform:translate3d(3px,0,0)}}
-.slide-up{animation:slideUp .3s forwards}
-@keyframes slideUp{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
-.fade-in{animation:fadeIn .3s forwards}
-@keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
-.pop{animation:pop .2s}
-@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
-.settings-panel{max-height:150px;opacity:1;overflow:hidden;transition:all .3s ease}
-.settings-panel.collapsed{max-height:0;opacity:0;margin:0!important;pointer-events:none}
-.scrollbar-hide::-webkit-scrollbar{display:none}
-.scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}
-.score-bar{position:sticky;top:0;z-index:40;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-#micBtn{transition:all .2s;display:none}
-#micBtn.visible{display:flex}
-@keyframes mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.6)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
-#micBtn.listening{animation:mic-pulse 1.2s infinite;border-color:#ef4444!important}
-#odpoved.mic-active{border-color:#ef4444!important;box-shadow:0 0 0 2px rgba(239,68,68,.25)}
-</style>
-</head>
-<body class="bg-slate-200 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300 font-sans">
-<div class="w-full max-w-md mx-auto flex flex-col min-h-[100dvh]">
-
-<div class="score-bar bg-slate-300/80 dark:bg-slate-900/80 border-b border-slate-300 dark:border-slate-800 shadow-sm">
-<div class="px-4 py-2.5 flex items-center justify-between select-none">
-  <div class="flex items-center gap-3">
-    <div class="flex items-center gap-1.5">
-      <span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">✓</span>
-      <output id="scoreCorrect" class="text-lg font-black text-emerald-600 dark:text-emerald-400 tabular-nums">0</output>
-    </div>
-    <div class="w-px h-5 bg-slate-300 dark:bg-slate-700"></div>
-    <div class="flex items-center gap-1.5">
-      <span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">✗</span>
-      <output id="scoreWrong" class="text-lg font-black text-rose-600 dark:text-rose-400 tabular-nums">0</output>
-    </div>
-  </div>
-  <div class="flex items-center gap-3">
-    <label class="flex items-center gap-1.5 cursor-pointer select-none">
-      <span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Hlas</span>
-      <div class="relative">
-        <input type="checkbox" id="hlasCheck" class="sr-only peer"/>
-        <div class="w-8 h-4 bg-slate-400 dark:bg-slate-600 peer-checked:bg-blue-600 rounded-full transition-colors duration-200"></div>
-        <div class="absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform duration-200 peer-checked:translate-x-4 shadow"></div>
-      </div>
-    </label>
-    <div class="w-px h-5 bg-slate-300 dark:bg-slate-700"></div>
-    <div class="flex items-center gap-2">
-      <span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Série</span>
-      <div class="flex items-center gap-1">
-        <output id="streakCount" class="text-lg font-black text-amber-500 dark:text-amber-400 tabular-nums">0</output>
-        <svg class="w-4 h-4 text-amber-500 dark:text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/></svg>
-      </div>
-    </div>
-  </div>
-</div>
-</div>
-
-<div class="flex-1 overflow-y-auto px-4 py-3 space-y-3 scrollbar-hide">
-<div class="bg-slate-200 dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-300 dark:border-slate-800 p-4">
-
-<div class="flex items-start justify-between mb-3">
-<div>
-  <h1 class="text-lg font-black tracking-tight text-slate-800 dark:text-white uppercase">Trénink počítání</h1>
-  <div class="flex items-center gap-1.5 mt-0.5">
-    <span id="currentDate" class="text-[11px] font-medium text-slate-400 dark:text-slate-500"></span>
-  </div>
-</div>
-<div class="flex items-center gap-1">
-  <button id="settingsToggle" class="p-1.5 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors text-slate-400">
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-  </button>
-  <button id="themeToggle" class="p-1.5 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors">
-    <svg id="themeIconMoon" class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-    <svg id="themeIconSun" class="hidden w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-  </button>
-</div>
-</div>
-
-<div id="settingsPanel" class="settings-panel mb-3 collapsed">
-<div class="grid grid-cols-3 gap-2">
-  <div class="flex flex-col">
-    <label class="text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1">Operace</label>
-    <select id="operace" class="bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-bold text-xs">
-      <option value="+">+</option><option value="-">−</option><option value="*">x</option><option value="/">:</option>
-    </select>
-  </div>
-  <div class="flex flex-col">
-    <label class="text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1">1. Číslo</label>
-    <select id="cislice1" class="bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-xs"></select>
-  </div>
-  <div class="flex flex-col">
-    <label class="text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1">2. Číslo</label>
-    <select id="cislice2" class="bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-xs"></select>
-  </div>
-</div>
-</div>
-
-<div id="chyba" class="text-red-500 text-[10px] font-bold text-center h-4 overflow-hidden mb-1" role="alert"></div>
-
-<div id="upperBox" class="bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 pl-4 pr-4 pb-1 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center">
-<div id="problemContainer" class="w-full overflow-x-auto scrollbar-hide flex flex-col items-end relative z-10 transition-all">
-  <div id="priklad" class="math-text text-4xl font-semibold tracking-normal text-slate-700 dark:text-slate-200 tabular-nums" style="white-space: break-spaces;"></div>
-  <div id="cara" class="math-text text-4xl text-slate-400 dark:text-slate-600 border-t-[3px] border-slate-400 dark:border-slate-600 w-full mt-1 opacity-0 transition-opacity duration-300"></div>
-</div>
-</div>
-
-<div class="space-y-2.5">
-  <div class="relative bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-300 dark:border-slate-700 focus-within:border-blue-500 transition-all shadow-inner overflow-hidden flex">
-    
-    <div id="inputWrapper" class="w-full">
-      <input type="text" id="odpoved" inputmode="text" enterkeyhint="done" autocomplete="off" placeholder="historie" class="w-full pl-4 pr-4 py-1 text-2xl sm:text-3xl font-semibold bg-transparent text-slate-800 dark:text-white outline-none text-center tabular-nums tracking-normal"/>
-    </div>
-    
-    <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 scale-75 pointer-events-none"></div>
-  </div>
-  <button id="tlacitko" type="button" class="w-full py-3 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-black text-base rounded-xl shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest touch-manipulation btn-pulse">START</button>
-</div>
-</div>
-
-<div id="historyContainer" class="px-1 opacity-0 transition-opacity duration-500 select-none">
-<div class="text-[9px] font-bold uppercase text-slate-400 tracking-wider mb-1.5">Historie</div>
-<div id="historyList" class="flex flex-wrap gap-1.5">
-  <div id="historyEmpty" class="text-[11px] text-slate-400 italic">Zatím jste nevyřešil(a) žádný příklad</div>
-</div>
-</div>
-<div class="h-4"></div>
-</div>
-</div>
-
 <script>
 (function(){
 
@@ -162,32 +6,71 @@ const odpovedEl=$('odpoved');
 const inputWrapper=$('inputWrapper');
 
 let realValue = '';
+let isPasswordMode = true; // na úvodní obrazovce = true
 
+// === SPOLEHLIVÉ MASKOVÁNÍ HESLA ===
+// Místo input eventu použijeme beforeinput + input combo
+odpovedEl.addEventListener('beforeinput', function(e) {
+  if (!isPasswordMode) return; // v režimu výpočtů normální chování
+  
+  if (e.inputType === 'insertText' && e.data) {
+    e.preventDefault();
+    realValue += e.data;
+    this.value = '*'.repeat(realValue.length);
+  } else if (e.inputType === 'deleteContentBackward') {
+    e.preventDefault();
+    if (realValue.length > 0) {
+      realValue = realValue.slice(0, -1);
+      this.value = '*'.repeat(realValue.length);
+    }
+  } else if (e.inputType === 'deleteContentForward') {
+    e.preventDefault();
+    realValue = '';
+    this.value = '';
+  } else if (e.inputType === 'insertCompositionText' || e.inputType === 'insertReplacementText') {
+    // Pro mobilní klávesnice s predikcí
+    e.preventDefault();
+    if (e.data) {
+      realValue += e.data;
+      this.value = '*'.repeat(realValue.length);
+    }
+  }
+});
+
+// Záchytná síť pro případ, že beforeinput nepokryje vše (starší browsery)
 odpovedEl.addEventListener('input', function(e) {
-  if (!aktualniPriklad && !zobrazitVysledek) {
-    const displayedValue = this.value;
-    
-    if (displayedValue.length < realValue.length) {
-      realValue = realValue.substring(0, displayedValue.length);
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-      const maskedValue = '*'.repeat(realValue.length);
-      nativeInputValueSetter.call(this, maskedValue);
-      return;
-    }
-    
-    const starsCount = (displayedValue.match(/\*/g) || []).length;
-    if (starsCount > realValue.length) {
-      const lastChar = displayedValue[displayedValue.length - 1];
-      if (lastChar !== '*') {
-        realValue += lastChar;
+  if (!isPasswordMode) return;
+  
+  const displayed = this.value;
+  const allStars = /^\**$/.test(displayed);
+  
+  if (!allStars) {
+    // Nějaké písmeno proklouzlo — najdeme nové znaky
+    for (let i = 0; i < displayed.length; i++) {
+      if (displayed[i] !== '*') {
+        // Tohle je nový znak
+        if (i >= realValue.length) {
+          realValue += displayed[i];
+        }
       }
-      
-      const maskedValue = '*'.repeat(realValue.length);
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-      nativeInputValueSetter.call(this, maskedValue);
-    } else if (displayedValue === '') {
-      realValue = '';
     }
+    this.value = '*'.repeat(realValue.length);
+  } else {
+    // Samé hvězdičky — synchronizujeme délku (mazání)
+    if (displayed.length < realValue.length) {
+      realValue = realValue.substring(0, displayed.length);
+    }
+  }
+});
+
+// Zabránit paste v password režimu
+odpovedEl.addEventListener('paste', function(e) {
+  if (!isPasswordMode) return;
+  e.preventDefault();
+  const pasted = (e.clipboardData || window.clipboardData).getData('text');
+  if (pasted) {
+    realValue += pasted;
+    this.value = '*'.repeat(realValue.length);
   }
 });
 
@@ -324,7 +207,9 @@ function generate(){
 
 function startNewProblem(){
   const p=generate();if(!p)return false;
-  aktualniPriklad=p;showProblem(p);
+  aktualniPriklad=p;
+  isPasswordMode=false; // přepnout do režimu výpočtů
+  showProblem(p);
   odpovedEl.value='';
   realValue='';
   zobrazitVysledek=true;
@@ -364,11 +249,15 @@ function showProblem(p){
 }
 
 function resetToInitialState() {
+  aktualniPriklad = null;
+  zobrazitVysledek = false;
+  isPasswordMode = true; // zpět do režimu hesla
   odpovedEl.value = '';
   realValue = '';
   odpovedEl.setAttribute('inputmode', 'text');
   odpovedEl.placeholder = 'historie';
   odpovedEl.style.textAlign = 'center';
+  updateBtn();
   btnEl.focus();
 }
 
@@ -460,17 +349,18 @@ function handle(e){
   parentDiv.classList.remove('zelene','cervene');
   odpovedEl.classList.remove('text-white');
   
-  if(!zobrazitVysledek){
+  // === ÚVODNÍ OBRAZOVKA (password mode) ===
+  if(!zobrazitVysledek && !aktualniPriklad){
     const inputVal = realValue.trim();
     
-    // Prázdný input -> spusť počítání (bod 1)
+    // Bod 1: Prázdný input -> spusť počítání
     if (!inputVal) {
       if(startNewProblem()) return;
       isProcessing=false;
       return;
     }
     
-    // Správné heslo "zrušit" (jakákoliv velikost písmen) -> smaž historii a spusť počítání (bod 2)
+    // Bod 2: Správné heslo "zrušit" -> smaž historii a spusť počítání
     if (inputVal.toLowerCase() === 'zrušit') {
       history=[];correct=wrong=streak=0;
       updateScores();renderHistory();save();
@@ -481,24 +371,28 @@ function handle(e){
       return;
     }
     
-    // Špatné heslo -> upozorni, vyčisti, vrať placeholder, focus na START (bod 3)
+    // Bod 3: Špatné heslo -> hláška, vyčistit, zpět na bod 1
     chybaEl.textContent='⚠️ Špatné heslo';
     setTimeout(()=>chybaEl.textContent='',2000);
     resetToInitialState();
     isProcessing=false;
     return;
-    
-  }else{
-    // Kontrola výsledku
+  }
+  
+  // === OBRAZOVKA VÝPOČTŮ ===
+  if(zobrazitVysledek){
     const val=odpovedEl.value.trim();
     const normVal=norm(val);
     
     if(!val){
+      // Prázdný = ukáž výsledek
       odpovedEl.value=fmt(aktualniPriklad.vysledekZ!==undefined?aktualniPriklad.vysledekZ:aktualniPriklad.vysledek);
       zobrazitVysledek=false;
       updateBtn();
-      resetToInitialState();
-      isProcessing=false;
+      // Po zobrazení výsledku čekáme na další START
+      setTimeout(()=>{
+        isProcessing=false;
+      },50);
       return;
     }
     
@@ -534,10 +428,18 @@ function handle(e){
     save();
     zobrazitVysledek=false;
     updateBtn();
-    resetToInitialState();
+    // Po kontrole výsledku: focus na START, čekáme na další
+    btnEl.focus();
     setTimeout(()=>{
       isProcessing=false;
     },150);
+    return;
+  }
+  
+  // === PO ZOBRAZENÍ VÝSLEDKU - START = další příklad ===
+  if(aktualniPriklad && !zobrazitVysledek){
+    if(startNewProblem()) return;
+    isProcessing=false;
   }
 }
 
@@ -555,5 +457,3 @@ resetToInitialState();
 
 })();
 </script>
-</body>
-</html>
