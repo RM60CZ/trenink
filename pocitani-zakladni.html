@@ -16,8 +16,8 @@ tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Inter','syst
 input{-webkit-appearance:none;border-radius:.75rem}
 #inputWrapper{position:relative;overflow:hidden}
 #odpoved{position:relative;right:0;transition:right 0.15s ease}
-#odpoved::placeholder{text-align:center!important;font-size:3.75rem}
-@media(max-width:400px){#odpoved::placeholder{font-size:2.5rem}}
+#odpoved::placeholder{text-align:center!important;font-size:3rem}
+@media(max-width:400px){#odpoved::placeholder{font-size:2rem}}
 #odpoved.hidden-text{color:transparent!important;caret-color:transparent!important;-webkit-text-fill-color:transparent!important}
 .math-text{white-space:pre;line-height:1.25;display:block;font-variant-numeric:tabular-nums}
 .worksheet-bg{background-color:#e2e8f0;background-image:radial-gradient(circle,#94a3b8 1px,transparent 1px);background-size:24px 24px}
@@ -132,7 +132,7 @@ input{-webkit-appearance:none;border-radius:.75rem}
 <div class="space-y-2.5">
   <div id="inputBox" class="relative bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-300 dark:border-slate-700 focus-within:border-blue-500 transition-all shadow-inner overflow-hidden flex">
     <div id="inputWrapper" class="w-full">
-      <input type="text" id="odpoved" inputmode="text" enterkeyhint="done" autocomplete="off" placeholder="historie" class="w-full pl-4 pr-4 py-1 text-6xl font-semibold bg-transparent text-slate-800 dark:text-white outline-none text-center tabular-nums tracking-normal"/>
+      <input type="text" id="odpoved" inputmode="text" enterkeyhint="done" autocomplete="off" placeholder="historie" class="w-full pl-4 pr-4 py-1 text-5xl font-semibold bg-transparent text-slate-800 dark:text-white outline-none text-center tabular-nums tracking-normal"/>
     </div>
     <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 scale-75 pointer-events-none"></div>
   </div>
