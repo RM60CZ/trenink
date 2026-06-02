@@ -135,7 +135,7 @@ input{-webkit-appearance:none;border-radius:.75rem}
   <div class="relative bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-300 dark:border-slate-700 focus-within:border-blue-500 transition-all shadow-inner overflow-hidden flex">
     
     <div id="inputWrapper" class="w-full">
-      <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="historie" class="w-full pl-4 pr-4 py-1 text-2xl sm:text-3xl font-semibold bg-transparent text-slate-800 dark:text-white outline-none text-center tabular-nums tracking-normal"/>
+      <input type="text" id="odpoved" inputmode="text" enterkeyhint="done" autocomplete="off" placeholder="historie" class="w-full pl-4 pr-4 py-1 text-2xl sm:text-3xl font-semibold bg-transparent text-slate-800 dark:text-white outline-none text-center tabular-nums tracking-normal"/>
     </div>
     
     <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 scale-75 pointer-events-none"></div>
@@ -171,26 +171,26 @@ let realValue = '';
 odpovedEl.addEventListener('input', function(e) {
   if (!aktualniPriklad && !zobrazitVysledek) {
     const displayedValue = this.value;
-    const specialChars = displayedValue.replace(/\*/g, '');
     
-    if (specialChars.length > 0) {
-      // Uživatel napsal nový znak
-      const lastChar = specialChars[specialChars.length - 1];
-      realValue += lastChar;
-      
-      // Vytvoř maskovanou verzi
-      let maskedValue = '';
-      for (let i = 0; i < realValue.length; i++) {
-        maskedValue += '*';
-      }
-      
-      // Nastav hodnotu inputu na hvězdičky
+    if (displayedValue.length < realValue.length) {
+      realValue = realValue.substring(0, displayedValue.length);
       const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+      const maskedValue = '*'.repeat(realValue.length);
       nativeInputValueSetter.call(this, maskedValue);
+      return;
     }
     
-    // Pokud je input prázdný, resetuj realValue
-    if (displayedValue === '') {
+    const starsCount = (displayedValue.match(/\*/g) || []).length;
+    if (starsCount > realValue.length) {
+      const lastChar = displayedValue[displayedValue.length - 1];
+      if (lastChar !== '*') {
+        realValue += lastChar;
+      }
+      
+      const maskedValue = '*'.repeat(realValue.length);
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+      nativeInputValueSetter.call(this, maskedValue);
+    } else if (displayedValue === '') {
       realValue = '';
     }
   }
@@ -328,6 +328,24 @@ function generate(){
   return{a,b,op,vysledek,vysledekZ};
 }
 
+function startNewProblem(){
+  const p=generate();if(!p)return false;
+  aktualniPriklad=p;showProblem(p);
+  odpovedEl.value='';odpovedEl.placeholder='Váš výsledek';
+  odpovedEl.style.textAlign = 'right';
+  realValue='';
+  spReset();
+  zobrazitVysledek=true;updateBtn();
+  updateMicVisibility();
+  setTimeout(()=>{
+    caraEl.style.opacity='1';
+    if(hlasCheck.checked){setTimeout(()=>startMic(),100)}
+    else{odpovedEl.focus()}
+    isProcessing=false;
+  },50);
+  return true;
+}
+
 function showProblem(p){
   const fa=fmt(p.a),fb=fmt(p.b);
   const opUI=p.op==='*'?'x':p.op==='/'?':':p.op==='-'?'−':'+';
@@ -352,6 +370,15 @@ function showProblem(p){
   odpovedEl.setAttribute('inputmode', 'decimal');
   odpovedEl.placeholder='Váš výsledek';
   odpovedEl.style.textAlign = 'right';
+}
+
+function resetToInitialState() {
+  odpovedEl.value = '';
+  realValue = '';
+  odpovedEl.setAttribute('inputmode', 'text');
+  odpovedEl.placeholder = 'historie';
+  odpovedEl.style.textAlign = 'center';
+  btnEl.focus();
 }
 
 function checkDivision(userStr,p){
@@ -398,7 +425,7 @@ function updateScores(){
 
 function updateBtn(){
   btnEl.classList.remove('btn-pulse','btn-glow');
-  if(!zobrazitVysledek){btnEl.textContent=aktualniPriklad?'DALŠÍ PŘÍKLAD':'START';btnEl.classList.add('btn-pulse')}
+  if(!zobrazitVysledek){btnEl.textContent='START';btnEl.classList.add('btn-pulse')}
   else{btnEl.textContent='✓ VÝSLEDEK(kontrola)';btnEl.classList.add('btn-glow')}
 }
 
@@ -446,47 +473,44 @@ function handle(e,fromVoice){
   if(!fromVoice&&micListening)stopMic(false);
 
   if(!zobrazitVysledek){
-    const inputVal = realValue.toLowerCase();
+    const inputVal = realValue.toLowerCase().trim();
     
-    if(!aktualniPriklad && inputVal === 'zrušit'){
-      history=[];correct=wrong=streak=0;
-      updateScores();renderHistory();save();
-      odpovedEl.value='';
-      realValue='';
-      chybaEl.textContent='✅ Historie smazána';
-      setTimeout(()=>chybaEl.textContent='',2000);
+    // Prázdný input -> spusť počítání
+    if (!inputVal) {
+      if(startNewProblem()) return;
       isProcessing=false;
-      setTimeout(()=>btnEl.focus(),50);
       return;
     }
     
-    const p=generate();if(!p){isProcessing=false;return}
-    aktualniPriklad=p;showProblem(p);
-    odpovedEl.value='';odpovedEl.placeholder='Váš výsledek';
-    odpovedEl.style.textAlign = 'right';
-    realValue='';
-    spReset();
-    zobrazitVysledek=true;updateBtn();
-    updateMicVisibility();
-    setTimeout(()=>{
-      caraEl.style.opacity='1';
-      if(hlasCheck.checked){setTimeout(()=>startMic(),100)}
-      else{odpovedEl.focus()}
+    // Správné heslo "zrušit" -> smaž historii a hned spusť počítání
+    if (inputVal === 'zrušit') {
+      history=[];correct=wrong=streak=0;
+      updateScores();renderHistory();save();
+      chybaEl.textContent='✅ Historie smazána, pokračujte v počítání';
+      setTimeout(()=>chybaEl.textContent='',2000);
+      if(startNewProblem()) return;
       isProcessing=false;
-    },50);
+      return;
+    }
+    
+    // Špatné heslo -> upozorni, vyčisti a čekej
+    if (inputVal && inputVal !== 'zrušit') {
+      chybaEl.textContent='⚠️ Špatné heslo';
+      setTimeout(()=>chybaEl.textContent='',2000);
+      resetToInitialState();
+      isProcessing=false;
+      return;
+    }
   }else{
     const val=odpovedEl.value.trim();
     const normVal=norm(val);
     if(!val){
       odpovedEl.value=fmt(aktualniPriklad.vysledekZ!==undefined?aktualniPriklad.vysledekZ:aktualniPriklad.vysledek);
       zobrazitVysledek=false;updateBtn();
-      odpovedEl.style.textAlign = 'center';
-      odpovedEl.placeholder = 'historie';
+      resetToInitialState();
       updateMicVisibility();
-      setTimeout(()=>{
-        odpovedEl.focus();
-        isProcessing=false;
-      },50);
+      isProcessing=false;
+      return;
     }else if(!/^-?\d+([.,]\d*)?$/.test(normVal)){
       chybaEl.textContent='⚠️ Nepovolený znak!';isProcessing=false;
       if(!fromVoice)odpovedEl.focus();
@@ -515,74 +539,25 @@ function handle(e,fromVoice){
       inputIcon.style.opacity='1';
       updateScores();addHist(ok,normVal);save();
       zobrazitVysledek=false;updateBtn();
-      odpovedEl.style.textAlign = 'center';
-      odpovedEl.placeholder = 'historie';
+      resetToInitialState();
       updateMicVisibility();
       setTimeout(()=>{
-        odpovedEl.focus();
         isProcessing=false;
       },150);
     }
   }
 }
 
-const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-let recognition=null,micListening=false,micAutoRestart=true;
+// Event listeners
+btnEl.addEventListener('touchstart',e=>handle(e,false),{passive:false});
+btnEl.addEventListener('click',e=>{if(e.pointerType!=='touch')handle(e,false)});
+odpovedEl.addEventListener('keydown',e=>{if(e.key==='Enter')handle(e,false)});
+$('settingsToggle').addEventListener('click',()=>{$('settingsPanel').classList.toggle('collapsed')});
 
-let spBuf = [];
-
-function spReset(){
-  spBuf = [];
-  odpovedEl.value='';
-}
-
-function spFlush(){
-  if (!spBuf.length) return;
-  
-  let dotIndex = spBuf.indexOf('.');
-  let intParts, decParts;
-  
-  if (dotIndex === -1) {
-    intParts = spBuf;
-    decParts = [];
-  } else {
-    intParts = spBuf.slice(0, dotIndex);
-    decParts = spBuf.slice(dotIndex + 1);
-  }
-  
-  let intStr = intParts.map(x => String(x)).join('');
-  let decStr = decParts.map(x => String(x)).join('');
-  
-  intStr = intStr.replace(/^0+(?=\d)/, '');
-  if (intStr === '') intStr = '0';
-  
-  let result;
-  if (dotIndex === -1) {
-    result = intStr;
-  } else {
-    result = intStr + '.' + decStr;
-  }
-  
-  odpovedEl.value = fmtInputStr(result);
-}
-
-// ... zbytek funkcí pro hlasové ovládání zůstává stejný ...
-
-function updateMicVisibility(){
-  const show=hlasCheck.checked&&zobrazitVysledek&&aktualniPriklad;
-  micBtn.style.display=show?'flex':'none';
-  if(!show&&micListening)stopMic(false);
-}
-
-// ... (všechny ostatní funkce zůstávají stejné jako v předchozí verzi) ...
-
+// Inicializace
 updateScores();updateBtn();renderHistory();updateMicVisibility();
+resetToInitialState();
 
-odpovedEl.setAttribute('inputmode', 'text');
-odpovedEl.placeholder = 'historie';
-odpovedEl.style.textAlign = 'center';
-
-// Focus na tlačítko START
 setTimeout(()=>btnEl.focus(),100);
 
 })();
