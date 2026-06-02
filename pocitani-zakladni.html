@@ -37,8 +37,8 @@ input{-webkit-appearance:none;border-radius:.75rem}
 .scrollbar-hide::-webkit-scrollbar{display:none}
 .scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}
 .score-bar{position:sticky;top:0;z-index:40;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-#micBtn{transition:all .2s;display:none}
-#micBtn.visible{display:flex}
+#micBtn{transition:opacity .2s;visibility:hidden;opacity:0;pointer-events:none}
+#micBtn.shown{visibility:visible;opacity:1;pointer-events:auto}
 @keyframes mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.6)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
 #micBtn.listening{animation:mic-pulse 1.2s infinite;border-color:#ef4444!important}
 </style>
@@ -526,7 +526,7 @@ function expandCompound(t){
 
 function updateMicVisibility(){
   var show = hlasCheck.checked && zobrazitVysledek && aktualniPriklad;
-  micBtn.style.display = show ? 'flex' : 'none';
+  micBtn.classList.toggle('shown', !!show);
   if(!show && micListening) stopMic(false);
 }
 
