@@ -41,8 +41,6 @@ input{-webkit-appearance:none;border-radius:.75rem}
 @keyframes mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.6)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
 #micBtn.listening{animation:mic-pulse 1.2s infinite;border-color:#ef4444!important}
 #odpoved.mic-active{border-color:#ef4444!important;box-shadow:0 0 0 2px rgba(239,68,68,.25)}
-#odpoved::placeholder{white-space:nowrap;overflow:visible;text-overflow:clip;font-size:1.5rem}
-@media(max-width:400px){#odpoved::placeholder{font-size:1.2rem}}
 </style>
 </head>
 <body class="bg-slate-200 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300 font-sans">
@@ -135,7 +133,7 @@ input{-webkit-appearance:none;border-radius:.75rem}
   <div class="relative bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-300 dark:border-slate-700 focus-within:border-blue-500 transition-all shadow-inner overflow-hidden flex">
     
     <div id="inputWrapper" class="w-full">
-      <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="Historie – zrušit" class="w-[calc(100%+80px)] pl-4 pr-4 py-1 text-2xl sm:text-4xl font-semibold bg-transparent text-slate-800 dark:text-white outline-none text-right tabular-nums tracking-normal"/>
+      <input type="text" id="odpoved" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="z....t" class="w-[calc(100%+80px)] pl-4 pr-4 py-1 text-4xl font-semibold bg-transparent text-slate-800 dark:text-white outline-none text-right tabular-nums tracking-normal"/>
     </div>
     
     <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 scale-75 pointer-events-none"></div>
@@ -422,7 +420,6 @@ function handle(e,fromVoice){
   if(!fromVoice&&micListening)stopMic(false);
 
   if(!zobrazitVysledek){
-    // ZMĚNA 2: Zkontrolovat, zda uživatel zadal "zrušit" (case insensitive)
     const inputVal = odpovedEl.value.trim().toLowerCase();
     if(!aktualniPriklad && inputVal === 'zrušit'){
       history=[];correct=wrong=streak=0;
@@ -791,11 +788,9 @@ new MutationObserver(()=>{const t=prikladEl.textContent;if(t&&t!==''&&!t.include
 
 updateScores();updateBtn();renderHistory();updateMicVisibility();
 
-// Inicializace úvodní obrazovky
 odpovedEl.setAttribute('inputmode', 'text');
-odpovedEl.placeholder = 'Historie – zrušit';
+odpovedEl.placeholder = 'z....t';
 
-// Fokus na modré tlačítko
 setTimeout(()=>btnEl.focus(),100);
 
 })();
