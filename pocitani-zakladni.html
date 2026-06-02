@@ -577,7 +577,7 @@ function buildRecognition(){
     raw = raw.replace(/\b(ukázat|ukazat|ukažte|ukazte|ukaž|ukaš)\b/g, ' ');
     raw = raw.replace(/\b(nuly|zero|zirou|zírou)\b/g, ' nula nula nula ');
 
-    if(/znovu|znova|smazat|vymazat|zrušit|zrusit/.test(raw)){ spReset(); return; }
+    if(/znovu|znova|chy|vymazat|chyba|zrusit/.test(raw)){ spReset(); return; }
 
     var shouldSubmit = false;
     if(/\b(ano|jo|joo)\b/.test(raw)){
