@@ -15,36 +15,34 @@
             --bg-color: #000000; --text-color: #f5f5f7; --container-bg: #1c1c1e;
             --border-color: #38383a; --btn-bg: #2c2c2e; --btn-hover: #3a3a3c;
         }
+
         * { box-sizing: border-box; font-family: -apple-system, sans-serif; margin: 0; padding: 0; }
+        
         body {
             background-color: var(--bg-color); color: var(--text-color);
             display: flex; justify-content: center; padding: 10px; min-height: 100vh;
         }
+
         .app-container {
             background-color: var(--container-bg); border-radius: 12px;
             padding: 16px; width: 100%; max-width: 400px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 12px;
         }
+
         .header { display: flex; justify-content: space-between; align-items: center; }
         .header h1 { font-size: 18px; }
+        
         .header-icons { display: flex; gap: 12px; }
         .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-color); }
 
-        .settings-group {
-            overflow: hidden; max-height: 0; transition: max-height 0.3s ease;
-            display: flex; flex-direction: column; gap: 8px;
-        }
-        .settings-group.open { max-height: 200px; }
-
+        .settings-group { display: none; flex-direction: column; gap: 8px; margin-top: 4px; }
         select {
             width: 100%; padding: 6px; border-radius: 6px;
             border: 1px solid var(--border-color); background: var(--container-bg);
             color: var(--text-color);
         }
 
-        .info-wrapper { overflow: hidden; max-height: 0; transition: max-height 0.3s ease; }
-        .info-wrapper.open { max-height: 60px; }
-        .info-text { font-size: 12px; color: #86868b; text-align: center; padding: 2px 0; }
+        .info-text { font-size: 12px; color: #86868b; text-align: center; }
 
         .game-area { min-height: 160px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
 
@@ -54,9 +52,9 @@
             color: var(--text-color); font-size: 14px;
         }
 
-        .question { font-size: 28px; font-weight: bold; display: none; text-align: center; letter-spacing: 2px; }
+        .question { font-size: 28px; font-weight: bold; display: none; text-align: center;}
 
-        .boxes { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; align-items: center; }
+        .boxes { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; }
         .box {
             width: 28px; height: 36px; border: 2px solid var(--border-color);
             border-radius: 6px; text-align: center; font-size: 18px; font-weight: bold;
@@ -66,48 +64,34 @@
         .box.correct { background-color: var(--success); color: white; border-color: var(--success); }
         .box.error { background-color: var(--error); color: white; border-color: var(--error); }
         .box:disabled { opacity: 1; }
-        .box-gap { width: 12px; flex-shrink: 0; }
 
-        /* Binární klávesnice */
-        .keypad-bin { display: none; grid-template-columns: 1fr 1fr; gap: 6px; width: 100%; }
-
-        /* Decimální klávesnice */
-        .keypad-dec { display: none; width: 100%; }
-        .keypad-dec-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 6px;
-        }
-
+        .keypad { display: grid; gap: 6px; width: 100%; display: none; }
+        .keypad.bin { grid-template-columns: 1fr 1fr; }
+        .keypad.dec { grid-template-columns: repeat(5, 1fr); }
+        
         .key-btn {
-            background: var(--btn-bg);
-            color: var(--text-color);
-            border: none;
-            padding: 14px;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            text-align: center;
-            width: 100%;
+            background: var(--btn-bg); color: var(--text-color); border: none;
+            padding: 10px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer;
         }
         .key-btn:active { background: var(--btn-hover); }
 
-        .key-btn.action {
-            background: var(--primary-bg);
-            color: var(--primary-text);
-            font-size: 11px;
-            line-height: 1.4;
+        .main-action {
+            width: 100%; padding: 12px; border-radius: 8px;
+            background: var(--primary-bg); color: var(--primary-text);
+            border: none; font-size: 16px; font-weight: bold; cursor: pointer;
         }
-        .key-btn.action:active { opacity: 0.85; }
-        .key-btn.action:focus { outline: 3px solid #ffd60a; }
 
         .history-container { border-top: 1px solid var(--border-color); padding-top: 10px; }
         .history-title { font-size: 14px; font-weight: bold; margin-bottom: 8px; }
-        .history-list { display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; padding-bottom: 8px; }
+        
+        .history-list { 
+            display: flex; flex-direction: row; flex-wrap: wrap; 
+            gap: 6px; padding-bottom: 8px;
+        }
         .history-item {
-            padding: 4px 8px; border-radius: 4px;
-            font-family: monospace; font-size: 14px; color: white; display: inline-block;
+            padding: 4px 8px; border-radius: 4px; 
+            font-family: monospace; font-size: 14px; color: white;
+            display: inline-block;
         }
         .history-item.correct { background-color: var(--success); }
         .history-item.error { background-color: var(--error); }
@@ -117,7 +101,7 @@
 
 <div class="app-container">
     <div class="header">
-        <h1 id="main-title">Binární trénink</h1>
+        <h1>Binární Trénink</h1>
         <div class="header-icons">
             <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
             <button class="icon-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
@@ -130,40 +114,36 @@
             <option value="bin2dec">Binární na Decimální</option>
         </select>
         <select id="bits" onchange="updateInfo()"></select>
-        <div class="info-wrapper" id="info-wrapper">
-            <div class="info-text" id="info"></div>
-        </div>
     </div>
+    
+    <div class="info-text" id="info"></div>
 
     <div class="game-area">
         <input type="text" id="secret-input" placeholder="Zde můžete smazat historii...">
+        
         <div class="question" id="question-display"></div>
         <div class="boxes" id="boxes-container"></div>
-
-        <!-- Binární klávesnice - bez modrého tlačítka -->
-        <div class="keypad-bin" id="keypad-bin">
+        
+        <div class="keypad bin" id="keypad-bin">
             <button class="key-btn" onclick="typeVal('0')">0</button>
             <button class="key-btn" onclick="typeVal('1')">1</button>
         </div>
 
-        <!-- Decimální klávesnice - jedno modré tlačítko -->
-        <div class="keypad-dec" id="keypad-dec">
-            <div class="keypad-dec-grid">
-                <button class="key-btn" onclick="typeVal('7')">7</button>
-                <button class="key-btn" onclick="typeVal('8')">8</button>
-                <button class="key-btn" onclick="typeVal('9')">9</button>
-                <button class="key-btn" onclick="typeVal('4')">4</button>
-                <button class="key-btn" onclick="typeVal('5')">5</button>
-                <button class="key-btn" onclick="typeVal('6')">6</button>
-                <button class="key-btn" onclick="typeVal('1')">1</button>
-                <button class="key-btn" onclick="typeVal('2')">2</button>
-                <button class="key-btn" onclick="typeVal('3')">3</button>
-                <div></div>
-                <button class="key-btn" onclick="typeVal('0')">0</button>
-                <button class="key-btn action" id="action-btn" onclick="handleMainAction()">START</button>
-            </div>
+        <div class="keypad dec" id="keypad-dec">
+            <button class="key-btn" onclick="typeVal('1')">1</button>
+            <button class="key-btn" onclick="typeVal('2')">2</button>
+            <button class="key-btn" onclick="typeVal('3')">3</button>
+            <button class="key-btn" onclick="typeVal('4')">4</button>
+            <button class="key-btn" onclick="typeVal('5')">5</button>
+            <button class="key-btn" onclick="typeVal('6')">6</button>
+            <button class="key-btn" onclick="typeVal('7')">7</button>
+            <button class="key-btn" onclick="typeVal('8')">8</button>
+            <button class="key-btn" onclick="typeVal('9')">9</button>
+            <button class="key-btn" onclick="typeVal('0')">0</button>
         </div>
     </div>
+
+    <button class="main-action" id="main-btn" onclick="handleMainAction()">START</button>
 
     <div class="history-container" id="history-container" style="display: none;">
         <div class="history-title">Dnešní historie:</div>
@@ -177,24 +157,6 @@
     let expectedAnswer = "";
     let expectedLength = 0;
     let currentFocusIdx = 0;
-    let settingsOpen = false;
-
-    const bitRanges = {
-        5:31, 6:63, 7:127, 8:255, 9:511,
-        10:1023, 11:2047, 12:4095, 13:8191, 14:16383, 15:32767
-    };
-
-    function updateTitle() {
-        const direction = document.getElementById('direction').value;
-        const label = direction === 'bin2dec' ? '  BIN→DEC' : '  DEC→BIN';
-        document.getElementById('main-title').innerText =
-            'Binární trénink' + (state !== 'init' ? label : '');
-    }
-
-    function setActionBtnLabel(mode) {
-        const btn = document.getElementById('action-btn');
-        if (btn) btn.innerText = mode === 'check' ? 'VÝSLEDEK\n(KONTROLA)' : 'START';
-    }
 
     function initApp() {
         const savedTheme = localStorage.getItem('binTrainTheme') || 'light';
@@ -204,18 +166,20 @@
         const bitSelect = document.getElementById('bits');
         for (let i = 5; i <= 15; i++) {
             let opt = document.createElement('option');
-            opt.value = i;
-            opt.innerHTML = `${i} bitů ≤ ${bitRanges[i].toLocaleString('cs-CZ')}`;
+            opt.value = i; opt.innerHTML = `${i} bitů`;
             bitSelect.appendChild(opt);
         }
 
         const savedDir = localStorage.getItem('binTrainDir');
         if (savedDir) document.getElementById('direction').value = savedDir;
+        
         const savedBits = localStorage.getItem('binTrainBits');
         if (savedBits) document.getElementById('bits').value = savedBits;
 
-        settingsOpen = false;
-        document.getElementById('secret-input').focus();
+        if(state === 'init') {
+            document.getElementById('settings-panel').style.display = 'flex';
+            document.getElementById('secret-input').focus(); 
+        }
 
         checkHistoryDate();
         updateInfo();
@@ -223,17 +187,17 @@
     }
 
     function toggleTheme() {
-        const isDark = document.body.dataset.theme === 'dark';
+        const body = document.body;
+        const isDark = body.dataset.theme === 'dark';
         const newTheme = isDark ? 'light' : 'dark';
-        document.body.dataset.theme = newTheme;
+        body.dataset.theme = newTheme;
         document.getElementById('theme-btn').innerText = newTheme === 'dark' ? '☀️' : '🌙';
         localStorage.setItem('binTrainTheme', newTheme);
     }
 
     function toggleSettings() {
-        settingsOpen = !settingsOpen;
-        document.getElementById('settings-panel').classList.toggle('open', settingsOpen);
-        document.getElementById('info-wrapper').classList.toggle('open', settingsOpen);
+        const panel = document.getElementById('settings-panel');
+        panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
     }
 
     function updateInfo() {
@@ -242,22 +206,19 @@
         localStorage.setItem('binTrainBits', bits);
         localStorage.setItem('binTrainDir', direction);
         const maxNum = Math.pow(2, bits) - 1;
-        document.getElementById('info').innerText = `Rozsah: 0 až ${maxNum.toLocaleString('cs-CZ')}`;
-        updateTitle();
-        if (state === 'playing') startGame();
+        document.getElementById('info').innerText = `Rozsah: 0 až ${maxNum}`;
+        if (state === 'playing') startGame(); 
     }
 
     function handleMainAction() {
         if (state === 'init') {
             const secret = document.getElementById('secret-input').value.trim().toLowerCase();
             if (secret === 'zrušit') {
-                localStorage.removeItem('binTrainHistory');
+                localStorage.removeItem('binTrainHistory'); 
                 renderHistory();
             }
             document.getElementById('secret-input').style.display = 'none';
-            settingsOpen = false;
-            document.getElementById('settings-panel').classList.remove('open');
-            document.getElementById('info-wrapper').classList.remove('open');
+            document.getElementById('settings-panel').style.display = 'none'; 
             startGame();
         } else if (state === 'playing') {
             checkAnswer();
@@ -266,22 +227,31 @@
         }
     }
 
+    // Upravené chování klávesy Enter
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Enter') {
-            event.preventDefault();
-            handleMainAction();
+            event.preventDefault(); 
+            if (state === 'init') {
+                // Funguje jako tlačítko POUZE pokud je tam nápis START
+                handleMainAction();
+            } else if (state === 'playing') {
+                // Během hry pouze posouvá kurzor do dalšího pole doprava
+                const boxes = document.getElementById('boxes-container').children;
+                if (currentFocusIdx < expectedLength - 1) {
+                    boxes[currentFocusIdx + 1].focus();
+                }
+            }
         }
     });
 
     function startGame() {
         state = 'playing';
-        setActionBtnLabel('check');
-        updateTitle();
-
+        document.getElementById('main-btn').innerText = "VÝSLEDEK (KONTROLA)";
+        
         const bits = parseInt(document.getElementById('bits').value);
         const direction = document.getElementById('direction').value;
         const maxNum = Math.pow(2, bits) - 1;
-
+        
         currentDecValue = Math.floor(Math.random() * (maxNum + 1));
         const binString = currentDecValue.toString(2).padStart(bits, '0');
 
@@ -294,126 +264,87 @@
             document.getElementById('keypad-bin').style.display = 'grid';
             document.getElementById('keypad-dec').style.display = 'none';
         } else {
-            document.getElementById('question-display').innerText = formatBinDisplay(binString);
+            document.getElementById('question-display').innerText = binString;
             expectedAnswer = currentDecValue.toString();
-            expectedLength = currentDecValue.toString().length;
-            if (expectedLength < 1) expectedLength = 1;
+            expectedLength = maxNum.toString().length; 
             document.getElementById('keypad-bin').style.display = 'none';
-            document.getElementById('keypad-dec').style.display = 'block';
+            document.getElementById('keypad-dec').style.display = 'grid';
         }
         renderBoxes();
-    }
-
-    function formatBinDisplay(bin) {
-        let result = '';
-        const len = bin.length;
-        for (let i = 0; i < len; i++) {
-            const fromRight = len - 1 - i;
-            if (i > 0 && (fromRight === 4 || fromRight === 9)) result += ' ';
-            result += bin[i];
-        }
-        return result;
     }
 
     function renderBoxes() {
         const container = document.getElementById('boxes-container');
         container.innerHTML = '';
         currentFocusIdx = 0;
-        const direction = document.getElementById('direction').value;
-
+        
         for (let i = 0; i < expectedLength; i++) {
-            if (direction === 'dec2bin') {
-                const fromRight = expectedLength - 1 - i;
-                if (i > 0 && (fromRight === 4 || fromRight === 9)) {
-                    const gap = document.createElement('span');
-                    gap.className = 'box-gap';
-                    container.appendChild(gap);
-                }
-            }
-            if (direction === 'bin2dec') {
-                if (expectedLength > 3 && i > 0 && i === expectedLength - 3) {
-                    const gap = document.createElement('span');
-                    gap.className = 'box-gap';
-                    container.appendChild(gap);
-                }
-            }
-
             const input = document.createElement('input');
             input.type = 'text';
             input.inputMode = 'numeric';
             input.maxLength = 1;
             input.className = 'box';
 
+            if ((expectedLength - 1 - i) % 5 === 0 && i !== expectedLength - 1) {
+                input.style.marginRight = '12px';
+            }
+            
             input.addEventListener('focus', () => { currentFocusIdx = i; });
             input.addEventListener('input', function() {
                 if (this.value !== '' && i < expectedLength - 1) {
-                    focusBoxByIndex(i + 1);
-                } else if (this.value !== '' && i === expectedLength - 1) {
-                    const btn = document.getElementById('action-btn');
-                    if (btn) btn.focus();
+                    container.children[i + 1].focus();
                 }
             });
             container.appendChild(input);
         }
-        focusBoxByIndex(0);
-    }
-
-    function getBoxInputs() {
-        return Array.from(document.getElementById('boxes-container').children)
-            .filter(el => el.tagName === 'INPUT');
-    }
-
-    function focusBoxByIndex(idx) {
-        const boxes = getBoxInputs();
-        if (boxes[idx]) boxes[idx].focus();
+        if (container.children.length > 0) container.children[0].focus();
     }
 
     function typeVal(val) {
         if (state !== 'playing') return;
-        const boxes = getBoxInputs();
+        const boxes = document.getElementById('boxes-container').children;
         if (currentFocusIdx < expectedLength) {
             boxes[currentFocusIdx].value = val;
-            const nextIdx = currentFocusIdx + 1;
+            let nextIdx = currentFocusIdx + 1;
             if (nextIdx < expectedLength) {
-                focusBoxByIndex(nextIdx);
+                boxes[nextIdx].focus();
             } else {
-                const btn = document.getElementById('action-btn');
-                if (btn) btn.focus();
+                boxes[currentFocusIdx].blur(); 
             }
         }
     }
 
     function checkAnswer() {
         const direction = document.getElementById('direction').value;
-        const boxes = getBoxInputs();
+        const boxes = Array.from(document.getElementById('boxes-container').children);
         const userInput = boxes.map(b => b.value).join('');
 
         state = 'evaluated';
-        setActionBtnLabel('start');
+        document.getElementById('main-btn').innerText = "DALŠÍ";
 
         if (userInput.trim() === '') {
             const fullAnswer = expectedAnswer.padStart(expectedLength, '0');
             boxes.forEach((box, idx) => {
-                box.value = fullAnswer[idx];
-                box.disabled = true;
+                box.value = fullAnswer[idx]; 
+                box.disabled = true; 
             });
-            return;
+            return; 
         }
 
         const inputBase = direction === 'dec2bin' ? 2 : 10;
         const isCorrect = parseInt(userInput, inputBase) === currentDecValue;
-
-        boxes.forEach(box => {
-            box.disabled = true;
-            if (box.value !== '') box.classList.add(isCorrect ? 'correct' : 'error');
+        
+        boxes.forEach((box) => {
+            box.disabled = true; 
+            if (box.value !== "") box.classList.add(isCorrect ? 'correct' : 'error');
         });
 
         let binStr, decStr;
         if (isCorrect) {
-            binStr = (direction === 'dec2bin') ? userInput : document.getElementById('question-display').innerText.replace(/ /g, '');
+            binStr = (direction === 'dec2bin') ? userInput : document.getElementById('question-display').innerText;
             decStr = (direction === 'dec2bin') ? currentDecValue : userInput;
         } else {
-            binStr = (direction === 'dec2bin') ? expectedAnswer : document.getElementById('question-display').innerText.replace(/ /g, '');
+            binStr = (direction === 'dec2bin') ? expectedAnswer : document.getElementById('question-display').innerText;
             decStr = (direction === 'dec2bin') ? currentDecValue : expectedAnswer;
         }
 
@@ -430,7 +361,7 @@
 
     function saveToHistory(text, isCorrect) {
         let history = JSON.parse(localStorage.getItem('binTrainHistory') || '[]');
-        history.unshift({ text, isCorrect });
+        history.unshift({ text, isCorrect }); 
         localStorage.setItem('binTrainHistory', JSON.stringify(history));
         renderHistory();
     }
@@ -441,6 +372,7 @@
         const list = document.getElementById('history-list');
         list.innerHTML = '';
         if (history.length === 0) { container.style.display = 'none'; return; }
+        
         container.style.display = 'block';
         history.forEach(item => {
             const div = document.createElement('div');
