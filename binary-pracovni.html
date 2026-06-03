@@ -31,7 +31,7 @@
         .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-color); }
 
         .settings-group {
-            overflow: hidden; max-height: 0; transition: max-height 0.35s ease;
+            overflow: hidden; max-height: 0; transition: max-height 0.3s ease;
             display: flex; flex-direction: column; gap: 8px;
         }
         .settings-group.open { max-height: 200px; }
@@ -42,7 +42,7 @@
             color: var(--text-color);
         }
 
-        .info-wrapper { overflow: hidden; max-height: 0; transition: max-height 0.35s ease; }
+        .info-wrapper { overflow: hidden; max-height: 0; transition: max-height 0.3s ease; }
         .info-wrapper.open { max-height: 60px; }
         .info-text { font-size: 12px; color: #86868b; text-align: center; padding: 2px 0; }
 
@@ -71,50 +71,38 @@
         /* Binární klávesnice */
         .keypad-bin { display: none; grid-template-columns: 1fr 1fr; gap: 6px; width: 100%; }
 
-        /* Decimální klávesnice - kalkulačka + tlačítko akce vpravo od 0 */
+        /* Decimální klávesnice */
         .keypad-dec { display: none; width: 100%; }
-        .keypad-dec-wrap {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr) 1.4fr;
-            gap: 6px;
-        }
-        .keypad-dec-nums {
-            grid-column: 1 / 4;
+        .keypad-dec-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 6px;
         }
-        .keypad-action-col {
-            grid-column: 4;
-            grid-row: 1 / 5;
-            display: flex;
-            align-items: flex-end;
-        }
 
+        /* Všechna tlačítka — stejný styl, stejná velikost */
         .key-btn {
-            background: var(--btn-bg); color: var(--text-color); border: none;
-            padding: 14px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer;
+            background: var(--btn-bg);
+            color: var(--text-color);
+            border: none;
+            padding: 14px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            width: 100%;
         }
         .key-btn:active { background: var(--btn-hover); }
-        .key-btn-zero { grid-column: 2; }
 
-        /* Modré akční tlačítko vedle klávesnice */
-        .action-side-btn {
-            width: 100%; height: 100%;
-            background: var(--primary-bg); color: var(--primary-text);
-            border: none; border-radius: 6px; font-size: 13px; font-weight: bold;
-            cursor: pointer; line-height: 1.3; padding: 8px 4px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        /* Modré tlačítko — STEJNÉ rozměry jako .key-btn, jen modrá barva a jiný text */
+        .key-btn.action {
+            background: var(--primary-bg);
+            color: var(--primary-text);
+            font-size: 11px;
+            line-height: 1.4;
         }
-        .action-side-btn:focus { outline: 3px solid #ffd60a; }
-        .action-side-btn span { display: block; text-align: center; }
-
-        .main-action {
-            width: 100%; padding: 12px; border-radius: 8px;
-            background: var(--primary-bg); color: var(--primary-text);
-            border: none; font-size: 16px; font-weight: bold; cursor: pointer;
-        }
-        .main-action:focus { outline: 3px solid #ffd60a; }
+        .key-btn.action:active { opacity: 0.85; }
+        .key-btn.action:focus { outline: 3px solid #ffd60a; }
 
         .history-container { border-top: 1px solid var(--border-color); padding-top: 10px; }
         .history-title { font-size: 14px; font-weight: bold; margin-bottom: 8px; }
@@ -144,7 +132,7 @@
             <option value="bin2dec">Binární na Decimální</option>
         </select>
         <select id="bits" onchange="updateInfo()"></select>
-        <div class="info-wrapper open" id="info-wrapper">
+        <div class="info-wrapper" id="info-wrapper">
             <div class="info-text" id="info"></div>
         </div>
     </div>
@@ -158,34 +146,28 @@
         <div class="keypad-bin" id="keypad-bin">
             <button class="key-btn" onclick="typeVal('0')">0</button>
             <button class="key-btn" onclick="typeVal('1')">1</button>
+            <button class="key-btn action" id="action-btn-bin" onclick="handleMainAction()">START</button>
+            <div></div>
         </div>
 
-        <!-- Decimální klávesnice: kalkulačka + akční tlačítko vpravo -->
+        <!-- Decimální klávesnice -->
         <div class="keypad-dec" id="keypad-dec">
-            <div class="keypad-dec-wrap">
-                <div class="keypad-dec-nums">
-                    <button class="key-btn" onclick="typeVal('7')">7</button>
-                    <button class="key-btn" onclick="typeVal('8')">8</button>
-                    <button class="key-btn" onclick="typeVal('9')">9</button>
-                    <button class="key-btn" onclick="typeVal('4')">4</button>
-                    <button class="key-btn" onclick="typeVal('5')">5</button>
-                    <button class="key-btn" onclick="typeVal('6')">6</button>
-                    <button class="key-btn" onclick="typeVal('1')">1</button>
-                    <button class="key-btn" onclick="typeVal('2')">2</button>
-                    <button class="key-btn" onclick="typeVal('3')">3</button>
-                    <button class="key-btn key-btn-zero" onclick="typeVal('0')">0</button>
-                </div>
-                <div class="keypad-action-col">
-                    <button class="action-side-btn" id="side-action-btn" onclick="handleMainAction()">
-                        <span>VÝSLEDEK</span>
-                        <span>(KONTROLA)</span>
-                    </button>
-                </div>
+            <div class="keypad-dec-grid">
+                <button class="key-btn" onclick="typeVal('7')">7</button>
+                <button class="key-btn" onclick="typeVal('8')">8</button>
+                <button class="key-btn" onclick="typeVal('9')">9</button>
+                <button class="key-btn" onclick="typeVal('4')">4</button>
+                <button class="key-btn" onclick="typeVal('5')">5</button>
+                <button class="key-btn" onclick="typeVal('6')">6</button>
+                <button class="key-btn" onclick="typeVal('1')">1</button>
+                <button class="key-btn" onclick="typeVal('2')">2</button>
+                <button class="key-btn" onclick="typeVal('3')">3</button>
+                <button class="key-btn" onclick="typeVal('0')">0</button>
+                <div></div>
+                <button class="key-btn action" id="action-btn" onclick="handleMainAction()">START</button>
             </div>
         </div>
     </div>
-
-    <button class="main-action" id="main-btn" onclick="handleMainAction()">START</button>
 
     <div class="history-container" id="history-container" style="display: none;">
         <div class="history-title">Dnešní historie:</div>
@@ -208,9 +190,17 @@
 
     function updateTitle() {
         const direction = document.getElementById('direction').value;
-        const arrow = ' →';
-        let label = direction === 'bin2dec' ? '  BIN' + arrow + 'DEC' : '  DEC' + arrow + 'BIN';
-        document.getElementById('main-title').innerText = 'Binární trénink' + label;
+        const label = direction === 'bin2dec' ? '  BIN→DEC' : '  DEC→BIN';
+        document.getElementById('main-title').innerText =
+            'Binární trénink' + (state !== 'init' ? label : '');
+    }
+
+    function setActionBtnLabel(mode) {
+        const text = mode === 'check' ? 'VÝSLEDEK\n(KONTROLA)' : 'START';
+        ['action-btn', 'action-btn-bin'].forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) btn.innerText = text;
+        });
     }
 
     function initApp() {
@@ -231,15 +221,11 @@
         const savedBits = localStorage.getItem('binTrainBits');
         if (savedBits) document.getElementById('bits').value = savedBits;
 
-        // Nastavení jsou při startu ZASUNUTA
         settingsOpen = false;
-        document.getElementById('settings-panel').classList.remove('open');
-
         document.getElementById('secret-input').focus();
 
         checkHistoryDate();
         updateInfo();
-        updateTitle();
         renderHistory();
     }
 
@@ -254,6 +240,7 @@
     function toggleSettings() {
         settingsOpen = !settingsOpen;
         document.getElementById('settings-panel').classList.toggle('open', settingsOpen);
+        document.getElementById('info-wrapper').classList.toggle('open', settingsOpen);
     }
 
     function updateInfo() {
@@ -277,6 +264,7 @@
             document.getElementById('secret-input').style.display = 'none';
             settingsOpen = false;
             document.getElementById('settings-panel').classList.remove('open');
+            document.getElementById('info-wrapper').classList.remove('open');
             startGame();
         } else if (state === 'playing') {
             checkAnswer();
@@ -288,25 +276,14 @@
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Enter') {
             event.preventDefault();
-            if (state === 'init') {
-                handleMainAction();
-            } else if (state === 'playing') {
-                // Enter při hře: vyhodnotit
-                checkAnswer();
-            } else if (state === 'evaluated') {
-                startGame();
-            }
+            handleMainAction();
         }
     });
 
     function startGame() {
         state = 'playing';
-        document.getElementById('main-btn').innerText = "VÝSLEDEK (KONTROLA)";
-
-        const sideBtn = document.getElementById('side-action-btn');
-        if (sideBtn) {
-            sideBtn.innerHTML = '<span>VÝSLEDEK</span><span>(KONTROLA)</span>';
-        }
+        setActionBtnLabel('check');
+        updateTitle();
 
         const bits = parseInt(document.getElementById('bits').value);
         const direction = document.getElementById('direction').value;
@@ -324,13 +301,9 @@
             document.getElementById('keypad-bin').style.display = 'grid';
             document.getElementById('keypad-dec').style.display = 'none';
         } else {
-            // Zobraz binární číslo bez nadbytečných nul vlevo — padStart zůstane na bits,
-            // ale zobrazíme ho s mezerami
             document.getElementById('question-display').innerText = formatBinDisplay(binString);
             expectedAnswer = currentDecValue.toString();
-            // expectedLength = přesný počet číslic čísla (žádné nadbytečné nuly)
             expectedLength = currentDecValue.toString().length;
-            // Minimálně 1 políčko
             if (expectedLength < 1) expectedLength = 1;
             document.getElementById('keypad-bin').style.display = 'none';
             document.getElementById('keypad-dec').style.display = 'block';
@@ -338,15 +311,12 @@
         renderBoxes();
     }
 
-    // Vloží mezeru po 5. a 10. bitu zprava
     function formatBinDisplay(bin) {
         let result = '';
         const len = bin.length;
         for (let i = 0; i < len; i++) {
             const fromRight = len - 1 - i;
-            if (i > 0 && (fromRight === 4 || fromRight === 9)) {
-                result += ' ';
-            }
+            if (i > 0 && (fromRight === 4 || fromRight === 9)) result += ' ';
             result += bin[i];
         }
         return result;
@@ -356,11 +326,9 @@
         const container = document.getElementById('boxes-container');
         container.innerHTML = '';
         currentFocusIdx = 0;
-
         const direction = document.getElementById('direction').value;
 
         for (let i = 0; i < expectedLength; i++) {
-            // Mezery pro binární: po 5. a 10. bitu zprava
             if (direction === 'dec2bin') {
                 const fromRight = expectedLength - 1 - i;
                 if (i > 0 && (fromRight === 4 || fromRight === 9)) {
@@ -369,7 +337,6 @@
                     container.appendChild(gap);
                 }
             }
-            // Mezera pro decimální: před pozicí expectedLength-3 (odděluje tisíce od stovek)
             if (direction === 'bin2dec') {
                 if (expectedLength > 3 && i > 0 && i === expectedLength - 3) {
                     const gap = document.createElement('span');
@@ -389,14 +356,11 @@
                 if (this.value !== '' && i < expectedLength - 1) {
                     focusBoxByIndex(i + 1);
                 } else if (this.value !== '' && i === expectedLength - 1) {
-                    // Poslední políčko vyplněno → fokus na modré tlačítko
-                    const direction = document.getElementById('direction').value;
-                    if (direction === 'bin2dec') {
-                        const sideBtn = document.getElementById('side-action-btn');
-                        if (sideBtn) sideBtn.focus();
-                    } else {
-                        document.getElementById('main-btn').focus();
-                    }
+                    const dir = document.getElementById('direction').value;
+                    const btn = dir === 'dec2bin'
+                        ? document.getElementById('action-btn-bin')
+                        : document.getElementById('action-btn');
+                    if (btn) btn.focus();
                 }
             });
             container.appendChild(input);
@@ -423,14 +387,11 @@
             if (nextIdx < expectedLength) {
                 focusBoxByIndex(nextIdx);
             } else {
-                // Přesun fokusu na akční tlačítko
-                const direction = document.getElementById('direction').value;
-                if (direction === 'bin2dec') {
-                    const sideBtn = document.getElementById('side-action-btn');
-                    if (sideBtn) sideBtn.focus();
-                } else {
-                    document.getElementById('main-btn').focus();
-                }
+                const dir = document.getElementById('direction').value;
+                const btn = dir === 'dec2bin'
+                    ? document.getElementById('action-btn-bin')
+                    : document.getElementById('action-btn');
+                if (btn) btn.focus();
             }
         }
     }
@@ -441,9 +402,7 @@
         const userInput = boxes.map(b => b.value).join('');
 
         state = 'evaluated';
-        document.getElementById('main-btn').innerText = "START";
-        const sideBtn = document.getElementById('side-action-btn');
-        if (sideBtn) sideBtn.innerHTML = '<span>START</span>';
+        setActionBtnLabel('start');
 
         if (userInput.trim() === '') {
             const fullAnswer = expectedAnswer.padStart(expectedLength, '0');
