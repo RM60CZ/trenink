@@ -108,7 +108,7 @@
 
 <div class="app-container">
     <div class="header">
-        <h1>Binární trénink</h1>
+        <h1 id="main-title">Binární trénink</h1>
         <div class="header-icons">
             <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
             <button class="icon-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
@@ -176,6 +176,21 @@
     let expectedLength = 0;
     let currentFocusIdx = 0;
 
+    function updateTitle() {
+        const direction = document.getElementById('direction').value;
+        const titleElement = document.getElementById('main-title');
+        
+        if (state === 'playing') {
+            if (direction === 'bin2dec') {
+                titleElement.textContent = 'Binární trénink BIN → DEC';
+            } else {
+                titleElement.textContent = 'Binární trénink DEC → BIN';
+            }
+        } else {
+            titleElement.textContent = 'Binární trénink';
+        }
+    }
+
     function initApp() {
         const savedTheme = localStorage.getItem('binTrainTheme') || 'light';
         document.body.dataset.theme = savedTheme;
@@ -197,6 +212,7 @@
 
         checkHistoryDate();
         updateInfo();
+        updateTitle();
         renderHistory();
     }
 
@@ -262,6 +278,7 @@
     function startGame() {
         state = 'playing';
         document.getElementById('main-btn').innerText = "VÝSLEDEK (KONTROLA)";
+        updateTitle();
         
         const bits = parseInt(document.getElementById('bits').value);
         const direction = document.getElementById('direction').value;
@@ -336,6 +353,7 @@
 
         state = 'evaluated';
         document.getElementById('main-btn').innerText = "DALŠÍ";
+        updateTitle();
 
         if (userInput.trim() === '') {
             const fullAnswer = expectedAnswer.padStart(expectedLength, '0');
