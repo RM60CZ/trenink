@@ -634,12 +634,11 @@ function buildRecognition(){
     if(/chyba/.test(raw)){ spReset(); return; }
 
     // === ZPĚT / SPJET – vymaže poslední číslici, lze opakovat ===
-    var zpetRe = /\b(zpět|spjet)\b/g;
-    var hasBek = false;
-    while(zpetRe.exec(raw) !== null){ hasBek = true; spBackspace(); }
-    if(hasBek){ raw = raw.replace(/\b(zpět|spjet)\b/g, ' ').trim(); if(!raw){ return; } }
+    var zpetPocet = (raw.match(/\b(zpět|spjet)\b/g) || []).length;
+    for(var z = 0; z < zpetPocet; z++){ spBackspace(); }
+    if(zpetPocet > 0){ raw = raw.replace(/\b(zpět|spjet)\b/g, ' ').trim(); if(!raw){ return; } }
 
-    // === ZERO/ZIROU/ZÍROU – přidá 000 napravo, lze opakovat ===
+    // === ZERO/ZIROU/ZÍROU – přidá 000 napravo ===
     var zeroRe = /\b(zero|zirou|zírou)\b/g;
     var hasZero = false;
     while(zeroRe.exec(raw) !== null){ hasZero = true; spAppendZeros(); }
