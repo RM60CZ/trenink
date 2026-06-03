@@ -97,11 +97,19 @@
         }
         .history-item {
             padding: 4px 8px; border-radius: 4px; 
-            font-family: monospace; font-size: 14px; color: white;
+            font-family: monospace; font-size: 14px;
             display: inline-block;
+            background-color: var(--container-bg); /* Bez barevného pozadí */
+            border: 2px solid transparent; /* Výchozí průhledný okraj */
         }
-        .history-item.correct { background-color: var(--success); }
-        .history-item.error { background-color: var(--error); }
+        .history-item.correct { 
+            color: var(--success); 
+            border-color: var(--success);
+        }
+        .history-item.error { 
+            color: var(--error); 
+            border-color: var(--error);
+        }
     </style>
 </head>
 <body data-theme="light">
@@ -318,6 +326,17 @@
         return spaced.split('').reverse().join('');
     }
 
+    function formatBinaryForHistory(binStr) {
+        // Oddělení po 5 bitech zprava pro historii
+        let reversed = binStr.split('').reverse().join('');
+        let spaced = '';
+        for (let i = 0; i < reversed.length; i++) {
+            if (i > 0 && i % 5 === 0) spaced += ' ';
+            spaced += reversed[i];
+        }
+        return spaced.split('').reverse().join('');
+    }
+
     function renderBoxes() {
         const container = document.getElementById('boxes-container');
         container.innerHTML = '';
@@ -396,7 +415,10 @@
             decStr = (direction === 'dec2bin') ? currentDecValue : expectedAnswer;
         }
 
-        saveToHistory(`${binStr}=${decStr.toLocaleString('cs-CZ')}`, isCorrect);
+        // Formátování pro historii
+        const formattedBin = formatBinaryForHistory(binStr);
+        const formattedDec = parseInt(decStr).toLocaleString('cs-CZ');
+        saveToHistory(`${formattedBin}=${formattedDec}`, isCorrect);
     }
 
     function checkHistoryDate() {
