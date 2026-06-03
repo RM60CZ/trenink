@@ -452,14 +452,11 @@ function spReset(){
   odpovedEl.value = '';
 }
 
-// === BEK – vymaže poslední číslici z raw bufferu i z inputu ===
+// === ZPĚT/SPJET – vymaže poslední číslici ===
 function spBackspace(){
-  // Pracujeme přímo s aktuální hodnotou v inputu (bez mezer)
   var current = norm(odpovedEl.value);
   if(!current) return;
-  // Odstraníme poslední znak
   current = current.slice(0, -1);
-  // Přepočítáme spBuf z nové hodnoty
   spBuf = current ? current.split('').map(function(c){ return c === '.' ? '.' : parseInt(c, 10); }) : [];
   odpovedEl.value = current ? fmtInputStr(current) : '';
 }
@@ -481,13 +478,10 @@ function spFlush(){
 // === APPEND nuly (zero/zirou/zírou) – přidá 000 napravo ===
 function spAppendZeros(){
   var current = norm(odpovedEl.value);
-  // Přidáme tři nuly jako číslice do bufferu
   var zeros = [0, 0, 0];
   if(!current){
-    // Prázdný input – spBuf je prázdný, přidáme jen nuly
     zeros.forEach(function(z){ spBuf.push(z); });
   } else {
-    // Přepočítáme spBuf z aktuální hodnoty a přidáme nuly
     var dotIdx = current.indexOf('.');
     if(dotIdx === -1){
       spBuf = current.split('').map(function(c){ return parseInt(c,10); });
@@ -639,18 +633,16 @@ function buildRecognition(){
 
     if(/chyba/.test(raw)){ spReset(); return; }
 
-    // === BEK – vymaže poslední číslici, lze opakovat ===
-    var bekRe = /\bbek\b/g;
-    var bekMatch;
+    // === ZPĚT / SPJET – vymaže poslední číslici, lze opakovat ===
+    var zpetRe = /\b(zpět|spjet)\b/g;
     var hasBek = false;
-    while((bekMatch = bekRe.exec(raw)) !== null){ hasBek = true; spBackspace(); }
-    if(hasBek){ raw = raw.replace(/\bbek\b/g, ' ').trim(); if(!raw){ return; } }
+    while(zpetRe.exec(raw) !== null){ hasBek = true; spBackspace(); }
+    if(hasBek){ raw = raw.replace(/\b(zpět|spjet)\b/g, ' ').trim(); if(!raw){ return; } }
 
     // === ZERO/ZIROU/ZÍROU – přidá 000 napravo, lze opakovat ===
     var zeroRe = /\b(zero|zirou|zírou)\b/g;
-    var zeroMatch;
     var hasZero = false;
-    while((zeroMatch = zeroRe.exec(raw)) !== null){ hasZero = true; spAppendZeros(); }
+    while(zeroRe.exec(raw) !== null){ hasZero = true; spAppendZeros(); }
     if(hasZero){ raw = raw.replace(/\b(zero|zirou|zírou)\b/g, ' ').trim(); if(!raw){ return; } }
 
     var shouldSubmit = false;
@@ -725,7 +717,6 @@ function handle(e, fromVoice){
   parentDiv.classList.remove('zelene', 'cervene');
   odpovedEl.classList.remove('text-white');
 
-  // ÚVODNÍ OBRAZOVKA
   if(!aktualniPriklad && !zobrazitVysledek){
     var inputVal = odpovedEl.value.trim();
     if(!inputVal){
@@ -746,7 +737,6 @@ function handle(e, fromVoice){
     isProcessing = false; return;
   }
 
-  // KONTROLA VÝSLEDKU
   if(zobrazitVysledek && aktualniPriklad){
     var val = odpovedEl.value.trim();
     var normVal = norm(val);
@@ -788,7 +778,6 @@ function handle(e, fromVoice){
     return;
   }
 
-  // DALŠÍ PŘÍKLAD
   if(aktualniPriklad && !zobrazitVysledek){
     if(startNewProblem()) return;
     isProcessing = false;
