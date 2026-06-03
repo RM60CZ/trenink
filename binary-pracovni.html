@@ -73,7 +73,7 @@
 
         .keypad { display: grid; gap: 6px; width: 100%; display: none; }
         .keypad.bin { grid-template-columns: 1fr 1fr; }
-        .keypad.dec { grid-template-columns: repeat(5, 1fr); }
+        .keypad.dec { grid-template-columns: repeat(3, 1fr); }
         
         .key-btn {
             background: var(--btn-bg); color: var(--text-color); border: none;
@@ -148,16 +148,18 @@
         </div>
 
         <div class="keypad dec" id="keypad-dec">
-            <button class="key-btn" onclick="typeVal('1')">1</button>
-            <button class="key-btn" onclick="typeVal('2')">2</button>
-            <button class="key-btn" onclick="typeVal('3')">3</button>
-            <button class="key-btn" onclick="typeVal('4')">4</button>
-            <button class="key-btn" onclick="typeVal('5')">5</button>
-            <button class="key-btn" onclick="typeVal('6')">6</button>
             <button class="key-btn" onclick="typeVal('7')">7</button>
             <button class="key-btn" onclick="typeVal('8')">8</button>
             <button class="key-btn" onclick="typeVal('9')">9</button>
+            <button class="key-btn" onclick="typeVal('4')">4</button>
+            <button class="key-btn" onclick="typeVal('5')">5</button>
+            <button class="key-btn" onclick="typeVal('6')">6</button>
+            <button class="key-btn" onclick="typeVal('1')">1</button>
+            <button class="key-btn" onclick="typeVal('2')">2</button>
+            <button class="key-btn" onclick="typeVal('3')">3</button>
+            <div></div>
             <button class="key-btn" onclick="typeVal('0')">0</button>
+            <div></div>
         </div>
     </div>
 
@@ -306,7 +308,14 @@
     }
 
     function formatBinary(binStr) {
-        return binStr.replace(/(.{4})/g, '$1 ').trim();
+        // Mezery mezi 5-6 a 10-11 bitem zprava
+        let reversed = binStr.split('').reverse().join('');
+        let spaced = '';
+        for (let i = 0; i < reversed.length; i++) {
+            if (i === 5 || i === 10) spaced += ' ';
+            spaced += reversed[i];
+        }
+        return spaced.split('').reverse().join('');
     }
 
     function renderBoxes() {
@@ -321,6 +330,12 @@
             input.maxLength = 1;
             input.className = 'box';
 
+            // Mezera mezi 3. a 4. polem zprava
+            const positionFromRight = expectedLength - i;
+            if (positionFromRight === 4) {
+                input.style.marginRight = '12px';
+            }
+            
             input.addEventListener('focus', () => { currentFocusIdx = i; });
             input.addEventListener('input', function() {
                 if (this.value !== '' && i < expectedLength - 1) {
