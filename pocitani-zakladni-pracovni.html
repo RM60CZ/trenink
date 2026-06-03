@@ -90,7 +90,11 @@ input{-webkit-appearance:none;border-radius:.75rem}
     <span id="currentDate" class="text-[11px] font-medium text-slate-400 dark:text-slate-500"></span>
   </div>
 </div>
+<!-- UPRAVENO: přidán domeček vlevo od ozubeného kola, stejná mezera gap-1 -->
 <div class="flex items-center gap-1">
+  <button id="homeBtn" class="p-1.5 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors text-slate-400 text-lg leading-none">
+    🏠
+  </button>
   <button id="settingsToggle" class="p-1.5 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors text-slate-400">
     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
   </button>
@@ -136,11 +140,17 @@ input{-webkit-appearance:none;border-radius:.75rem}
     </div>
     <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 scale-75 pointer-events-none"></div>
   </div>
-  <button id="micBtn" type="button" class="w-full py-2 flex items-center justify-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-sm transition-all touch-manipulation">
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4M12 3a4 4 0 014 4v4a4 4 0 01-8 0V7a4 4 0 014-4z"/></svg>
-    <span id="micLabel">Mikrofon</span>
-  </button>
-  <button id="tlacitko" type="button" class="w-full py-3 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-black text-base rounded-xl shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest touch-manipulation btn-pulse">START</button>
+
+  <!-- UPRAVENO: mic a hlavní tlačítko vedle sebe na jednom řádku -->
+  <div class="flex gap-2.5 items-stretch">
+    <!-- micBtn: auto šířka, o 50% vyšší (py-3), obsah centrován -->
+    <button id="micBtn" type="button" class="flex-shrink-0 px-4 py-3 flex items-center justify-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-sm transition-all touch-manipulation whitespace-nowrap">
+      <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4M12 3a4 4 0 014 4v4a4 4 0 01-8 0V7a4 4 0 014-4z"/></svg>
+      <span id="micLabel">Mikrofon</span>
+    </button>
+    <!-- hlavní tlačítko: zbytek šířky, stejná výška -->
+    <button id="tlacitko" type="button" class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-black text-base rounded-xl shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest touch-manipulation btn-pulse flex items-center justify-center">START</button>
+  </div>
 </div>
 </div>
 
@@ -179,6 +189,7 @@ var hlasCheck = _id('hlasCheck');
 var micBtn = _id('micBtn');
 var micLabel = _id('micLabel');
 var inputBox = _id('inputBox');
+var homeBtn = _id('homeBtn');
 
 var KEY = 'matika_trenink_v4';
 var correct = 0, wrong = 0, streak = 0, history = [];
@@ -202,6 +213,17 @@ themeToggle.addEventListener('click', function(){
   updateThemeIcons();
 });
 updateThemeIcons();
+
+// === HOME BUTTON ===
+homeBtn.addEventListener('click', function(){
+  if(micListening) stopMic(false);
+  aktualniPriklad = null;
+  zobrazitVysledek = false;
+  isProcessing = false;
+  chybaEl.textContent = '';
+  _id('settingsPanel').classList.remove('collapsed');
+  resetToInitialState();
+});
 
 // === FORMAT ===
 function fmt(x){
@@ -327,6 +349,8 @@ function resetToInitialState(){
   odpovedEl.setAttribute('inputmode', 'text');
   odpovedEl.placeholder = 'historie';
   odpovedEl.style.textAlign = 'center';
+  prikladEl.innerHTML = '';
+  caraEl.style.opacity = '0';
   updateMicVisibility();
   updateBtn();
   btnEl.focus();
@@ -541,7 +565,7 @@ function buildRecognition(){
   r.onstart = function(){
     micListening = true;
     micBtn.classList.add('listening');
-    micLabel.textContent = 'Poslouchám…';
+    micLabel.textContent = 'Mluvte…';
     inputBox.style.borderColor = '#ef4444';
   };
 
