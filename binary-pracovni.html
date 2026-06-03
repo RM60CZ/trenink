@@ -35,14 +35,20 @@
         .header-icons { display: flex; gap: 12px; }
         .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-color); }
 
-        .settings-group { display: none; flex-direction: column; gap: 8px; margin-top: 4px; }
+        .settings-section { display: none; flex-direction: column; gap: 8px; margin-top: 4px; }
         select {
             width: 100%; padding: 6px; border-radius: 6px;
             border: 1px solid var(--border-color); background: var(--container-bg);
             color: var(--text-color);
         }
 
-        .info-text { font-size: 12px; color: #86868b; text-align: center; }
+        .info-text { 
+            font-size: 12px; 
+            color: #86868b; 
+            text-align: center;
+            display: none;
+            margin-top: 4px;
+        }
 
         .game-area { min-height: 160px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
 
@@ -79,6 +85,7 @@
             width: 100%; padding: 12px; border-radius: 8px;
             background: var(--primary-bg); color: var(--primary-text);
             border: none; font-size: 16px; font-weight: bold; cursor: pointer;
+            margin-top: 4px;
         }
 
         .history-container { border-top: 1px solid var(--border-color); padding-top: 10px; }
@@ -101,22 +108,33 @@
 
 <div class="app-container">
     <div class="header">
-        <h1>Binární Trénink</h1>
+        <h1>Binární trénink</h1>
         <div class="header-icons">
             <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
             <button class="icon-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
         </div>
     </div>
 
-    <div class="settings-group" id="settings-panel">
+    <div class="settings-section" id="settings-section">
         <select id="direction" onchange="updateInfo()">
             <option value="dec2bin">Decimální na Binární</option>
             <option value="bin2dec">Binární na Decimální</option>
         </select>
-        <select id="bits" onchange="updateInfo()"></select>
+        <select id="bits" onchange="updateInfo()">
+            <option value="5">5 bitů ≤ 31</option>
+            <option value="6">6 bitů ≤ 63</option>
+            <option value="7">7 bitů ≤ 127</option>
+            <option value="8">8 bitů ≤ 255</option>
+            <option value="9">9 bitů ≤ 511</option>
+            <option value="10">10 bitů ≤ 1 023</option>
+            <option value="11">11 bitů ≤ 2 047</option>
+            <option value="12">12 bitů ≤ 4 095</option>
+            <option value="13">13 bitů ≤ 8 191</option>
+            <option value="14">14 bitů ≤ 16 383</option>
+            <option value="15">15 bitů ≤ 32 767</option>
+        </select>
+        <div class="info-text" id="info"></div>
     </div>
-    
-    <div class="info-text" id="info"></div>
 
     <div class="game-area">
         <input type="text" id="secret-input" placeholder="Zde můžete smazat historii...">
@@ -163,21 +181,17 @@
         document.body.dataset.theme = savedTheme;
         document.getElementById('theme-btn').innerText = savedTheme === 'dark' ? '☀️' : '🌙';
 
-        const bitSelect = document.getElementById('bits');
-        for (let i = 5; i <= 15; i++) {
-            let opt = document.createElement('option');
-            opt.value = i; opt.innerHTML = `${i} bitů`;
-            bitSelect.appendChild(opt);
-        }
-
         const savedDir = localStorage.getItem('binTrainDir');
         if (savedDir) document.getElementById('direction').value = savedDir;
         
         const savedBits = localStorage.getItem('binTrainBits');
         if (savedBits) document.getElementById('bits').value = savedBits;
 
+        // Skryjeme nastavení při startu
+        document.getElementById('settings-section').style.display = 'none';
+        document.getElementById('info').style.display = 'none';
+        
         if(state === 'init') {
-            document.getElementById('settings-panel').style.display = 'flex';
             document.getElementById('secret-input').focus(); 
         }
 
@@ -196,8 +210,12 @@
     }
 
     function toggleSettings() {
-        const panel = document.getElementById('settings-panel');
-        panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+        const section = document.getElementById('settings-section');
+        const info = document.getElementById('info');
+        const isExpanded = section.style.display === 'flex';
+        
+        section.style.display = isExpanded ? 'none' : 'flex';
+        info.style.display = isExpanded ? 'none' : 'block';
     }
 
     function updateInfo() {
@@ -206,7 +224,7 @@
         localStorage.setItem('binTrainBits', bits);
         localStorage.setItem('binTrainDir', direction);
         const maxNum = Math.pow(2, bits) - 1;
-        document.getElementById('info').innerText = `Rozsah: 0 až ${maxNum}`;
+        document.getElementById('info').innerText = `Rozsah: 0 až ${maxNum.toLocaleString('cs-CZ')}`;
         if (state === 'playing') startGame(); 
     }
 
@@ -218,7 +236,6 @@
                 renderHistory();
             }
             document.getElementById('secret-input').style.display = 'none';
-            document.getElementById('settings-panel').style.display = 'none'; 
             startGame();
         } else if (state === 'playing') {
             checkAnswer();
@@ -232,10 +249,8 @@
         if (event.key === 'Enter') {
             event.preventDefault(); 
             if (state === 'init') {
-                // Funguje jako tlačítko POUZE pokud je tam nápis START
                 handleMainAction();
             } else if (state === 'playing') {
-                // Během hry pouze posouvá kurzor do dalšího pole doprava
                 const boxes = document.getElementById('boxes-container').children;
                 if (currentFocusIdx < expectedLength - 1) {
                     boxes[currentFocusIdx + 1].focus();
@@ -258,19 +273,23 @@
         document.getElementById('question-display').style.display = 'block';
 
         if (direction === 'dec2bin') {
-            document.getElementById('question-display').innerText = currentDecValue;
+            document.getElementById('question-display').innerText = currentDecValue.toLocaleString('cs-CZ');
             expectedAnswer = binString;
             expectedLength = bits;
             document.getElementById('keypad-bin').style.display = 'grid';
             document.getElementById('keypad-dec').style.display = 'none';
         } else {
-            document.getElementById('question-display').innerText = binString;
+            document.getElementById('question-display').innerText = formatBinary(binString);
             expectedAnswer = currentDecValue.toString();
-            expectedLength = maxNum.toString().length; 
+            expectedLength = currentDecValue.toString().length;
             document.getElementById('keypad-bin').style.display = 'none';
             document.getElementById('keypad-dec').style.display = 'grid';
         }
         renderBoxes();
+    }
+
+    function formatBinary(binStr) {
+        return binStr.replace(/(.{4})/g, '$1 ').trim();
     }
 
     function renderBoxes() {
@@ -285,10 +304,6 @@
             input.maxLength = 1;
             input.className = 'box';
 
-            if ((expectedLength - 1 - i) % 5 === 0 && i !== expectedLength - 1) {
-                input.style.marginRight = '12px';
-            }
-            
             input.addEventListener('focus', () => { currentFocusIdx = i; });
             input.addEventListener('input', function() {
                 if (this.value !== '' && i < expectedLength - 1) {
@@ -341,14 +356,14 @@
 
         let binStr, decStr;
         if (isCorrect) {
-            binStr = (direction === 'dec2bin') ? userInput : document.getElementById('question-display').innerText;
+            binStr = (direction === 'dec2bin') ? userInput : document.getElementById('question-display').innerText.replace(/\s/g, '');
             decStr = (direction === 'dec2bin') ? currentDecValue : userInput;
         } else {
-            binStr = (direction === 'dec2bin') ? expectedAnswer : document.getElementById('question-display').innerText;
+            binStr = (direction === 'dec2bin') ? expectedAnswer : document.getElementById('question-display').innerText.replace(/\s/g, '');
             decStr = (direction === 'dec2bin') ? currentDecValue : expectedAnswer;
         }
 
-        saveToHistory(`${binStr}=${decStr}`, isCorrect);
+        saveToHistory(`${binStr}=${decStr.toLocaleString('cs-CZ')}`, isCorrect);
     }
 
     function checkHistoryDate() {
