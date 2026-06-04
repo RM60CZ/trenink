@@ -82,7 +82,7 @@
 
         .keypad { display: grid; gap: 6px; width: 100%; display: none; }
         .keypad.bin { grid-template-columns: 1fr 1fr; }
-        .keypad.dec { grid-template-columns: repeat(3, 1fr); } /* KALKULAČKA: 3 sloupce */
+        .keypad.dec { grid-template-columns: repeat(3, 1fr); }
         
         .key-btn {
             background: var(--btn-bg); color: var(--text-color); border: none;
@@ -90,7 +90,6 @@
         }
         .key-btn:active { background: var(--btn-hover); }
 
-        /* Pro tlačítko "0" – zabere 2 sloupce */
         .key-0 {
             grid-column: span 2;
         }
@@ -109,12 +108,23 @@
             gap: 6px; padding-bottom: 8px;
         }
         .history-item {
-            padding: 4px 8px; border-radius: 4px; 
-            font-family: monospace; font-size: 14px; color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
             display: inline-block;
+            background: var(--container-bg);
+            color: var(--text-color);
+            border: 1px solid transparent;
         }
-        .history-item.correct { background-color: var(--success); }
-        .history-item.error { background-color: var(--error); }
+        .history-item.correct {
+            color: var(--success);
+            border-color: var(--success);
+        }
+        .history-item.error {
+            color: var(--error);
+            border-color: var(--error);
+        }
     </style>
 </head>
 <body data-theme="light">
@@ -151,7 +161,6 @@
         </div>
 
         <div class="keypad dec" id="keypad-dec">
-            <!-- KALKULAČKOVÉ USPOŘÁDÁNÍ -->
             <button class="key-btn" onclick="typeVal('7')">7</button>
             <button class="key-btn" onclick="typeVal('8')">8</button>
             <button class="key-btn" onclick="typeVal('9')">9</button>
@@ -189,6 +198,19 @@
             .replace(/(.{5})/g, '$1 ')
             .trim()
             .split('').reverse().join('');
+    }
+
+    function extractDigits(input) {
+        return input.replace(/\D/g, '');
+    }
+
+    function isValidInput(input) {
+        if (input.length > 6) return false;
+        const digits = extractDigits(input);
+        if (digits.length === 0 || digits.length > 5) return false;
+        const spaces = (input.match(/\s/g) || []).length;
+        if (spaces > 1) return false;
+        return /^[\d\s]*$/.test(input);
     }
 
     function initApp() {
@@ -280,12 +302,6 @@
         }
     });
 
-    function isValidInput(input) {
-        const digits = input.replace(/\s/g, '');
-        const spaces = (input.match(/\s/g) || []).length;
-        return /^\d+$/.test(digits) && spaces <= 1 && input.length > 0;
-    }
-
     function startGame() {
         state = 'playing';
         document.getElementById('main-btn').innerText = "VÝSLEDEK (KONTROLA)";
@@ -356,6 +372,7 @@
         
         if (direction === 'bin2dec') {
             const input = document.getElementById('single-input');
+            if (input.value.length >= 6) return;
             input.value += val;
         } else {
             const boxes = document.getElementById('boxes-container').children;
@@ -382,27 +399,38 @@
                 inputEl.disabled = true;
                 inputEl.value = formatDecimal(parseInt(expectedAnswer));
                 inputEl.className = '';
+                const binStr = document.getElementById('question-display').innerText;
+                const formattedCorrect = formatDecimal(parseInt(expectedAnswer));
+                saveToHistory(`${binStr}=${formattedCorrect}`, false);
                 return;
             }
             
             if (!isValidInput(rawValue)) {
-                alert('Chybný znak!');
+                state = 'evaluated';
+                document.getElementById('main-btn').innerText = "START";
+                inputEl.disabled = true;
+                const digitsOnly = extractDigits(rawValue);
+                const formattedValue = digitsOnly ? formatDecimal(parseInt(digitsOnly)) : rawValue;
+                inputEl.value = formattedValue;
+                inputEl.className = 'error';
+                const binStr = document.getElementById('question-display').innerText;
+                const formattedCorrect = formatDecimal(parseInt(expectedAnswer));
+                saveToHistory(`${binStr}=${formattedCorrect}`, false);
                 return;
             }
             
-            const cleanValue = rawValue.replace(/\s/g, '');
-            const isCorrect = cleanValue === expectedAnswer;
+            const userDigits = extractDigits(rawValue);
+            const isCorrect = userDigits === expectedAnswer;
             const formattedCorrect = formatDecimal(parseInt(expectedAnswer));
             
             state = 'evaluated';
             document.getElementById('main-btn').innerText = "START";
             inputEl.disabled = true;
+            inputEl.value = formattedCorrect;
             
             if (isCorrect) {
-                inputEl.value = formattedCorrect;
                 inputEl.className = 'success';
             } else {
-                inputEl.value = formatDecimal(parseInt(cleanValue)) || rawValue;
                 inputEl.className = 'error';
             }
             
@@ -422,6 +450,9 @@
                     box.value = fullAnswer[idx]; 
                     box.disabled = true; 
                 });
+                const userBinFormatted = formatBinary(fullAnswer);
+                const decFormatted = formatDecimal(currentDecValue);
+                saveToHistory(`${userBinFormatted}=${decFormatted}`, true);
                 return; 
             }
 
