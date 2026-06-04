@@ -191,7 +191,7 @@
         </div>
     </div>
 
-    <!-- Tlačítko vždy ukazuje START -->
+    <!-- Tlačítko ukazuje VÝSLEDEK(KONTROLA) během hry a START po vyhodnocení -->
     <button class="main-action" id="main-btn" onclick="handleMainAction()">START</button>
 
     <div class="history-container" id="history-container" style="display: none;">
@@ -312,8 +312,8 @@
 
     function startGame() {
         state = 'playing';
-        // Tlačítko vždy ukazuje START
-        document.getElementById('main-btn').innerText = "START";
+        // Během hry ukazujeme VÝSLEDEK(KONTROLA)
+        document.getElementById('main-btn').innerText = "VÝSLEDEK (KONTROLA)";
         updateTitle();
         
         const bits = parseInt(document.getElementById('bits').value);
@@ -434,7 +434,7 @@
         }
 
         state = 'evaluated';
-        // Tlačítko vždy ukazuje START
+        // Po vyhodnocení ukazujeme START (místo dřívějšího DALŠÍ)
         document.getElementById('main-btn').innerText = "START";
         updateTitle();
 
