@@ -131,7 +131,7 @@
 
 <div class="app-container">
     <div class="header">
-        <h1>Binární Trénink</h1>
+        <h1 id="app-title">Binární trénink</h1>
         <div class="header-icons">
             <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
             <button class="icon-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
@@ -213,6 +213,17 @@
         return /^[\d\s]*$/.test(input);
     }
 
+    // Nová funkce: aktualizuje titulek podle režimu
+    function updateTitle() {
+        const direction = document.getElementById('direction').value;
+        const titleEl = document.getElementById('app-title');
+        if (direction === 'dec2bin') {
+            titleEl.innerText = 'Binární trénink DEC → BIN';
+        } else {
+            titleEl.innerText = 'Binární trénink BIN → DEC';
+        }
+    }
+
     function initApp() {
         const savedTheme = localStorage.getItem('binTrainTheme') || 'light';
         document.body.dataset.theme = savedTheme;
@@ -231,6 +242,9 @@
         if (savedDir) document.getElementById('direction').value = savedDir;
         const savedBits = localStorage.getItem('binTrainBits');
         if (savedBits) document.getElementById('bits').value = savedBits;
+
+        // Aktualizujeme titulek při startu
+        updateTitle();
 
         if (state === 'init') {
             document.getElementById('settings-panel').style.display = 'flex';
@@ -263,6 +277,10 @@
         localStorage.setItem('binTrainDir', direction);
         const maxNum = Math.pow(2, bits) - 1;
         document.getElementById('info').innerText = `Rozsah: 0 až ${formatDecimal(maxNum)}`;
+        
+        // Aktualizujeme titulek při změně režimu
+        updateTitle();
+        
         if (state === 'playing') startGame();
     }
 
