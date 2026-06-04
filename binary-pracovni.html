@@ -46,7 +46,7 @@
             font-size: 12px; 
             color: #86868b; 
             text-align: center; 
-            display: none; /* Skryto ve výchozím stavu */
+            display: none;
         }
 
         .game-area { min-height: 160px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
@@ -247,13 +247,12 @@
         const savedBits = localStorage.getItem('binTrainBits');
         if (savedBits) document.getElementById('bits').value = savedBits;
 
-        // ✅ Panel a info text jsou SKRYTÉ při startu
         document.getElementById('settings-panel').style.display = 'none';
         document.getElementById('info').style.display = 'none';
 
         updateTitle();
         checkHistoryDate();
-        updateInfo(); // Aktualizuje data, ale nezobrazuje
+        updateInfo();
         renderHistory();
 
         document.getElementById('secret-input').focus();
@@ -297,13 +296,12 @@
 
     function handleMainAction() {
         if (state === 'init') {
-            const secret = document.getElementById('secret-input').value.trim().toLowerCase();
-            if (secret === 'zrušit') {
+            const secret = document.getElementById('secret-input').value.trim();
+            if (secret.toLowerCase() === 'vymazat') {
                 localStorage.removeItem('binTrainHistory');
                 renderHistory();
             }
             document.getElementById('secret-input').style.display = 'none';
-            // Nepřepínáme zobrazení panelu – zůstává skrytý
             startGame();
         } else if (state === 'playing') {
             checkAnswer();
@@ -422,15 +420,13 @@
             const inputEl = document.getElementById('single-input');
             const rawValue = inputEl.value.trim();
             
+            // Prázdný vstup → ukážeme výsledek, ale NEUKLÁDÁME DO HISTORIE
             if (rawValue === '') {
                 state = 'evaluated';
                 document.getElementById('main-btn').innerText = "START";
                 inputEl.disabled = true;
                 inputEl.value = formatDecimal(parseInt(expectedAnswer));
                 inputEl.className = '';
-                const binStr = document.getElementById('question-display').innerText;
-                const formattedCorrect = formatDecimal(parseInt(expectedAnswer));
-                saveToHistory(`${binStr}=${formattedCorrect}`, false);
                 return;
             }
             
@@ -468,21 +464,27 @@
             
         } else {
             const boxes = Array.from(document.getElementById('boxes-container').children);
-            const userInput = boxes.map(b => b.value).join('');
+            let userInput = '';
+            for (const box of boxes) {
+                if (box.value !== '') userInput += box.value;
+            }
+            userInput = userInput.trim();
+
+            // Považujeme za prázdný, pokud není žádná platná číslice 0/1
+            const isEmpty = userInput === '' || !/^[01]+$/.test(userInput);
 
             state = 'evaluated';
             document.getElementById('main-btn').innerText = "START";
 
-            if (userInput.trim() === '') {
+            if (isEmpty) {
+                // Zobrazíme správnou odpověď bez stylu a BEZ historie
                 const fullAnswer = expectedAnswer.padStart(expectedLength, '0');
                 boxes.forEach((box, idx) => {
                     box.value = fullAnswer[idx]; 
-                    box.disabled = true; 
+                    box.disabled = true;
+                    // Neaplikujeme žádnou třídu (bez barvy)
                 });
-                const userBinFormatted = formatBinary(fullAnswer);
-                const decFormatted = formatDecimal(currentDecValue);
-                saveToHistory(`${userBinFormatted}=${decFormatted}`, true);
-                return; 
+                return;
             }
 
             const isCorrect = parseInt(userInput, 2) === currentDecValue;
