@@ -42,7 +42,12 @@
             color: var(--text-color);
         }
 
-        .info-text { font-size: 12px; color: #86868b; text-align: center; }
+        .info-text { 
+            font-size: 12px; 
+            color: #86868b; 
+            text-align: center; 
+            display: none; /* Skryto ve výchozím stavu */
+        }
 
         .game-area { min-height: 160px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
 
@@ -213,7 +218,6 @@
         return /^[\d\s]*$/.test(input);
     }
 
-    // Nová funkce: aktualizuje titulek podle režimu
     function updateTitle() {
         const direction = document.getElementById('direction').value;
         const titleEl = document.getElementById('app-title');
@@ -243,17 +247,16 @@
         const savedBits = localStorage.getItem('binTrainBits');
         if (savedBits) document.getElementById('bits').value = savedBits;
 
-        // Aktualizujeme titulek při startu
+        // ✅ Panel a info text jsou SKRYTÉ při startu
+        document.getElementById('settings-panel').style.display = 'none';
+        document.getElementById('info').style.display = 'none';
+
         updateTitle();
-
-        if (state === 'init') {
-            document.getElementById('settings-panel').style.display = 'flex';
-            document.getElementById('secret-input').focus();
-        }
-
         checkHistoryDate();
-        updateInfo();
+        updateInfo(); // Aktualizuje data, ale nezobrazuje
         renderHistory();
+
+        document.getElementById('secret-input').focus();
     }
 
     function toggleTheme() {
@@ -267,7 +270,16 @@
 
     function toggleSettings() {
         const panel = document.getElementById('settings-panel');
-        panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+        const info = document.getElementById('info');
+        const isHidden = panel.style.display === 'none' || panel.style.display === '';
+        
+        if (isHidden) {
+            panel.style.display = 'flex';
+            info.style.display = 'block';
+        } else {
+            panel.style.display = 'none';
+            info.style.display = 'none';
+        }
     }
 
     function updateInfo() {
@@ -278,7 +290,6 @@
         const maxNum = Math.pow(2, bits) - 1;
         document.getElementById('info').innerText = `Rozsah: 0 až ${formatDecimal(maxNum)}`;
         
-        // Aktualizujeme titulek při změně režimu
         updateTitle();
         
         if (state === 'playing') startGame();
@@ -292,7 +303,7 @@
                 renderHistory();
             }
             document.getElementById('secret-input').style.display = 'none';
-            document.getElementById('settings-panel').style.display = 'none';
+            // Nepřepínáme zobrazení panelu – zůstává skrytý
             startGame();
         } else if (state === 'playing') {
             checkAnswer();
