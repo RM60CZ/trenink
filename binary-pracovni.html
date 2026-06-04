@@ -176,6 +176,19 @@
     let expectedLength = 0;
     let currentFocusIdx = 0;
 
+    // === NOVÉ FUNKCE PRO FORMÁTOVÁNÍ ===
+    function formatDecimal(num) {
+        return num.toLocaleString('cs-CZ');
+    }
+
+    function formatBinary(binStr) {
+        // Otočíme řetězec, vložíme mezeru každých 5 znaků, pak zase otočíme
+        return binStr.split('').reverse().join('')
+            .replace(/(.{5})/g, '$1 ')
+            .trim()
+            .split('').reverse().join('');
+    }
+
     function initApp() {
         const savedTheme = localStorage.getItem('binTrainTheme') || 'light';
         document.body.dataset.theme = savedTheme;
@@ -184,7 +197,9 @@
         const bitSelect = document.getElementById('bits');
         for (let i = 5; i <= 15; i++) {
             let opt = document.createElement('option');
-            opt.value = i; opt.innerHTML = `${i} bitů`;
+            const maxVal = Math.pow(2, i) - 1;
+            opt.value = i;
+            opt.innerHTML = `${i} bitů ≤ ${formatDecimal(maxVal)}`;
             bitSelect.appendChild(opt);
         }
 
@@ -224,7 +239,7 @@
         localStorage.setItem('binTrainBits', bits);
         localStorage.setItem('binTrainDir', direction);
         const maxNum = Math.pow(2, bits) - 1;
-        document.getElementById('info').innerText = `Rozsah: 0 až ${maxNum}`;
+        document.getElementById('info').innerText = `Rozsah: 0 až ${formatDecimal(maxNum)}`;
         if (state === 'playing') startGame(); 
     }
 
@@ -245,7 +260,6 @@
         }
     }
 
-    // Upravené chování klávesy Enter
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Enter') {
             event.preventDefault(); 
@@ -265,12 +279,6 @@
         }
     });
 
-    // Pomocná funkce pro formátování čísla s mezerami
-    function formatWithSpaces(numStr) {
-        return parseInt(numStr).toLocaleString('cs-CZ');
-    }
-
-    // Validace vstupu: jen číslice a max. jedna mezera
     function isValidInput(input) {
         const digits = input.replace(/\s/g, '');
         const spaces = (input.match(/\s/g) || []).length;
@@ -291,17 +299,19 @@
         document.getElementById('question-display').style.display = 'block';
 
         if (direction === 'dec2bin') {
-            document.getElementById('question-display').innerText = currentDecValue;
-            expectedAnswer = binString;
+            // Zobrazujeme decimální otázku s mezerami
+            document.getElementById('question-display').innerText = formatDecimal(currentDecValue);
+            expectedAnswer = binString; // Bez mezer (pro kontrolu)
             expectedLength = bits;
             document.getElementById('keypad-bin').style.display = 'grid';
             document.getElementById('keypad-dec').style.display = 'none';
             document.getElementById('single-input').style.display = 'none';
             document.getElementById('boxes-container').style.display = 'flex';
-            renderBoxes();
+            renderBoxes(binString); // Předáme binString pro vizuální mezery
         } else {
-            document.getElementById('question-display').innerText = binString;
-            expectedAnswer = currentDecValue.toString();
+            // Zobrazujeme binární otázku s mezerami
+            document.getElementById('question-display').innerText = formatBinary(binString);
+            expectedAnswer = currentDecValue.toString(); // Bez mezer
             expectedLength = maxNum.toString().length; 
             document.getElementById('keypad-bin').style.display = 'none';
             document.getElementById('keypad-dec').style.display = 'grid';
@@ -309,15 +319,19 @@
             document.getElementById('single-input').style.display = 'block';
             document.getElementById('single-input').value = '';
             document.getElementById('single-input').className = '';
-            document.getElementById('single-input').disabled = false; // Odomknuto
+            document.getElementById('single-input').disabled = false;
             document.getElementById('single-input').focus();
         }
     }
 
-    function renderBoxes() {
+    // Upraveno: přijímá binString pro vizuální mezery
+    function renderBoxes(binString) {
         const container = document.getElementById('boxes-container');
         container.innerHTML = '';
         currentFocusIdx = 0;
+        
+        // Formátovaný binární řetězec pro zobrazení (bez mezer, jen pro indexaci)
+        const cleanBin = binString.replace(/\s/g, '');
         
         for (let i = 0; i < expectedLength; i++) {
             const input = document.createElement('input');
@@ -326,6 +340,7 @@
             input.maxLength = 1;
             input.className = 'box';
 
+            // Přidáme vizuální mezeru mezi 5.-6. a 10.-11. bitem zprava
             if ((expectedLength - 1 - i) % 5 === 0 && i !== expectedLength - 1) {
                 input.style.marginRight = '12px';
             }
@@ -369,27 +384,23 @@
             const inputEl = document.getElementById('single-input');
             const rawValue = inputEl.value.trim();
             
-            // Prázdný vstup
             if (rawValue === '') {
                 state = 'evaluated';
                 document.getElementById('main-btn').innerText = "START";
                 inputEl.disabled = true;
-                inputEl.value = formatWithSpaces(expectedAnswer);
-                inputEl.className = ''; // Normální barva
-                // Neukládáme do historie
+                inputEl.value = formatDecimal(parseInt(expectedAnswer));
+                inputEl.className = '';
                 return;
             }
             
-            // Validace vstupu
             if (!isValidInput(rawValue)) {
                 alert('Chybný znak!');
                 return;
             }
             
-            // Porovnání hodnot
             const cleanValue = rawValue.replace(/\s/g, '');
             const isCorrect = cleanValue === expectedAnswer;
-            const formattedCorrect = formatWithSpaces(expectedAnswer);
+            const formattedCorrect = formatDecimal(parseInt(expectedAnswer));
             
             state = 'evaluated';
             document.getElementById('main-btn').innerText = "START";
@@ -399,17 +410,15 @@
                 inputEl.value = formattedCorrect;
                 inputEl.className = 'success';
             } else {
-                // Zformátujeme uživatelův vstup (i když je špatně)
-                inputEl.value = formatWithSpaces(cleanValue) || rawValue;
+                inputEl.value = formatDecimal(parseInt(cleanValue)) || rawValue;
                 inputEl.className = 'error';
             }
             
-            // Uložení do historie
-            const binStr = document.getElementById('question-display').innerText;
+            // Do historie: binární s mezerami, decimální s mezerami
+            const binStr = document.getElementById('question-display').innerText; // Již formátované
             saveToHistory(`${binStr}=${formattedCorrect}`, isCorrect);
             
         } else {
-            // Původní logika pro dec2bin
             const boxes = Array.from(document.getElementById('boxes-container').children);
             const userInput = boxes.map(b => b.value).join('');
 
@@ -417,11 +426,16 @@
             document.getElementById('main-btn').innerText = "START";
 
             if (userInput.trim() === '') {
+                // Automaticky doplníme správnou odpověď do boxů (bez mezer v datech, ale s mezerami ve formátu)
                 const fullAnswer = expectedAnswer.padStart(expectedLength, '0');
                 boxes.forEach((box, idx) => {
                     box.value = fullAnswer[idx]; 
                     box.disabled = true; 
                 });
+                // Do historie: binární s mezerami, decimální s mezerami
+                const formattedBin = formatBinary(fullAnswer);
+                const formattedDec = formatDecimal(currentDecValue);
+                // Neukládáme do historie při prázdném vstupu!
                 return; 
             }
 
@@ -433,16 +447,21 @@
                 if (box.value !== "") box.classList.add(isCorrect ? 'correct' : 'error');
             });
 
-            let binStr, decStr;
+            // Formátované hodnoty pro historii
+            const userBinFormatted = formatBinary(userInput.padStart(expectedLength, '0'));
+            const correctBinFormatted = formatBinary(expectedAnswer);
+            const decFormatted = formatDecimal(currentDecValue);
+
+            let binStrForHistory, decStrForHistory;
             if (isCorrect) {
-                binStr = userInput;
-                decStr = currentDecValue;
+                binStrForHistory = userBinFormatted;
+                decStrForHistory = decFormatted;
             } else {
-                binStr = expectedAnswer;
-                decStr = currentDecValue;
+                binStrForHistory = correctBinFormatted;
+                decStrForHistory = decFormatted;
             }
 
-            saveToHistory(`${binStr}=${decStr}`, isCorrect);
+            saveToHistory(`${binStrForHistory}=${decStrForHistory}`, isCorrect);
         }
     }
 
