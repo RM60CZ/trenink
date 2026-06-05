@@ -504,8 +504,7 @@
             document.getElementById('main-btn').innerText = "START";
             inputEl.disabled = true;
             
-            // Formátování bez nadbytečných nul
-            const formattedUser = formatBinary(cleanUser);
+            // Formátování bez nadbytečných nul (zde striktně čistíme)
             const formattedCorrect = formatBinary(cleanExpected);
             
             inputEl.value = formattedCorrect; // Vždy ukážeme správný očištěný binární výsledek
