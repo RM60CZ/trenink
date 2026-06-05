@@ -355,7 +355,7 @@
         }
     });
 
-    // Volná validace při ručním psaní do políčka (zde se nuly nemažou!)
+    // Volná validace při ručním psaní do políčka (zde se nuly ani mezery nemažou!)
     document.getElementById('single-input').addEventListener('input', function(e) {
         const direction = document.getElementById('direction').value;
         if (direction === 'dec2bin') {
@@ -448,7 +448,7 @@
         }
     }
 
-    // Vyhodnocení - očištění o nadbytečné úvodní nuly a zápis matematicky správného vztahu do historie
+    // Vyhodnocení - uživatelský vstup se v poli NESMÍ přepsat, ale do historie jde vždy matematicky správný vztah
     function checkAnswer() {
         const direction = document.getElementById('direction').value;
         const inputEl = document.getElementById('single-input');
@@ -473,15 +473,16 @@
             state = 'evaluated';
             document.getElementById('main-btn').innerText = "START";
             inputEl.disabled = true;
-            inputEl.value = formattedCorrect; // Do políčka dáme správnou odpověď bez úvodních nul
             
             if (isCorrect) {
                 inputEl.className = 'success';
+                inputEl.value = formattedCorrect; // Pokud je to správně, sjednotíme formát (odstraníme případné nuly navíc)
             } else {
                 inputEl.className = 'error';
+                // Pokud je to ŠPATNĚ, vstup uživatele necháme beze změny!
             }
             
-            // Otázka (binární) a výsledek (decimální) bez nadbytečných nul tvoří vždy matematicky správný vztah
+            // Do historie se zapíše vždy matematicky správný vztah (otázka v BIN = správná odpověď v DEC)
             const binStr = formatBinary(document.getElementById('question-display').innerText);
             saveToHistory(`${binStr} = ${formattedCorrect}`, isCorrect);
             
@@ -504,19 +505,18 @@
             document.getElementById('main-btn').innerText = "START";
             inputEl.disabled = true;
             
-            // Formátování bez nadbytečných nul (zde striktně čistíme)
             const formattedCorrect = formatBinary(cleanExpected);
-            
-            inputEl.value = formattedCorrect; // Vždy ukážeme správný očištěný binární výsledek
             
             if (isCorrect) {
                 inputEl.className = 'success';
+                inputEl.value = formattedCorrect; // Pokud je to správně, sjednotíme formát (odstraníme nuly navíc, přidáme mezery)
             } else {
                 inputEl.className = 'error';
+                // Pokud je to ŠPATNĚ, vstup uživatele v textovém poli necháme netknutý!
             }
 
             const decFormatted = formatDecimal(currentDecValue);
-            // Do historie zapíšeme matematicky správný vztah (vždy se správným očištěným binárním výsledkem)
+            // Do historie se zapíše vždy matematicky správný vztah (otázka v DEC = správná odpověď v BIN bez nadbytečných nul)
             saveToHistory(`${decFormatted} = ${formattedCorrect}`, isCorrect);
         }
     }
