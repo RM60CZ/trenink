@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Binární trénink</title>
+    <title>Bináry   </title>
     <style>
         :root {
             --bg-color: #f5f5f7; --text-color: #1d1d1f; --container-bg: #ffffff;
@@ -30,7 +30,7 @@
         }
 
         .header { display: flex; justify-content: space-between; align-items: center; }
-        .header h1 { font-size: 18px; }
+        .header h1 { font-size: 18px; white-space: pre-wrap; }
         
         .header-icons { display: flex; gap: 12px; }
         .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-color); }
@@ -136,8 +136,9 @@
 
 <div class="app-container">
     <div class="header">
-        <h1 id="app-title">Binární trénink</h1>
+        <h1 id="app-title">Bináry   </h1>
         <div class="header-icons">
+            <button class="icon-btn" id="home-btn" onclick="goHome()" style="display: none;">🏠</button>
             <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
             <button class="icon-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
         </div>
@@ -158,7 +159,7 @@
         
         <div class="question" id="question-display"></div>
         <div class="boxes" id="boxes-container"></div>
-        <input type="text" id="single-input" style="display: none;" inputmode="numeric">
+        <input type="text" id="single-input" style="display: none;">
         
         <div class="keypad bin" id="keypad-bin">
             <button class="key-btn" onclick="typeVal('0')">0</button>
@@ -222,9 +223,9 @@
         const direction = document.getElementById('direction').value;
         const titleEl = document.getElementById('app-title');
         if (direction === 'dec2bin') {
-            titleEl.innerText = 'Binární trénink DEC → BIN';
+            titleEl.innerText = 'Bináry   DEC → BIN';
         } else {
-            titleEl.innerText = 'Binární trénink BIN → DEC';
+            titleEl.innerText = 'Bináry   BIN → DEC';
         }
     }
 
@@ -255,6 +256,20 @@
         updateInfo();
         renderHistory();
 
+        goHome();
+    }
+
+    function goHome() {
+        state = 'init';
+        document.getElementById('home-btn').style.display = 'none';
+        document.getElementById('secret-input').style.display = 'block';
+        document.getElementById('secret-input').value = '';
+        document.getElementById('question-display').style.display = 'none';
+        document.getElementById('boxes-container').style.display = 'none';
+        document.getElementById('single-input').style.display = 'none';
+        document.getElementById('keypad-bin').style.display = 'none';
+        document.getElementById('keypad-dec').style.display = 'none';
+        document.getElementById('main-btn').innerText = "START";
         document.getElementById('secret-input').focus();
     }
 
@@ -329,8 +344,30 @@
         }
     });
 
+    // Real-time validace vstupu pro decimální -> binární (v single-input)
+    document.getElementById('single-input').addEventListener('input', function() {
+        const direction = document.getElementById('direction').value;
+        if (direction === 'dec2bin') {
+            let val = this.value;
+            
+            // 1) Kontrola nepovolených znaků (povoleno pouze 0, 1)
+            if (/[^01]/.test(val)) {
+                alert("Nepovolený znak!");
+                this.value = val.replace(/[^01]/g, '');
+                return;
+            }
+            
+            // 2) Kontrola délky vstupu
+            if (val.length > 15) {
+                alert("Maximální počet 0 a 1 je 15, překročili jste limit, opravte!");
+                this.value = val.substring(0, 15);
+            }
+        }
+    });
+
     function startGame() {
         state = 'playing';
+        document.getElementById('home-btn').style.display = 'block';
         document.getElementById('main-btn').innerText = "VÝSLEDEK (KONTROLA)";
         
         const bits = parseInt(document.getElementById('bits').value);
@@ -348,9 +385,12 @@
             expectedLength = bits;
             document.getElementById('keypad-bin').style.display = 'grid';
             document.getElementById('keypad-dec').style.display = 'none';
-            document.getElementById('single-input').style.display = 'none';
-            document.getElementById('boxes-container').style.display = 'flex';
-            renderBoxes();
+            document.getElementById('boxes-container').style.display = 'none';
+            document.getElementById('single-input').style.display = 'block';
+            document.getElementById('single-input').value = '';
+            document.getElementById('single-input').className = '';
+            document.getElementById('single-input').disabled = false;
+            document.getElementById('single-input').focus();
         } else {
             document.getElementById('question-display').innerText = formatBinary(binString);
             expectedAnswer = currentDecValue.toString();
@@ -402,14 +442,16 @@
             if (input.value.length >= 6) return;
             input.value += val;
         } else {
-            const boxes = document.getElementById('boxes-container').children;
-            if (currentFocusIdx < expectedLength) {
-                boxes[currentFocusIdx].value = val;
-                let nextIdx = currentFocusIdx + 1;
-                if (nextIdx < expectedLength) {
-                    boxes[nextIdx].focus();
-                }
+            const input = document.getElementById('single-input');
+            if (input.value.length >= 15 && val !== '') {
+                alert("Maximální počet 0 a 1 je 15, překročili jste limit, opravte!");
+                return;
             }
+            if (val !== '0' && val !== '1') {
+                alert("Nepovolený znak!");
+                return;
+            }
+            input.value += val;
         }
     }
 
@@ -463,43 +505,37 @@
             saveToHistory(`${binStr}=${formattedCorrect}`, isCorrect);
             
         } else {
-            const boxes = Array.from(document.getElementById('boxes-container').children);
-            let userInput = '';
-            for (const box of boxes) {
-                if (box.value !== '') userInput += box.value;
-            }
-            userInput = userInput.trim();
+            const inputEl = document.getElementById('single-input');
+            let userInput = inputEl.value.trim();
 
-            // Považujeme za prázdný, pokud není žádná platná číslice 0/1
             const isEmpty = userInput === '' || !/^[01]+$/.test(userInput);
 
             state = 'evaluated';
             document.getElementById('main-btn').innerText = "START";
+            inputEl.disabled = true;
 
             if (isEmpty) {
-                // Zobrazíme správnou odpověď bez stylu a BEZ historie
-                const fullAnswer = expectedAnswer.padStart(expectedLength, '0');
-                boxes.forEach((box, idx) => {
-                    box.value = fullAnswer[idx]; 
-                    box.disabled = true;
-                    // Neaplikujeme žádnou třídu (bez barvy)
-                });
+                inputEl.value = expectedAnswer;
+                inputEl.className = '';
                 return;
             }
 
-            const isCorrect = parseInt(userInput, 2) === currentDecValue;
+            const isCorrect = userInput === expectedAnswer;
             
-            boxes.forEach(box => {
-                box.disabled = true;
-                if (box.value !== "") box.classList.add(isCorrect ? 'correct' : 'error');
-            });
+            if (isCorrect) {
+                inputEl.className = 'success';
+            } else {
+                inputEl.className = 'error';
+            }
 
-            const userBinFormatted = formatBinary(userInput.padStart(expectedLength, '0'));
+            inputEl.value = expectedAnswer;
+
+            const userBinFormatted = formatBinary(userInput);
             const correctBinFormatted = formatBinary(expectedAnswer);
             const decFormatted = formatDecimal(currentDecValue);
 
             const binStrForHistory = isCorrect ? userBinFormatted : correctBinFormatted;
-            saveToHistory(`${binStrForHistory}=${decFormatted}`, isCorrect);
+            saveToHistory(`${decFormatted}=${binStrForHistory}`, isCorrect);
         }
     }
 
