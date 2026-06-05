@@ -399,7 +399,7 @@
         const maxNum = Math.pow(2, bits) - 1;
         
         currentDecValue = Math.floor(Math.random() * (maxNum + 1));
-        const binString = currentDecValue.toString(2); // Generuje čisté binární číslo bez zbytečných nul
+        const binString = currentDecValue.toString(2); // Čisté binární číslo bez úvodních nul
 
         document.getElementById('question-display').style.display = 'block';
         document.getElementById('single-input').style.display = 'block';
@@ -423,7 +423,7 @@
         }
     }
 
-    // Psaní pomocí virtuálních kláves (zde také dovolujeme psát libovolné nuly)
+    // Psaní pomocí virtuálních kláves
     function typeVal(val) {
         if (state !== 'playing') return;
         const direction = document.getElementById('direction').value;
@@ -448,7 +448,7 @@
         }
     }
 
-    // Vyhodnocení - zde probíhá očištění o nadbytečné úvodní nuly!
+    // Vyhodnocení - očištění o nadbytečné úvodní nuly a zápis matematicky správného vztahu do historie
     function checkAnswer() {
         const direction = document.getElementById('direction').value;
         const inputEl = document.getElementById('single-input');
@@ -481,6 +481,7 @@
                 inputEl.className = 'error';
             }
             
+            // Otázka (binární) a výsledek (decimální) bez nadbytečných nul tvoří vždy matematicky správný vztah
             const binStr = formatBinary(document.getElementById('question-display').innerText);
             saveToHistory(`${binStr} = ${formattedCorrect}`, isCorrect);
             
@@ -503,11 +504,11 @@
             document.getElementById('main-btn').innerText = "START";
             inputEl.disabled = true;
             
-            // Při zobrazení výsledku zformátujeme hodnotu bez nadbytečných nul
+            // Formátování bez nadbytečných nul
             const formattedUser = formatBinary(cleanUser);
             const formattedCorrect = formatBinary(cleanExpected);
             
-            inputEl.value = formattedCorrect;
+            inputEl.value = formattedCorrect; // Vždy ukážeme správný očištěný binární výsledek
             
             if (isCorrect) {
                 inputEl.className = 'success';
@@ -516,8 +517,8 @@
             }
 
             const decFormatted = formatDecimal(currentDecValue);
-            const binStrForHistory = isCorrect ? formattedUser : formattedCorrect;
-            saveToHistory(`${decFormatted} = ${binStrForHistory}`, isCorrect);
+            // Do historie zapíšeme matematicky správný vztah (vždy se správným očištěným binárním výsledkem)
+            saveToHistory(`${decFormatted} = ${formattedCorrect}`, isCorrect);
         }
     }
 
