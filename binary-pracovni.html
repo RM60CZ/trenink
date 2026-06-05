@@ -59,8 +59,6 @@
 
         .question { font-size: 28px; font-weight: bold; display: none; text-align: center;}
 
-        .boxes { display: none; } /* Zcela skryto, nepoužíváme chlívečky */
-
         #single-input {
             width: 220px; padding: 8px; border-radius: 6px; text-align: center;
             border: 2px solid var(--border-color); background: var(--container-bg);
@@ -149,7 +147,6 @@
         <input type="text" id="secret-input" placeholder="Zde můžete smazat historii...">
         
         <div class="question" id="question-display"></div>
-        <div class="boxes" id="boxes-container"></div>
         <input type="text" id="single-input" style="display: none;">
         
         <div class="keypad bin" id="keypad-bin">
@@ -260,7 +257,6 @@
         document.getElementById('secret-input').style.display = 'block';
         document.getElementById('secret-input').value = '';
         document.getElementById('question-display').style.display = 'none';
-        document.getElementById('boxes-container').style.display = 'none';
         document.getElementById('single-input').style.display = 'none';
         document.getElementById('keypad-bin').style.display = 'none';
         document.getElementById('keypad-dec').style.display = 'none';
@@ -365,7 +361,6 @@
         const binString = currentDecValue.toString(2).padStart(bits, '0');
 
         document.getElementById('question-display').style.display = 'block';
-        document.getElementById('boxes-container').style.display = 'none';
         document.getElementById('single-input').style.display = 'block';
         document.getElementById('single-input').value = '';
         document.getElementById('single-input').className = '';
