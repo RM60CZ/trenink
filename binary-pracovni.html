@@ -32,7 +32,7 @@
         .header { display: flex; justify-content: space-between; align-items: center; }
         .header h1 { font-size: 18px; white-space: pre-wrap; }
         
-        .header-icons { display: flex; gap: 12px; }
+        .header-icons { display: flex; gap: 12px; align-items: center; }
         .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-color); }
 
         .settings-group { display: none; flex-direction: column; gap: 8px; margin-top: 4px; }
@@ -59,19 +59,10 @@
 
         .question { font-size: 28px; font-weight: bold; display: none; text-align: center;}
 
-        .boxes { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; }
-        .box {
-            width: 28px; height: 36px; border: 2px solid var(--border-color);
-            border-radius: 6px; text-align: center; font-size: 18px; font-weight: bold;
-            background: var(--container-bg); color: var(--text-color); outline: none;
-        }
-        .box:focus { border-color: var(--primary-bg); }
-        .box.correct { background-color: var(--success); color: white; border-color: var(--success); }
-        .box.error { background-color: var(--error); color: white; border-color: var(--error); }
-        .box:disabled { opacity: 1; }
+        .boxes { display: none; } /* Zcela skryto, nepoužíváme chlívečky */
 
         #single-input {
-            width: 100px; padding: 8px; border-radius: 6px; text-align: center;
+            width: 220px; padding: 8px; border-radius: 6px; text-align: center;
             border: 2px solid var(--border-color); background: var(--container-bg);
             color: var(--text-color); font-size: 18px; font-weight: bold;
             outline: none;
@@ -193,7 +184,6 @@
     let currentDecValue = 0;
     let expectedAnswer = "";
     let expectedLength = 0;
-    let currentFocusIdx = 0;
 
     function formatDecimal(num) {
         return num.toLocaleString('cs-CZ');
@@ -211,12 +201,17 @@
     }
 
     function isValidInput(input) {
-        if (input.length > 6) return false;
-        const digits = extractDigits(input);
-        if (digits.length === 0 || digits.length > 5) return false;
-        const spaces = (input.match(/\s/g) || []).length;
-        if (spaces > 1) return false;
-        return /^[\d\s]*$/.test(input);
+        const direction = document.getElementById('direction').value;
+        if (direction === 'dec2bin') {
+            return /^[01]*$/.test(input);
+        } else {
+            if (input.length > 6) return false;
+            const digits = extractDigits(input);
+            if (digits.length === 0 || digits.length > 5) return false;
+            const spaces = (input.match(/\s/g) || []).length;
+            if (spaces > 1) return false;
+            return /^[\d\s]*$/.test(input);
+        }
     }
 
     function updateTitle() {
@@ -331,33 +326,25 @@
             if (state === 'init') {
                 handleMainAction();
             } else if (state === 'playing') {
-                const direction = document.getElementById('direction').value;
-                if (direction === 'bin2dec') {
-                    checkAnswer();
-                } else {
-                    const boxes = document.getElementById('boxes-container').children;
-                    if (currentFocusIdx < expectedLength - 1) {
-                        boxes[currentFocusIdx + 1].focus();
-                    }
-                }
+                checkAnswer();
             }
         }
     });
 
-    // Real-time validace vstupu pro decimální -> binární (v single-input)
-    document.getElementById('single-input').addEventListener('input', function() {
+    // Validace vstupu v reálném čase pro single-input
+    document.getElementById('single-input').addEventListener('input', function(e) {
         const direction = document.getElementById('direction').value;
         if (direction === 'dec2bin') {
             let val = this.value;
             
-            // 1) Kontrola nepovolených znaků (povoleno pouze 0, 1)
+            // 1) Kontrola nepovolených znaků (pouze 0 a 1)
             if (/[^01]/.test(val)) {
                 alert("Nepovolený znak!");
                 this.value = val.replace(/[^01]/g, '');
                 return;
             }
             
-            // 2) Kontrola délky vstupu
+            // 2) Kontrola maximální délky
             if (val.length > 15) {
                 alert("Maximální počet 0 a 1 je 15, překročili jste limit, opravte!");
                 this.value = val.substring(0, 15);
@@ -378,6 +365,12 @@
         const binString = currentDecValue.toString(2).padStart(bits, '0');
 
         document.getElementById('question-display').style.display = 'block';
+        document.getElementById('boxes-container').style.display = 'none';
+        document.getElementById('single-input').style.display = 'block';
+        document.getElementById('single-input').value = '';
+        document.getElementById('single-input').className = '';
+        document.getElementById('single-input').disabled = false;
+        document.getElementById('single-input').focus();
 
         if (direction === 'dec2bin') {
             document.getElementById('question-display').innerText = formatDecimal(currentDecValue);
@@ -385,70 +378,32 @@
             expectedLength = bits;
             document.getElementById('keypad-bin').style.display = 'grid';
             document.getElementById('keypad-dec').style.display = 'none';
-            document.getElementById('boxes-container').style.display = 'none';
-            document.getElementById('single-input').style.display = 'block';
-            document.getElementById('single-input').value = '';
-            document.getElementById('single-input').className = '';
-            document.getElementById('single-input').disabled = false;
-            document.getElementById('single-input').focus();
         } else {
             document.getElementById('question-display').innerText = formatBinary(binString);
             expectedAnswer = currentDecValue.toString();
             expectedLength = maxNum.toString().length;
             document.getElementById('keypad-bin').style.display = 'none';
             document.getElementById('keypad-dec').style.display = 'grid';
-            document.getElementById('boxes-container').style.display = 'none';
-            document.getElementById('single-input').style.display = 'block';
-            document.getElementById('single-input').value = '';
-            document.getElementById('single-input').className = '';
-            document.getElementById('single-input').disabled = false;
-            document.getElementById('single-input').focus();
         }
-    }
-
-    function renderBoxes() {
-        const container = document.getElementById('boxes-container');
-        container.innerHTML = '';
-        currentFocusIdx = 0;
-        
-        for (let i = 0; i < expectedLength; i++) {
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.inputMode = 'numeric';
-            input.maxLength = 1;
-            input.className = 'box';
-
-            if ((expectedLength - 1 - i) % 5 === 0 && i !== expectedLength - 1) {
-                input.style.marginRight = '12px';
-            }
-            
-            input.addEventListener('focus', () => { currentFocusIdx = i; });
-            input.addEventListener('input', function() {
-                if (this.value !== '' && i < expectedLength - 1) {
-                    container.children[i + 1].focus();
-                }
-            });
-            container.appendChild(input);
-        }
-        if (container.children.length > 0) container.children[0].focus();
     }
 
     function typeVal(val) {
         if (state !== 'playing') return;
         const direction = document.getElementById('direction').value;
+        const input = document.getElementById('single-input');
         
         if (direction === 'bin2dec') {
-            const input = document.getElementById('single-input');
             if (input.value.length >= 6) return;
             input.value += val;
         } else {
-            const input = document.getElementById('single-input');
-            if (input.value.length >= 15 && val !== '') {
-                alert("Maximální počet 0 a 1 je 15, překročili jste limit, opravte!");
-                return;
-            }
+            // Kontrola nepovoleného znaku na klávesnici
             if (val !== '0' && val !== '1') {
                 alert("Nepovolený znak!");
+                return;
+            }
+            // Kontrola limitu 15 znaků
+            if (input.value.length >= 15) {
+                alert("Maximální počet 0 a 1 je 15, překročili jste limit, opravte!");
                 return;
             }
             input.value += val;
@@ -457,11 +412,10 @@
 
     function checkAnswer() {
         const direction = document.getElementById('direction').value;
+        const inputEl = document.getElementById('single-input');
+        const rawValue = inputEl.value.trim();
         
         if (direction === 'bin2dec') {
-            const inputEl = document.getElementById('single-input');
-            const rawValue = inputEl.value.trim();
-            
             // Prázdný vstup → ukážeme výsledek, ale NEUKLÁDÁME DO HISTORIE
             if (rawValue === '') {
                 state = 'evaluated';
@@ -505,22 +459,22 @@
             saveToHistory(`${binStr}=${formattedCorrect}`, isCorrect);
             
         } else {
-            const inputEl = document.getElementById('single-input');
-            let userInput = inputEl.value.trim();
-
-            const isEmpty = userInput === '' || !/^[01]+$/.test(userInput);
-
-            state = 'evaluated';
-            document.getElementById('main-btn').innerText = "START";
-            inputEl.disabled = true;
-
-            if (isEmpty) {
+            // Prázdný vstup pro DEC -> BIN → ukážeme výsledek bez uložení do historie
+            if (rawValue === '') {
+                state = 'evaluated';
+                document.getElementById('main-btn').innerText = "START";
+                inputEl.disabled = true;
                 inputEl.value = expectedAnswer;
                 inputEl.className = '';
                 return;
             }
 
-            const isCorrect = userInput === expectedAnswer;
+            const isCorrect = rawValue === expectedAnswer;
+            
+            state = 'evaluated';
+            document.getElementById('main-btn').innerText = "START";
+            inputEl.disabled = true;
+            inputEl.value = expectedAnswer;
             
             if (isCorrect) {
                 inputEl.className = 'success';
@@ -528,11 +482,9 @@
                 inputEl.className = 'error';
             }
 
-            inputEl.value = expectedAnswer;
-
-            const userBinFormatted = formatBinary(userInput);
-            const correctBinFormatted = formatBinary(expectedAnswer);
             const decFormatted = formatDecimal(currentDecValue);
+            const userBinFormatted = formatBinary(rawValue);
+            const correctBinFormatted = formatBinary(expectedAnswer);
 
             const binStrForHistory = isCorrect ? userBinFormatted : correctBinFormatted;
             saveToHistory(`${decFormatted}=${binStrForHistory}`, isCorrect);
