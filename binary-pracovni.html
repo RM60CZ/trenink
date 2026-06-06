@@ -59,11 +59,20 @@
 
         .question { font-size: 28px; font-weight: bold; display: none; text-align: center;}
 
+        .input-with-back {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            justify-content: center;
+        }
+
         #single-input {
-            width: 220px; padding: 8px; border-radius: 6px; text-align: center;
+            width: 180px; padding: 8px; border-radius: 6px; text-align: center;
             border: 2px solid var(--border-color); background: var(--container-bg);
             color: var(--text-color); font-size: 18px; font-weight: bold;
             outline: none;
+            height: 44px;
         }
         #single-input.success {
             color: var(--success);
@@ -74,19 +83,21 @@
             border-color: var(--error);
         }
 
-        .keypad { display: grid; gap: 6px; width: 100%; display: none; }
-        
-        .keypad.bin { 
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: auto auto;
-        }
-        .bin-double-btn {
-            grid-column: 2;
-            grid-row: 1 / span 2;
+        .back-btn {
+            background: var(--btn-bg); color: var(--text-color); border: none;
+            padding: 0; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer;
+            height: 44px;
+            width: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100%;
+        }
+        .back-btn:active { background: var(--btn-hover); }
+
+        .keypad { display: grid; gap: 6px; width: 100%; display: none; }
+        
+        .keypad.bin { 
+            grid-template-columns: repeat(2, 1fr);
         }
 
         .keypad.dec { grid-template-columns: repeat(3, 1fr); }
@@ -161,11 +172,14 @@
         <input type="text" id="secret-input" placeholder="Zde můžete smazat historii...">
         
         <div class="question" id="question-display"></div>
-        <input type="text" id="single-input" style="display: none;">
+        
+        <div class="input-with-back">
+            <input type="text" id="single-input" style="display: none;">
+            <button class="back-btn" id="back-btn" onclick="deleteLeft()" style="display: none;">Zpět</button>
+        </div>
         
         <div class="keypad bin" id="keypad-bin">
             <button class="key-btn" onclick="typeVal('0')">0</button>
-            <button class="key-btn bin-double-btn" onclick="insertSpace()">Mezera</button>
             <button class="key-btn" onclick="typeVal('1')">1</button>
         </div>
 
@@ -196,7 +210,7 @@
     let currentDecValue = 0;
     let expectedAnswer = "";
     let expectedLength = 0;
-    let currentDisplayBits = 0; // Počet bitů pro zobrazení (5, 10 nebo 15)
+    let currentDisplayBits = 0;
 
     function formatDecimal(num) {
         return num.toLocaleString('cs-CZ');
@@ -208,7 +222,6 @@
         return stripped === "" ? "0" : stripped;
     }
 
-    // Formátuje binární číslo s mezerami každých 5 bitů zprava
     function formatBinary(binStr) {
         let clean = binStr.replace(/\s/g, '');
         if (clean === "") return "";
@@ -224,23 +237,17 @@
         return result;
     }
 
-    // Zformátuje binární číslo pro zobrazení v režimu BIN→DEC s danou délkou
     function formatBinaryForDisplay(binStr, displayBits) {
-        // Nejprve odstraníme všechny mezery a nadbytečné nuly
         let clean = binStr.replace(/\s/g, '');
-        // Odstraníme vedoucí nuly
         clean = clean.replace(/^0+/, '');
         if (clean === "") clean = "0";
         
-        // Doplníme na požadovanou délku zleva nulami
         while (clean.length < displayBits) {
             clean = "0" + clean;
         }
         
-        // Ořízneme na přesnou délku (pokud by bylo delší)
         clean = clean.substring(clean.length - displayBits);
         
-        // Vložíme mezery každých 5 bitů zprava
         let result = "";
         let count = 0;
         for (let i = clean.length - 1; i >= 0; i--) {
@@ -253,35 +260,19 @@
         return result;
     }
 
-    // Formátuje decimální číslo s mezerou jako oddělovač tisíců
     function formatDecimalInput(value) {
-        // Odstraníme všechny mezery
         let clean = value.replace(/\s/g, '');
-        // Odstraníme nečíselné znaky
         clean = clean.replace(/\D/g, '');
         if (clean === "") return "";
         
-        // Převedeme na číslo a zpět na string pro odstranění vedoucích nul
         let num = parseInt(clean, 10);
         if (isNaN(num)) return "";
         
-        // Formátujeme s mezerou jako oddělovačem tisíců
         return num.toLocaleString('cs-CZ').replace(/\./g, ' ');
     }
 
     function extractDigits(input) {
         return input.replace(/\D/g, '');
-    }
-
-    function isValidInput(input) {
-        const direction = document.getElementById('direction').value;
-        if (direction === 'dec2bin') {
-            return /^[01\s]*$/.test(input);
-        } else {
-            const digits = extractDigits(input);
-            if (digits.length === 0) return false;
-            return /^[\d\s]*$/.test(input);
-        }
     }
 
     function updateTitle() {
@@ -328,9 +319,10 @@
         state = 'init';
         document.getElementById('home-btn').style.display = 'none';
         document.getElementById('secret-input').style.display = 'block';
-        document.getElementById('secret-input').value = '';
         document.getElementById('question-display').style.display = 'none';
         document.getElementById('single-input').style.display = 'none';
+        document.getElementById('single-input').value = '';
+        document.getElementById('back-btn').style.display = 'none';
         document.getElementById('keypad-bin').style.display = 'none';
         document.getElementById('keypad-dec').style.display = 'none';
         document.getElementById('main-btn').innerText = "START";
@@ -400,7 +392,6 @@
         }
     });
 
-    // Obsluha vstupu pro automatické formátování a validaci
     document.getElementById('single-input').addEventListener('input', function(e) {
         const direction = document.getElementById('direction').value;
         const input = this;
@@ -408,9 +399,6 @@
         const originalValue = input.value;
         
         if (direction === 'dec2bin') {
-            // Binární režim - pouze 0, 1 a mezera, automatické mezery po 5 bitech
-            
-            // Kontrola neplatných znaků
             if (/[^01\s]/.test(input.value)) {
                 const invalidChar = input.value.match(/[^01\s]/);
                 alert(`Nepovolený znak: "${invalidChar}". Povoleno pouze 0, 1 a mezera.`);
@@ -418,16 +406,13 @@
                 return;
             }
             
-            // Odstraníme všechny mezery pro zpracování
             let clean = input.value.replace(/\s/g, '');
             
-            // Kontrola limitu 15 číslic
             if (clean.length > 15) {
                 alert("Maximální počet 0 a 1 je 15, překročili jste limit, opravte!");
                 clean = clean.substring(0, 15);
             }
             
-            // Spočítáme pozici kurzoru v čistých číslicích
             let digitsBeforeCursor = 0;
             for (let i = 0; i < cursorPosition && i < originalValue.length; i++) {
                 if (/[01]/.test(originalValue[i])) {
@@ -435,7 +420,6 @@
                 }
             }
             
-            // Zformátujeme s mezerami každých 5 bitů zprava
             let formatted = "";
             let count = 0;
             for (let i = clean.length - 1; i >= 0; i--) {
@@ -448,7 +432,6 @@
             
             input.value = formatted;
             
-            // Najdeme novou pozici kurzoru
             let newCursorPos = 0;
             let digitCount = 0;
             for (let i = 0; i < formatted.length; i++) {
@@ -465,18 +448,13 @@
             input.selectionStart = input.selectionEnd = newCursorPos;
             
         } else {
-            // Decimální režim - automatické formátování s mezerou jako oddělovačem tisíců
-            let val = input.value;
-            
-            // Kontrola neplatných znaků
-            if (/[^\d\s]/.test(val)) {
-                const invalidChar = val.match(/[^\d\s]/);
+            if (/[^\d\s]/.test(input.value)) {
+                const invalidChar = input.value.match(/[^\d\s]/);
                 alert(`Nepovolený znak: "${invalidChar}". Povolena pouze čísla.`);
-                input.value = val.replace(/[^\d\s]/g, '');
+                input.value = input.value.replace(/[^\d\s]/g, '');
                 return;
             }
             
-            // Spočítáme pozici kurzoru v čistých číslicích
             let digitsBeforeCursor = 0;
             for (let i = 0; i < cursorPosition && i < originalValue.length; i++) {
                 if (/\d/.test(originalValue[i])) {
@@ -484,12 +462,10 @@
                 }
             }
             
-            // Formátujeme hodnotu
-            const formatted = formatDecimalInput(val);
+            const formatted = formatDecimalInput(input.value);
             
             input.value = formatted;
             
-            // Najdeme novou pozici kurzoru
             let newCursorPos = 0;
             let digitCount = 0;
             for (let i = 0; i < formatted.length; i++) {
@@ -521,6 +497,7 @@
 
         document.getElementById('question-display').style.display = 'block';
         document.getElementById('single-input').style.display = 'block';
+        document.getElementById('back-btn').style.display = 'flex';
         document.getElementById('single-input').value = '';
         document.getElementById('single-input').className = '';
         document.getElementById('single-input').disabled = false;
@@ -533,7 +510,6 @@
             document.getElementById('keypad-bin').style.display = 'grid';
             document.getElementById('keypad-dec').style.display = 'none';
         } else {
-            // Určíme počet bitů pro zobrazení
             if (bits === 5) {
                 currentDisplayBits = 5;
             } else if (bits <= 10) {
@@ -542,7 +518,6 @@
                 currentDisplayBits = 15;
             }
             
-            // Zobrazíme binární číslo s doplněnými nulami a mezerami
             document.getElementById('question-display').innerText = formatBinaryForDisplay(binString, currentDisplayBits);
             expectedAnswer = currentDecValue.toString();
             expectedLength = maxNum.toString().length;
@@ -551,88 +526,96 @@
         }
     }
 
-    // Vloží mezeru na pozici kurzoru - pokud je text označen, smaže ho a kurzor zůstane na místě
-    function insertSpace() {
+    // Funkce Zpět - maže 1 číslici vlevo od kurzoru
+    function deleteLeft() {
         if (state !== 'playing') return;
         const input = document.getElementById('single-input');
         const direction = document.getElementById('direction').value;
         
-        if (direction !== 'dec2bin') return;
-        
-        const start = input.selectionStart;
-        const end = input.selectionEnd;
+        const cursorPos = input.selectionStart;
         const value = input.value;
         
-        // Pokud je text označen (start != end), smaže ho - kurzor zůstane na místě
-        if (start !== end) {
-            // Odstraníme označený text
-            let newValue = value.substring(0, start) + value.substring(end);
-            // Zformátujeme znovu
-            let clean = newValue.replace(/\s/g, '');
-            let formatted = "";
-            let count = 0;
-            for (let i = clean.length - 1; i >= 0; i--) {
-                formatted = clean[i] + formatted;
-                count++;
-                if (count % 5 === 0 && i > 0) {
-                    formatted = " " + formatted;
-                }
-            }
-            input.value = formatted;
-            input.selectionStart = input.selectionEnd = start;
-        } else {
-            // Jinak vloží mezeru na pozici kurzoru a zformátuje
-            let newValue = value.substring(0, start) + ' ' + value.substring(end);
-            let clean = newValue.replace(/\s/g, '');
-            
-            // Kontrola limitu 15 číslic
-            if (clean.length > 15) {
-                alert("Maximální počet 0 a 1 je 15, překročili jste limit, opravte!");
-                return;
-            }
-            
-            let formatted = "";
-            let count = 0;
-            for (let i = clean.length - 1; i >= 0; i--) {
-                formatted = clean[i] + formatted;
-                count++;
-                if (count % 5 === 0 && i > 0) {
-                    formatted = " " + formatted;
-                }
-            }
-            input.value = formatted;
-            
-            // Najdeme novou pozici kurzoru
-            let newCursorPos = start + 1;
-            // Upravíme podle formátování
-            let digitCount = 0;
-            for (let i = 0; i < start && i < value.length; i++) {
+        if (cursorPos === 0) return; // Nic není vlevo
+        
+        // Najdeme pozici první číslice vlevo od kurzoru
+        let deletePos = -1;
+        for (let i = cursorPos - 1; i >= 0; i--) {
+            if (direction === 'dec2bin') {
                 if (/[01]/.test(value[i])) {
-                    digitCount++;
+                    deletePos = i;
+                    break;
+                }
+            } else {
+                if (/\d/.test(value[i])) {
+                    deletePos = i;
+                    break;
                 }
             }
-            // Najdeme pozici za touto číslicí ve formátovaném textu
-            newCursorPos = 0;
-            let currentDigit = 0;
+        }
+        
+        if (deletePos === -1) return; // Žádná číslice k smazání
+        
+        // Smažeme znak na nalezené pozici
+        let newValue = value.substring(0, deletePos) + value.substring(deletePos + 1);
+        
+        // Zformátujeme podle režimu
+        if (direction === 'dec2bin') {
+            let clean = newValue.replace(/\s/g, '');
+            
+            let formatted = "";
+            let count = 0;
+            for (let i = clean.length - 1; i >= 0; i--) {
+                formatted = clean[i] + formatted;
+                count++;
+                if (count % 5 === 0 && i > 0) {
+                    formatted = " " + formatted;
+                }
+            }
+            
+            input.value = formatted;
+            
+            // Nastavíme kurzor na pozici smazané číslice
+            let newCursorPos = 0;
+            let digitCount = 0;
+            const targetDigits = value.substring(0, deletePos).replace(/\s/g, '').length;
             for (let i = 0; i < formatted.length; i++) {
                 if (/[01]/.test(formatted[i])) {
-                    currentDigit++;
+                    digitCount++;
                 }
-                if (currentDigit === digitCount) {
+                if (digitCount === targetDigits) {
                     newCursorPos = i + 1;
                     break;
                 }
                 newCursorPos = i + 1;
             }
-            newCursorPos++; // Posuneme za vloženou mezeru
             
-            input.selectionStart = input.selectionEnd = Math.min(newCursorPos, formatted.length);
+            input.selectionStart = input.selectionEnd = newCursorPos;
+            
+        } else {
+            const formatted = formatDecimalInput(newValue);
+            input.value = formatted;
+            
+            // Nastavíme kurzor na pozici smazané číslice
+            let newCursorPos = 0;
+            let digitCount = 0;
+            const targetDigits = value.substring(0, deletePos).replace(/\s/g, '').length;
+            for (let i = 0; i < formatted.length; i++) {
+                if (/\d/.test(formatted[i])) {
+                    digitCount++;
+                }
+                if (digitCount === targetDigits) {
+                    newCursorPos = i + 1;
+                    break;
+                }
+                newCursorPos = i + 1;
+            }
+            
+            input.selectionStart = input.selectionEnd = newCursorPos;
         }
         
         input.focus();
     }
 
-    // Vloží hodnotu na pozici kurzoru - pokud je text označen, přepíše ho a kurzor zůstane na místě
     function typeVal(val) {
         if (state !== 'playing') return;
         const direction = document.getElementById('direction').value;
@@ -642,20 +625,15 @@
         const end = input.selectionEnd;
         const value = input.value;
         
-        // Kontrola, zda je text označen
         const hasSelection = start !== end;
         
         if (direction === 'bin2dec') {
-            // Decimální režim
-            // Kontrola délky pro dec režim (pouze pokud nepřepisujeme označený text)
             if (!hasSelection && value.replace(/\s/g, '').length >= 6) return;
             
-            // Pokud je text označen, smaže ho a vloží novou hodnotu
             const newValue = value.substring(0, start) + val + value.substring(end);
             const formatted = formatDecimalInput(newValue);
             input.value = formatted;
             
-            // Najdeme novou pozici kurzoru
             let newCursorPos = 0;
             let digitCount = 0;
             const targetDigits = value.substring(0, start).replace(/\s/g, '').length + 1;
@@ -672,13 +650,11 @@
             input.selectionStart = input.selectionEnd = newCursorPos;
             
         } else {
-            // Binární režim
             if (val !== '0' && val !== '1' && val !== ' ') {
                 alert("Nepovolený znak! Povoleno pouze 0, 1 a mezera.");
                 return;
             }
             
-            // Kontrola limitu 15 číslic (pouze pokud nepřepisujeme označený text)
             if (!hasSelection) {
                 let digitsOnly = value.replace(/\s/g, '');
                 if (digitsOnly.length >= 15) {
@@ -687,17 +663,14 @@
                 }
             }
             
-            // Pokud je text označen, smaže ho a vloží novou hodnotu
             let newValue = value.substring(0, start) + val + value.substring(end);
             let clean = newValue.replace(/\s/g, '');
             
-            // Kontrola limitu 15 číslic
             if (clean.length > 15) {
                 alert("Maximální počet 0 a 1 je 15, překročili jste limit, opravte!");
                 clean = clean.substring(0, 15);
             }
             
-            // Zformátujeme s mezerami každých 5 bitů zprava
             let formatted = "";
             let count = 0;
             for (let i = clean.length - 1; i >= 0; i--) {
@@ -710,10 +683,9 @@
             
             input.value = formatted;
             
-            // Najdeme novou pozici kurzoru
             let digitsBefore = value.substring(0, start).replace(/\s/g, '').length;
             if (!hasSelection) {
-                digitsBefore++; // Přidáme novou číslici
+                digitsBefore++;
             }
             
             let newCursorPos = 0;
@@ -766,7 +738,6 @@
                 inputEl.className = 'error';
             }
             
-            // Historie: binární číslo bez nadbytečných nul, ALE s mezerami každých 5 bitů
             const binForHistory = formatBinary(currentDecValue.toString(2));
             saveToHistory(`${binForHistory} = ${formattedCorrect}`, isCorrect);
             
@@ -797,7 +768,6 @@
                 inputEl.className = 'error';
             }
 
-            // Historie: decimální číslo s mezerou na 4. místě zprava (tisíce)
             const decFormatted = formatDecimal(currentDecValue);
             saveToHistory(`${decFormatted} = ${formattedCorrect}`, isCorrect);
         }
