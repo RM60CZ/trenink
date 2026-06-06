@@ -97,7 +97,7 @@
 
         .clear-btn {
             background: var(--btn-bg); color: var(--text-color); border: none;
-            padding: 0; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer;
+            padding: 0 16px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer;
             height: 44px;
             display: flex;
             align-items: center;
@@ -106,27 +106,25 @@
         }
         .clear-btn:active { background: var(--btn-hover); }
 
-        /* Pro DEC-BIN: šířka až k pravé hraně tlačítka 1 (3 sloupce, poslední tlačítko v posledním řádku) */
+        /* Pro DEC-BIN: šířka až k pravé hraně tlačítka Výsledek (100% kontejneru minus input a mezery) */
         .input-with-back.dec-mode .clear-btn {
-            width: calc(2 * 48px + 6px); /* 2 tlačítka + mezera mezi nimi */
+            flex: 1;
+            max-width: calc(100% - 180px - 8px - 48px - 8px);
         }
 
-        /* Pro BIN-DEC: šířka až k pravé hraně tlačítka 9 (2 sloupce, pravé tlačítko nahoře) */
+        /* Pro BIN-DEC: šířka až k pravé hraně tlačítka Výsledek */
         .input-with-back.bin-mode .clear-btn {
-            width: calc(1 * 48px + 0px); /* stejná šířka jako jedno tlačítko */
+            flex: 1;
+            max-width: calc(100% - 180px - 8px - 48px - 8px);
         }
 
         .keypad { display: grid; gap: 6px; width: 100%; display: none; }
         
         .keypad.bin { 
             grid-template-columns: repeat(2, 1fr);
-            max-width: calc(2 * 48px + 6px);
         }
 
-        .keypad.dec { 
-            grid-template-columns: repeat(3, 1fr); 
-            max-width: calc(3 * 48px + 12px);
-        }
+        .keypad.dec { grid-template-columns: repeat(3, 1fr); }
         
         .key-btn {
             background: var(--btn-bg); color: var(--text-color); border: none;
@@ -756,6 +754,10 @@
         const direction = document.getElementById('direction').value;
         const inputEl = document.getElementById('single-input');
         const rawValue = inputEl.value.trim();
+        
+        // Skryjeme tlačítka Zpět a Smazat při zobrazení výsledku
+        document.getElementById('back-btn').style.display = 'none';
+        document.getElementById('clear-btn').style.display = 'none';
         
         if (direction === 'bin2dec') {
             if (rawValue === '') {
