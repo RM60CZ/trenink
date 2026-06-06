@@ -91,20 +91,50 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
         .back-btn:active { background: var(--btn-hover); }
+
+        .clear-btn {
+            background: var(--btn-bg); color: var(--text-color); border: none;
+            padding: 0; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .clear-btn:active { background: var(--btn-hover); }
+
+        /* Pro DEC-BIN: šířka až k pravé hraně tlačítka 1 (3 sloupce, poslední tlačítko v posledním řádku) */
+        .input-with-back.dec-mode .clear-btn {
+            width: calc(2 * 48px + 6px); /* 2 tlačítka + mezera mezi nimi */
+        }
+
+        /* Pro BIN-DEC: šířka až k pravé hraně tlačítka 9 (2 sloupce, pravé tlačítko nahoře) */
+        .input-with-back.bin-mode .clear-btn {
+            width: calc(1 * 48px + 0px); /* stejná šířka jako jedno tlačítko */
+        }
 
         .keypad { display: grid; gap: 6px; width: 100%; display: none; }
         
         .keypad.bin { 
             grid-template-columns: repeat(2, 1fr);
+            max-width: calc(2 * 48px + 6px);
         }
 
-        .keypad.dec { grid-template-columns: repeat(3, 1fr); }
+        .keypad.dec { 
+            grid-template-columns: repeat(3, 1fr); 
+            max-width: calc(3 * 48px + 12px);
+        }
         
         .key-btn {
             background: var(--btn-bg); color: var(--text-color); border: none;
             padding: 10px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .key-btn:active { background: var(--btn-hover); }
 
@@ -173,9 +203,10 @@
         
         <div class="question" id="question-display"></div>
         
-        <div class="input-with-back">
+        <div class="input-with-back" id="input-container">
             <input type="text" id="single-input" style="display: none;">
             <button class="back-btn" id="back-btn" onclick="deleteLeft()" style="display: none;">Zpět</button>
+            <button class="clear-btn" id="clear-btn" onclick="clearAll()" style="display: none;">Smazat</button>
         </div>
         
         <div class="keypad bin" id="keypad-bin">
@@ -323,6 +354,7 @@
         document.getElementById('single-input').style.display = 'none';
         document.getElementById('single-input').value = '';
         document.getElementById('back-btn').style.display = 'none';
+        document.getElementById('clear-btn').style.display = 'none';
         document.getElementById('keypad-bin').style.display = 'none';
         document.getElementById('keypad-dec').style.display = 'none';
         document.getElementById('main-btn').innerText = "START";
@@ -498,17 +530,21 @@
         document.getElementById('question-display').style.display = 'block';
         document.getElementById('single-input').style.display = 'block';
         document.getElementById('back-btn').style.display = 'flex';
+        document.getElementById('clear-btn').style.display = 'flex';
         document.getElementById('single-input').value = '';
         document.getElementById('single-input').className = '';
         document.getElementById('single-input').disabled = false;
         document.getElementById('single-input').focus();
 
+        const inputContainer = document.getElementById('input-container');
+        
         if (direction === 'dec2bin') {
             document.getElementById('question-display').innerText = formatDecimal(currentDecValue);
             expectedAnswer = binString;
             expectedLength = bits;
             document.getElementById('keypad-bin').style.display = 'grid';
             document.getElementById('keypad-dec').style.display = 'none';
+            inputContainer.className = 'input-with-back bin-mode';
         } else {
             if (bits === 5) {
                 currentDisplayBits = 5;
@@ -523,6 +559,7 @@
             expectedLength = maxNum.toString().length;
             document.getElementById('keypad-bin').style.display = 'none';
             document.getElementById('keypad-dec').style.display = 'grid';
+            inputContainer.className = 'input-with-back dec-mode';
         }
     }
 
@@ -613,6 +650,14 @@
             input.selectionStart = input.selectionEnd = newCursorPos;
         }
         
+        input.focus();
+    }
+
+    // NOVÁ FUNKCE: Smazat celý obsah inputu
+    function clearAll() {
+        if (state !== 'playing') return;
+        const input = document.getElementById('single-input');
+        input.value = '';
         input.focus();
     }
 
