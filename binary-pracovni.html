@@ -575,8 +575,8 @@
                 inputEl.className = 'error';
             }
             
-            // Historie: binární číslo bez nadbytečných nul a bez mezer
-            const binForHistory = currentDecValue.toString(2);
+            // Historie: binární číslo bez nadbytečných nul, ALE s mezerami každých 5 bitů
+            const binForHistory = formatBinary(currentDecValue.toString(2));
             saveToHistory(`${binForHistory} = ${formattedCorrect}`, isCorrect);
             
         } else {
@@ -606,6 +606,7 @@
                 inputEl.className = 'error';
             }
 
+            // Historie: decimální číslo s mezerou na 4. místě zprava (tisíce)
             const decFormatted = formatDecimal(currentDecValue);
             saveToHistory(`${decFormatted} = ${formattedCorrect}`, isCorrect);
         }
