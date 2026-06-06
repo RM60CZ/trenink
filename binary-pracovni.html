@@ -196,6 +196,7 @@
     let currentDecValue = 0;
     let expectedAnswer = "";
     let expectedLength = 0;
+    let currentDisplayBits = 0; // Počet bitů pro zobrazení (5, 10 nebo 15)
 
     function formatDecimal(num) {
         return num.toLocaleString('cs-CZ');
@@ -207,6 +208,7 @@
         return stripped === "" ? "0" : stripped;
     }
 
+    // Formátuje binární číslo pro zobrazení s mezerami každých 5 bitů zprava
     function formatBinary(binStr) {
         let clean = binStr.replace(/\s/g, '');
         if (clean === "") return "";
@@ -215,7 +217,36 @@
         for (let i = clean.length - 1; i >= 0; i--) {
             result = clean[i] + result;
             count++;
-            if ((count === 5 || count === 10) && i > 0) {
+            if (count % 5 === 0 && i > 0) {
+                result = " " + result;
+            }
+        }
+        return result;
+    }
+
+    // Zformátuje binární číslo pro zobrazení v režimu BIN→DEC s danou délkou
+    function formatBinaryForDisplay(binStr, displayBits) {
+        // Nejprve odstraníme všechny mezery a nadbytečné nuly
+        let clean = binStr.replace(/\s/g, '');
+        // Odstraníme vedoucí nuly
+        clean = clean.replace(/^0+/, '');
+        if (clean === "") clean = "0";
+        
+        // Doplníme na požadovanou délku zleva nulami
+        while (clean.length < displayBits) {
+            clean = "0" + clean;
+        }
+        
+        // Ořízneme na přesnou délku (pokud by bylo delší)
+        clean = clean.substring(clean.length - displayBits);
+        
+        // Vložíme mezery každých 5 bitů zprava
+        let result = "";
+        let count = 0;
+        for (let i = clean.length - 1; i >= 0; i--) {
+            result = clean[i] + result;
+            count++;
+            if (count % 5 === 0 && i > 0) {
                 result = " " + result;
             }
         }
@@ -410,7 +441,17 @@
             document.getElementById('keypad-bin').style.display = 'grid';
             document.getElementById('keypad-dec').style.display = 'none';
         } else {
-            document.getElementById('question-display').innerText = formatBinary(binString);
+            // Určíme počet bitů pro zobrazení
+            if (bits === 5) {
+                currentDisplayBits = 5;
+            } else if (bits <= 10) {
+                currentDisplayBits = 10;
+            } else {
+                currentDisplayBits = 15;
+            }
+            
+            // Zobrazíme binární číslo s doplněnými nulami a mezerami
+            document.getElementById('question-display').innerText = formatBinaryForDisplay(binString, currentDisplayBits);
             expectedAnswer = currentDecValue.toString();
             expectedLength = maxNum.toString().length;
             document.getElementById('keypad-bin').style.display = 'none';
@@ -534,8 +575,9 @@
                 inputEl.className = 'error';
             }
             
-            const binStr = formatBinary(document.getElementById('question-display').innerText);
-            saveToHistory(`${binStr} = ${formattedCorrect}`, isCorrect);
+            // Historie: binární číslo bez nadbytečných nul a bez mezer
+            const binForHistory = currentDecValue.toString(2);
+            saveToHistory(`${binForHistory} = ${formattedCorrect}`, isCorrect);
             
         } else {
             if (rawValue === '') {
