@@ -121,7 +121,7 @@
         .keypad { display: grid; gap: 6px; width: 100%; display: none; }
         
         .keypad.bin { 
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: 1fr;
         }
 
         .keypad.dec { grid-template-columns: repeat(3, 1fr); }
@@ -129,10 +129,6 @@
         .key-btn {
             background: var(--btn-bg); color: var(--text-color); border: none;
             padding: 10px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
         .key-btn:active { background: var(--btn-hover); }
 
