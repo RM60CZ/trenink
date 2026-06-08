@@ -205,7 +205,6 @@
         <div class="input-with-back" id="input-container">
             <input type="text" id="single-input"
                    inputmode="none"
-                   readonly
                    autocomplete="off"
                    autocorrect="off"
                    autocapitalize="off"
@@ -328,6 +327,7 @@
         document.getElementById('theme-btn').innerText = savedTheme === 'dark' ? '☀️' : '🌙';
 
         const bitSelect = document.getElementById('bits');
+        bitSelect.innerHTML = '';
         for (let i = 5; i <= 15; i++) {
             const maxVal = Math.pow(2, i) - 1;
             const opt = document.createElement('option');
