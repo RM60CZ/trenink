@@ -196,12 +196,21 @@
     <div class="info-text" id="info"></div>
 
     <div class="game-area">
-        <input type="text" id="secret-input" placeholder="Zde můžete smazat historii...">
+        <input type="text" id="secret-input"
+               inputmode="text"
+               placeholder="Zde můžete smazat historii...">
         
         <div class="question" id="question-display"></div>
         
         <div class="input-with-back" id="input-container">
-            <input type="text" id="single-input" style="display: none;">
+            <input type="text" id="single-input"
+                   inputmode="none"
+                   readonly
+                   autocomplete="off"
+                   autocorrect="off"
+                   autocapitalize="off"
+                   spellcheck="false"
+                   style="display: none;">
             <button class="back-btn" id="back-btn" onclick="deleteLeft()" style="display: none;">Zpět</button>
             <button class="clear-btn" id="clear-btn" onclick="clearAll()" style="display: none;">Smazat</button>
         </div>
