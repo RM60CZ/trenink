@@ -159,6 +159,14 @@ input{-webkit-appearance:none;border-radius:.75rem}
 </div>
 </div>
 <div class="h-4"></div>
+
+<div class="px-1 mb-2">
+  <div class="text-[9px] font-bold uppercase text-amber-500 tracking-wider mb-1">ASR Debug</div>
+  <div id="asr-debug" class="bg-slate-900 rounded-lg p-2 min-h-[40px] max-h-[120px] overflow-y-auto text-[11px] font-mono">
+    <div style="color:#475569;">Zde se zobrazí co mikrofon slyší…</div>
+  </div>
+</div>
+
 </div>
 </div>
 
@@ -653,6 +661,17 @@ function buildRecognition(){
       if(e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
     }
     if(!finalText.trim()) return;
+
+    // DEBUG – zobrazí co ASR slyšelo
+    var debugEl = document.getElementById('asr-debug');
+    if(debugEl){
+      var item = document.createElement('div');
+      item.style.cssText = 'font-size:11px;color:#f59e0b;border-bottom:1px solid #334155;padding:2px 0;word-break:break-all;';
+      item.textContent = '🎤 "' + finalText.trim() + '"';
+      debugEl.insertBefore(item, debugEl.firstChild);
+      // Max 8 řádků
+      while(debugEl.children.length > 8) debugEl.removeChild(debugEl.lastChild);
+    }
 
     var raw = finalText.trim().toLowerCase();
     raw = raw.replace(/[?!;:_,.]/g, ' ');
