@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="cs" class="dark">
 <head>
@@ -137,7 +138,7 @@ input{-webkit-appearance:none;border-radius:.75rem}
 <div class="space-y-2.5">
   <div id="inputBox" class="relative bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-300 dark:border-slate-700 focus-within:border-blue-500 transition-all shadow-inner overflow-hidden flex">
     <div id="inputWrapper" class="w-full">
-      <input type="text" id="odpoved" inputmode="text" enterkeyhint="done" autocomplete="off" placeholder="historie" class="w-full pl-4 pr-4 py-1 text-4xl sm:text-4xl font-semibold bg-transparent text-slate-800 dark:text-white outline-none text-center tabular-nums tracking-normal"/>
+      <input type="text" id="odpoved" inputmode="text" enterkeyhint="done" autocomplete="off" placeholder="historie" class="w-full pl-4 pr-4 py-1 text-3xl sm:text-4xl font-semibold bg-transparent text-slate-800 dark:text-white outline-none text-center tabular-nums tracking-normal"/>
     </div>
     <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 scale-75 pointer-events-none"></div>
   </div>
@@ -211,13 +212,11 @@ themeToggle.addEventListener('click', function(){
 });
 updateThemeIcons();
 
-// === HOME BUTTON VISIBILITY ===
+// === HOME BUTTON ===
 function updateHomeBtn(){
   var onHome = !aktualniPriklad && !zobrazitVysledek;
   homeBtn.classList.toggle('hidden-btn', onHome);
 }
-
-// === HOME BUTTON ACTION ===
 homeBtn.addEventListener('click', function(){
   if(micListening) stopMic(false);
   aktualniPriklad = null;
@@ -236,7 +235,6 @@ function fmt(x){
   var c = parts[0], d = parts[1];
   return d ? c.replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0') + ',' + d : c.replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
 }
-
 function fmtInputStr(s){
   s = s.replace(/\s|\u00A0/g, '');
   var neg = s.charAt(0) === '-';
@@ -246,7 +244,6 @@ function fmtInputStr(s){
   var r = ip.replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
   return (neg ? '-' : '') + r + (dp !== undefined ? ',' + dp : '');
 }
-
 function norm(s){ return s.trim().replace(/[\s\u00A0]+/g, '').replace(',', '.'); }
 function genNum(n){ var mn = Math.pow(10, n-1), mx = Math.pow(10, n) - 1; return Math.floor(Math.random() * (mx - mn + 1)) + mn; }
 function trunc4(n){ var parts = (n + '').split('.'); return parts[1] ? parts[0] + '.' + parts[1].substring(0, 4) : parts[0]; }
@@ -264,7 +261,6 @@ function load(){
     }
   } catch(e){}
 }
-
 function save(){
   try { localStorage.setItem(KEY, JSON.stringify({date:todayStr, correct:correct, wrong:wrong, streak:streak, history:history, operace:operaceEl.value, cislice1:cis1.value, cislice2:cis2.value})); } catch(e){}
 }
@@ -375,7 +371,6 @@ function checkDivision(userStr, p){
   for(var i = 0; i < userDec.length; i++){ if(userDec.charAt(i) !== truePadded.charAt(i)) return { ok:false, bracket:i+1 }; }
   return { ok:true, bracket:userDec.length };
 }
-
 function check(input, p){
   var n = norm(input);
   if(!n) return false;
@@ -384,7 +379,6 @@ function check(input, p){
   var num = parseFloat(n);
   return !isNaN(num) && Math.abs(num - p.vysledek) < 1e-9;
 }
-
 function findFirstWrongDigit(userInput, p){
   var n = norm(userInput);
   var cs, us;
@@ -403,13 +397,11 @@ function updateScores(){
   streakEl.parentElement.classList.add('pop');
   setTimeout(function(){ streakEl.parentElement.classList.remove('pop'); }, 200);
 }
-
 function updateBtn(){
   btnEl.classList.remove('btn-pulse', 'btn-glow');
   if(!zobrazitVysledek){ btnEl.textContent = 'START'; btnEl.classList.add('btn-pulse'); }
   else { btnEl.textContent = '✓ VÝSLEDEK (kontrola)'; btnEl.classList.add('btn-glow'); }
 }
-
 function renderHistory(){
   if(!history.length){ histEmpty.style.display = 'block'; histCont.style.opacity = '0'; var olds = histList.querySelectorAll('.hi'); for(var k=0;k<olds.length;k++) olds[k].remove(); return; }
   histEmpty.style.display = 'none';
@@ -425,7 +417,6 @@ function renderHistory(){
     histList.appendChild(d);
   }
 }
-
 function addHist(ok, userInput){
   if(!aktualniPriklad) return;
   var p = aktualniPriklad;
@@ -440,132 +431,139 @@ function addHist(ok, userInput){
 }
 
 // ═══════════════════════════════════════════════════════════════
-// HLASOVÝ VSTUP
+// HLASOVÝ VSTUP – tokenová logika
 // ═══════════════════════════════════════════════════════════════
+//
+// Pravidla:
+//   • Každé vyslovené číslo 0–999 = samostatný token s přesným počtem číslic
+//       "nula"    → {val:0, digits:1}
+//       "padesát" → {val:50, digits:2}
+//       "pětsetsedmdesátjedna" → {val:571, digits:3}
+//   • "celá" / "celých" / "čárka" → token desetinné tečky
+//   • Input během diktování zůstává PRÁZDNÝ
+//   • "ano" / "jo" → zřetězí tokeny, formátuje, zobrazí v inputu
+//   • "chyba" → vymaže vše, začne znovu
+//   • "zpět" (pouze po zobrazení) → smaže jednu cifru nalevo od kurzoru
 
 var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 var recognition = null, micListening = false, micAutoRestart = true;
-var spBuf = [];
+var spTokens = []; // pole tokenů: {val, digits} nebo {decimal:true}
 
 function spReset(){
-  spBuf = [];
-  odpovedEl.value = '';
+  spTokens = [];
+  // Nepřepisujeme odpovedEl.value zde – to řeší startNewProblem
 }
 
-// === ZPĚT/SPJET – vymaže poslední číslici ===
-function spBackspace(){
-  var current = norm(odpovedEl.value);
-  if(!current) return;
-  current = current.slice(0, -1);
-  spBuf = current ? current.split('').map(function(c){ return c === '.' ? '.' : parseInt(c, 10); }) : [];
-  odpovedEl.value = current ? fmtInputStr(current) : '';
-}
-
-function spFlush(){
-  if(!spBuf.length){ odpovedEl.value = ''; return; }
-  var dotIndex = spBuf.indexOf('.');
-  var intParts, decParts;
-  if(dotIndex === -1){ intParts = spBuf; decParts = []; }
-  else { intParts = spBuf.slice(0, dotIndex); decParts = spBuf.slice(dotIndex + 1); }
-  var intStr = intParts.map(function(x){ return String(x); }).join('');
-  var decStr = decParts.map(function(x){ return String(x); }).join('');
-  intStr = intStr.replace(/^0+(?=\d)/, '');
-  if(intStr === '') intStr = '0';
-  var result = dotIndex === -1 ? intStr : intStr + '.' + decStr;
-  odpovedEl.value = fmtInputStr(result);
-}
-
-// === APPEND nuly (zero/zirou/zírou) – přidá 000 napravo ===
-function spAppendZeros(){
-  var current = norm(odpovedEl.value);
-  var zeros = [0, 0, 0];
-  if(!current){
-    zeros.forEach(function(z){ spBuf.push(z); });
-  } else {
-    var dotIdx = current.indexOf('.');
-    if(dotIdx === -1){
-      spBuf = current.split('').map(function(c){ return parseInt(c,10); });
-    } else {
-      spBuf = current.split('').map(function(c){ return c === '.' ? '.' : parseInt(c,10); });
-    }
-    zeros.forEach(function(z){ spBuf.push(z); });
-  }
-  spFlush();
-}
-
-var WV = {
-  'žádná':0,'zadna':0,'nula':0,'nulu':0,'nuly':0,
+// Slovník číslovek 0–999
+var WORD_MAP = {
+  'nula':0,'nulu':0,'nuly':0,
   'jedna':1,'jeden':1,'jedno':1,'jednu':1,'jedné':1,
-  'dvě':2,'dva':2,'dvou':2,'tři':3,'třech':3,
-  'čtyři':4,'čtyřech':4,'pět':5,'pěti':5,
-  'šest':6,'šesti':6,'sedm':7,'sedmi':7,
-  'osm':8,'osmi':8,'devět':9,'devíti':9,
-  'deset':10,'deseti':10,'jedenáct':11,'jedenácti':11,
-  'dvanáct':12,'dvanácti':12,'třináct':13,'třinácti':13,
-  'čtrnáct':14,'čtrnácti':14,'patnáct':15,'patnácti':15,
-  'šestnáct':16,'šestnácti':16,'sedmnáct':17,'sedmnácti':17,
-  'osmnáct':18,'osmnácti':18,'devatenáct':19,'devatenácti':19,
-  'dvacet':20,'dvaceti':20,'třicet':30,'třiceti':30,
-  'čtyřicet':40,'čtyřiceti':40,'padesát':50,'padesáti':50,
-  'šedesát':60,'šedesáti':60,'sedmdesát':70,'sedmdesáti':70,
-  'osmdesát':80,'osmdesáti':80,'devadesát':90,'devadesáti':90,
+  'dva':2,'dvě':2,'dvou':2,
+  'tři':3,'třech':3,
+  'čtyři':4,'čtyřech':4,
+  'pět':5,'pěti':5,
+  'šest':6,'šesti':6,
+  'sedm':7,'sedmi':7,
+  'osm':8,'osmi':8,
+  'devět':9,'devíti':9,
+  'deset':10,'deseti':10,
+  'jedenáct':11,'jedenácti':11,
+  'dvanáct':12,'dvanácti':12,
+  'třináct':13,'třinácti':13,
+  'čtrnáct':14,'čtrnácti':14,
+  'patnáct':15,'patnácti':15,
+  'šestnáct':16,'šestnácti':16,
+  'sedmnáct':17,'sedmnácti':17,
+  'osmnáct':18,'osmnácti':18,
+  'devatenáct':19,'devatenácti':19,
+  'dvacet':20,'dvaceti':20,
+  'třicet':30,'třiceti':30,
+  'čtyřicet':40,'čtyřiceti':40,
+  'padesát':50,'padesáti':50,
+  'šedesát':60,'šedesáti':60,
+  'sedmdesát':70,'sedmdesáti':70,
+  'osmdesát':80,'osmdesáti':80,
+  'devadesát':90,'devadesáti':90,
   'sto':100,'sta':100,'stu':100,'stem':100,'stě':100,
-  'dvěstě':200,'dvěsta':200,'třista':300,'třísta':300,
-  'čtyřista':400,'čtyřsta':400
+  'dvěstě':200,'dvěsta':200,
+  'třista':300,'třísta':300,
+  'čtyřista':400,'čtyřsta':400,
+  'pětset':500,'šestset':600,'sedmset':700,'osmset':800,'devětset':900
 };
 
-var IGNORE_WORDS = {'tisíc':1,'tisíce':1,'tisíců':1,'tisíci':1,'tisícům':1,'tisícem':1,'tisících':1,
-  'milion':1,'milión':1,'miliony':1,'milióny':1,'milionu':1,'miliónu':1,'milionů':1,'miliónů':1,
-  'miliarda':1,'miliardy':1,'miliard':1,'miliardě':1,'miliardám':1,'miliardou':1,'miliardách':1};
+var DECIMAL_WORDS = {'celá':1,'celách':1,'celých':1,'celé':1,'cela':1,'cele':1,'celych':1,'čárka':1,'carka':1,'tečka':1,'tecka':1};
+var SUBMIT_WORDS  = {'ano':1,'jo':1,'joo':1,'yes':1};
+var RESET_WORDS   = {'chyba':1,'reset':1};
+var BACK_WORDS    = {'zpět':1,'zpet':1,'spjet':1};
+var IGNORE_WORDS  = {'tisíc':1,'tisíce':1,'tisíců':1,'tisíci':1,'tisícem':1,'tisících':1,'milion':1,'milión':1,'miliony':1,'milióny':1,'milionu':1,'milionů':1,'miliarda':1,'miliardy':1,'miliard':1};
 
-var DEC_RE = /(?:^|\s)(celá|celé|celých|celych|cely|celi|cela|čárka|čárku|carka|carku|tečka|tečku|tecka|tecku)(?:\s|$)/;
-
-function evalPhrase(phrase, words, startIdx, len){
-  if(/^\d+$/.test(phrase)) return phrase;
-  if(WV[phrase] !== undefined) return WV[phrase];
-  if(len >= 2){
-    var w0 = words[startIdx], w1 = words[startIdx+1];
-    if((w1==='set'||w1==='sto'||w1==='sta'||w1==='stu'||w1==='stě') && WV[w0] !== undefined && WV[w0] >= 2 && WV[w0] <= 9) return WV[w0]*100;
-    if(WV[w0] !== undefined && WV[w0] >= 20 && WV[w0] <= 90 && WV[w1] !== undefined && WV[w1] >= 1 && WV[w1] <= 9) return WV[w0]+WV[w1];
-    if(w0==='sto'||w0==='sta'||w0==='stu'||w0==='stě'){
-      if(WV[w1] !== undefined && WV[w1] <= 99) return 100+WV[w1];
-      if(/^\d+$/.test(w1)) return 100+parseInt(w1,10);
-    }
+// Vyhodnotí frázi (1–4 slova) na číslo 0–999 nebo null
+function evalPhrase(words, start, len){
+  var phrase = words.slice(start, start+len).join(' ');
+  // Čistá číslice od ASR
+  if(/^\d+$/.test(phrase)){
+    var n = parseInt(phrase,10);
+    return (n >= 0 && n <= 999) ? n : null;
   }
-  if(len >= 3){
-    var w0 = words[startIdx], w1 = words[startIdx+1], w2 = words[startIdx+2];
-    var isHundred = (w1==='set'||w1==='sto'||w1==='sta'||w1==='stu'||w1==='stě') && WV[w0] >= 2 && WV[w0] <= 9;
-    if(isHundred){
-      var hundreds = WV[w0]*100;
-      if(len === 3){
-        if(WV[w2] !== undefined && WV[w2] <= 99) return hundreds+WV[w2];
-        if(/^\d+$/.test(w2)) return hundreds+parseInt(w2,10);
-      }
-      if(len === 4){
-        var w3 = words[startIdx+3];
-        if(WV[w2] !== undefined && WV[w2] >= 20 && WV[w2] <= 90 && WV[w3] !== undefined && WV[w3] >= 1 && WV[w3] <= 9) return hundreds+WV[w2]+WV[w3];
-      }
-    }
-    if(w0==='sto'||w0==='sta'||w0==='stu'||w0==='stě'){
-      if(len === 3 && WV[w1] !== undefined && WV[w1] >= 20 && WV[w1] <= 90 && WV[w2] !== undefined && WV[w2] >= 1 && WV[w2] <= 9) return 100+WV[w1]+WV[w2];
-    }
+  // Přímý lookup
+  if(WORD_MAP[phrase] !== undefined) return WORD_MAP[phrase];
+  if(len < 2) return null;
+
+  var w = words.slice(start, start+len);
+  var v0=WORD_MAP[w[0]], v1=WORD_MAP[w[1]];
+
+  if(len === 2){
+    // "X set/sto" → X*100
+    if((w[1]==='set'||w[1]==='sto'||w[1]==='sta'||w[1]==='stě') && v0 >= 2 && v0 <= 9) return v0*100;
+    // "sto X" → 100+X
+    if((w[0]==='sto'||w[0]==='sta'||w[0]==='stě') && v1 !== undefined && v1 >= 1 && v1 <= 99) return 100+v1;
+    // "dvacet pět" atd.
+    if(v0 !== undefined && v0 >= 20 && v0 <= 90 && v1 !== undefined && v1 >= 1 && v1 <= 9) return v0+v1;
+    return null;
+  }
+
+  if(len === 3){
+    var v2=WORD_MAP[w[2]];
+    // "dvě stě pět"
+    if((w[1]==='set'||w[1]==='sto'||w[1]==='sta'||w[1]==='stě') && v0 >= 2 && v0 <= 9 && v2 !== undefined && v2 >= 1 && v2 <= 99) return v0*100+v2;
+    // "sto dvacet pět"
+    if((w[0]==='sto'||w[0]==='sta'||w[0]==='stě') && v1 !== undefined && v1 >= 20 && v1 <= 90 && v2 !== undefined && v2 >= 1 && v2 <= 9) return 100+v1+v2;
+    return null;
+  }
+
+  if(len === 4){
+    var v2=WORD_MAP[w[2]], v3=WORD_MAP[w[3]];
+    // "dvě stě dvacet pět"
+    if((w[1]==='set'||w[1]==='sto'||w[1]==='sta'||w[1]==='stě') && v0 >= 2 && v0 <= 9 && v2 !== undefined && v2 >= 20 && v2 <= 90 && v3 !== undefined && v3 >= 1 && v3 <= 9) return v0*100+v2+v3;
+    return null;
   }
   return null;
 }
 
-function parseVoiceTokens(words){
-  var result = [], i = 0;
+// Počet číslic tokenu = délka řetězce hodnoty (zachovává zamýšlené leading zeros)
+// Výjimka: "nula" → 1 cifra (val=0, digits=1)
+function tokenDigits(val){
+  if(val === 0) return 1;
+  return String(val).length;
+}
+
+// Parsuje pole slov na tokeny
+function parseWords(words){
+  var result = [];
+  var i = 0;
   while(i < words.length){
     var w = words[i];
     if(!w){ i++; continue; }
-    if(IGNORE_WORDS[w]){ i++; continue; }
+    if(IGNORE_WORDS[w]||SUBMIT_WORDS[w]||RESET_WORDS[w]||BACK_WORDS[w]){ i++; continue; }
+    if(DECIMAL_WORDS[w]){ result.push({decimal:true}); i++; continue; }
+
     var matched = false;
     for(var len = 4; len >= 1; len--){
       if(i+len > words.length) continue;
-      var phrase = words.slice(i, i+len).join(' ');
-      var val = evalPhrase(phrase, words, i, len);
-      if(val !== null && ((typeof val === 'number' && val >= 0)||(typeof val === 'string' && /^\d+$/.test(val)))){
-        result.push(val); i += len; matched = true; break;
+      var val = evalPhrase(words, i, len);
+      if(val !== null){
+        result.push({val:val, digits:tokenDigits(val)});
+        i += len; matched = true; break;
       }
     }
     if(!matched) i++;
@@ -573,18 +571,49 @@ function parseVoiceTokens(words){
   return result;
 }
 
-function expandCompound(t){
-  return t.replace(/dvěstě/g,'dvě stě').replace(/třista/g,'tři sta').replace(/čtyřista/g,'čtyři sta')
-    .replace(/([a-záčďéěíňóřšťúůýž]+)set\b/g,'$1 set')
-    .replace(/(dvacet|třicet|čtyřicet|padesát|šedesát|sedmdesát|osmdesát|devadesát)(jedna|jeden|dvě|dva|tři|čtyři|pět|šest|sedm|osm|devět)/g,'$1 $2');
+// Sestaví číslo z tokenů → string pro zobrazení
+function buildNumber(tokens){
+  var intStr = '', decStr = '', afterDec = false;
+  for(var i = 0; i < tokens.length; i++){
+    var t = tokens[i];
+    if(t.decimal){ afterDec = true; continue; }
+    var s = String(t.val);
+    while(s.length < t.digits) s = '0' + s;
+    if(afterDec) decStr += s;
+    else intStr += s;
+  }
+  // Odstraníme leading zeros z celé části
+  intStr = intStr.replace(/^0+/,'') || '0';
+  // Formátujeme s nezlomitelnými mezerami po tisících
+  var formatted = intStr.replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
+  if(decStr) formatted += ',' + decStr;
+  return formatted;
 }
 
+// Zpět – maže jednu cifru nalevo od kurzoru (pouze po zobrazení)
+function spBackspace(){
+  var val = odpovedEl.value;
+  var pos = odpovedEl.selectionStart;
+  if(pos === 0) return;
+  // Najdeme nejbližší cifru nalevo od kurzoru
+  var deletePos = -1;
+  for(var i = pos-1; i >= 0; i--){
+    if(/\d/.test(val[i])){ deletePos = i; break; }
+  }
+  if(deletePos === -1) return;
+  odpovedEl.value = val.substring(0, deletePos) + val.substring(deletePos+1);
+  odpovedEl.selectionStart = odpovedEl.selectionEnd = deletePos;
+  odpovedEl.focus();
+}
+
+// === MIC VISIBILITY ===
 function updateMicVisibility(){
   var show = hlasCheck.checked && zobrazitVysledek && aktualniPriklad;
   micBtn.classList.toggle('shown', !!show);
   if(!show && micListening) stopMic(false);
 }
 
+// === BUILD RECOGNITION ===
 function buildRecognition(){
   if(!SpeechRecognition) return null;
   var r = new SpeechRecognition();
@@ -611,7 +640,7 @@ function buildRecognition(){
   };
 
   r.onerror = function(e){
-    if(e.error === 'not-allowed' || e.error === 'service-not-available'){
+    if(e.error==='not-allowed'||e.error==='service-not-available'){
       micAutoRestart = false; hlasCheck.checked = false; updateMicVisibility();
       chybaEl.textContent = '⚠️ Mikrofon není dostupný';
     }
@@ -626,52 +655,60 @@ function buildRecognition(){
     if(!finalText.trim()) return;
 
     var raw = finalText.trim().toLowerCase();
-    raw = raw.replace(/(\d)\s+(?=\d)/g, '$1');
-    raw = raw.replace(/[,.]/g, ' čárka ');
-    raw = raw.replace(/[?!;:_]/g, '');
-    raw = raw.replace(/\b(ukázat|ukazat|ukažte|ukazte|ukaž|ukaš)\b/g, ' ');
+    raw = raw.replace(/[?!;:_,.]/g, ' ');
+    var words = raw.split(/\s+/).filter(Boolean);
 
-    if(/chyba/.test(raw)){ spReset(); return; }
-
-    // === ZPĚT / SPJET – vymaže poslední číslici, lze opakovat ===
-    var zpetPocet = (raw.match(/\b(zpět|spjet)\b/g) || []).length;
-    for(var z = 0; z < zpetPocet; z++){ spBackspace(); }
-    if(zpetPocet > 0){ raw = raw.replace(/\b(zpět|spjet)\b/g, ' ').trim(); if(!raw){ return; } }
-
-    // === ZERO/ZIROU/ZÍROU – přidá 000 napravo ===
-    var zeroRe = /\b(zero|zirou|zírou)\b/g;
-    var hasZero = false;
-    while(zeroRe.exec(raw) !== null){ hasZero = true; spAppendZeros(); }
-    if(hasZero){ raw = raw.replace(/\b(zero|zirou|zírou)\b/g, ' ').trim(); if(!raw){ return; } }
-
-    var shouldSubmit = false;
-    if(/\b(ano|jo|joo)\b/.test(raw)){
-      shouldSubmit = true;
-      raw = raw.replace(/\b(ano|jo|joo)\b/g, ' ');
-    }
-
-    raw = expandCompound(raw);
-    raw = raw.trim();
-
-    if(raw){
-      var decMatch = raw.match(DEC_RE);
-      if(decMatch){
-        var before = raw.slice(0, decMatch.index).trim();
-        if(before){ parseVoiceTokens(before.split(/\s+/).filter(Boolean)).forEach(function(v){ spBuf.push(v); }); }
-        spBuf.push('.');
-        var after = raw.slice(decMatch.index + decMatch[0].length).trim();
-        if(after){ parseVoiceTokens(after.split(/\s+/).filter(Boolean)).forEach(function(v){ spBuf.push(v); }); }
-      } else {
-        parseVoiceTokens(raw.split(/\s+/).filter(Boolean)).forEach(function(v){ spBuf.push(v); });
+    // CHYBA → vymaž vše
+    for(var k = 0; k < words.length; k++){
+      if(RESET_WORDS[words[k]]){
+        spTokens = [];
+        odpovedEl.value = '';
+        return;
       }
-      spFlush();
     }
+
+    // ZPĚT → maže cifru v inputu (jen po zobrazení výsledku)
+    var zpetCount = 0;
+    var filtWords = [];
+    for(var k = 0; k < words.length; k++){
+      if(BACK_WORDS[words[k]]) zpetCount++;
+      else filtWords.push(words[k]);
+    }
+    for(var z = 0; z < zpetCount; z++) spBackspace();
+    words = filtWords;
+    if(!words.length) return;
+
+    // ANO → sestav a zobraz
+    var shouldSubmit = false;
+    var wordsNoAno = [];
+    for(var k = 0; k < words.length; k++){
+      if(SUBMIT_WORDS[words[k]]) shouldSubmit = true;
+      else wordsNoAno.push(words[k]);
+    }
+
+    // Přidej nové tokeny
+    var newTokens = parseWords(wordsNoAno);
+    for(var k = 0; k < newTokens.length; k++) spTokens.push(newTokens[k]);
 
     if(shouldSubmit){
-      micAutoRestart = false;
-      stopMic(false);
-      setTimeout(function(){ handle(null, true); }, 100);
+      if(spTokens.length > 0){
+        // Sestavíme číslo a zobrazíme
+        var result = buildNumber(spTokens);
+        spTokens = [];
+        odpovedEl.value = result;
+        odpovedEl.classList.remove('hidden-text');
+        // Zastavíme mikrofon – uživatel zkontroluje a stiskne VÝSLEDEK
+        micAutoRestart = false;
+        stopMic(false);
+        odpovedEl.focus();
+      } else {
+        // "ano" bez tokenů = prázdná odpověď → rovnou odešleme
+        micAutoRestart = false;
+        stopMic(false);
+        setTimeout(function(){ handle(null, true); }, 100);
+      }
     }
+    // Pokud NEBYLO "ano", input zůstává prázdný – tokeny čekají v spTokens[]
   };
 
   return r;
@@ -700,7 +737,6 @@ hlasCheck.addEventListener('change', function(){
   if(!hlasCheck.checked){ stopMic(true); }
   else if(zobrazitVysledek && aktualniPriklad){ setTimeout(function(){ startMic(); }, 100); }
 });
-
 micBtn.addEventListener('click', function(){ if(micListening) stopMic(false); else startMic(); });
 micBtn.addEventListener('touchstart', function(e){ e.stopPropagation(); }, {passive:true});
 
