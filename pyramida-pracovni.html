@@ -15,6 +15,8 @@
       --primary-light: #818cf8;
       --input-bg: #f5f6f8;
       --input-border: #b9c1d1;
+      --disabled-bg: #e1e5ec;
+      --disabled-border: #c4cad5;
       --bottom-border: #facc15;
       --bottom-bg: #f3efd7;
       --shadow: 0 24px 60px rgba(60, 70, 95, 0.18);
@@ -29,6 +31,8 @@
       --primary-light: #a5b4fc;
       --input-bg: #111827;
       --input-border: #475569;
+      --disabled-bg: #1e293b;
+      --disabled-border: #334155;
       --bottom-border: #eab308;
       --bottom-bg: #292517;
       --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
@@ -72,7 +76,7 @@
     .hlavicka {
       position: relative;
       text-align: center;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
       padding: 0 42px;
     }
 
@@ -89,7 +93,6 @@
       width: 36px;
       height: 36px;
       border: 0;
-      border-radius: 0;
       font-size: 25px;
       cursor: pointer;
       color: inherit;
@@ -103,32 +106,34 @@
     }
 
     .nastaveni {
-      margin-bottom: 18px;
+      margin-bottom: 16px;
       text-align: center;
     }
 
-    .nastaveni-toggle {
+    .popis-toggle {
       border: 0;
       background: transparent;
       color: var(--muted);
       font-size: 15px;
       font-weight: 700;
       cursor: pointer;
-      padding: 6px 10px;
+      padding: 6px 8px;
+      line-height: 1.35;
     }
 
-    .nastaveni-toggle::after {
+    .popis-toggle::after {
       content: " ▼";
       font-size: 12px;
+      white-space: nowrap;
     }
 
-    .nastaveni.zavreno .nastaveni-toggle::after {
+    .nastaveni.zavreno .popis-toggle::after {
       content: " ▲";
     }
 
     .panel-nastaveni {
       overflow: hidden;
-      max-height: 180px;
+      max-height: 90px;
       opacity: 1;
       transition: max-height 0.25s ease, opacity 0.2s ease, margin 0.25s ease;
     }
@@ -139,19 +144,14 @@
       margin: 0;
     }
 
-    .popis {
-      margin: 4px 0 12px;
-      color: var(--muted);
-      font-size: 15px;
-    }
-
     .ovladani {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       align-items: center;
       gap: 12px;
-      margin-bottom: 8px;
+      margin-top: 8px;
+      margin-bottom: 4px;
     }
 
     .pole {
@@ -203,7 +203,7 @@
       border: 2px solid var(--input-border);
       border-radius: 14px;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
-      transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+      transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
     }
 
     input:focus {
@@ -221,6 +221,18 @@
     }
 
     input.spodni:focus {
+      transform: none;
+      box-shadow: none;
+    }
+
+    input.zamcene {
+      background: var(--disabled-bg);
+      border-color: var(--disabled-border);
+      cursor: not-allowed;
+      opacity: 0.72;
+    }
+
+    input.zamcene:focus {
       transform: none;
       box-shadow: none;
     }
@@ -261,6 +273,10 @@
         font-size: 24px;
       }
 
+      .popis-toggle {
+        font-size: 14px;
+      }
+
       .radek {
         gap: 4px;
       }
@@ -292,13 +308,11 @@
     </header>
 
     <section id="nastaveni" class="nastaveni">
-      <button id="nastaveniToggle" class="nastaveni-toggle" type="button">
-        Nastavení
+      <button id="nastaveniToggle" class="popis-toggle" type="button">
+        Vyber počet poschodí pyramidy a počet cifer spodního řádku.
       </button>
 
       <div id="panelNastaveni" class="panel-nastaveni">
-        <p class="popis">Vyber počet poschodí pyramidy a počet cifer spodního řádku.</p>
-
         <div class="ovladani">
           <div class="pole">
             <select id="vyska" aria-label="Počet poschodí pyramidy">
@@ -344,6 +358,21 @@
     const STORAGE_VYSKA = 'pyramida_vyska';
     const STORAGE_CIFRY = 'pyramida_cifry';
 
+    function formatujTisice(hodnota) {
+      if (!hodnota) {
+        return '';
+      }
+
+      return hodnota.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    }
+
+    function nastavVstupCisla(input) {
+      input.addEventListener('input', function () {
+        const cislice = this.value.replace(/\D/g, '');
+        this.value = formatujTisice(cislice);
+      });
+    }
+
     function ulozNastaveni() {
       localStorage.setItem(STORAGE_VYSKA, vyska.value);
       localStorage.setItem(STORAGE_CIFRY, cifry.value);
@@ -388,6 +417,8 @@
       const pocetRadku = Number(vyska.value);
       const pocetCifer = Number(cifry.value);
 
+      let poleProFocus = null;
+
       for (let r = 1; r <= pocetRadku; r++) {
         const radek = document.createElement('div');
         radek.className = 'radek';
@@ -406,28 +437,42 @@
             input.setAttribute('aria-label', 'Automaticky vygenerované číslo');
 
             if (generovatSpodniRadek) {
-              input.value = nahodneCisloSPoctemCifer(pocetCifer);
+              const nahodne = String(nahodneCisloSPoctemCifer(pocetCifer));
+              input.value = formatujTisice(nahodne);
             } else {
               input.value = '';
             }
           } else {
             input.value = '';
 
-            input.addEventListener('input', function () {
-              let hodnota = this.value.replace(/\D/g, '');
+            if (generovatSpodniRadek) {
+              const jeDruhePoschodiA1Zleva = r === pocetRadku - 1 && i === 0;
 
-              if (hodnota) {
-                this.value = Number(hodnota).toLocaleString('cs-CZ');
+              if (jeDruhePoschodiA1Zleva) {
+                input.readOnly = false;
+                input.tabIndex = 0;
+                nastavVstupCisla(input);
+                poleProFocus = input;
               } else {
-                this.value = '';
+                input.classList.add('zamcene');
+                input.readOnly = true;
+                input.tabIndex = -1;
               }
-            });
+            } else {
+              nastavVstupCisla(input);
+            }
           }
 
           radek.appendChild(input);
         }
 
         pyramida.appendChild(radek);
+      }
+
+      if (poleProFocus) {
+        setTimeout(function () {
+          poleProFocus.focus();
+        }, 0);
       }
     }
 
