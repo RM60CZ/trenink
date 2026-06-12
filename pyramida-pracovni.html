@@ -190,16 +190,6 @@
       text-align: center;
     }
 
-    .historie {
-      min-height: 24px;
-      margin: 0 0 10px;
-      text-align: center;
-      font-size: 16px;
-      font-weight: 900;
-      color: var(--success);
-      word-spacing: 8px;
-    }
-
     .pyramida {
       width: 100%;
       max-width: 100%;
@@ -315,6 +305,16 @@
       background: linear-gradient(135deg, #64748b, #94a3b8);
     }
 
+    .historie {
+      min-height: 24px;
+      margin: 14px 0 0;
+      text-align: center;
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--success);
+      word-spacing: 8px;
+    }
+
     @media (max-width: 480px) {
       .aplikace {
         padding-left: 8px;
@@ -408,7 +408,6 @@
     </section>
 
     <div id="hlaska" class="hlaska"></div>
-    <div id="historie" class="historie"></div>
 
     <div class="pyramida" id="pyramida"></div>
 
@@ -416,6 +415,8 @@
       <button id="start" class="akce" type="button">S T A R T</button>
       <button id="konec" class="akce konec" type="button">K O N E C</button>
     </div>
+
+    <div id="historie" class="historie"></div>
   </main>
 
   <script>
@@ -475,6 +476,12 @@
       historie.innerHTML = novaHistorie;
     }
 
+    function vymazHistorii() {
+      localStorage.setItem(STORAGE_HISTORIE_DATUM, dnesniDatum());
+      localStorage.setItem(STORAGE_HISTORIE, '');
+      historie.innerHTML = '';
+    }
+
     function formatujTisice(hodnota) {
       if (!hodnota) return '';
       return hodnota.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
@@ -530,6 +537,7 @@
     function nahodneCisloSPoctemCifer(pocetCifer) {
       const min = pocetCifer === 1 ? 0 : Math.pow(10, pocetCifer - 1);
       const max = Math.pow(10, pocetCifer) - 1;
+
       return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
@@ -586,8 +594,6 @@
     }
 
     function dalsiPole() {
-      const pocetRadku = Number(vyska.value);
-
       if (aktivniIndex + 1 < aktivniRadek) {
         return {
           r: aktivniRadek,
@@ -632,6 +638,8 @@
 
             if (generovatSpodniRadek) {
               input.value = formatujTisice(String(nahodneCisloSPoctemCifer(pocetCifer)));
+            } else {
+              input.value = '';
             }
           } else {
             input.value = '';
@@ -668,6 +676,21 @@
       const aktivni = ziskejPole(aktivniRadek, aktivniIndex);
 
       if (!aktivni) return;
+
+      const text = aktivni.value.trim();
+
+      if (
+        aktivniRadek === 2 &&
+        aktivniIndex === 0 &&
+        text.toLowerCase() === 'vymazat'
+      ) {
+        vymazHistorii();
+        aktivni.value = '';
+        aktivni.classList.remove('spatne');
+        aktivni.focus();
+        aktivni.select();
+        return;
+      }
 
       if (!pouzeCisliceATisice(aktivni.value) || aktivni.value.trim() === '') {
         hlaska.textContent = 'Nepovolený znak!';
