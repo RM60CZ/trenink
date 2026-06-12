@@ -77,7 +77,7 @@ body.dark{
   border-radius:28px;
   padding:24px 14px 30px;
   box-shadow:var(--shadow);
-  overflow:hidden;
+  overflow:visible;
 }
 
 .hlavicka{
@@ -345,7 +345,7 @@ select option{
   align-items:center;
   gap:8px;
   pointer-events:none;
-  max-width:calc(100vw - 16px);
+  max-width:none;
 }
 
 .prekryv-panel.zobrazen{
@@ -382,6 +382,12 @@ select option{
   box-shadow:0 8px 20px rgba(15,23,42,.14);
   pointer-events:auto;
   min-width:0;
+}
+
+#overlayLevy,
+#overlayPravy{
+  padding-left:4px;
+  padding-right:4px;
 }
 
 .prekryv-input:focus{
@@ -499,7 +505,7 @@ select option{
     padding-left:8px;
     padding-right:8px;
     border-radius:22px;
-    overflow:hidden;
+    overflow:visible;
   }
 
   .hlavicka{
@@ -543,6 +549,13 @@ select option{
     height:clamp(52px,15vw,72px);
     font-size:clamp(17px,4.4vw,24px);
     padding:0 6px;
+  }
+
+  #overlayLevy,
+  #overlayPravy{
+    font-size:clamp(15px,4vw,22px);
+    padding-left:2px;
+    padding-right:2px;
   }
 
   .akce{
@@ -779,19 +792,38 @@ function sirkaTextu(text, typ = 'cela'){
 
   let jeMobil = window.innerWidth < 480;
 
-  let znak = jeMobil ? 14.5 : 18;
-  let rezerva = jeMobil ? 34 : 44;
+  let meric = document.createElement('span');
+  meric.style.position = 'fixed';
+  meric.style.left = '-9999px';
+  meric.style.top = '-9999px';
+  meric.style.visibility = 'hidden';
+  meric.style.whiteSpace = 'nowrap';
+  meric.style.fontFamily = 'Arial, sans-serif';
+  meric.style.fontWeight = '800';
+  meric.style.fontSize = jeMobil ? '22px' : '30px';
+  meric.textContent = text;
 
-  let w = Math.ceil(text.length * znak + rezerva);
+  document.body.appendChild(meric);
+  let realna = Math.ceil(meric.getBoundingClientRect().width);
+  meric.remove();
+
+  let rezerva = jeMobil ? 50 : 70;
+  let w = realna + rezerva;
 
   if(typ === 'pulka'){
-    let max = Math.floor((window.innerWidth - 18) / 2);
-    let min = jeMobil ? 104 : 120;
+    let zakladna = pole(+vyska.value, 0)?.closest('.radek');
+    let sirkaZakladny = zakladna
+      ? Math.floor(zakladna.getBoundingClientRect().width)
+      : Math.floor(window.innerWidth * 0.9);
+
+    let max = Math.floor(sirkaZakladny / 2);
+    let min = jeMobil ? 120 : 150;
+
     return Math.min(Math.max(w, min), max);
   }
 
-  let max = Math.min(window.innerWidth - 20, jeMobil ? 360 : 520);
-  let min = jeMobil ? 112 : 130;
+  let max = Math.min(window.innerWidth - 20, jeMobil ? 380 : 620);
+  let min = jeMobil ? 130 : 160;
 
   return Math.min(Math.max(w, min), max);
 }
@@ -833,12 +865,15 @@ function zobrazPrekryv(){
   overlayAktivni.classList.remove('spatne','spravne');
 
   let wA = sirkaProText(vysledky[aktivniRadek][aktivniIndex]);
+
   let wL = sirkaPoloviny(l.value);
   let wP = sirkaPoloviny(p.value);
 
+  let wSpodni = Math.max(wL, wP);
+
   overlayAktivni.style.width = wA + 'px';
-  overlayLevy.style.width = wL + 'px';
-  overlayPravy.style.width = wP + 'px';
+  overlayLevy.style.width = wSpodni + 'px';
+  overlayPravy.style.width = wSpodni + 'px';
 
   nastavPrekryvPozici();
   prekryvPanel.classList.add('zobrazen');
