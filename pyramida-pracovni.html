@@ -72,39 +72,77 @@
     .hlavicka {
       position: relative;
       text-align: center;
-      margin-bottom: 22px;
-      padding: 0 48px;
+      margin-bottom: 14px;
+      padding: 0 42px;
     }
 
     h1 {
-      margin: 0 0 8px;
+      margin: 0;
       font-size: clamp(26px, 6vw, 42px);
       letter-spacing: -0.04em;
-    }
-
-    .popis {
-      margin: 0;
-      color: var(--muted);
-      font-size: 15px;
     }
 
     .rezim {
       position: absolute;
       top: 0;
       right: 0;
-      width: 42px;
-      height: 42px;
+      width: 36px;
+      height: 36px;
       border: 0;
-      border-radius: 50%;
-      font-size: 22px;
+      border-radius: 0;
+      font-size: 25px;
       cursor: pointer;
-      color: #ffffff;
-      background: linear-gradient(135deg, var(--primary), var(--primary-light));
-      box-shadow: 0 10px 22px rgba(79, 70, 229, 0.28);
+      color: inherit;
+      background: transparent;
+      box-shadow: none;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 0;
+      line-height: 1;
+    }
+
+    .nastaveni {
+      margin-bottom: 18px;
+      text-align: center;
+    }
+
+    .nastaveni-toggle {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 6px 10px;
+    }
+
+    .nastaveni-toggle::after {
+      content: " ▼";
+      font-size: 12px;
+    }
+
+    .nastaveni.zavreno .nastaveni-toggle::after {
+      content: " ▲";
+    }
+
+    .panel-nastaveni {
+      overflow: hidden;
+      max-height: 180px;
+      opacity: 1;
+      transition: max-height 0.25s ease, opacity 0.2s ease, margin 0.25s ease;
+    }
+
+    .nastaveni.zavreno .panel-nastaveni {
+      max-height: 0;
+      opacity: 0;
+      margin: 0;
+    }
+
+    .popis {
+      margin: 4px 0 12px;
+      color: var(--muted);
+      font-size: 15px;
     }
 
     .ovladani {
@@ -113,23 +151,16 @@
       justify-content: center;
       align-items: center;
       gap: 12px;
-      margin-bottom: 26px;
+      margin-bottom: 8px;
     }
 
     .pole {
       display: flex;
       align-items: center;
-      gap: 8px;
       background: rgba(255, 255, 255, 0.26);
       border: 1px solid rgba(148, 163, 184, 0.28);
       border-radius: 999px;
       padding: 8px 12px;
-    }
-
-    label {
-      color: var(--muted);
-      font-size: 14px;
-      font-weight: 700;
     }
 
     select {
@@ -151,6 +182,7 @@
       align-items: center;
       gap: clamp(5px, 1.5vw, 10px);
       overflow: hidden;
+      min-height: 40px;
     }
 
     .radek {
@@ -193,6 +225,25 @@
       box-shadow: none;
     }
 
+    .start-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 18px;
+    }
+
+    .start {
+      border: 0;
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border-radius: 999px;
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: 0.28em;
+      cursor: pointer;
+      padding: 12px 28px;
+      box-shadow: 0 10px 22px rgba(79, 70, 229, 0.28);
+    }
+
     @media (max-width: 480px) {
       .aplikace {
         padding-left: 8px;
@@ -201,13 +252,13 @@
       }
 
       .hlavicka {
-        padding: 0 44px;
+        padding: 0 40px;
       }
 
       .rezim {
-        width: 38px;
-        height: 38px;
-        font-size: 20px;
+        width: 34px;
+        height: 34px;
+        font-size: 24px;
       }
 
       .radek {
@@ -224,6 +275,11 @@
         border-radius: 10px;
         padding: 0;
       }
+
+      .start {
+        font-size: 16px;
+        padding: 11px 24px;
+      }
     }
   </style>
 </head>
@@ -232,37 +288,47 @@
   <main class="aplikace">
     <header class="hlavicka">
       <h1>Pyramida čísel</h1>
-      <p class="popis">Vyber výšku pyramidy a počet cifer spodního řádku.</p>
-
       <button id="rezim" class="rezim" type="button" aria-label="Přepnout tmavý/světlý režim">🌙</button>
     </header>
 
-    <section class="ovladani">
-      <div class="pole">
-        <label for="vyska">Výška</label>
-        <select id="vyska">
-          <option value="2">2 poschodí</option>
-          <option value="3">3 poschodí</option>
-          <option value="4">4 poschodí</option>
-          <option value="5">5 poschodí</option>
-          <option value="6">6 poschodí</option>
-          <option value="7" selected>7 poschodí</option>
-        </select>
-      </div>
+    <section id="nastaveni" class="nastaveni">
+      <button id="nastaveniToggle" class="nastaveni-toggle" type="button">
+        Nastavení
+      </button>
 
-      <div class="pole">
-        <label for="cifry">Cifry</label>
-        <select id="cifry">
-          <option value="1">1 cifra</option>
-          <option value="2" selected>2 cifry</option>
-          <option value="3">3 cifry</option>
-          <option value="4">4 cifry</option>
-          <option value="5">5 cifer</option>
-        </select>
+      <div id="panelNastaveni" class="panel-nastaveni">
+        <p class="popis">Vyber počet poschodí pyramidy a počet cifer spodního řádku.</p>
+
+        <div class="ovladani">
+          <div class="pole">
+            <select id="vyska" aria-label="Počet poschodí pyramidy">
+              <option value="2">2 poschodí</option>
+              <option value="3">3 poschodí</option>
+              <option value="4">4 poschodí</option>
+              <option value="5">5 poschodí</option>
+              <option value="6">6 poschodí</option>
+              <option value="7" selected>7 poschodí</option>
+            </select>
+          </div>
+
+          <div class="pole">
+            <select id="cifry" aria-label="Počet cifer spodního řádku">
+              <option value="1">1 cifra</option>
+              <option value="2" selected>2 cifry</option>
+              <option value="3">3 cifry</option>
+              <option value="4">4 cifry</option>
+              <option value="5">5 cifer</option>
+            </select>
+          </div>
+        </div>
       </div>
     </section>
 
     <div class="pyramida" id="pyramida"></div>
+
+    <div class="start-wrap">
+      <button id="start" class="start" type="button">S T A R T</button>
+    </div>
   </main>
 
   <script>
@@ -270,12 +336,19 @@
     const vyska = document.getElementById('vyska');
     const cifry = document.getElementById('cifry');
     const rezim = document.getElementById('rezim');
+    const start = document.getElementById('start');
+    const nastaveni = document.getElementById('nastaveni');
+    const nastaveniToggle = document.getElementById('nastaveniToggle');
 
     function nahodneCisloSPoctemCifer(pocetCifer) {
       const min = pocetCifer === 1 ? 0 : Math.pow(10, pocetCifer - 1);
       const max = Math.pow(10, pocetCifer) - 1;
 
       return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function vymazPyramidu() {
+      pyramida.innerHTML = '';
     }
 
     function vytvorPyramidu(pocetRadku) {
@@ -321,11 +394,20 @@
       }
     }
 
+    nastaveniToggle.addEventListener('click', function () {
+      nastaveni.classList.toggle('zavreno');
+      vymazPyramidu();
+    });
+
     vyska.addEventListener('change', function () {
-      vytvorPyramidu(Number(this.value));
+      vymazPyramidu();
     });
 
     cifry.addEventListener('change', function () {
+      vymazPyramidu();
+    });
+
+    start.addEventListener('click', function () {
       vytvorPyramidu(Number(vyska.value));
     });
 
@@ -339,7 +421,7 @@
       }
     });
 
-    vytvorPyramidu(Number(vyska.value));
+    vymazPyramidu();
   </script>
 </body>
 </html>
