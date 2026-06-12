@@ -482,6 +482,13 @@
       historie.innerHTML = '';
     }
 
+    function oznacPole(input) {
+      setTimeout(function () {
+        input.focus({ preventScroll: false });
+        input.select();
+      }, 30);
+    }
+
     function formatujTisice(hodnota) {
       if (!hodnota) return '';
       return hodnota.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
@@ -687,16 +694,14 @@
         vymazHistorii();
         aktivni.value = '';
         aktivni.classList.remove('spatne');
-        aktivni.focus();
-        aktivni.select();
+        oznacPole(aktivni);
         return;
       }
 
       if (!pouzeCisliceATisice(aktivni.value) || aktivni.value.trim() === '') {
         hlaska.textContent = 'Nepovolený znak!';
         aktivni.classList.add('spatne');
-        aktivni.focus();
-        aktivni.select();
+        oznacPole(aktivni);
         return;
       }
 
@@ -727,8 +732,7 @@
         }
       } else {
         aktivni.classList.add('spatne');
-        aktivni.focus();
-        aktivni.select();
+        oznacPole(aktivni);
       }
     }
 
@@ -775,6 +779,13 @@
       document.body.classList.toggle('dark');
       rezim.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
       ulozNastaveni();
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        start.click();
+      }
     });
 
     nactiNastaveni();
