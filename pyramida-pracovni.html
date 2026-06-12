@@ -228,24 +228,22 @@
     }
 
     .herni-plocha {
-      display: grid;
-      grid-template-columns: minmax(120px, 1fr) auto minmax(120px, 1fr);
-      align-items: start;
-      column-gap: 10px;
+      position: relative;
       width: 100%;
     }
 
     .postranni-tlacitko {
-      padding-top: 2px;
-      display: flex;
+      position: absolute;
+      top: 0;
+      z-index: 5;
     }
 
     .postranni-tlacitko.vlevo {
-      justify-content: flex-end;
+      right: calc(50% + 48px);
     }
 
     .postranni-tlacitko.vpravo {
-      justify-content: flex-start;
+      left: calc(50% + 48px);
     }
 
     .pyramida {
@@ -413,29 +411,20 @@
 
     @media (max-width: 760px) {
       .herni-plocha {
-        grid-template-columns: 1fr 1fr;
-        grid-template-areas:
-          "pyramida pyramida"
-          "start konec";
-        row-gap: 14px;
+        position: relative;
+        padding-top: 54px;
       }
 
       .postranni-tlacitko {
-        padding-top: 0;
+        top: 0;
       }
 
       .postranni-tlacitko.vlevo {
-        grid-area: start;
-        justify-content: flex-end;
+        right: calc(50% + 10px);
       }
 
       .postranni-tlacitko.vpravo {
-        grid-area: konec;
-        justify-content: flex-start;
-      }
-
-      .pyramida {
-        grid-area: pyramida;
+        left: calc(50% + 10px);
       }
     }
 
