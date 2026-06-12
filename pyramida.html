@@ -23,9 +23,10 @@ h1{margin:0;font-size:clamp(26px,6vw,42px);letter-spacing:-.04em}
 .mazani-historie::placeholder{color:var(--muted);opacity:.9}
 .mazani-historie:focus{outline:0;border-color:var(--primary);box-shadow:0 0 0 4px rgba(129,140,248,.22);transform:none}
 body.dark .mazani-historie{color:var(--input-bg)}
-.ovladani{flex-wrap:wrap;align-items:center;gap:12px;margin:8px 0 4px}
-.pole{display:flex;align-items:center;background:rgba(255,255,255,.22);border:1px solid rgba(148,163,184,.32);border-radius:999px;padding:8px 12px}
-select{color:var(--text);background:var(--input-bg);border:1px solid var(--input-border);border-radius:999px;font-size:15px;font-weight:700;cursor:pointer;padding:8px 12px}
+.ovladani{flex-wrap:wrap;align-items:center;justify-content:center;gap:12px;margin:8px 0 4px}
+.pole{display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.22);border:1px solid rgba(148,163,184,.32);border-radius:999px;padding:8px 12px}
+select{color:var(--text);background:var(--input-bg);border:1px solid var(--input-border);border-radius:999px;font-size:15px;font-weight:700;cursor:pointer;padding:8px 12px;text-align:center;text-align-last:center}
+select option{text-align:center}
 .hlaska{min-height:22px;margin:2px 0 8px;color:var(--error);font-size:15px;font-weight:800;text-align:center}
 .herni-plocha{position:relative;width:100%}.postranni-tlacitko{position:absolute;top:0;z-index:5}.postranni-tlacitko.vlevo{right:calc(50% + 82px)}.postranni-tlacitko.vpravo{left:calc(50% + 82px)}
 .pyramida{width:100%;max-width:100%;display:flex;flex-direction:column;align-items:center;gap:clamp(5px,1.5vw,10px);overflow:visible;min-height:40px}
@@ -63,6 +64,7 @@ input.spravne,input.spravne:focus,input.aktivni.spravne,input.aktivni.spravne:fo
 <div class="ovladani">
 <div class="pole"><select id="vyska" aria-label="Počet poschodí pyramidy"><option value="2">2 poschodí</option><option value="3">3 poschodí</option><option value="4">4 poschodí</option><option value="5">5 poschodí</option><option value="6">6 poschodí</option><option value="7" selected>7 poschodí</option></select></div>
 <div class="pole"><select id="cifry" aria-label="Počet cifer spodního řádku"><option value="1">1 cifra</option><option value="2" selected>2 cifry</option><option value="3">3 cifry</option><option value="4">4 cifry</option><option value="5">5 cifer</option></select></div>
+<div class="pole"><select id="znamenko" aria-label="Typ čísel spodního řádku"><option value="+">+</option><option value="+-">+-</option></select></div>
 </div></div></section>
 <div id="hlaska" class="hlaska"></div>
 <div class="herni-plocha">
@@ -74,30 +76,30 @@ input.spravne,input.spravne:focus,input.aktivni.spravne,input.aktivni.spravne:fo
 </main>
 
 <script>
-const $=id=>document.getElementById(id),pyramida=$('pyramida'),vyska=$('vyska'),cifry=$('cifry'),rezim=$('rezim'),start=$('start'),konec=$('konec'),nastaveni=$('nastaveni'),nastaveniToggle=$('nastaveniToggle'),mazaniHistorie=$('mazaniHistorie'),hlaska=$('hlaska'),historie=$('historie');
-const SR='pyramida_rezim',SV='pyramida_vyska',SC='pyramida_cifry',SH='pyramida_historie',SD='pyramida_historie_datum';
+const $=id=>document.getElementById(id),pyramida=$('pyramida'),vyska=$('vyska'),cifry=$('cifry'),znamenko=$('znamenko'),rezim=$('rezim'),start=$('start'),konec=$('konec'),nastaveni=$('nastaveni'),nastaveniToggle=$('nastaveniToggle'),mazaniHistorie=$('mazaniHistorie'),hlaska=$('hlaska'),historie=$('historie');
+const SR='pyramida_rezim',SV='pyramida_vyska',SC='pyramida_cifry',SZ='pyramida_znamenko',SH='pyramida_historie',SD='pyramida_historie_datum';
 let hraBezi=0,aktivniRadek=null,aktivniIndex=null,vysledky=[];
-const dnes=()=>{let d=new Date;return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`},fmt=v=>v?v.replace(/\B(?=(\d{3})+(?!\d))/g,' '):'',cis=v=>Number(v.replace(/\s/g,'')),pole=(r,i)=>pyramida.querySelector(`input[data-r="${r}"][data-i="${i}"]`),uloz=()=>{localStorage.setItem(SV,vyska.value);localStorage.setItem(SC,cifry.value);localStorage.setItem(SR,document.body.classList.contains('dark')?'dark':'light')};
+const dnes=()=>{let d=new Date;return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`},fmt=v=>{if(v===''||v==null)return'';let s=String(v),m=s[0]=='-'?'-':'';s=s.replace('-','');return m+s.replace(/\B(?=(\d{3})+(?!\d))/g,' ')},cis=v=>Number(String(v).replace(/\s/g,'')),pole=(r,i)=>pyramida.querySelector(`input[data-r="${r}"][data-i="${i}"]`),uloz=()=>{localStorage.setItem(SV,vyska.value);localStorage.setItem(SC,cifry.value);localStorage.setItem(SZ,znamenko.value);localStorage.setItem(SR,document.body.classList.contains('dark')?'dark':'light')};
 function nactiHistorii(){let d=dnes();if(localStorage.getItem(SD)!==d)localStorage.setItem(SD,d),localStorage.setItem(SH,'');historie.innerHTML=localStorage.getItem(SH)||''}
 function pridej(z){let d=dnes();if(localStorage.getItem(SD)!==d)localStorage.setItem(SD,d),localStorage.setItem(SH,'');let h=(localStorage.getItem(SH)||'')+`<span>${z}</span>&nbsp;&nbsp;`;localStorage.setItem(SH,h);historie.innerHTML=h}
 function vymazHistorii(){localStorage.setItem(SD,dnes());localStorage.setItem(SH,'');historie.innerHTML=''}
 function mazani(){if(mazaniHistorie.value.trim().toLowerCase()==='vymazat')vymazHistorii();mazaniHistorie.value=''}
 function ohnostroj(){let o=document.createElement('div');o.className='ohnostroj';document.body.appendChild(o);[{x:28,y:28},{x:50,y:20},{x:72,y:30},{x:40,y:42},{x:62,y:45}].forEach((v,k)=>setTimeout(()=>{for(let i=0;i<28;i++){let s=document.createElement('span'),u=Math.random()*Math.PI*2,d=70+Math.random()*90;s.className='jiskra';s.style.setProperty('--x',v.x+'vw');s.style.setProperty('--y',v.y+'vh');s.style.setProperty('--dx',Math.cos(u)*d+'px');s.style.setProperty('--dy',Math.sin(u)*d+'px');s.style.setProperty('--hue',Math.random()*360|0);o.appendChild(s);setTimeout(()=>s.remove(),1e3)}},k*180));setTimeout(()=>o.remove(),1800)}
 function oznac(i){setTimeout(()=>{i.focus({preventScroll:false});i.select()},30)}
-function nastavSirkuPole(i,hodnota,velke){let delka=String(hodnota||0).length,sirka=Math.max(velke?72:34,delka*(velke?24:14)+36),max=window.innerWidth<480?220:320;i.style.width=Math.min(sirka,max)+'px'}
+function nastavSirkuPole(i,hodnota,velke){let delka=String(hodnota||0).replace(/\s/g,'').length,sirka=Math.max(velke?72:34,delka*(velke?24:14)+36),max=window.innerWidth<480?220:320;i.style.width=Math.min(sirka,max)+'px'}
 function spocitejSirky(){let R=+vyska.value;vysledky=[];for(let r=1;r<=R;r++)vysledky[r]=[];for(let i=0;i<R;i++)vysledky[R][i]=cis(pole(R,i).value),nastavSirkuPole(pole(R,i),vysledky[R][i],0);for(let r=R-1;r>=1;r--)for(let i=0;i<r;i++){vysledky[r][i]=vysledky[r+1][i]+vysledky[r+1][i+1];let p=pole(r,i);if(p)nastavSirkuPole(p,vysledky[r][i],r===aktivniRadek&&i===aktivniIndex)}}
-function vstup(i){i.addEventListener('input',function(){this.classList.remove('spatne');let b=this.value.replace(/\s/g,'');if(/^\d*$/.test(b)){this.value=fmt(b);nastavSirkuPole(this,b,this.classList.contains('aktivni')||this.classList.contains('podklad'))}})}
-function nacti(){let v=localStorage.getItem(SV),c=localStorage.getItem(SC),r=localStorage.getItem(SR);if(v)vyska.value=v;if(c)cifry.value=c;document.body.classList.toggle('dark',r==='dark');rezim.textContent=r==='dark'?'☀️':'🌙'}
-function nahoda(c){let min=c==1?0:10**(c-1),max=10**c-1;return Math.floor(Math.random()*(max-min+1))+min}
+function vstup(i){i.addEventListener('input',function(){this.classList.remove('spatne');let b=this.value.replace(/\s/g,'');if(/^-?\d*$/.test(b)){this.value=fmt(b);nastavSirkuPole(this,b,this.classList.contains('aktivni')||this.classList.contains('podklad'))}})}
+function nacti(){let v=localStorage.getItem(SV),c=localStorage.getItem(SC),z=localStorage.getItem(SZ),r=localStorage.getItem(SR);if(v)vyska.value=v;if(c)cifry.value=c;if(z)znamenko.value=z;document.body.classList.toggle('dark',r==='dark');rezim.textContent=r==='dark'?'☀️':'🌙'}
+function nahoda(c){let min=c==1?0:10**(c-1),max=10**c-1,n=Math.floor(Math.random()*(max-min+1))+min;return znamenko.value==='+-'&&Math.random()<.5?-n:n}
 function cisti(){pyramida.querySelectorAll('input').forEach(i=>i.classList.remove('aktivni','podklad'))}
 function zvyrazni(){cisti();if(aktivniRadek==null)return;[pole(aktivniRadek,aktivniIndex),pole(aktivniRadek+1,aktivniIndex),pole(aktivniRadek+1,aktivniIndex+1)].forEach((i,n)=>i&&i.classList.add(n?'podklad':'aktivni'));spocitejSirky()}
 function aktivuj(r,i){aktivniRadek=r;aktivniIndex=i;pyramida.querySelectorAll('input').forEach(x=>{if(!x.classList.contains('spodni')&&!x.classList.contains('spravne'))x.classList.add('zamcene'),x.readOnly=1,x.tabIndex=-1});let a=pole(r,i);if(a){a.classList.remove('zamcene','spatne');a.readOnly=0;a.tabIndex=0;zvyrazni();setTimeout(()=>{start.blur();a.focus({preventScroll:false});a.select()},120)}}
 function dalsi(){return aktivniIndex+1<aktivniRadek?{r:aktivniRadek,i:aktivniIndex+1}:aktivniRadek-1>=1?{r:aktivniRadek-1,i:0}:null}
 function vytvor(gen){pyramida.innerHTML='';hlaska.textContent='';vysledky=[];let R=+vyska.value,C=+cifry.value;for(let r=1;r<=R;r++){let row=document.createElement('div');row.className='radek';for(let i=0;i<r;i++){let x=document.createElement('input');x.type='text';x.inputMode='numeric';x.dataset.r=r;x.dataset.i=i;if(r===R){x.classList.add('spodni');x.readOnly=1;x.tabIndex=-1;x.value=gen?fmt(String(nahoda(C))):''}else{x.value='';vstup(x);if(gen)x.classList.add('zamcene'),x.readOnly=1,x.tabIndex=-1}row.appendChild(x)}pyramida.appendChild(row)}hraBezi=!!gen;start.textContent=gen?'D A L Š Í':'S T A R T';aktivniRadek=aktivniIndex=null;if(gen){spocitejSirky();aktivuj(R-1,0)}}
-function kontrola(){hlaska.textContent='';let a=pole(aktivniRadek,aktivniIndex);if(!a)return;if(!/^[0-9 ]*$/.test(a.value)||!a.value.trim()){hlaska.textContent='Nepovolený znak!';a.classList.add('spatne');return oznac(a)}let ok=vysledky[aktivniRadek][aktivniIndex],z=cis(a.value);if(z===ok){a.value=fmt(String(z));nastavSirkuPole(a,z,1);a.classList.remove('spatne','aktivni');a.classList.add('spravne','zamcene');a.readOnly=1;a.tabIndex=-1;let d=dalsi();d?aktivuj(d.r,d.i):(cisti(),spocitejSirky(),hraBezi=0,aktivniRadek=aktivniIndex=null,start.textContent='S T A R T',pridej(`${vyska.value}/${cifry.value}`),ohnostroj())}else a.classList.add('spatne'),oznac(a)}
+function kontrola(){hlaska.textContent='';let a=pole(aktivniRadek,aktivniIndex);if(!a)return;if(!/^-?[0-9 ]*$/.test(a.value)||!a.value.trim()||a.value.trim()==='-'){hlaska.textContent='Nepovolený znak!';a.classList.add('spatne');return oznac(a)}let ok=vysledky[aktivniRadek][aktivniIndex],z=cis(a.value);if(z===ok){a.value=fmt(String(z));nastavSirkuPole(a,z,1);a.classList.remove('spatne','aktivni');a.classList.add('spravne','zamcene');a.readOnly=1;a.tabIndex=-1;let d=dalsi();d?aktivuj(d.r,d.i):(cisti(),spocitejSirky(),hraBezi=0,aktivniRadek=aktivniIndex=null,start.textContent='S T A R T',pridej(`${vyska.value}/${cifry.value}/${znamenko.value}`),ohnostroj())}else a.classList.add('spatne'),oznac(a)}
 function konecHry(){hraBezi=0;aktivniRadek=aktivniIndex=null;hlaska.textContent='';start.textContent='S T A R T';vytvor(0)}
 nastaveniToggle.onclick=()=>{mazani();nastaveni.classList.toggle('zavreno');uloz()};
-[vyska,cifry].forEach(e=>e.onchange=()=>{mazani();uloz();konecHry()});
+[vyska,cifry,znamenko].forEach(e=>e.onchange=()=>{mazani();uloz();konecHry()});
 mazaniHistorie.onkeydown=e=>{if(e.key==='Enter')e.preventDefault(),mazani()};
 start.onclick=()=>{mazani();uloz();hraBezi?kontrola():vytvor(1)};
 konec.onclick=()=>{mazani();konecHry()};
