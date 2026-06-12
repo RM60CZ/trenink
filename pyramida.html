@@ -1,361 +1,1012 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Pyramida čísel</title>
+
 <style>
-:root{--bg:#dfe3ea;--card:rgba(238,241,245,.92);--text:#172033;--muted:#5d6b86;--primary:#4f46e5;--primary-light:#818cf8;--input-bg:#f5f6f8;--input-border:#b9c1d1;--disabled-bg:#e1e5ec;--disabled-border:#c4cad5;--bottom-border:#facc15;--bottom-bg:#f3efd7;--success:#16a34a;--error:#dc2626;--active-bg:#eef2ff;--shadow:0 24px 60px rgba(60,70,95,.18)}
-body.dark{--bg:#0f172a;--card:rgba(30,41,59,.9);--text:#f8fafc;--muted:#cbd5e1;--primary:#818cf8;--primary-light:#a5b4fc;--input-bg:#111827;--input-border:#475569;--disabled-bg:#1e293b;--disabled-border:#334155;--bottom-border:#eab308;--bottom-bg:#292517;--success:#22c55e;--error:#f87171;--active-bg:#1e1b4b;--shadow:0 24px 60px rgba(0,0,0,.35)}
-*{box-sizing:border-box}
-body{font-family:Arial,sans-serif;min-height:100vh;margin:0;color:var(--text);background:radial-gradient(circle at top left,rgba(129,140,248,.18),transparent 32%),linear-gradient(135deg,var(--bg),#cfd5df);display:flex;justify-content:center;align-items:flex-start;padding:18px 10px;transition:background .3s,color .3s}
-body.dark{background:radial-gradient(circle at top left,rgba(129,140,248,.18),transparent 34%),linear-gradient(135deg,#020617,var(--bg))}
-.aplikace{position:relative;width:min(100%,860px);background:var(--card);border:1px solid rgba(148,163,184,.35);border-radius:28px;padding:24px 14px 30px;box-shadow:var(--shadow);overflow:hidden}
-.hlavicka{position:relative;text-align:center;margin-bottom:10px;padding:0 42px}
-h1{margin:0;font-size:clamp(26px,6vw,42px);letter-spacing:-.04em}
-.rezim{position:absolute;top:0;right:0;width:36px;height:36px;border:0;font-size:25px;cursor:pointer;color:inherit;background:transparent;box-shadow:none;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}
-.nastaveni{text-align:center;margin-bottom:12px}
-.popis-toggle{border:0;background:transparent;color:var(--muted);font-size:15px;font-weight:700;cursor:pointer;padding:6px 8px;line-height:1.35}
-.popis-toggle:after{content:" ▼";font-size:12px;white-space:nowrap}.nastaveni.zavreno .popis-toggle:after{content:" ▲"}
-.panel-nastaveni{overflow:hidden;max-height:145px;opacity:1;transition:max-height .25s,opacity .2s,margin .25s}
-.nastaveni.zavreno .panel-nastaveni{max-height:0;opacity:0;margin:0}
-.mazani-wrap,.ovladani{display:flex;justify-content:center}.mazani-wrap{margin:8px 0 4px}
-.mazani-historie{width:min(92%,340px);height:38px;border-radius:999px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--input-bg);caret-color:var(--primary);font-size:15px;font-weight:700;text-align:center;padding:8px 14px}
-.mazani-historie::placeholder{color:var(--muted);opacity:.9}
-.mazani-historie:focus{outline:0;border-color:var(--primary);box-shadow:0 0 0 4px rgba(129,140,248,.22);transform:none}
-body.dark .mazani-historie{color:var(--input-bg)}
-.ovladani{flex-wrap:wrap;align-items:center;justify-content:center;gap:12px;margin:8px 0 4px}
-.pole{display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.22);border:1px solid rgba(148,163,184,.32);border-radius:999px;padding:8px 12px}
-select{color:var(--text);background:var(--input-bg);border:1px solid var(--input-border);border-radius:999px;font-size:15px;font-weight:700;cursor:pointer;padding:8px 12px;text-align:center;text-align-last:center}
-select option{text-align:center}
-.hlaska{min-height:22px;margin:2px 0 8px;color:var(--error);font-size:15px;font-weight:800;text-align:center}
-.herni-plocha{position:relative;width:100%;overflow:visible}
-.postranni-tlacitko{position:absolute;top:0;z-index:5}
-.postranni-tlacitko.vlevo{right:calc(50% + 82px)}
-.postranni-tlacitko.vpravo{left:calc(50% + 82px)}
-.pyramida{position:relative;width:100%;max-width:100%;display:flex;flex-direction:column;align-items:center;gap:clamp(5px,1.5vw,10px);overflow:visible;min-height:40px}
-.radek{position:relative;display:flex;justify-content:center;gap:clamp(3px,1vw,8px);width:100%;overflow:visible}
-input{width:clamp(34px,11vw,80px);height:clamp(40px,11vw,58px);color:var(--text);background:var(--input-bg);font-size:clamp(14px,3.8vw,20px);font-weight:700;text-align:center;border:2px solid var(--input-border);border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.25);transition:width .18s,height .18s,font-size .18s,transform .18s,border-color .16s,box-shadow .16s,opacity .16s,left .18s,right .18s;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:clip}
-input:focus{outline:0;border-color:var(--primary);box-shadow:0 0 0 4px rgba(129,140,248,.22);transform:translateY(-1px)}
-input.spodni{border-color:var(--bottom-border);background:var(--bottom-bg);cursor:not-allowed;opacity:1}
-input.zamcene{background:var(--disabled-bg);border-color:var(--disabled-border);cursor:not-allowed;opacity:.72}
-input.spravne{color:var(--text);border-color:var(--success);box-shadow:0 0 0 4px rgba(34,197,94,.18)}
-input.spatne{color:var(--text);border-color:var(--error);box-shadow:0 0 0 4px rgba(220,38,38,.18)}
-input.aktivni,input.podklad{height:clamp(58px,15vw,82px);font-size:clamp(22px,5vw,32px);z-index:50;opacity:1;overflow:visible;text-overflow:clip}
-input.aktivni{background:var(--active-bg);border-color:var(--primary);box-shadow:0 0 0 5px rgba(129,140,248,.22)}
-input.aktivni.spatne{color:var(--text);border-color:var(--error);box-shadow:0 0 0 5px rgba(220,38,38,.25)}
-input.aktivni.spravne{color:var(--text);border-color:var(--success);box-shadow:0 0 0 5px rgba(34,197,94,.25)}
-input.podklad{box-shadow:0 8px 20px rgba(15,23,42,.14)}
-input.prekryv{position:relative;z-index:80}
-input.prekryv-vlevo{transform:translateX(-18%)}
-input.prekryv-vpravo{transform:translateX(18%)}
-input.prekryv-stred{transform:translateX(0)}
-input.prekryv:focus{transform:translateY(-1px)}
-input.prekryv-vlevo:focus{transform:translateX(-18%) translateY(-1px)}
-input.prekryv-vpravo:focus{transform:translateX(18%) translateY(-1px)}
-.akce{min-width:150px;border:0;color:#fff;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:999px;font-size:17px;font-weight:900;letter-spacing:.28em;cursor:pointer;padding:12px 24px;box-shadow:0 10px 22px rgba(79,70,229,.28);white-space:nowrap}
-.konec{background:linear-gradient(135deg,#64748b,#94a3b8)}
-.historie{min-height:24px;margin:14px 0 0;text-align:center;font-size:16px;font-weight:900;color:var(--success);word-spacing:8px}
-.ohnostroj{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9999}
-.jiskra{position:absolute;left:var(--x);top:var(--y);width:8px;height:8px;border-radius:50%;background:hsl(var(--hue),95%,60%);box-shadow:0 0 12px currentColor;animation:jiskraLet .9s ease-out forwards}
-@keyframes jiskraLet{from{transform:translate(0,0) scale(1);opacity:1}to{transform:translate(var(--dx),var(--dy)) scale(.1);opacity:0}}
-@media(max-width:760px){.herni-plocha{position:relative;padding-top:54px}.postranni-tlacitko{top:0}.postranni-tlacitko.vlevo{right:calc(50% + 22px)}.postranni-tlacitko.vpravo{left:calc(50% + 22px)}}
-@media(max-width:480px){.aplikace{padding-left:8px;padding-right:8px;border-radius:22px;overflow:hidden}.hlavicka{padding:0 40px}.rezim{width:34px;height:34px;font-size:24px}.popis-toggle{font-size:14px}.radek{gap:4px}input{width:calc((100vw - 56px)/7);height:calc((100vw - 56px)/7);max-width:52px;max-height:52px;min-width:0;font-size:clamp(13px,3.6vw,17px);border-radius:10px;padding:0 2px}input.aktivni,input.podklad{height:clamp(52px,15vw,72px);max-width:none;max-height:none;font-size:clamp(20px,5vw,28px);border-radius:13px;padding:0 6px}.akce{min-width:136px;font-size:15px;padding:11px 18px}}
-input.spatne,input.spatne:focus,input.aktivni.spatne,input.aktivni.spatne:focus{color:var(--text)!important;border:2px solid var(--error)!important;box-shadow:0 0 0 5px rgba(220,38,38,.35)!important}
-input.spravne,input.spravne:focus,input.aktivni.spravne,input.aktivni.spravne:focus{color:var(--text)!important;border:2px solid var(--success)!important;box-shadow:0 0 0 5px rgba(34,197,94,.25)!important}
-</style>
-</head>
-<body>
-<main class="aplikace">
-<header class="hlavicka"><h1>Pyramida čísel</h1><button id="rezim" class="rezim" type="button" aria-label="Přepnout tmavý/světlý režim">🌙</button></header>
-
-<section id="nastaveni" class="nastaveni">
-<button id="nastaveniToggle" class="popis-toggle" type="button">Vyber poschodí pyramidy a cifry spodního řádku.</button>
-<div id="panelNastaveni" class="panel-nastaveni">
-<div class="mazani-wrap"><input id="mazaniHistorie" class="mazani-historie" type="text" autocomplete="off" spellcheck="false" aria-label="Zde můžete odstranit historii"></div>
-<div class="ovladani">
-<div class="pole"><select id="vyska" aria-label="Počet poschodí pyramidy"><option value="2">2 poschodí</option><option value="3">3 poschodí</option><option value="4">4 poschodí</option><option value="5">5 poschodí</option><option value="6">6 poschodí</option><option value="7" selected>7 poschodí</option></select></div>
-<div class="pole"><select id="cifry" aria-label="Počet cifer spodního řádku"><option value="1">1 cifra</option><option value="2" selected>2 cifry</option><option value="3">3 cifry</option><option value="4">4 cifry</option><option value="5">5 cifer</option><option value="6">6 cifer</option><option value="7">7 cifer</option><option value="8">8 cifer</option></select></div>
-<div class="pole"><select id="znamenko" aria-label="Typ čísel spodního řádku"><option value="+">+</option><option value="+-">+-</option></select></div>
-</div>
-</div>
-</section>
-
-<div id="hlaska" class="hlaska"></div>
-
-<div class="herni-plocha">
-<div class="postranni-tlacitko vlevo"><button id="start" class="akce" type="button">S T A R T</button></div>
-<div class="pyramida" id="pyramida"></div>
-<div class="postranni-tlacitko vpravo"><button id="konec" class="akce konec" type="button">K O N E C</button></div>
-</div>
-
-<div id="historie" class="historie"></div>
-</main>
-
-<script>
-const $=id=>document.getElementById(id),
-pyramida=$('pyramida'),vyska=$('vyska'),cifry=$('cifry'),znamenko=$('znamenko'),
-rezim=$('rezim'),start=$('start'),konec=$('konec'),nastaveni=$('nastaveni'),
-nastaveniToggle=$('nastaveniToggle'),mazaniHistorie=$('mazaniHistorie'),hlaska=$('hlaska'),historie=$('historie');
-
-const SR='pyramida_rezim',SV='pyramida_vyska',SC='pyramida_cifry',SZ='pyramida_znamenko',SH='pyramida_historie',SD='pyramida_historie_datum';
-let hraBezi=0,aktivniRadek=null,aktivniIndex=null,vysledky=[];
-
-const dnes=()=>{let d=new Date;return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`},
-fmt=v=>{if(v===''||v==null)return'';let s=String(v),m=s[0]=='-'?'-':'';s=s.replace('-','');return m+s.replace(/\B(?=(\d{3})+(?!\d))/g,' ')},
-cis=v=>Number(String(v).replace(/\s/g,'')),
-pole=(r,i)=>pyramida.querySelector(`input[data-r="${r}"][data-i="${i}"]`),
-uloz=()=>{localStorage.setItem(SV,vyska.value);localStorage.setItem(SC,cifry.value);localStorage.setItem(SZ,znamenko.value);localStorage.setItem(SR,document.body.classList.contains('dark')?'dark':'light')};
-
-function nactiHistorii(){let d=dnes();if(localStorage.getItem(SD)!==d)localStorage.setItem(SD,d),localStorage.setItem(SH,'');historie.innerHTML=localStorage.getItem(SH)||''}
-function pridej(z){let d=dnes();if(localStorage.getItem(SD)!==d)localStorage.setItem(SD,d),localStorage.setItem(SH,'');let h=(localStorage.getItem(SH)||'')+`<span>${z}</span>&nbsp;&nbsp;`;localStorage.setItem(SH,h);historie.innerHTML=h}
-function vymazHistorii(){localStorage.setItem(SD,dnes());localStorage.setItem(SH,'');historie.innerHTML=''}
-function mazani(){if(mazaniHistorie.value.trim().toLowerCase()==='vymazat')vymazHistorii();mazaniHistorie.value=''}
-
-function ohnostroj(){let o=document.createElement('div');o.className='ohnostroj';document.body.appendChild(o);[{x:28,y:28},{x:50,y:20},{x:72,y:30},{x:40,y:42},{x:62,y:45}].forEach((v,k)=>setTimeout(()=>{for(let i=0;i<28;i++){let s=document.createElement('span'),u=Math.random()*Math.PI*2,d=70+Math.random()*90;s.className='jiskra';s.style.setProperty('--x',v.x+'vw');s.style.setProperty('--y',v.y+'vh');s.style.setProperty('--dx',Math.cos(u)*d+'px');s.style.setProperty('--dy',Math.sin(u)*d+'px');s.style.setProperty('--hue',Math.random()*360|0);o.appendChild(s);setTimeout(()=>s.remove(),1e3)}},k*180));setTimeout(()=>o.remove(),1800)}
-function oznac(i){setTimeout(()=>{i.focus({preventScroll:false});i.select()},30)}
-
-function sirkaProText(hodnota){
-  let text=fmt(String(hodnota||0));
-  let znaku=text.length;
-  let jeMobil=window.innerWidth<480;
-  let zaklad=jeMobil?34:42;
-  let znak=jeMobil?15:19;
-  let max=Math.min(window.innerWidth-28, jeMobil?360:460);
-  return Math.min(Math.max(72, zaklad+znaku*znak), max);
+:root{
+  --bg:#dfe3ea;
+  --card:rgba(238,241,245,.92);
+  --text:#172033;
+  --muted:#5d6b86;
+  --primary:#4f46e5;
+  --primary-light:#818cf8;
+  --input-bg:#f5f6f8;
+  --input-border:#b9c1d1;
+  --disabled-bg:#e1e5ec;
+  --disabled-border:#c4cad5;
+  --bottom-border:#facc15;
+  --bottom-bg:#f3efd7;
+  --success:#16a34a;
+  --error:#dc2626;
+  --active-bg:#eef2ff;
+  --shadow:0 24px 60px rgba(60,70,95,.18);
 }
 
-function nastavPrekryv(i,hodnota,typ){
-  if(!i)return;
-
-  i.classList.add('prekryv');
-
-  i.classList.remove('prekryv-vlevo','prekryv-vpravo','prekryv-stred');
-
-  if(typ==='leva')i.classList.add('prekryv-vlevo');
-  else if(typ==='prava')i.classList.add('prekryv-vpravo');
-  else i.classList.add('prekryv-stred');
-
-  let sirka=sirkaProText(hodnota);
-  i.style.width=sirka+'px';
-
-  requestAnimationFrame(()=>upravDoKraju(i));
+body.dark{
+  --bg:#0f172a;
+  --card:rgba(30,41,59,.9);
+  --text:#f8fafc;
+  --muted:#cbd5e1;
+  --primary:#818cf8;
+  --primary-light:#a5b4fc;
+  --input-bg:#111827;
+  --input-border:#475569;
+  --disabled-bg:#1e293b;
+  --disabled-border:#334155;
+  --bottom-border:#eab308;
+  --bottom-bg:#292517;
+  --success:#22c55e;
+  --error:#f87171;
+  --active-bg:#1e1b4b;
+  --shadow:0 24px 60px rgba(0,0,0,.35);
 }
 
-function upravDoKraju(i){
-  let okraj=8;
-  let r=i.getBoundingClientRect();
-  let posun=0;
+*{
+  box-sizing:border-box;
+}
 
-  if(r.left<okraj)posun=okraj-r.left;
-  if(r.right>window.innerWidth-okraj)posun=(window.innerWidth-okraj)-r.right;
+body{
+  font-family:Arial,sans-serif;
+  min-height:100vh;
+  margin:0;
+  color:var(--text);
+  background:
+    radial-gradient(circle at top left,rgba(129,140,248,.18),transparent 32%),
+    linear-gradient(135deg,var(--bg),#cfd5df);
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:18px 10px;
+  transition:background .3s,color .3s;
+}
 
-  if(posun){
-    let puvod=i.style.transform||getComputedStyle(i).transform;
-    if(!i.dataset.baseTransform){
-      if(i.classList.contains('prekryv-vlevo'))i.dataset.baseTransform='translateX(-18%)';
-      else if(i.classList.contains('prekryv-vpravo'))i.dataset.baseTransform='translateX(18%)';
-      else i.dataset.baseTransform='translateX(0)';
-    }
-    i.style.transform=i.dataset.baseTransform+` translateX(${posun}px)`;
+body.dark{
+  background:
+    radial-gradient(circle at top left,rgba(129,140,248,.18),transparent 34%),
+    linear-gradient(135deg,#020617,var(--bg));
+}
+
+.aplikace{
+  position:relative;
+  width:min(100%,860px);
+  background:var(--card);
+  border:1px solid rgba(148,163,184,.35);
+  border-radius:28px;
+  padding:24px 14px 30px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+
+.hlavicka{
+  position:relative;
+  text-align:center;
+  margin-bottom:10px;
+  padding:0 42px;
+}
+
+h1{
+  margin:0;
+  font-size:clamp(26px,6vw,42px);
+  letter-spacing:-.04em;
+}
+
+.rezim{
+  position:absolute;
+  top:0;
+  right:0;
+  width:36px;
+  height:36px;
+  border:0;
+  font-size:25px;
+  cursor:pointer;
+  color:inherit;
+  background:transparent;
+  box-shadow:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  line-height:1;
+}
+
+.nastaveni{
+  text-align:center;
+  margin-bottom:12px;
+}
+
+.popis-toggle{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+  padding:6px 8px;
+  line-height:1.35;
+}
+
+.popis-toggle:after{
+  content:" ▼";
+  font-size:12px;
+  white-space:nowrap;
+}
+
+.nastaveni.zavreno .popis-toggle:after{
+  content:" ▲";
+}
+
+.panel-nastaveni{
+  overflow:hidden;
+  max-height:145px;
+  opacity:1;
+  transition:max-height .25s,opacity .2s,margin .25s;
+}
+
+.nastaveni.zavreno .panel-nastaveni{
+  max-height:0;
+  opacity:0;
+  margin:0;
+}
+
+.mazani-wrap,
+.ovladani{
+  display:flex;
+  justify-content:center;
+}
+
+.mazani-wrap{
+  margin:8px 0 4px;
+}
+
+.mazani-historie{
+  width:min(92%,340px);
+  height:38px;
+  border-radius:999px;
+  border:1px solid var(--input-border);
+  background:var(--input-bg);
+  color:var(--input-bg);
+  caret-color:var(--primary);
+  font-size:15px;
+  font-weight:700;
+  text-align:center;
+  padding:8px 14px;
+}
+
+.mazani-historie::placeholder{
+  color:var(--muted);
+  opacity:.9;
+}
+
+.mazani-historie:focus{
+  outline:0;
+  border-color:var(--primary);
+  box-shadow:0 0 0 4px rgba(129,140,248,.22);
+  transform:none;
+}
+
+body.dark .mazani-historie{
+  color:var(--input-bg);
+}
+
+.ovladani{
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  margin:8px 0 4px;
+}
+
+.pole{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.22);
+  border:1px solid rgba(148,163,184,.32);
+  border-radius:999px;
+  padding:8px 12px;
+}
+
+select{
+  color:var(--text);
+  background:var(--input-bg);
+  border:1px solid var(--input-border);
+  border-radius:999px;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+  padding:8px 12px;
+  text-align:center;
+  text-align-last:center;
+}
+
+select option{
+  text-align:center;
+}
+
+.hlaska{
+  min-height:22px;
+  margin:2px 0 8px;
+  color:var(--error);
+  font-size:15px;
+  font-weight:800;
+  text-align:center;
+}
+
+.herni-plocha{
+  position:relative;
+  width:100%;
+  overflow:visible;
+}
+
+.postranni-tlacitko{
+  position:absolute;
+  top:0;
+  z-index:5;
+}
+
+.postranni-tlacitko.vlevo{
+  right:calc(50% + 82px);
+}
+
+.postranni-tlacitko.vpravo{
+  left:calc(50% + 82px);
+}
+
+.pyramida{
+  position:relative;
+  width:100%;
+  max-width:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:clamp(5px,1.5vw,10px);
+  overflow:visible;
+  min-height:40px;
+}
+
+.radek{
+  position:relative;
+  display:flex;
+  justify-content:center;
+  gap:clamp(3px,1vw,8px);
+  width:100%;
+  overflow:visible;
+}
+
+/* Pevný slot drží základnu pyramidy. Ten se nikdy neroztahuje. */
+.bunka-slot{
+  position:relative;
+  flex:0 0 clamp(34px,11vw,80px);
+  width:clamp(34px,11vw,80px);
+  height:clamp(40px,11vw,58px);
+  overflow:visible;
+}
+
+/* Input je centrovaný ve slotu. Když se rozšíří, rozšíří se od středu. */
+.bunka-slot input{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  width:100%;
+  height:100%;
+  color:var(--text);
+  background:var(--input-bg);
+  font-size:clamp(14px,3.8vw,20px);
+  font-weight:700;
+  text-align:center;
+  border:2px solid var(--input-border);
+  border-radius:14px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25);
+  transition:
+    width .18s,
+    height .18s,
+    font-size .18s,
+    border-color .16s,
+    box-shadow .16s,
+    opacity .16s;
+  padding:0 4px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:clip;
+  z-index:1;
+}
+
+.bunka-slot input:focus{
+  outline:0;
+  border-color:var(--primary);
+  box-shadow:0 0 0 4px rgba(129,140,248,.22);
+}
+
+.bunka-slot input.spodni{
+  border-color:var(--bottom-border);
+  background:var(--bottom-bg);
+  cursor:not-allowed;
+  opacity:1;
+}
+
+.bunka-slot input.zamcene{
+  background:var(--disabled-bg);
+  border-color:var(--disabled-border);
+  cursor:not-allowed;
+  opacity:.72;
+}
+
+.bunka-slot input.spravne{
+  color:var(--text);
+  border-color:var(--success);
+  box-shadow:0 0 0 4px rgba(34,197,94,.18);
+}
+
+.bunka-slot input.spatne{
+  color:var(--text);
+  border-color:var(--error);
+  box-shadow:0 0 0 4px rgba(220,38,38,.18);
+}
+
+/* Aktivní trojice je široká jako překryv, ale slot zůstává původní. */
+.bunka-slot input.aktivni,
+.bunka-slot input.podklad{
+  width:var(--wide-width,160px);
+  height:clamp(58px,15vw,82px);
+  font-size:clamp(22px,5vw,32px);
+  opacity:1;
+  overflow:visible;
+  text-overflow:clip;
+  border-radius:15px;
+  padding:0 8px;
+}
+
+.bunka-slot input.aktivni{
+  background:var(--active-bg);
+  border-color:var(--primary);
+  box-shadow:0 0 0 5px rgba(129,140,248,.22);
+  z-index:70;
+}
+
+.bunka-slot input.podklad{
+  box-shadow:0 8px 20px rgba(15,23,42,.14);
+  z-index:60;
+}
+
+.bunka-slot input.aktivni.spatne{
+  color:var(--text);
+  border-color:var(--error);
+  box-shadow:0 0 0 5px rgba(220,38,38,.25);
+}
+
+.bunka-slot input.aktivni.spravne{
+  color:var(--text);
+  border-color:var(--success);
+  box-shadow:0 0 0 5px rgba(34,197,94,.25);
+}
+
+.akce{
+  min-width:150px;
+  border:0;
+  color:#fff;
+  background:linear-gradient(135deg,var(--primary),var(--primary-light));
+  border-radius:999px;
+  font-size:17px;
+  font-weight:900;
+  letter-spacing:.28em;
+  cursor:pointer;
+  padding:12px 24px;
+  box-shadow:0 10px 22px rgba(79,70,229,.28);
+  white-space:nowrap;
+}
+
+.konec{
+  background:linear-gradient(135deg,#64748b,#94a3b8);
+}
+
+.historie{
+  min-height:24px;
+  margin:14px 0 0;
+  text-align:center;
+  font-size:16px;
+  font-weight:900;
+  color:var(--success);
+  word-spacing:8px;
+}
+
+.ohnostroj{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  overflow:hidden;
+  z-index:9999;
+}
+
+.jiskra{
+  position:absolute;
+  left:var(--x);
+  top:var(--y);
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:hsl(var(--hue),95%,60%);
+  box-shadow:0 0 12px currentColor;
+  animation:jiskraLet .9s ease-out forwards;
+}
+
+@keyframes jiskraLet{
+  from{
+    transform:translate(0,0) scale(1);
+    opacity:1;
+  }
+  to{
+    transform:translate(var(--dx),var(--dy)) scale(.1);
+    opacity:0;
   }
 }
 
-function resetSirkuPole(i){
-  i.style.width='';
-  i.style.transform='';
-  i.dataset.baseTransform='';
-  i.classList.remove('prekryv','prekryv-vlevo','prekryv-vpravo','prekryv-stred');
+@media(max-width:760px){
+  .herni-plocha{
+    position:relative;
+    padding-top:54px;
+  }
+
+  .postranni-tlacitko{
+    top:0;
+  }
+
+  .postranni-tlacitko.vlevo{
+    right:calc(50% + 22px);
+  }
+
+  .postranni-tlacitko.vpravo{
+    left:calc(50% + 22px);
+  }
+}
+
+@media(max-width:480px){
+  .aplikace{
+    padding-left:8px;
+    padding-right:8px;
+    border-radius:22px;
+    overflow:hidden;
+  }
+
+  .hlavicka{
+    padding:0 40px;
+  }
+
+  .rezim{
+    width:34px;
+    height:34px;
+    font-size:24px;
+  }
+
+  .popis-toggle{
+    font-size:14px;
+  }
+
+  .radek{
+    gap:4px;
+  }
+
+  .bunka-slot{
+    flex:0 0 calc((100vw - 56px)/7);
+    width:calc((100vw - 56px)/7);
+    height:calc((100vw - 56px)/7);
+    max-width:52px;
+    max-height:52px;
+    min-width:0;
+  }
+
+  .bunka-slot input{
+    font-size:clamp(13px,3.6vw,17px);
+    border-radius:10px;
+    padding:0 2px;
+  }
+
+  .bunka-slot input.aktivni,
+  .bunka-slot input.podklad{
+    height:clamp(52px,15vw,72px);
+    max-width:none;
+    max-height:none;
+    font-size:clamp(20px,5vw,28px);
+    border-radius:13px;
+    padding:0 6px;
+  }
+
+  .akce{
+    min-width:136px;
+    font-size:15px;
+    padding:11px 18px;
+  }
+}
+
+.bunka-slot input.spatne,
+.bunka-slot input.spatne:focus,
+.bunka-slot input.aktivni.spatne,
+.bunka-slot input.aktivni.spatne:focus{
+  color:var(--text)!important;
+  border:2px solid var(--error)!important;
+  box-shadow:0 0 0 5px rgba(220,38,38,.35)!important;
+}
+
+.bunka-slot input.spravne,
+.bunka-slot input.spravne:focus,
+.bunka-slot input.aktivni.spravne,
+.bunka-slot input.aktivni.spravne:focus{
+  color:var(--text)!important;
+  border:2px solid var(--success)!important;
+  box-shadow:0 0 0 5px rgba(34,197,94,.25)!important;
+}
+</style>
+</head>
+
+<body>
+<main class="aplikace">
+  <header class="hlavicka">
+    <h1>Pyramida čísel</h1>
+    <button id="rezim" class="rezim" type="button" aria-label="Přepnout tmavý/světlý režim">🌙</button>
+  </header>
+
+  <section id="nastaveni" class="nastaveni">
+    <button id="nastaveniToggle" class="popis-toggle" type="button">
+      Vyber poschodí pyramidy a cifry spodního řádku.
+    </button>
+
+    <div id="panelNastaveni" class="panel-nastaveni">
+      <div class="mazani-wrap">
+        <input id="mazaniHistorie" class="mazani-historie" type="text" autocomplete="off" spellcheck="false" aria-label="Zde můžete odstranit historii">
+      </div>
+
+      <div class="ovladani">
+        <div class="pole">
+          <select id="vyska" aria-label="Počet poschodí pyramidy">
+            <option value="2">2 poschodí</option>
+            <option value="3">3 poschodí</option>
+            <option value="4">4 poschodí</option>
+            <option value="5">5 poschodí</option>
+            <option value="6">6 poschodí</option>
+            <option value="7" selected>7 poschodí</option>
+          </select>
+        </div>
+
+        <div class="pole">
+          <select id="cifry" aria-label="Počet cifer spodního řádku">
+            <option value="1">1 cifra</option>
+            <option value="2" selected>2 cifry</option>
+            <option value="3">3 cifry</option>
+            <option value="4">4 cifry</option>
+            <option value="5">5 cifer</option>
+            <option value="6">6 cifer</option>
+            <option value="7">7 cifer</option>
+            <option value="8">8 cifer</option>
+          </select>
+        </div>
+
+        <div class="pole">
+          <select id="znamenko" aria-label="Typ čísel spodního řádku">
+            <option value="+">+</option>
+            <option value="+-">+-</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="hlaska" class="hlaska"></div>
+
+  <div class="herni-plocha">
+    <div class="postranni-tlacitko vlevo">
+      <button id="start" class="akce" type="button">S T A R T</button>
+    </div>
+
+    <div class="pyramida" id="pyramida"></div>
+
+    <div class="postranni-tlacitko vpravo">
+      <button id="konec" class="akce konec" type="button">K O N E C</button>
+    </div>
+  </div>
+
+  <div id="historie" class="historie"></div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const pyramida = $('pyramida');
+const vyska = $('vyska');
+const cifry = $('cifry');
+const znamenko = $('znamenko');
+const rezim = $('rezim');
+const start = $('start');
+const konec = $('konec');
+const nastaveni = $('nastaveni');
+const nastaveniToggle = $('nastaveniToggle');
+const mazaniHistorie = $('mazaniHistorie');
+const hlaska = $('hlaska');
+const historie = $('historie');
+
+const SR = 'pyramida_rezim';
+const SV = 'pyramida_vyska';
+const SC = 'pyramida_cifry';
+const SZ = 'pyramida_znamenko';
+const SH = 'pyramida_historie';
+const SD = 'pyramida_historie_datum';
+
+let hraBezi = 0;
+let aktivniRadek = null;
+let aktivniIndex = null;
+let vysledky = [];
+
+const dnes = () => {
+  let d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+};
+
+const fmt = v => {
+  if(v === '' || v == null) return '';
+  let s = String(v);
+  let m = s[0] == '-' ? '-' : '';
+  s = s.replace('-', '');
+  return m + s.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+};
+
+const cis = v => Number(String(v).replace(/\s/g,''));
+
+const pole = (r,i) => pyramida.querySelector(`input[data-r="${r}"][data-i="${i}"]`);
+
+function uloz(){
+  localStorage.setItem(SV, vyska.value);
+  localStorage.setItem(SC, cifry.value);
+  localStorage.setItem(SZ, znamenko.value);
+  localStorage.setItem(SR, document.body.classList.contains('dark') ? 'dark' : 'light');
+}
+
+function nactiHistorii(){
+  let d = dnes();
+
+  if(localStorage.getItem(SD) !== d){
+    localStorage.setItem(SD, d);
+    localStorage.setItem(SH, '');
+  }
+
+  historie.innerHTML = localStorage.getItem(SH) || '';
+}
+
+function pridej(z){
+  let d = dnes();
+
+  if(localStorage.getItem(SD) !== d){
+    localStorage.setItem(SD, d);
+    localStorage.setItem(SH, '');
+  }
+
+  let h = (localStorage.getItem(SH) || '') + `<span>${z}</span>&nbsp;&nbsp;`;
+  localStorage.setItem(SH, h);
+  historie.innerHTML = h;
+}
+
+function vymazHistorii(){
+  localStorage.setItem(SD, dnes());
+  localStorage.setItem(SH, '');
+  historie.innerHTML = '';
+}
+
+function mazani(){
+  if(mazaniHistorie.value.trim().toLowerCase() === 'vymazat'){
+    vymazHistorii();
+  }
+
+  mazaniHistorie.value = '';
+}
+
+function ohnostroj(){
+  let o = document.createElement('div');
+  o.className = 'ohnostroj';
+  document.body.appendChild(o);
+
+  [
+    {x:28,y:28},
+    {x:50,y:20},
+    {x:72,y:30},
+    {x:40,y:42},
+    {x:62,y:45}
+  ].forEach((v,k) => {
+    setTimeout(() => {
+      for(let i=0;i<28;i++){
+        let s = document.createElement('span');
+        let u = Math.random() * Math.PI * 2;
+        let d = 70 + Math.random() * 90;
+
+        s.className = 'jiskra';
+        s.style.setProperty('--x', v.x + 'vw');
+        s.style.setProperty('--y', v.y + 'vh');
+        s.style.setProperty('--dx', Math.cos(u) * d + 'px');
+        s.style.setProperty('--dy', Math.sin(u) * d + 'px');
+        s.style.setProperty('--hue', Math.random() * 360 | 0);
+
+        o.appendChild(s);
+        setTimeout(() => s.remove(), 1000);
+      }
+    }, k * 180);
+  });
+
+  setTimeout(() => o.remove(), 1800);
+}
+
+function oznac(i){
+  setTimeout(() => {
+    i.focus({preventScroll:false});
+    i.select();
+  }, 30);
+}
+
+function sirkaProText(hodnota){
+  let text = fmt(String(hodnota || 0));
+  let znaku = text.length;
+  let jeMobil = window.innerWidth < 480;
+
+  let zaklad = jeMobil ? 30 : 38;
+  let znak = jeMobil ? 13 : 17;
+
+  let max = Math.min(window.innerWidth - 32, jeMobil ? 330 : 460);
+  let min = jeMobil ? 86 : 100;
+
+  return Math.min(Math.max(min, zaklad + znaku * znak), max);
+}
+
+function nastavPrekryv(input, hodnota){
+  if(!input) return;
+
+  let w = sirkaProText(hodnota);
+  input.style.setProperty('--wide-width', w + 'px');
+}
+
+function resetPrekryv(input){
+  if(!input) return;
+  input.style.removeProperty('--wide-width');
 }
 
 function spocitejVysledky(){
-  let R=+vyska.value;
-  vysledky=[];
-  for(let r=1;r<=R;r++)vysledky[r]=[];
+  let R = +vyska.value;
+  vysledky = [];
+
+  for(let r=1;r<=R;r++){
+    vysledky[r] = [];
+  }
 
   for(let i=0;i<R;i++){
-    vysledky[R][i]=cis(pole(R,i).value);
+    vysledky[R][i] = cis(pole(R,i).value);
   }
 
   for(let r=R-1;r>=1;r--){
     for(let i=0;i<r;i++){
-      vysledky[r][i]=vysledky[r+1][i]+vysledky[r+1][i+1];
+      vysledky[r][i] = vysledky[r+1][i] + vysledky[r+1][i+1];
     }
   }
 }
 
 function vstup(i){
-  i.addEventListener('input',function(){
+  i.addEventListener('input', function(){
     this.classList.remove('spatne');
-    let b=this.value.replace(/\s/g,'');
+
+    let b = this.value.replace(/\s/g,'');
+
     if(/^-?\d*$/.test(b)){
-      this.value=fmt(b);
-      if(this.classList.contains('aktivni')||this.classList.contains('podklad')){
-        nastavPrekryv(this,b,this.dataset.prekryvTyp||'stred');
+      this.value = fmt(b);
+
+      if(this.classList.contains('aktivni') || this.classList.contains('podklad')){
+        nastavPrekryv(this, b);
       }
     }
   });
 }
 
 function nacti(){
-  let v=localStorage.getItem(SV),c=localStorage.getItem(SC),z=localStorage.getItem(SZ),r=localStorage.getItem(SR);
-  if(v)vyska.value=v;
+  let v = localStorage.getItem(SV);
+  let c = localStorage.getItem(SC);
+  let z = localStorage.getItem(SZ);
+  let r = localStorage.getItem(SR);
+
+  if(v) vyska.value = v;
+
   if(c){
-    if(+c>8)c='8';
-    cifry.value=c;
+    if(+c > 8) c = '8';
+    cifry.value = c;
   }
-  if(z)znamenko.value=z;
-  document.body.classList.toggle('dark',r==='dark');
-  rezim.textContent=r==='dark'?'☀️':'🌙';
+
+  if(z) znamenko.value = z;
+
+  document.body.classList.toggle('dark', r === 'dark');
+  rezim.textContent = r === 'dark' ? '☀️' : '🌙';
 }
 
 function nahoda(c){
-  let min=c==1?0:10**(c-1),max=10**c-1,n=Math.floor(Math.random()*(max-min+1))+min;
-  return znamenko.value==='+-'&&Math.random()<.5?-n:n;
+  let min = c == 1 ? 0 : 10 ** (c - 1);
+  let max = 10 ** c - 1;
+  let n = Math.floor(Math.random() * (max - min + 1)) + min;
+
+  if(znamenko.value === '+-' && Math.random() < .5){
+    n = -n;
+  }
+
+  return n;
 }
 
 function cisti(){
-  pyramida.querySelectorAll('input').forEach(i=>{
+  pyramida.querySelectorAll('input').forEach(i => {
     i.classList.remove('aktivni','podklad');
-    resetSirkuPole(i);
+    resetPrekryv(i);
   });
 }
 
 function zvyrazni(){
   cisti();
-  if(aktivniRadek==null)return;
 
-  let a=pole(aktivniRadek,aktivniIndex);
-  let l=pole(aktivniRadek+1,aktivniIndex);
-  let p=pole(aktivniRadek+1,aktivniIndex+1);
+  if(aktivniRadek == null) return;
+
+  let a = pole(aktivniRadek, aktivniIndex);
+  let l = pole(aktivniRadek + 1, aktivniIndex);
+  let p = pole(aktivniRadek + 1, aktivniIndex + 1);
 
   if(a){
     a.classList.add('aktivni');
-    a.dataset.prekryvTyp='stred';
-    nastavPrekryv(a,vysledky[aktivniRadek][aktivniIndex],'stred');
+    nastavPrekryv(a, vysledky[aktivniRadek][aktivniIndex]);
   }
 
   if(l){
     l.classList.add('podklad');
-    l.dataset.prekryvTyp='leva';
-    nastavPrekryv(l,cis(l.value),'leva');
+    nastavPrekryv(l, cis(l.value));
   }
 
   if(p){
     p.classList.add('podklad');
-    p.dataset.prekryvTyp='prava';
-    nastavPrekryv(p,cis(p.value),'prava');
+    nastavPrekryv(p, cis(p.value));
   }
 }
 
 function aktivuj(r,i){
-  aktivniRadek=r;
-  aktivniIndex=i;
+  aktivniRadek = r;
+  aktivniIndex = i;
 
-  pyramida.querySelectorAll('input').forEach(x=>{
-    if(!x.classList.contains('spodni')&&!x.classList.contains('spravne')){
+  pyramida.querySelectorAll('input').forEach(x => {
+    if(!x.classList.contains('spodni') && !x.classList.contains('spravne')){
       x.classList.add('zamcene');
-      x.readOnly=1;
-      x.tabIndex=-1;
+      x.readOnly = 1;
+      x.tabIndex = -1;
     }
   });
 
-  let a=pole(r,i);
+  let a = pole(r,i);
+
   if(a){
     a.classList.remove('zamcene','spatne');
-    a.readOnly=0;
-    a.tabIndex=0;
+    a.readOnly = 0;
+    a.tabIndex = 0;
     zvyrazni();
-    setTimeout(()=>{start.blur();a.focus({preventScroll:false});a.select()},120);
+
+    setTimeout(() => {
+      start.blur();
+      a.focus({preventScroll:false});
+      a.select();
+    }, 120);
   }
 }
 
 function dalsi(){
-  return aktivniIndex+1<aktivniRadek?{r:aktivniRadek,i:aktivniIndex+1}:aktivniRadek-1>=1?{r:aktivniRadek-1,i:0}:null;
+  if(aktivniIndex + 1 < aktivniRadek){
+    return {
+      r:aktivniRadek,
+      i:aktivniIndex + 1
+    };
+  }
+
+  if(aktivniRadek - 1 >= 1){
+    return {
+      r:aktivniRadek - 1,
+      i:0
+    };
+  }
+
+  return null;
 }
 
 function vytvor(gen){
-  pyramida.innerHTML='';
-  hlaska.textContent='';
-  vysledky=[];
-  let R=+vyska.value,C=+cifry.value;
+  pyramida.innerHTML = '';
+  hlaska.textContent = '';
+  vysledky = [];
 
-  if(C>8){
-    C=8;
-    cifry.value='8';
+  let R = +vyska.value;
+  let C = +cifry.value;
+
+  if(C > 8){
+    C = 8;
+    cifry.value = '8';
   }
 
   for(let r=1;r<=R;r++){
-    let row=document.createElement('div');
-    row.className='radek';
+    let row = document.createElement('div');
+    row.className = 'radek';
 
     for(let i=0;i<r;i++){
-      let x=document.createElement('input');
-      x.type='text';
-      x.inputMode='numeric';
-      x.dataset.r=r;
-      x.dataset.i=i;
+      let slot = document.createElement('div');
+      slot.className = 'bunka-slot';
 
-      if(r===R){
+      let x = document.createElement('input');
+      x.type = 'text';
+      x.inputMode = 'numeric';
+      x.dataset.r = r;
+      x.dataset.i = i;
+
+      if(r === R){
         x.classList.add('spodni');
-        x.readOnly=1;
-        x.tabIndex=-1;
-        x.value=gen?fmt(String(nahoda(C))):'';
+        x.readOnly = 1;
+        x.tabIndex = -1;
+        x.value = gen ? fmt(String(nahoda(C))) : '';
       }else{
-        x.value='';
+        x.value = '';
         vstup(x);
+
         if(gen){
           x.classList.add('zamcene');
-          x.readOnly=1;
-          x.tabIndex=-1;
+          x.readOnly = 1;
+          x.tabIndex = -1;
         }
       }
 
-      row.appendChild(x);
+      slot.appendChild(x);
+      row.appendChild(slot);
     }
 
     pyramida.appendChild(row);
   }
 
-  hraBezi=!!gen;
-  start.textContent=gen?'D A L Š Í':'S T A R T';
-  aktivniRadek=aktivniIndex=null;
+  hraBezi = !!gen;
+  start.textContent = gen ? 'D A L Š Í' : 'S T A R T';
+  aktivniRadek = null;
+  aktivniIndex = null;
 
   if(gen){
     spocitejVysledky();
-    aktivuj(R-1,0);
+    aktivuj(R - 1, 0);
   }
 }
 
 function kontrola(){
-  hlaska.textContent='';
-  let a=pole(aktivniRadek,aktivniIndex);
-  if(!a)return;
+  hlaska.textContent = '';
 
-  if(!/^-?[0-9 ]*$/.test(a.value)||!a.value.trim()||a.value.trim()==='-'){
-    hlaska.textContent='Nepovolený znak!';
+  let a = pole(aktivniRadek, aktivniIndex);
+
+  if(!a) return;
+
+  if(!/^-?[0-9 ]*$/.test(a.value) || !a.value.trim() || a.value.trim() === '-'){
+    hlaska.textContent = 'Nepovolený znak!';
     a.classList.add('spatne');
     return oznac(a);
   }
 
-  let ok=vysledky[aktivniRadek][aktivniIndex],z=cis(a.value);
+  let ok = vysledky[aktivniRadek][aktivniIndex];
+  let z = cis(a.value);
 
-  if(z===ok){
-    a.value=fmt(String(z));
-    nastavPrekryv(a,z,a.dataset.prekryvTyp||'stred');
+  if(z === ok){
+    a.value = fmt(String(z));
+    nastavPrekryv(a, z);
+
     a.classList.remove('spatne','aktivni');
     a.classList.add('spravne','zamcene');
-    a.readOnly=1;
-    a.tabIndex=-1;
+    a.readOnly = 1;
+    a.tabIndex = -1;
 
-    let d=dalsi();
+    let d = dalsi();
 
     if(d){
       aktivuj(d.r,d.i);
     }else{
       cisti();
-      hraBezi=0;
-      aktivniRadek=aktivniIndex=null;
-      start.textContent='S T A R T';
+      hraBezi = 0;
+      aktivniRadek = null;
+      aktivniIndex = null;
+      start.textContent = 'S T A R T';
       pridej(`${vyska.value}/${cifry.value}/${znamenko.value}`);
       ohnostroj();
     }
@@ -366,21 +1017,70 @@ function kontrola(){
 }
 
 function konecHry(){
-  hraBezi=0;
-  aktivniRadek=aktivniIndex=null;
-  hlaska.textContent='';
-  start.textContent='S T A R T';
+  hraBezi = 0;
+  aktivniRadek = null;
+  aktivniIndex = null;
+  hlaska.textContent = '';
+  start.textContent = 'S T A R T';
   vytvor(0);
 }
 
-nastaveniToggle.onclick=()=>{mazani();nastaveni.classList.toggle('zavreno');uloz()};
-[vyska,cifry,znamenko].forEach(e=>e.onchange=()=>{mazani();uloz();konecHry()});
-mazaniHistorie.onkeydown=e=>{if(e.key==='Enter')e.preventDefault(),mazani()};
-start.onclick=()=>{mazani();uloz();hraBezi?kontrola():vytvor(1)};
-konec.onclick=()=>{mazani();konecHry()};
-rezim.onclick=()=>{mazani();document.body.classList.toggle('dark');rezim.textContent=document.body.classList.contains('dark')?'☀️':'🌙';uloz()};
-document.onkeydown=e=>{if(e.key==='Enter'&&document.activeElement!==mazaniHistorie){e.preventDefault();start.click()}};
-window.onresize=()=>{if(hraBezi)zvyrazni()};
+nastaveniToggle.onclick = () => {
+  mazani();
+  nastaveni.classList.toggle('zavreno');
+  uloz();
+};
+
+[vyska,cifry,znamenko].forEach(e => {
+  e.onchange = () => {
+    mazani();
+    uloz();
+    konecHry();
+  };
+});
+
+mazaniHistorie.onkeydown = e => {
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    mazani();
+  }
+};
+
+start.onclick = () => {
+  mazani();
+  uloz();
+
+  if(hraBezi){
+    kontrola();
+  }else{
+    vytvor(1);
+  }
+};
+
+konec.onclick = () => {
+  mazani();
+  konecHry();
+};
+
+rezim.onclick = () => {
+  mazani();
+  document.body.classList.toggle('dark');
+  rezim.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+  uloz();
+};
+
+document.onkeydown = e => {
+  if(e.key === 'Enter' && document.activeElement !== mazaniHistorie){
+    e.preventDefault();
+    start.click();
+  }
+};
+
+window.onresize = () => {
+  if(hraBezi){
+    zvyrazni();
+  }
+};
 
 nacti();
 nactiHistorii();
