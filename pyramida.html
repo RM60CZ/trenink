@@ -184,7 +184,6 @@ h1{
   outline:0;
   border-color:var(--primary);
   box-shadow:0 0 0 4px rgba(129,140,248,.22);
-  transform:none;
 }
 
 body.dark .mazani-historie{
@@ -239,6 +238,7 @@ select option{
   position:relative;
   width:100%;
   overflow:visible;
+  padding-top:0;
 }
 
 .postranni-tlacitko{
@@ -276,7 +276,6 @@ select option{
   overflow:visible;
 }
 
-/* Pevný slot drží základnu pyramidy. Ten se nikdy neroztahuje. */
 .bunka-slot{
   position:relative;
   flex:0 0 clamp(34px,11vw,80px);
@@ -285,12 +284,7 @@ select option{
   overflow:visible;
 }
 
-/* Input je centrovaný ve slotu. Když se rozšíří, rozšíří se od středu. */
 .bunka-slot input{
-  position:absolute;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%);
   width:100%;
   height:100%;
   color:var(--text);
@@ -301,18 +295,10 @@ select option{
   border:2px solid var(--input-border);
   border-radius:14px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.25);
-  transition:
-    width .18s,
-    height .18s,
-    font-size .18s,
-    border-color .16s,
-    box-shadow .16s,
-    opacity .16s;
   padding:0 4px;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:clip;
-  z-index:1;
 }
 
 .bunka-slot input:focus{
@@ -332,13 +318,14 @@ select option{
   background:var(--disabled-bg);
   border-color:var(--disabled-border);
   cursor:not-allowed;
-  opacity:.72;
+  opacity:.45;
 }
 
 .bunka-slot input.spravne{
   color:var(--text);
   border-color:var(--success);
   box-shadow:0 0 0 4px rgba(34,197,94,.18);
+  opacity:1;
 }
 
 .bunka-slot input.spatne{
@@ -347,41 +334,84 @@ select option{
   box-shadow:0 0 0 4px rgba(220,38,38,.18);
 }
 
-/* Aktivní trojice je široká jako překryv, ale slot zůstává původní. */
-.bunka-slot input.aktivni,
-.bunka-slot input.podklad{
-  width:var(--wide-width,160px);
-  height:clamp(58px,15vw,82px);
-  font-size:clamp(22px,5vw,32px);
-  opacity:1;
-  overflow:visible;
-  text-overflow:clip;
-  border-radius:15px;
-  padding:0 8px;
+/* CENTRÁLNÍ PŘEKRYV */
+.prekryv-panel{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:80;
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  pointer-events:none;
 }
 
-.bunka-slot input.aktivni{
+.prekryv-panel.zobrazen{
+  display:flex;
+}
+
+.prekryv-horni-wrap{
+  display:flex;
+  justify-content:center;
+  width:100%;
+}
+
+.prekryv-spodni-wrap{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:0;
+  width:100%;
+}
+
+.prekryv-input{
+  height:clamp(58px,15vw,82px);
+  color:var(--text);
+  background:var(--input-bg);
+  font-size:clamp(22px,5vw,32px);
+  font-weight:800;
+  text-align:center;
+  border:2px solid var(--input-border);
+  border-radius:15px;
+  padding:0 8px;
+  white-space:nowrap;
+  overflow:visible;
+  text-overflow:clip;
+  box-shadow:0 8px 20px rgba(15,23,42,.14);
+  pointer-events:auto;
+}
+
+.prekryv-input:focus{
+  outline:0;
+  border-color:var(--primary);
+  box-shadow:0 0 0 5px rgba(129,140,248,.22);
+}
+
+#overlayAktivni{
   background:var(--active-bg);
   border-color:var(--primary);
   box-shadow:0 0 0 5px rgba(129,140,248,.22);
-  z-index:70;
 }
 
-.bunka-slot input.podklad{
-  box-shadow:0 8px 20px rgba(15,23,42,.14);
-  z-index:60;
+#overlayLevy{
+  border-radius:15px 0 0 15px;
 }
 
-.bunka-slot input.aktivni.spatne{
-  color:var(--text);
-  border-color:var(--error);
-  box-shadow:0 0 0 5px rgba(220,38,38,.25);
+#overlayPravy{
+  border-radius:0 15px 15px 0;
 }
 
-.bunka-slot input.aktivni.spravne{
-  color:var(--text);
-  border-color:var(--success);
-  box-shadow:0 0 0 5px rgba(34,197,94,.25);
+.prekryv-input.spatne{
+  color:var(--text)!important;
+  border:2px solid var(--error)!important;
+  box-shadow:0 0 0 5px rgba(220,38,38,.35)!important;
+}
+
+.prekryv-input.spravne{
+  color:var(--text)!important;
+  border:2px solid var(--success)!important;
+  box-shadow:0 0 0 5px rgba(34,197,94,.25)!important;
 }
 
 .akce{
@@ -446,7 +476,6 @@ select option{
 
 @media(max-width:760px){
   .herni-plocha{
-    position:relative;
     padding-top:54px;
   }
 
@@ -504,13 +533,13 @@ select option{
     padding:0 2px;
   }
 
-  .bunka-slot input.aktivni,
-  .bunka-slot input.podklad{
+  .prekryv-panel{
+    gap:6px;
+  }
+
+  .prekryv-input{
     height:clamp(52px,15vw,72px);
-    max-width:none;
-    max-height:none;
     font-size:clamp(20px,5vw,28px);
-    border-radius:13px;
     padding:0 6px;
   }
 
@@ -519,24 +548,6 @@ select option{
     font-size:15px;
     padding:11px 18px;
   }
-}
-
-.bunka-slot input.spatne,
-.bunka-slot input.spatne:focus,
-.bunka-slot input.aktivni.spatne,
-.bunka-slot input.aktivni.spatne:focus{
-  color:var(--text)!important;
-  border:2px solid var(--error)!important;
-  box-shadow:0 0 0 5px rgba(220,38,38,.35)!important;
-}
-
-.bunka-slot input.spravne,
-.bunka-slot input.spravne:focus,
-.bunka-slot input.aktivni.spravne,
-.bunka-slot input.aktivni.spravne:focus{
-  color:var(--text)!important;
-  border:2px solid var(--success)!important;
-  box-shadow:0 0 0 5px rgba(34,197,94,.25)!important;
 }
 </style>
 </head>
@@ -595,12 +606,23 @@ select option{
 
   <div id="hlaska" class="hlaska"></div>
 
-  <div class="herni-plocha">
+  <div class="herni-plocha" id="herniPlocha">
     <div class="postranni-tlacitko vlevo">
       <button id="start" class="akce" type="button">S T A R T</button>
     </div>
 
     <div class="pyramida" id="pyramida"></div>
+
+    <div id="prekryvPanel" class="prekryv-panel">
+      <div class="prekryv-horni-wrap">
+        <input id="overlayAktivni" class="prekryv-input" type="text" inputmode="numeric">
+      </div>
+
+      <div class="prekryv-spodni-wrap">
+        <input id="overlayLevy" class="prekryv-input" type="text" readonly tabindex="-1">
+        <input id="overlayPravy" class="prekryv-input" type="text" readonly tabindex="-1">
+      </div>
+    </div>
 
     <div class="postranni-tlacitko vpravo">
       <button id="konec" class="akce konec" type="button">K O N E C</button>
@@ -614,6 +636,12 @@ select option{
 const $ = id => document.getElementById(id);
 
 const pyramida = $('pyramida');
+const herniPlocha = $('herniPlocha');
+const prekryvPanel = $('prekryvPanel');
+const overlayAktivni = $('overlayAktivni');
+const overlayLevy = $('overlayLevy');
+const overlayPravy = $('overlayPravy');
+
 const vyska = $('vyska');
 const cifry = $('cifry');
 const znamenko = $('znamenko');
@@ -734,10 +762,10 @@ function ohnostroj(){
   setTimeout(() => o.remove(), 1800);
 }
 
-function oznac(i){
+function oznacOverlay(){
   setTimeout(() => {
-    i.focus({preventScroll:false});
-    i.select();
+    overlayAktivni.focus({preventScroll:false});
+    overlayAktivni.select();
   }, 30);
 }
 
@@ -755,16 +783,72 @@ function sirkaProText(hodnota){
   return Math.min(Math.max(min, zaklad + znaku * znak), max);
 }
 
-function nastavPrekryv(input, hodnota){
-  if(!input) return;
+function sirkaPoloviny(hodnota){
+  let text = fmt(String(hodnota || 0));
+  let znaku = text.length;
+  let jeMobil = window.innerWidth < 480;
 
-  let w = sirkaProText(hodnota);
-  input.style.setProperty('--wide-width', w + 'px');
+  let zaklad = jeMobil ? 24 : 30;
+  let znak = jeMobil ? 12 : 16;
+
+  let maxPolovina = Math.floor((window.innerWidth - 28) / 2);
+  let min = jeMobil ? 86 : 100;
+
+  return Math.min(Math.max(min, zaklad + znaku * znak), maxPolovina);
 }
 
-function resetPrekryv(input){
-  if(!input) return;
-  input.style.removeProperty('--wide-width');
+function nastavPrekryvPozici(){
+  if(aktivniRadek == null) return;
+
+  let a = pole(aktivniRadek, aktivniIndex);
+  if(!a) return;
+
+  let plochaRect = herniPlocha.getBoundingClientRect();
+  let bunkaRect = a.getBoundingClientRect();
+
+  let top = bunkaRect.top - plochaRect.top;
+  prekryvPanel.style.top = top + 'px';
+}
+
+function zobrazPrekryv(){
+  if(aktivniRadek == null) return;
+
+  let a = pole(aktivniRadek, aktivniIndex);
+  let l = pole(aktivniRadek + 1, aktivniIndex);
+  let p = pole(aktivniRadek + 1, aktivniIndex + 1);
+
+  if(!a || !l || !p) return;
+
+  overlayAktivni.value = a.value;
+  overlayLevy.value = l.value;
+  overlayPravy.value = p.value;
+
+  overlayAktivni.classList.remove('spatne','spravne');
+
+  let wA = sirkaProText(vysledky[aktivniRadek][aktivniIndex]);
+  let wL = sirkaPoloviny(cis(l.value));
+  let wP = sirkaPoloviny(cis(p.value));
+
+  overlayAktivni.style.width = wA + 'px';
+  overlayLevy.style.width = wL + 'px';
+  overlayPravy.style.width = wP + 'px';
+
+  nastavPrekryvPozici();
+  prekryvPanel.classList.add('zobrazen');
+
+  setTimeout(() => {
+    start.blur();
+    overlayAktivni.focus({preventScroll:false});
+    overlayAktivni.select();
+  }, 80);
+}
+
+function skryjPrekryv(){
+  prekryvPanel.classList.remove('zobrazen');
+  overlayAktivni.value = '';
+  overlayLevy.value = '';
+  overlayPravy.value = '';
+  overlayAktivni.classList.remove('spatne','spravne');
 }
 
 function spocitejVysledky(){
@@ -784,22 +868,6 @@ function spocitejVysledky(){
       vysledky[r][i] = vysledky[r+1][i] + vysledky[r+1][i+1];
     }
   }
-}
-
-function vstup(i){
-  i.addEventListener('input', function(){
-    this.classList.remove('spatne');
-
-    let b = this.value.replace(/\s/g,'');
-
-    if(/^-?\d*$/.test(b)){
-      this.value = fmt(b);
-
-      if(this.classList.contains('aktivni') || this.classList.contains('podklad')){
-        nastavPrekryv(this, b);
-      }
-    }
-  });
 }
 
 function nacti(){
@@ -833,38 +901,6 @@ function nahoda(c){
   return n;
 }
 
-function cisti(){
-  pyramida.querySelectorAll('input').forEach(i => {
-    i.classList.remove('aktivni','podklad');
-    resetPrekryv(i);
-  });
-}
-
-function zvyrazni(){
-  cisti();
-
-  if(aktivniRadek == null) return;
-
-  let a = pole(aktivniRadek, aktivniIndex);
-  let l = pole(aktivniRadek + 1, aktivniIndex);
-  let p = pole(aktivniRadek + 1, aktivniIndex + 1);
-
-  if(a){
-    a.classList.add('aktivni');
-    nastavPrekryv(a, vysledky[aktivniRadek][aktivniIndex]);
-  }
-
-  if(l){
-    l.classList.add('podklad');
-    nastavPrekryv(l, cis(l.value));
-  }
-
-  if(p){
-    p.classList.add('podklad');
-    nastavPrekryv(p, cis(p.value));
-  }
-}
-
 function aktivuj(r,i){
   aktivniRadek = r;
   aktivniIndex = i;
@@ -881,15 +917,9 @@ function aktivuj(r,i){
 
   if(a){
     a.classList.remove('zamcene','spatne');
-    a.readOnly = 0;
-    a.tabIndex = 0;
-    zvyrazni();
-
-    setTimeout(() => {
-      start.blur();
-      a.focus({preventScroll:false});
-      a.select();
-    }, 120);
+    a.readOnly = 1;
+    a.tabIndex = -1;
+    zobrazPrekryv();
   }
 }
 
@@ -914,6 +944,7 @@ function dalsi(){
 function vytvor(gen){
   pyramida.innerHTML = '';
   hlaska.textContent = '';
+  skryjPrekryv();
   vysledky = [];
 
   let R = +vyska.value;
@@ -945,7 +976,6 @@ function vytvor(gen){
         x.value = gen ? fmt(String(nahoda(C))) : '';
       }else{
         x.value = '';
-        vstup(x);
 
         if(gen){
           x.classList.add('zamcene');
@@ -974,35 +1004,35 @@ function vytvor(gen){
 
 function kontrola(){
   hlaska.textContent = '';
+  overlayAktivni.classList.remove('spatne');
 
-  let a = pole(aktivniRadek, aktivniIndex);
+  let hodnota = overlayAktivni.value;
 
-  if(!a) return;
-
-  if(!/^-?[0-9 ]*$/.test(a.value) || !a.value.trim() || a.value.trim() === '-'){
+  if(!/^-?[0-9 ]*$/.test(hodnota) || !hodnota.trim() || hodnota.trim() === '-'){
     hlaska.textContent = 'Nepovolený znak!';
-    a.classList.add('spatne');
-    return oznac(a);
+    overlayAktivni.classList.add('spatne');
+    return oznacOverlay();
   }
 
   let ok = vysledky[aktivniRadek][aktivniIndex];
-  let z = cis(a.value);
+  let z = cis(hodnota);
 
   if(z === ok){
-    a.value = fmt(String(z));
-    nastavPrekryv(a, z);
+    let skutecna = pole(aktivniRadek, aktivniIndex);
 
-    a.classList.remove('spatne','aktivni');
-    a.classList.add('spravne','zamcene');
-    a.readOnly = 1;
-    a.tabIndex = -1;
+    skutecna.value = fmt(String(z));
+    skutecna.classList.remove('spatne');
+    skutecna.classList.add('spravne');
+
+    overlayAktivni.value = fmt(String(z));
+    overlayAktivni.classList.add('spravne');
 
     let d = dalsi();
 
     if(d){
       aktivuj(d.r,d.i);
     }else{
-      cisti();
+      skryjPrekryv();
       hraBezi = 0;
       aktivniRadek = null;
       aktivniIndex = null;
@@ -1011,8 +1041,8 @@ function kontrola(){
       ohnostroj();
     }
   }else{
-    a.classList.add('spatne');
-    oznac(a);
+    overlayAktivni.classList.add('spatne');
+    oznacOverlay();
   }
 }
 
@@ -1022,8 +1052,20 @@ function konecHry(){
   aktivniIndex = null;
   hlaska.textContent = '';
   start.textContent = 'S T A R T';
+  skryjPrekryv();
   vytvor(0);
 }
+
+overlayAktivni.addEventListener('input', function(){
+  this.classList.remove('spatne');
+
+  let b = this.value.replace(/\s/g,'');
+
+  if(/^-?\d*$/.test(b)){
+    this.value = fmt(b);
+    this.style.width = sirkaProText(b) + 'px';
+  }
+});
 
 nastaveniToggle.onclick = () => {
   mazani();
@@ -1078,7 +1120,7 @@ document.onkeydown = e => {
 
 window.onresize = () => {
   if(hraBezi){
-    zvyrazni();
+    zobrazPrekryv();
   }
 };
 
