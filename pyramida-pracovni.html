@@ -1,53 +1,277 @@
-.pyramida {
-  width: 100%;
-  max-width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(5px, 1.5vw, 10px);
-  overflow: hidden;
-}
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pyramida čísel</title>
 
-.radek {
-  display: flex;
-  justify-content: center;
-  gap: clamp(3px, 1vw, 8px);
-  width: 100%;
-}
+  <style>
+    :root {
+      --bg: #eef2ff;
+      --card: rgba(255, 255, 255, 0.86);
+      --text: #172033;
+      --muted: #5d6b86;
+      --primary: #4f46e5;
+      --primary-light: #818cf8;
+      --input-bg: #ffffff;
+      --input-border: #c7d2fe;
+      --shadow: 0 24px 60px rgba(79, 70, 229, 0.18);
+    }
 
-input {
-  width: clamp(34px, 11vw, 80px);
-  height: clamp(40px, 11vw, 58px);
-  color: var(--text);
-  background: var(--input-bg);
-  font-size: clamp(14px, 3.8vw, 20px);
-  font-weight: 700;
-  text-align: center;
-  border: 2px solid var(--input-border);
-  border-radius: 14px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
-  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
-}
+    body.dark {
+      --bg: #0f172a;
+      --card: rgba(30, 41, 59, 0.9);
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --primary: #818cf8;
+      --primary-light: #a5b4fc;
+      --input-bg: #111827;
+      --input-border: #475569;
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+    }
 
-@media (max-width: 480px) {
-  .aplikace {
-    padding-left: 8px;
-    padding-right: 8px;
-    border-radius: 22px;
-  }
+    * {
+      box-sizing: border-box;
+    }
 
-  .radek {
-    gap: 4px;
-  }
+    body {
+      font-family: Arial, sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(129, 140, 248, 0.35), transparent 32%),
+        linear-gradient(135deg, var(--bg), #ffffff);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 18px 10px;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
 
-  input {
-    width: calc((100vw - 56px) / 7);
-    height: calc((100vw - 56px) / 7);
-    max-width: 52px;
-    max-height: 52px;
-    min-width: 0;
-    font-size: clamp(13px, 3.6vw, 17px);
-    border-radius: 10px;
-    padding: 0;
-  }
-}
+    body.dark {
+      background:
+        radial-gradient(circle at top left, rgba(129, 140, 248, 0.18), transparent 34%),
+        linear-gradient(135deg, #020617, var(--bg));
+    }
+
+    .aplikace {
+      width: min(100%, 720px);
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 28px;
+      padding: 24px 14px 30px;
+      box-shadow: var(--shadow);
+    }
+
+    .hlavicka {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 6vw, 42px);
+      letter-spacing: -0.04em;
+    }
+
+    .popis {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .ovladani {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 26px;
+    }
+
+    .pole {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.26);
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      border-radius: 999px;
+      padding: 8px 12px;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    select,
+    button {
+      border-radius: 999px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    select {
+      color: var(--text);
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      padding: 8px 12px;
+    }
+
+    button {
+      border: 0;
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      padding: 10px 16px;
+      box-shadow: 0 10px 22px rgba(79, 70, 229, 0.28);
+    }
+
+    .pyramida {
+      width: 100%;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: clamp(5px, 1.5vw, 10px);
+      overflow: hidden;
+    }
+
+    .radek {
+      display: flex;
+      justify-content: center;
+      gap: clamp(3px, 1vw, 8px);
+      width: 100%;
+    }
+
+    input {
+      width: clamp(34px, 11vw, 80px);
+      height: clamp(40px, 11vw, 58px);
+      color: var(--text);
+      background: var(--input-bg);
+      font-size: clamp(14px, 3.8vw, 20px);
+      font-weight: 700;
+      text-align: center;
+      border: 2px solid var(--input-border);
+      border-radius: 14px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+      transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    input::placeholder {
+      color: #94a3b8;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.22);
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 480px) {
+      .aplikace {
+        padding-left: 8px;
+        padding-right: 8px;
+        border-radius: 22px;
+      }
+
+      .radek {
+        gap: 4px;
+      }
+
+      input {
+        width: calc((100vw - 56px) / 7);
+        height: calc((100vw - 56px) / 7);
+        max-width: 52px;
+        max-height: 52px;
+        min-width: 0;
+        font-size: clamp(13px, 3.6vw, 17px);
+        border-radius: 10px;
+        padding: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="aplikace">
+    <header class="hlavicka">
+      <h1>Pyramida čísel</h1>
+      <p class="popis">Vyber výšku pyramidy a doplň čísla do jednotlivých políček.</p>
+    </header>
+
+    <section class="ovladani">
+      <div class="pole">
+        <label for="vyska">Výška</label>
+        <select id="vyska">
+          <option value="2">2 poschodí</option>
+          <option value="3">3 poschodí</option>
+          <option value="4">4 poschodí</option>
+          <option value="5">5 poschodí</option>
+          <option value="6">6 poschodí</option>
+          <option value="7" selected>7 poschodí</option>
+        </select>
+      </div>
+
+      <button id="rezim" type="button">🌙 Tmavý režim</button>
+    </section>
+
+    <div class="pyramida" id="pyramida"></div>
+  </main>
+
+  <script>
+    const pyramida = document.getElementById('pyramida');
+    const vyska = document.getElementById('vyska');
+    const rezim = document.getElementById('rezim');
+
+    function vytvorPyramidu(pocetRadku) {
+      pyramida.innerHTML = '';
+
+      for (let r = 1; r <= pocetRadku; r++) {
+        const radek = document.createElement('div');
+        radek.className = 'radek';
+
+        for (let i = 0; i < r; i++) {
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.inputMode = 'numeric';
+          input.placeholder = '0';
+
+          input.addEventListener('input', function () {
+            let hodnota = this.value.replace(/\D/g, '');
+
+            if (hodnota) {
+              this.value = Number(hodnota).toLocaleString('cs-CZ');
+            } else {
+              this.value = '';
+            }
+          });
+
+          radek.appendChild(input);
+        }
+
+        pyramida.appendChild(radek);
+      }
+    }
+
+    vyska.addEventListener('change', function () {
+      vytvorPyramidu(Number(this.value));
+    });
+
+    rezim.addEventListener('click', function () {
+      document.body.classList.toggle('dark');
+
+      if (document.body.classList.contains('dark')) {
+        rezim.textContent = '☀️ Světlý režim';
+      } else {
+        rezim.textContent = '🌙 Tmavý režim';
+      }
+    });
+
+    vytvorPyramidu(Number(vyska.value));
+  </script>
+</body>
+</html>
