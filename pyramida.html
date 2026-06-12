@@ -345,6 +345,7 @@ select option{
   align-items:center;
   gap:8px;
   pointer-events:none;
+  max-width:calc(100vw - 16px);
 }
 
 .prekryv-panel.zobrazen{
@@ -369,17 +370,18 @@ select option{
   height:clamp(58px,15vw,82px);
   color:var(--text);
   background:var(--input-bg);
-  font-size:clamp(22px,5vw,32px);
+  font-size:clamp(20px,4.7vw,30px);
   font-weight:800;
   text-align:center;
   border:2px solid var(--input-border);
   border-radius:15px;
-  padding:0 8px;
+  padding:0 10px;
   white-space:nowrap;
   overflow:visible;
   text-overflow:clip;
   box-shadow:0 8px 20px rgba(15,23,42,.14);
   pointer-events:auto;
+  min-width:0;
 }
 
 .prekryv-input:focus{
@@ -539,7 +541,7 @@ select option{
 
   .prekryv-input{
     height:clamp(52px,15vw,72px);
-    font-size:clamp(20px,5vw,28px);
+    font-size:clamp(17px,4.4vw,24px);
     padding:0 6px;
   }
 
@@ -673,9 +675,12 @@ const dnes = () => {
 
 const fmt = v => {
   if(v === '' || v == null) return '';
+
   let s = String(v);
   let m = s[0] == '-' ? '-' : '';
+
   s = s.replace('-', '');
+
   return m + s.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 };
 
@@ -769,32 +774,34 @@ function oznacOverlay(){
   }, 30);
 }
 
-function sirkaProText(hodnota){
-  let text = fmt(String(hodnota || 0));
-  let znaku = text.length;
+function sirkaTextu(text, typ = 'cela'){
+  text = fmt(String(text ?? 0));
+
   let jeMobil = window.innerWidth < 480;
 
-  let zaklad = jeMobil ? 30 : 38;
-  let znak = jeMobil ? 13 : 17;
+  let znak = jeMobil ? 14.5 : 18;
+  let rezerva = jeMobil ? 34 : 44;
 
-  let max = Math.min(window.innerWidth - 32, jeMobil ? 330 : 460);
-  let min = jeMobil ? 86 : 100;
+  let w = Math.ceil(text.length * znak + rezerva);
 
-  return Math.min(Math.max(min, zaklad + znaku * znak), max);
+  if(typ === 'pulka'){
+    let max = Math.floor((window.innerWidth - 18) / 2);
+    let min = jeMobil ? 104 : 120;
+    return Math.min(Math.max(w, min), max);
+  }
+
+  let max = Math.min(window.innerWidth - 20, jeMobil ? 360 : 520);
+  let min = jeMobil ? 112 : 130;
+
+  return Math.min(Math.max(w, min), max);
+}
+
+function sirkaProText(hodnota){
+  return sirkaTextu(hodnota, 'cela');
 }
 
 function sirkaPoloviny(hodnota){
-  let text = fmt(String(hodnota || 0));
-  let znaku = text.length;
-  let jeMobil = window.innerWidth < 480;
-
-  let zaklad = jeMobil ? 24 : 30;
-  let znak = jeMobil ? 12 : 16;
-
-  let maxPolovina = Math.floor((window.innerWidth - 28) / 2);
-  let min = jeMobil ? 86 : 100;
-
-  return Math.min(Math.max(min, zaklad + znaku * znak), maxPolovina);
+  return sirkaTextu(hodnota, 'pulka');
 }
 
 function nastavPrekryvPozici(){
@@ -826,8 +833,8 @@ function zobrazPrekryv(){
   overlayAktivni.classList.remove('spatne','spravne');
 
   let wA = sirkaProText(vysledky[aktivniRadek][aktivniIndex]);
-  let wL = sirkaPoloviny(cis(l.value));
-  let wP = sirkaPoloviny(cis(p.value));
+  let wL = sirkaPoloviny(l.value);
+  let wP = sirkaPoloviny(p.value);
 
   overlayAktivni.style.width = wA + 'px';
   overlayLevy.style.width = wL + 'px';
@@ -1063,7 +1070,10 @@ overlayAktivni.addEventListener('input', function(){
 
   if(/^-?\d*$/.test(b)){
     this.value = fmt(b);
-    this.style.width = sirkaProText(b) + 'px';
+
+    if(aktivniRadek != null){
+      this.style.width = sirkaProText(vysledky[aktivniRadek][aktivniIndex]) + 'px';
+    }
   }
 });
 
