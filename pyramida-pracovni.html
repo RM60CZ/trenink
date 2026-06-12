@@ -251,13 +251,15 @@
     }
 
     input.spravne {
-      color: var(--success);
+      color: var(--text);
       border-color: var(--success);
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.18);
     }
 
     input.spatne {
-      color: var(--error);
+      color: var(--text);
       border-color: var(--error);
+      box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.18);
     }
 
     input.aktivni,
@@ -313,6 +315,38 @@
       font-weight: 900;
       color: var(--success);
       word-spacing: 8px;
+    }
+
+    .ohnostroj {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 9999;
+    }
+
+    .jiskra {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: hsl(var(--hue), 95%, 60%);
+      box-shadow: 0 0 12px currentColor;
+      animation: jiskraLet 900ms ease-out forwards;
+    }
+
+    @keyframes jiskraLet {
+      from {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+      }
+
+      to {
+        transform: translate(var(--dx), var(--dy)) scale(0.1);
+        opacity: 0;
+      }
     }
 
     @media (max-width: 480px) {
@@ -480,6 +514,50 @@
       localStorage.setItem(STORAGE_HISTORIE_DATUM, dnesniDatum());
       localStorage.setItem(STORAGE_HISTORIE, '');
       historie.innerHTML = '';
+    }
+
+    function spustOhnostroj() {
+      const obal = document.createElement('div');
+      obal.className = 'ohnostroj';
+      document.body.appendChild(obal);
+
+      const vybuchy = [
+        { x: 28, y: 28 },
+        { x: 50, y: 20 },
+        { x: 72, y: 30 },
+        { x: 40, y: 42 },
+        { x: 62, y: 45 }
+      ];
+
+      vybuchy.forEach(function (vybuch, index) {
+        setTimeout(function () {
+          for (let i = 0; i < 28; i++) {
+            const jiskra = document.createElement('span');
+            jiskra.className = 'jiskra';
+
+            const uhel = Math.random() * Math.PI * 2;
+            const vzdalenost = 70 + Math.random() * 90;
+            const dx = Math.cos(uhel) * vzdalenost;
+            const dy = Math.sin(uhel) * vzdalenost;
+
+            jiskra.style.setProperty('--x', vybuch.x + 'vw');
+            jiskra.style.setProperty('--y', vybuch.y + 'vh');
+            jiskra.style.setProperty('--dx', dx + 'px');
+            jiskra.style.setProperty('--dy', dy + 'px');
+            jiskra.style.setProperty('--hue', Math.floor(Math.random() * 360));
+
+            obal.appendChild(jiskra);
+
+            setTimeout(function () {
+              jiskra.remove();
+            }, 1000);
+          }
+        }, index * 180);
+      });
+
+      setTimeout(function () {
+        obal.remove();
+      }, 1800);
     }
 
     function oznacPole(input) {
@@ -729,6 +807,7 @@
           aktivniIndex = null;
           start.textContent = 'S T A R T';
           pridejDoHistorie(`${vyska.value}/${cifry.value}`);
+          spustOhnostroj();
         }
       } else {
         aktivni.classList.add('spatne');
