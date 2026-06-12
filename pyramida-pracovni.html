@@ -471,8 +471,10 @@
 
       if (poleProFocus) {
         setTimeout(function () {
-          poleProFocus.focus();
-        }, 0);
+          start.blur();
+          poleProFocus.focus({ preventScroll: false });
+          poleProFocus.select();
+        }, 100);
       }
     }
 
@@ -495,6 +497,16 @@
     start.addEventListener('click', function () {
       ulozNastaveni();
       vytvorPyramidu(true);
+
+      setTimeout(function () {
+        const aktivniPole = pyramida.querySelector('input:not([readonly]):not(.spodni)');
+
+        if (aktivniPole) {
+          start.blur();
+          aktivniPole.focus({ preventScroll: false });
+          aktivniPole.select();
+        }
+      }, 150);
     });
 
     rezim.addEventListener('click', function () {
