@@ -27,7 +27,7 @@ body.dark .mazani-historie{color:var(--input-bg)}
 .pole{display:flex;align-items:center;background:rgba(255,255,255,.22);border:1px solid rgba(148,163,184,.32);border-radius:999px;padding:8px 12px}
 select{color:var(--text);background:var(--input-bg);border:1px solid var(--input-border);border-radius:999px;font-size:15px;font-weight:700;cursor:pointer;padding:8px 12px}
 .hlaska{min-height:22px;margin:2px 0 8px;color:var(--error);font-size:15px;font-weight:800;text-align:center}
-.herni-plocha{position:relative;width:100%}.postranni-tlacitko{position:absolute;top:0;z-index:5}.postranni-tlacitko.vlevo{right:calc(50% + 48px)}.postranni-tlacitko.vpravo{left:calc(50% + 48px)}
+.herni-plocha{position:relative;width:100%}.postranni-tlacitko{position:absolute;top:0;z-index:5}.postranni-tlacitko.vlevo{right:calc(50% + 82px)}.postranni-tlacitko.vpravo{left:calc(50% + 82px)}
 .pyramida{width:100%;max-width:100%;display:flex;flex-direction:column;align-items:center;gap:clamp(5px,1.5vw,10px);overflow:visible;min-height:40px}
 .radek{display:flex;justify-content:center;gap:clamp(3px,1vw,8px);width:100%}
 input{width:clamp(34px,11vw,80px);height:clamp(40px,11vw,58px);color:var(--text);background:var(--input-bg);font-size:clamp(14px,3.8vw,20px);font-weight:700;text-align:center;border:2px solid var(--input-border);border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.25);transition:width .18s,height .18s,font-size .18s,transform .18s,border-color .16s,box-shadow .16s,opacity .16s}
@@ -47,7 +47,7 @@ input.podklad{box-shadow:0 8px 20px rgba(15,23,42,.14)}
 .ohnostroj{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9999}
 .jiskra{position:absolute;left:var(--x);top:var(--y);width:8px;height:8px;border-radius:50%;background:hsl(var(--hue),95%,60%);box-shadow:0 0 12px currentColor;animation:jiskraLet .9s ease-out forwards}
 @keyframes jiskraLet{from{transform:translate(0,0) scale(1);opacity:1}to{transform:translate(var(--dx),var(--dy)) scale(.1);opacity:0}}
-@media(max-width:760px){.herni-plocha{position:relative;padding-top:54px}.postranni-tlacitko{top:0}.postranni-tlacitko.vlevo{right:calc(50% + 10px)}.postranni-tlacitko.vpravo{left:calc(50% + 10px)}}
+@media(max-width:760px){.herni-plocha{position:relative;padding-top:54px}.postranni-tlacitko{top:0}.postranni-tlacitko.vlevo{right:calc(50% + 22px)}.postranni-tlacitko.vpravo{left:calc(50% + 22px)}}
 @media(max-width:480px){.aplikace{padding-left:8px;padding-right:8px;border-radius:22px}.hlavicka{padding:0 40px}.rezim{width:34px;height:34px;font-size:24px}.popis-toggle{font-size:14px}.radek{gap:4px}input{width:calc((100vw - 56px)/7);height:calc((100vw - 56px)/7);max-width:52px;max-height:52px;min-width:0;font-size:clamp(13px,3.6vw,17px);border-radius:10px;padding:0}input.aktivni,input.podklad{width:clamp(58px,17vw,88px);height:clamp(52px,15vw,72px);max-width:none;max-height:none;font-size:clamp(20px,5vw,28px)}.akce{min-width:136px;font-size:15px;padding:11px 18px}}
 input.spatne,input.spatne:focus,input.aktivni.spatne,input.aktivni.spatne:focus{color:var(--text)!important;border:2px solid var(--error)!important;box-shadow:0 0 0 5px rgba(220,38,38,.35)!important}
 input.spravne,input.spravne:focus,input.aktivni.spravne,input.aktivni.spravne:focus{color:var(--text)!important;border:2px solid var(--success)!important;box-shadow:0 0 0 5px rgba(34,197,94,.25)!important}
