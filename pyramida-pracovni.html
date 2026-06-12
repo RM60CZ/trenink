@@ -19,6 +19,9 @@
       --disabled-border: #c4cad5;
       --bottom-border: #facc15;
       --bottom-bg: #f3efd7;
+      --success: #16a34a;
+      --error: #dc2626;
+      --active-bg: #eef2ff;
       --shadow: 0 24px 60px rgba(60, 70, 95, 0.18);
     }
 
@@ -35,6 +38,9 @@
       --disabled-border: #334155;
       --bottom-border: #eab308;
       --bottom-bg: #292517;
+      --success: #22c55e;
+      --error: #f87171;
+      --active-bg: #1e1b4b;
       --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
     }
 
@@ -65,12 +71,13 @@
 
     .aplikace {
       position: relative;
-      width: min(100%, 720px);
+      width: min(100%, 860px);
       background: var(--card);
       border: 1px solid rgba(148, 163, 184, 0.35);
       border-radius: 28px;
       padding: 24px 14px 30px;
       box-shadow: var(--shadow);
+      overflow: hidden;
     }
 
     .hlavicka {
@@ -106,7 +113,7 @@
     }
 
     .nastaveni {
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       text-align: center;
     }
 
@@ -174,6 +181,25 @@
       padding: 8px 12px;
     }
 
+    .hlaska {
+      min-height: 22px;
+      margin: 2px 0 8px;
+      color: var(--error);
+      font-size: 15px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .historie {
+      min-height: 24px;
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--success);
+      word-spacing: 8px;
+    }
+
     .pyramida {
       width: 100%;
       max-width: 100%;
@@ -181,7 +207,7 @@
       flex-direction: column;
       align-items: center;
       gap: clamp(5px, 1.5vw, 10px);
-      overflow: hidden;
+      overflow: visible;
       min-height: 40px;
     }
 
@@ -203,7 +229,14 @@
       border: 2px solid var(--input-border);
       border-radius: 14px;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
-      transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
+      transition:
+        width 0.18s ease,
+        height 0.18s ease,
+        font-size 0.18s ease,
+        transform 0.18s ease,
+        border-color 0.16s ease,
+        box-shadow 0.16s ease,
+        opacity 0.16s ease;
     }
 
     input:focus {
@@ -220,11 +253,6 @@
       opacity: 1;
     }
 
-    input.spodni:focus {
-      transform: none;
-      box-shadow: none;
-    }
-
     input.zamcene {
       background: var(--disabled-bg);
       border-color: var(--disabled-border);
@@ -232,18 +260,45 @@
       opacity: 0.72;
     }
 
-    input.zamcene:focus {
-      transform: none;
-      box-shadow: none;
+    input.spravne {
+      color: var(--success);
+      border-color: var(--success);
     }
 
-    .start-wrap {
+    input.spatne {
+      color: var(--error);
+      border-color: var(--error);
+    }
+
+    input.aktivni,
+    input.podklad {
+      width: clamp(72px, 20vw, 132px);
+      height: clamp(58px, 15vw, 82px);
+      font-size: clamp(22px, 5vw, 32px);
+      z-index: 2;
+    }
+
+    input.aktivni {
+      background: var(--active-bg);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 5px rgba(129, 140, 248, 0.22);
+    }
+
+    input.podklad {
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+    }
+
+    .tlacitka-wrap {
       display: flex;
       justify-content: center;
+      align-items: center;
+      gap: 14px;
       margin-top: 18px;
+      flex-wrap: wrap;
     }
 
-    .start {
+    .akce {
+      min-width: 150px;
       border: 0;
       color: #ffffff;
       background: linear-gradient(135deg, var(--primary), var(--primary-light));
@@ -252,8 +307,12 @@
       font-weight: 900;
       letter-spacing: 0.28em;
       cursor: pointer;
-      padding: 12px 28px;
+      padding: 12px 24px;
       box-shadow: 0 10px 22px rgba(79, 70, 229, 0.28);
+    }
+
+    .konec {
+      background: linear-gradient(135deg, #64748b, #94a3b8);
     }
 
     @media (max-width: 480px) {
@@ -292,9 +351,19 @@
         padding: 0;
       }
 
-      .start {
-        font-size: 16px;
-        padding: 11px 24px;
+      input.aktivni,
+      input.podklad {
+        width: clamp(58px, 17vw, 88px);
+        height: clamp(52px, 15vw, 72px);
+        max-width: none;
+        max-height: none;
+        font-size: clamp(20px, 5vw, 28px);
+      }
+
+      .akce {
+        min-width: 136px;
+        font-size: 15px;
+        padding: 11px 18px;
       }
     }
   </style>
@@ -338,10 +407,14 @@
       </div>
     </section>
 
+    <div id="hlaska" class="hlaska"></div>
+    <div id="historie" class="historie"></div>
+
     <div class="pyramida" id="pyramida"></div>
 
-    <div class="start-wrap">
-      <button id="start" class="start" type="button">S T A R T</button>
+    <div class="tlacitka-wrap">
+      <button id="start" class="akce" type="button">S T A R T</button>
+      <button id="konec" class="akce konec" type="button">K O N E C</button>
     </div>
   </main>
 
@@ -351,25 +424,80 @@
     const cifry = document.getElementById('cifry');
     const rezim = document.getElementById('rezim');
     const start = document.getElementById('start');
+    const konec = document.getElementById('konec');
     const nastaveni = document.getElementById('nastaveni');
     const nastaveniToggle = document.getElementById('nastaveniToggle');
+    const hlaska = document.getElementById('hlaska');
+    const historie = document.getElementById('historie');
 
     const STORAGE_REZIM = 'pyramida_rezim';
     const STORAGE_VYSKA = 'pyramida_vyska';
     const STORAGE_CIFRY = 'pyramida_cifry';
+    const STORAGE_HISTORIE = 'pyramida_historie';
+    const STORAGE_HISTORIE_DATUM = 'pyramida_historie_datum';
 
-    function formatujTisice(hodnota) {
-      if (!hodnota) {
-        return '';
+    let hraBezi = false;
+    let aktivniRadek = null;
+    let aktivniIndex = null;
+
+    function dnesniDatum() {
+      const d = new Date();
+      const rok = d.getFullYear();
+      const mesic = String(d.getMonth() + 1).padStart(2, '0');
+      const den = String(d.getDate()).padStart(2, '0');
+      return `${rok}-${mesic}-${den}`;
+    }
+
+    function nactiHistorii() {
+      const dnes = dnesniDatum();
+      const datum = localStorage.getItem(STORAGE_HISTORIE_DATUM);
+
+      if (datum !== dnes) {
+        localStorage.setItem(STORAGE_HISTORIE_DATUM, dnes);
+        localStorage.setItem(STORAGE_HISTORIE, '');
       }
 
+      historie.innerHTML = localStorage.getItem(STORAGE_HISTORIE) || '';
+    }
+
+    function pridejDoHistorie(zapis) {
+      const dnes = dnesniDatum();
+
+      if (localStorage.getItem(STORAGE_HISTORIE_DATUM) !== dnes) {
+        localStorage.setItem(STORAGE_HISTORIE_DATUM, dnes);
+        localStorage.setItem(STORAGE_HISTORIE, '');
+      }
+
+      const span = `<span>${zapis}</span>&nbsp;&nbsp;`;
+      const novaHistorie = (localStorage.getItem(STORAGE_HISTORIE) || '') + span;
+
+      localStorage.setItem(STORAGE_HISTORIE, novaHistorie);
+      historie.innerHTML = novaHistorie;
+    }
+
+    function formatujTisice(hodnota) {
+      if (!hodnota) return '';
       return hodnota.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    }
+
+    function pouzeCisliceATisice(hodnota) {
+      return /^[0-9 ]*$/.test(hodnota);
+    }
+
+    function naCislo(hodnota) {
+      const ciste = hodnota.replace(/\s/g, '');
+      return Number(ciste);
     }
 
     function nastavVstupCisla(input) {
       input.addEventListener('input', function () {
-        const cislice = this.value.replace(/\D/g, '');
-        this.value = formatujTisice(cislice);
+        this.classList.remove('spatne');
+
+        const bezMezer = this.value.replace(/\s/g, '');
+
+        if (/^\d*$/.test(bezMezer)) {
+          this.value = formatujTisice(bezMezer);
+        }
       });
     }
 
@@ -387,13 +515,8 @@
       const ulozeneCifry = localStorage.getItem(STORAGE_CIFRY);
       const ulozenyRezim = localStorage.getItem(STORAGE_REZIM);
 
-      if (ulozenaVyska) {
-        vyska.value = ulozenaVyska;
-      }
-
-      if (ulozeneCifry) {
-        cifry.value = ulozeneCifry;
-      }
+      if (ulozenaVyska) vyska.value = ulozenaVyska;
+      if (ulozeneCifry) cifry.value = ulozeneCifry;
 
       if (ulozenyRezim === 'dark') {
         document.body.classList.add('dark');
@@ -407,17 +530,87 @@
     function nahodneCisloSPoctemCifer(pocetCifer) {
       const min = pocetCifer === 1 ? 0 : Math.pow(10, pocetCifer - 1);
       const max = Math.pow(10, pocetCifer) - 1;
-
       return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function ziskejPole(r, i) {
+      return pyramida.querySelector(`input[data-r="${r}"][data-i="${i}"]`);
+    }
+
+    function vycistiZvyrazneni() {
+      pyramida.querySelectorAll('input').forEach(function (input) {
+        input.classList.remove('aktivni', 'podklad');
+      });
+    }
+
+    function zvyrazniAktivniTrojici() {
+      vycistiZvyrazneni();
+
+      if (aktivniRadek === null || aktivniIndex === null) return;
+
+      const aktivni = ziskejPole(aktivniRadek, aktivniIndex);
+      const levyDole = ziskejPole(aktivniRadek + 1, aktivniIndex);
+      const pravyDole = ziskejPole(aktivniRadek + 1, aktivniIndex + 1);
+
+      if (aktivni) aktivni.classList.add('aktivni');
+      if (levyDole) levyDole.classList.add('podklad');
+      if (pravyDole) pravyDole.classList.add('podklad');
+    }
+
+    function nastavAktivniPole(r, i) {
+      aktivniRadek = r;
+      aktivniIndex = i;
+
+      pyramida.querySelectorAll('input').forEach(function (input) {
+        if (!input.classList.contains('spodni') && !input.classList.contains('spravne')) {
+          input.classList.add('zamcene');
+          input.readOnly = true;
+          input.tabIndex = -1;
+        }
+      });
+
+      const aktivni = ziskejPole(r, i);
+
+      if (aktivni) {
+        aktivni.classList.remove('zamcene', 'spatne');
+        aktivni.readOnly = false;
+        aktivni.tabIndex = 0;
+        zvyrazniAktivniTrojici();
+
+        setTimeout(function () {
+          start.blur();
+          aktivni.focus({ preventScroll: false });
+          aktivni.select();
+        }, 120);
+      }
+    }
+
+    function dalsiPole() {
+      const pocetRadku = Number(vyska.value);
+
+      if (aktivniIndex + 1 < aktivniRadek) {
+        return {
+          r: aktivniRadek,
+          i: aktivniIndex + 1
+        };
+      }
+
+      if (aktivniRadek - 1 >= 1) {
+        return {
+          r: aktivniRadek - 1,
+          i: 0
+        };
+      }
+
+      return null;
     }
 
     function vytvorPyramidu(generovatSpodniRadek) {
       pyramida.innerHTML = '';
+      hlaska.textContent = '';
 
       const pocetRadku = Number(vyska.value);
       const pocetCifer = Number(cifry.value);
-
-      let poleProFocus = null;
 
       for (let r = 1; r <= pocetRadku; r++) {
         const radek = document.createElement('div');
@@ -429,37 +622,25 @@
           const input = document.createElement('input');
           input.type = 'text';
           input.inputMode = 'numeric';
+          input.dataset.r = r;
+          input.dataset.i = i;
 
           if (jeSpodniRadek) {
             input.classList.add('spodni');
             input.readOnly = true;
             input.tabIndex = -1;
-            input.setAttribute('aria-label', 'Automaticky vygenerované číslo');
 
             if (generovatSpodniRadek) {
-              const nahodne = String(nahodneCisloSPoctemCifer(pocetCifer));
-              input.value = formatujTisice(nahodne);
-            } else {
-              input.value = '';
+              input.value = formatujTisice(String(nahodneCisloSPoctemCifer(pocetCifer)));
             }
           } else {
             input.value = '';
+            nastavVstupCisla(input);
 
             if (generovatSpodniRadek) {
-              const jeDruhePoschodiA1Zleva = r === pocetRadku - 1 && i === 0;
-
-              if (jeDruhePoschodiA1Zleva) {
-                input.readOnly = false;
-                input.tabIndex = 0;
-                nastavVstupCisla(input);
-                poleProFocus = input;
-              } else {
-                input.classList.add('zamcene');
-                input.readOnly = true;
-                input.tabIndex = -1;
-              }
-            } else {
-              nastavVstupCisla(input);
+              input.classList.add('zamcene');
+              input.readOnly = true;
+              input.tabIndex = -1;
             }
           }
 
@@ -469,59 +650,112 @@
         pyramida.appendChild(radek);
       }
 
-      if (poleProFocus) {
-        setTimeout(function () {
-          start.blur();
-          poleProFocus.focus({ preventScroll: false });
-          poleProFocus.select();
-        }, 100);
+      if (generovatSpodniRadek) {
+        hraBezi = true;
+        start.textContent = 'D A L Š Í';
+        nastavAktivniPole(pocetRadku - 1, 0);
+      } else {
+        hraBezi = false;
+        aktivniRadek = null;
+        aktivniIndex = null;
+        start.textContent = 'S T A R T';
       }
+    }
+
+    function zkontrolujAktivniPole() {
+      hlaska.textContent = '';
+
+      const aktivni = ziskejPole(aktivniRadek, aktivniIndex);
+
+      if (!aktivni) return;
+
+      if (!pouzeCisliceATisice(aktivni.value) || aktivni.value.trim() === '') {
+        hlaska.textContent = 'Nepovolený znak!';
+        aktivni.classList.add('spatne');
+        aktivni.focus();
+        aktivni.select();
+        return;
+      }
+
+      const levyDole = ziskejPole(aktivniRadek + 1, aktivniIndex);
+      const pravyDole = ziskejPole(aktivniRadek + 1, aktivniIndex + 1);
+
+      const spravnySoucet = naCislo(levyDole.value) + naCislo(pravyDole.value);
+      const zadano = naCislo(aktivni.value);
+
+      if (zadano === spravnySoucet) {
+        aktivni.value = formatujTisice(String(zadano));
+        aktivni.classList.remove('spatne', 'aktivni');
+        aktivni.classList.add('spravne', 'zamcene');
+        aktivni.readOnly = true;
+        aktivni.tabIndex = -1;
+
+        const dalsi = dalsiPole();
+
+        if (dalsi) {
+          nastavAktivniPole(dalsi.r, dalsi.i);
+        } else {
+          vycistiZvyrazneni();
+          hraBezi = false;
+          aktivniRadek = null;
+          aktivniIndex = null;
+          start.textContent = 'S T A R T';
+          pridejDoHistorie(`${vyska.value}/${cifry.value}`);
+        }
+      } else {
+        aktivni.classList.add('spatne');
+        aktivni.focus();
+        aktivni.select();
+      }
+    }
+
+    function ukonciHru() {
+      hraBezi = false;
+      aktivniRadek = null;
+      aktivniIndex = null;
+      hlaska.textContent = '';
+      start.textContent = 'S T A R T';
+      vytvorPyramidu(false);
     }
 
     nastaveniToggle.addEventListener('click', function () {
       nastaveni.classList.toggle('zavreno');
       ulozNastaveni();
-      vytvorPyramidu(false);
+      ukonciHru();
     });
 
     vyska.addEventListener('change', function () {
       ulozNastaveni();
-      vytvorPyramidu(false);
+      ukonciHru();
     });
 
     cifry.addEventListener('change', function () {
       ulozNastaveni();
-      vytvorPyramidu(false);
+      ukonciHru();
     });
 
     start.addEventListener('click', function () {
       ulozNastaveni();
-      vytvorPyramidu(true);
 
-      setTimeout(function () {
-        const aktivniPole = pyramida.querySelector('input:not([readonly]):not(.spodni)');
+      if (!hraBezi) {
+        vytvorPyramidu(true);
+      } else {
+        zkontrolujAktivniPole();
+      }
+    });
 
-        if (aktivniPole) {
-          start.blur();
-          aktivniPole.focus({ preventScroll: false });
-          aktivniPole.select();
-        }
-      }, 150);
+    konec.addEventListener('click', function () {
+      ukonciHru();
     });
 
     rezim.addEventListener('click', function () {
       document.body.classList.toggle('dark');
-
-      if (document.body.classList.contains('dark')) {
-        rezim.textContent = '☀️';
-      } else {
-        rezim.textContent = '🌙';
-      }
-
+      rezim.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
       ulozNastaveni();
     });
 
     nactiNastaveni();
+    nactiHistorii();
     vytvorPyramidu(false);
   </script>
 </body>
