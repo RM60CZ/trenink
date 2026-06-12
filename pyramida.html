@@ -57,9 +57,9 @@ input.spravne,input.spravne:focus,input.aktivni.spravne,input.aktivni.spravne:fo
 <main class="aplikace">
 <header class="hlavicka"><h1>Pyramida čísel</h1><button id="rezim" class="rezim" type="button" aria-label="Přepnout tmavý/světlý režim">🌙</button></header>
 <section id="nastaveni" class="nastaveni">
-<button id="nastaveniToggle" class="popis-toggle" type="button">Vyber počet poschodí pyramidy a počet cifer spodního řádku.</button>
+<button id="nastaveniToggle" class="popis-toggle" type="button">Vyber poschodí pyramidy a cifry spodního řádku.</button>
 <div id="panelNastaveni" class="panel-nastaveni">
-<div class="mazani-wrap"><input id="mazaniHistorie" class="mazani-historie" type="text" autocomplete="off" spellcheck="false" placeholder="Zde můžete odstranit historii" aria-label="Zde můžete odstranit historii"></div>
+<div class="mazani-wrap"><input id="mazaniHistorie" class="mazani-historie" type="text" autocomplete="off" spellcheck="false" aria-label="Zde můžete odstranit historii"></div>
 <div class="ovladani">
 <div class="pole"><select id="vyska" aria-label="Počet poschodí pyramidy"><option value="2">2 poschodí</option><option value="3">3 poschodí</option><option value="4">4 poschodí</option><option value="5">5 poschodí</option><option value="6">6 poschodí</option><option value="7" selected>7 poschodí</option></select></div>
 <div class="pole"><select id="cifry" aria-label="Počet cifer spodního řádku"><option value="1">1 cifra</option><option value="2" selected>2 cifry</option><option value="3">3 cifry</option><option value="4">4 cifry</option><option value="5">5 cifer</option></select></div>
@@ -77,11 +77,7 @@ input.spravne,input.spravne:focus,input.aktivni.spravne,input.aktivni.spravne:fo
 const $=id=>document.getElementById(id),pyramida=$('pyramida'),vyska=$('vyska'),cifry=$('cifry'),rezim=$('rezim'),start=$('start'),konec=$('konec'),nastaveni=$('nastaveni'),nastaveniToggle=$('nastaveniToggle'),mazaniHistorie=$('mazaniHistorie'),hlaska=$('hlaska'),historie=$('historie');
 const SR='pyramida_rezim',SV='pyramida_vyska',SC='pyramida_cifry',SH='pyramida_historie',SD='pyramida_historie_datum';
 let hraBezi=0,aktivniRadek=null,aktivniIndex=null;
-const dnes=()=>{let d=new Date;return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`},
-fmt=v=>v?v.replace(/\B(?=(\d{3})+(?!\d))/g,' '):'',cis=v=>Number(v.replace(/\s/g,'')),
-pole=(r,i)=>pyramida.querySelector(`input[data-r="${r}"][data-i="${i}"]`),
-uloz=()=>{localStorage.setItem(SV,vyska.value);localStorage.setItem(SC,cifry.value);localStorage.setItem(SR,document.body.classList.contains('dark')?'dark':'light')};
-
+const dnes=()=>{let d=new Date;return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`},fmt=v=>v?v.replace(/\B(?=(\d{3})+(?!\d))/g,' '):'',cis=v=>Number(v.replace(/\s/g,'')),pole=(r,i)=>pyramida.querySelector(`input[data-r="${r}"][data-i="${i}"]`),uloz=()=>{localStorage.setItem(SV,vyska.value);localStorage.setItem(SC,cifry.value);localStorage.setItem(SR,document.body.classList.contains('dark')?'dark':'light')};
 function nactiHistorii(){let d=dnes();if(localStorage.getItem(SD)!==d)localStorage.setItem(SD,d),localStorage.setItem(SH,'');historie.innerHTML=localStorage.getItem(SH)||''}
 function pridej(z){let d=dnes();if(localStorage.getItem(SD)!==d)localStorage.setItem(SD,d),localStorage.setItem(SH,'');let h=(localStorage.getItem(SH)||'')+`<span>${z}</span>&nbsp;&nbsp;`;localStorage.setItem(SH,h);historie.innerHTML=h}
 function vymazHistorii(){localStorage.setItem(SD,dnes());localStorage.setItem(SH,'');historie.innerHTML=''}
