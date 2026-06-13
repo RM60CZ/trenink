@@ -39,6 +39,32 @@ pole=(r,i)=>pyramida.querySelector(`input[data-r="${r}"][data-i="${i}"]`);
 
 function jeMobil(){return window.matchMedia('(pointer: coarse)').matches}
 
+function kurzorNaKonecInputu(){
+  overlayAktivni.focus({preventScroll:false});
+  let k=overlayAktivni.value.length;
+  try{overlayAktivni.setSelectionRange(k,k)}catch(e){}
+}
+
+function prepniMinusVInputu(){
+  if(!jeMobil())return;
+  if(znamenko.value!=='pm')return;
+  if(!hraBezi)return;
+  if(aktivniRadek==null)return;
+
+  let v=overlayAktivni.value.replace(/\s/g,'');
+
+  if(v.startsWith('-'))v=v.slice(1);
+  else v='-'+v;
+
+  overlayAktivni.value=fmt(v);
+  overlayAktivni.classList.remove('spatne');
+
+  nastavPismoOverlay();
+  overlayAktivni.style.width=sirkaProText(vysledky[aktivniRadek][aktivniIndex])+'px';
+
+  requestAnimationFrame(kurzorNaKonecInputu);
+}
+
 function zvetseniPismaOverlay(){let krok=window.innerWidth<=480?1:2;return(8-Number(cifry.value))*krok}
 function nastavPismoOverlay(){let z=zvetseniPismaOverlay(),mobil=innerWidth<=480;overlayAktivni.style.fontSize=(mobil?24+z:30+z)+'px';overlayLevy.style.fontSize=(mobil?22+z:30+z)+'px';overlayPravy.style.fontSize=(mobil?22+z:30+z)+'px'}
 
@@ -67,6 +93,7 @@ function oznacChybnyVysledek(puvodniText){
 function sirkaTextu(text,typ='cela'){text=fmt(String(text??0));let jeMobil=innerWidth<480,meric=document.createElement('span');meric.style.position='fixed';meric.style.left='-9999px';meric.style.top='-9999px';meric.style.visibility='hidden';meric.style.whiteSpace='nowrap';meric.style.fontFamily='Arial, sans-serif';meric.style.fontWeight='800';meric.style.fontSize=getComputedStyle(overlayAktivni).fontSize;meric.textContent=text;document.body.appendChild(meric);let realna=Math.ceil(meric.getBoundingClientRect().width);meric.remove();let w=realna+(jeMobil?50:70);if(typ==='pulka'){let zakladna=pole(+vyska.value,0)?.closest('.radek'),sirkaZakladny=zakladna?Math.floor(zakladna.getBoundingClientRect().width):Math.floor(innerWidth*.9),max=Math.floor(sirkaZakladny/2),min=jeMobil?120:150;return Math.min(Math.max(w,min),max)}let max=Math.min(innerWidth-20,jeMobil?380:620),min=jeMobil?130:160;return Math.min(Math.max(w,min),max)}
 function sirkaProText(h){return sirkaTextu(h,'cela')}
 function sirkaPoloviny(h){return sirkaTextu(h,'pulka')}
+
 function nastavPrekryvPozici(){if(aktivniRadek==null)return;let a=pole(aktivniRadek,aktivniIndex);if(!a)return;let pr=herniPlocha.getBoundingClientRect(),br=a.getBoundingClientRect();prekryvPanel.style.top=br.top-pr.top+'px'}
 
 function zobrazPrekryv(){
@@ -124,7 +151,11 @@ function kontrola(){
   let hodnota=overlayAktivni.value;
   overlayAktivni.classList.remove('spatne');
 
-  if(!/^-?[0-9 ]*$/.test(hodnota)||!hodnota.trim()||hodnota.trim()==='-'){
+  if(!hodnota.trim()||hodnota.trim()==='-'){
+    return;
+  }
+
+  if(!/^-?[0-9 ]*$/.test(hodnota)){
     hlaska.textContent='Nepovolený znak!';
     oznacChybnyVysledek(hodnota);
     return;
@@ -139,6 +170,7 @@ function kontrola(){
     skutecna.classList.add('spravne');
     overlayAktivni.value=fmt(String(z));
     overlayAktivni.classList.add('spravne');
+
     let d=dalsi();
     if(d)aktivuj(d.r,d.i);
     else{
@@ -165,6 +197,13 @@ function spolecnaAkceEnterDalsi(){
   else vytvor(1);
   setTimeout(()=>akceBezi=false,80);
 }
+
+overlayAktivni.addEventListener('pointerdown',e=>{
+  if(jeMobil()&&znamenko.value==='pm'&&hraBezi&&aktivniRadek!=null){
+    e.preventDefault();
+    prepniMinusVInputu();
+  }
+});
 
 overlayAktivni.addEventListener('input',function(){
   this.classList.remove('spatne');
