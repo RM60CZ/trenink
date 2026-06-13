@@ -94,7 +94,12 @@ function sirkaTextu(text,typ='cela'){text=fmt(String(text??0));let jeMobil=inner
 function sirkaProText(h){return sirkaTextu(h,'cela')}
 function sirkaPoloviny(h){return sirkaTextu(h,'pulka')}
 
-function nastavPrekryvPozici(){if(aktivniRadek==null)return;let a=pole(aktivniRadek,aktivniIndex);if(!a)return;let pr=herniPlocha.getBoundingClientRect(),br=a.getBoundingClientRect();prekryvPanel.style.top=br.top-pr.top+'px'}
+function nastavPrekryvPozici(){
+  let vrchol=pole(1,0);
+  if(!vrchol)return;
+  let pr=herniPlocha.getBoundingClientRect(),br=vrchol.getBoundingClientRect(),mezera=innerWidth<=480?8:10;
+  prekryvPanel.style.top=(br.bottom-pr.top+mezera)+'px';
+}
 
 function zobrazPrekryv(){
   if(aktivniRadek==null)return;
