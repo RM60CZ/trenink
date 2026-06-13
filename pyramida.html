@@ -28,42 +28,33 @@ select{color:var(--text);background:var(--input-bg);border:1px solid var(--input
 <section id="nastaveni" class="nastaveni"><button id="nastaveniToggle" class="popis-toggle" type="button">Vyber poschodí pyramidy a cifry spodního řádku.</button><div id="panelNastaveni" class="panel-nastaveni"><div class="ovladani"><div class="pole"><select id="vyska" aria-label="Počet poschodí pyramidy"><option value="2">2 poschodí</option><option value="3">3 poschodí</option><option value="4">4 poschodí</option><option value="5">5 poschodí</option><option value="6">6 poschodí</option><option value="7" selected>7 poschodí</option></select></div><div class="pole"><select id="cifry" aria-label="Počet cifer spodního řádku"><option value="1">1 cifra</option><option value="2" selected>2 cifry</option><option value="3">3 cifry</option><option value="4">4 cifry</option><option value="5">5 cifer</option><option value="6">6 cifer</option><option value="7">7 cifer</option><option value="8">8 cifer</option></select></div><div class="pole"><select id="znamenko" aria-label="Typ čísel spodního řádku"><option value="p">+</option><option value="pm">+ -</option></select></div></div></div></section>
 <div id="hlaska" class="hlaska"></div><div class="herni-plocha" id="herniPlocha"><div class="postranni-tlacitko vlevo"><button id="start" class="akce" type="button">S T A R T</button></div><div class="pyramida" id="pyramida"></div><div id="prekryvPanel" class="prekryv-panel"><div class="prekryv-horni-wrap"><input id="overlayAktivni" class="prekryv-input" type="text" inputmode="numeric"></div><div class="prekryv-spodni-wrap"><input id="overlayLevy" class="prekryv-input" type="text" readonly tabindex="-1"><input id="overlayPravy" class="prekryv-input" type="text" readonly tabindex="-1"></div></div><div class="postranni-tlacitko vpravo"><button id="konec" class="akce konec" type="button">K O N E C</button></div></div><div id="historie" class="historie"></div></main>
 <script>
-const $=id=>document.getElementById(id),pyramida=$('pyramida'),herniPlocha=$('herniPlocha'),prekryvPanel=$('prekryvPanel'),overlayAktivni=$('overlayAktivni'),overlayLevy=$('overlayLevy'),overlayPravy=$('overlayPravy'),vyska=$('vyska'),cifry=$('cifry'),znamenko=$('znamenko'),rezim=$('rezim'),start=$('start'),konec=$('konec'),nastaveni=$('nastaveni'),nastaveniToggle=$('nastaveniToggle'),mazaniHistorie=$('mazaniHistorie'),hlaska=$('hlaska'),historie=$('historie'),SR='pyramida_rezim',SV='pyramida_vyska',SC='pyramida_cifry',SZ='pyramida_znamenko',SH='pyramida_historie',SD='pyramida_historie_datum';let hraBezi=0,aktivniRadek=null,aktivniIndex=null,vysledky=[],tapZacalVInputu=false,startOsetrenPointerem=false;
+const $=id=>document.getElementById(id),pyramida=$('pyramida'),herniPlocha=$('herniPlocha'),prekryvPanel=$('prekryvPanel'),overlayAktivni=$('overlayAktivni'),overlayLevy=$('overlayLevy'),overlayPravy=$('overlayPravy'),vyska=$('vyska'),cifry=$('cifry'),znamenko=$('znamenko'),rezim=$('rezim'),start=$('start'),konec=$('konec'),nastaveni=$('nastaveni'),nastaveniToggle=$('nastaveniToggle'),mazaniHistorie=$('mazaniHistorie'),hlaska=$('hlaska'),historie=$('historie'),SR='pyramida_rezim',SV='pyramida_vyska',SC='pyramida_cifry',SZ='pyramida_znamenko',SH='pyramida_historie',SD='pyramida_historie_datum';let hraBezi=0,aktivniRadek=null,aktivniIndex=null,vysledky=[];
 const dnes=()=>{let d=new Date;return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`},fmt=v=>{if(v===''||v==null)return'';let s=String(v),m=s[0]=='-'?'-':'';s=s.replace('-','');return m+s.replace(/\B(?=(\d{3})+(?!\d))/g,' ')},cis=v=>Number(String(v).replace(/\s/g,'')),pole=(r,i)=>pyramida.querySelector(`input[data-r="${r}"][data-i="${i}"]`);
 
-function jeMobil(){return window.matchMedia('(pointer: coarse)').matches}
-function kurzorNaKonec(){setTimeout(()=>{overlayAktivni.focus({preventScroll:false});let k=overlayAktivni.value.length;try{overlayAktivni.setSelectionRange(k,k)}catch(e){}},20)}
-function oznacChybu(text){
-  overlayAktivni.value=fmt(String(text).replace(/\s/g,''));
-  overlayAktivni.classList.add('spatne');
-  nastavPismoOverlay();
-  if(aktivniRadek!=null)overlayAktivni.style.width=sirkaProText(vysledky[aktivniRadek][aktivniIndex])+'px';
-  setTimeout(()=>{
-    overlayAktivni.focus({preventScroll:false});
-    overlayAktivni.classList.add('spatne');
-    try{overlayAktivni.setSelectionRange(0,overlayAktivni.value.length)}catch(e){overlayAktivni.select()}
-  },30);
+function zvetseniPismaOverlay(){
+  let krok=window.innerWidth<=480?1:2;
+  return (8-Number(cifry.value))*krok;
 }
-function prepniMinusMobil(){
-  if(!jeMobil()||znamenko.value!=='pm'||aktivniRadek==null)return;
-  let v=overlayAktivni.value.replace(/\s/g,'');
-  v=v.startsWith('-')?v.slice(1):'-'+v;
-  overlayAktivni.value=v;
-  overlayAktivni.dispatchEvent(new Event('input',{bubbles:true}));
-  kurzorNaKonec();
+
+function nastavPismoOverlay(){
+  let z=zvetseniPismaOverlay();
+  let mobil=innerWidth<=480;
+  overlayAktivni.style.fontSize=(mobil?24+z:30+z)+'px';
+  overlayLevy.style.fontSize=(mobil?22+z:30+z)+'px';
+  overlayPravy.style.fontSize=(mobil?22+z:30+z)+'px';
 }
-function zvetseniPismaOverlay(){let krok=window.innerWidth<=480?1:2;return(8-Number(cifry.value))*krok}
-function nastavPismoOverlay(){let z=zvetseniPismaOverlay(),mobil=innerWidth<=480;overlayAktivni.style.fontSize=(mobil?24+z:30+z)+'px';overlayLevy.style.fontSize=(mobil?22+z:30+z)+'px';overlayPravy.style.fontSize=(mobil?22+z:30+z)+'px'}
+
 function uloz(){localStorage.setItem(SV,vyska.value);localStorage.setItem(SC,cifry.value);localStorage.setItem(SZ,znamenko.value);localStorage.setItem(SR,document.body.classList.contains('dark')?'dark':'light')}
 function nactiHistorii(){let d=dnes();if(localStorage.getItem(SD)!==d){localStorage.setItem(SD,d);localStorage.setItem(SH,'')}historie.innerHTML=localStorage.getItem(SH)||''}
 function pridej(z){let d=dnes();if(localStorage.getItem(SD)!==d){localStorage.setItem(SD,d);localStorage.setItem(SH,'')}let h=(localStorage.getItem(SH)||'')+`<span>${z}</span>&nbsp;&nbsp;`;localStorage.setItem(SH,h);historie.innerHTML=h}
 function vymazHistorii(){localStorage.setItem(SD,dnes());localStorage.setItem(SH,'');historie.innerHTML=''}
 function mazani(){if(mazaniHistorie.value.trim().toLowerCase()==='vymazat')vymazHistorii();mazaniHistorie.value=''}
 function ohnostroj(){let o=document.createElement('div');o.className='ohnostroj';document.body.appendChild(o);[{x:28,y:28},{x:50,y:20},{x:72,y:30},{x:40,y:42},{x:62,y:45}].forEach((v,k)=>{setTimeout(()=>{for(let i=0;i<28;i++){let s=document.createElement('span'),u=Math.random()*Math.PI*2,d=70+Math.random()*90;s.className='jiskra';s.style.setProperty('--x',v.x+'vw');s.style.setProperty('--y',v.y+'vh');s.style.setProperty('--dx',Math.cos(u)*d+'px');s.style.setProperty('--dy',Math.sin(u)*d+'px');s.style.setProperty('--hue',Math.random()*360|0);o.appendChild(s);setTimeout(()=>s.remove(),1e3)}},k*180)});setTimeout(()=>o.remove(),1800)}
+function oznacOverlay(){setTimeout(()=>{overlayAktivni.focus({preventScroll:false});overlayAktivni.select()},30)}
 function sirkaTextu(text,typ='cela'){text=fmt(String(text??0));let jeMobil=innerWidth<480,meric=document.createElement('span');meric.style.position='fixed';meric.style.left='-9999px';meric.style.top='-9999px';meric.style.visibility='hidden';meric.style.whiteSpace='nowrap';meric.style.fontFamily='Arial, sans-serif';meric.style.fontWeight='800';meric.style.fontSize=getComputedStyle(overlayAktivni).fontSize;meric.textContent=text;document.body.appendChild(meric);let realna=Math.ceil(meric.getBoundingClientRect().width);meric.remove();let w=realna+(jeMobil?50:70);if(typ==='pulka'){let zakladna=pole(+vyska.value,0)?.closest('.radek'),sirkaZakladny=zakladna?Math.floor(zakladna.getBoundingClientRect().width):Math.floor(innerWidth*.9),max=Math.floor(sirkaZakladny/2),min=jeMobil?120:150;return Math.min(Math.max(w,min),max)}let max=Math.min(innerWidth-20,jeMobil?380:620),min=jeMobil?130:160;return Math.min(Math.max(w,min),max)}
 function sirkaProText(h){return sirkaTextu(h,'cela')}function sirkaPoloviny(h){return sirkaTextu(h,'pulka')}
 function nastavPrekryvPozici(){if(aktivniRadek==null)return;let a=pole(aktivniRadek,aktivniIndex);if(!a)return;let pr=herniPlocha.getBoundingClientRect(),br=a.getBoundingClientRect();prekryvPanel.style.top=br.top-pr.top+'px'}
-function zobrazPrekryv(){if(aktivniRadek==null)return;nastavPismoOverlay();let a=pole(aktivniRadek,aktivniIndex),l=pole(aktivniRadek+1,aktivniIndex),p=pole(aktivniRadek+1,aktivniIndex+1);if(!a||!l||!p)return;overlayAktivni.value=a.value;overlayLevy.value=l.value;overlayPravy.value=p.value;overlayAktivni.classList.remove('spatne','spravne');let wA=sirkaProText(vysledky[aktivniRadek][aktivniIndex]),wSpodni=Math.max(sirkaPoloviny(l.value),sirkaPoloviny(p.value));overlayAktivni.style.width=wA+'px';overlayLevy.style.width=wSpodni+'px';overlayPravy.style.width=wSpodni+'px';nastavPrekryvPozici();prekryvPanel.classList.add('zobrazen');setTimeout(()=>{start.blur();overlayAktivni.focus({preventScroll:false});if(jeMobil())kurzorNaKonec();else overlayAktivni.select()},80)}
+function zobrazPrekryv(){if(aktivniRadek==null)return;nastavPismoOverlay();let a=pole(aktivniRadek,aktivniIndex),l=pole(aktivniRadek+1,aktivniIndex),p=pole(aktivniRadek+1,aktivniIndex+1);if(!a||!l||!p)return;overlayAktivni.value=a.value;overlayLevy.value=l.value;overlayPravy.value=p.value;overlayAktivni.classList.remove('spatne','spravne');let wA=sirkaProText(vysledky[aktivniRadek][aktivniIndex]),wSpodni=Math.max(sirkaPoloviny(l.value),sirkaPoloviny(p.value));overlayAktivni.style.width=wA+'px';overlayLevy.style.width=wSpodni+'px';overlayPravy.style.width=wSpodni+'px';nastavPrekryvPozici();prekryvPanel.classList.add('zobrazen');setTimeout(()=>{start.blur();overlayAktivni.focus({preventScroll:false});overlayAktivni.select()},80)}
 function skryjPrekryv(){prekryvPanel.classList.remove('zobrazen');overlayAktivni.value=overlayLevy.value=overlayPravy.value='';overlayAktivni.classList.remove('spatne','spravne')}
 function spocitejVysledky(){let R=+vyska.value;vysledky=[];for(let r=1;r<=R;r++)vysledky[r]=[];for(let i=0;i<R;i++)vysledky[R][i]=cis(pole(R,i).value);for(let r=R-1;r>=1;r--)for(let i=0;i<r;i++)vysledky[r][i]=vysledky[r+1][i]+vysledky[r+1][i+1]}
 function nacti(){let v=localStorage.getItem(SV),c=localStorage.getItem(SC),z=localStorage.getItem(SZ),r=localStorage.getItem(SR);if(v)vyska.value=v;if(c){if(+c>8)c='8';cifry.value=c}if(z)znamenko.value=z;document.body.classList.toggle('dark',r==='dark');rezim.textContent=r==='dark'?'☀️':'🌙'}
@@ -71,32 +62,8 @@ function nahoda(c){let min=c==1?0:10**(c-1),max=10**c-1,n=Math.floor(Math.random
 function aktivuj(r,i){aktivniRadek=r;aktivniIndex=i;pyramida.querySelectorAll('input').forEach(x=>{if(!x.classList.contains('spodni')&&!x.classList.contains('spravne')){x.classList.add('zamcene');x.readOnly=1;x.tabIndex=-1}});let a=pole(r,i);if(a){a.classList.remove('zamcene','spatne');a.readOnly=1;a.tabIndex=-1;zobrazPrekryv()}}
 function dalsi(){if(aktivniIndex+1<aktivniRadek)return{r:aktivniRadek,i:aktivniIndex+1};if(aktivniRadek-1>=1)return{r:aktivniRadek-1,i:0};return null}
 function vytvor(gen){pyramida.innerHTML='';hlaska.textContent='';skryjPrekryv();vysledky=[];let R=+vyska.value,C=+cifry.value;if(C>8){C=8;cifry.value='8'}for(let r=1;r<=R;r++){let row=document.createElement('div');row.className='radek';for(let i=0;i<r;i++){let slot=document.createElement('div'),x=document.createElement('input');slot.className='bunka-slot';x.type='text';x.inputMode='numeric';x.dataset.r=r;x.dataset.i=i;if(r===R){x.classList.add('spodni');x.readOnly=1;x.tabIndex=-1;x.value=gen?fmt(String(nahoda(C))):''}else{x.value='';if(gen){x.classList.add('zamcene');x.readOnly=1;x.tabIndex=-1}}slot.appendChild(x);row.appendChild(slot)}pyramida.appendChild(row)}hraBezi=!!gen;start.textContent=gen?'D A L Š Í':'S T A R T';aktivniRadek=aktivniIndex=null;if(gen){spocitejVysledky();aktivuj(R-1,0)}}
-function kontrola(){hlaska.textContent='';let hodnota=overlayAktivni.value;overlayAktivni.classList.remove('spatne');if(!/^-?[0-9 ]*$/.test(hodnota)||!hodnota.trim()||hodnota.trim()==='-'){hlaska.textContent='Nepovolený znak!';return oznacChybu(hodnota)}let ok=vysledky[aktivniRadek][aktivniIndex],z=cis(hodnota);if(z===ok){let skutecna=pole(aktivniRadek,aktivniIndex);skutecna.value=fmt(String(z));skutecna.classList.remove('spatne');skutecna.classList.add('spravne');overlayAktivni.value=fmt(String(z));overlayAktivni.classList.add('spravne');let d=dalsi();if(d)aktivuj(d.r,d.i);else{skryjPrekryv();hraBezi=0;aktivniRadek=aktivniIndex=null;start.textContent='S T A R T';pridej(`${vyska.value}/${cifry.value}/${znamenko.value==='pm'?'+-':'+'}`);ohnostroj()}}else oznacChybu(hodnota)}
+function kontrola(){hlaska.textContent='';overlayAktivni.classList.remove('spatne');let hodnota=overlayAktivni.value;if(!/^-?[0-9 ]*$/.test(hodnota)||!hodnota.trim()||hodnota.trim()==='-'){hlaska.textContent='Nepovolený znak!';overlayAktivni.classList.add('spatne');return oznacOverlay()}let ok=vysledky[aktivniRadek][aktivniIndex],z=cis(hodnota);if(z===ok){let skutecna=pole(aktivniRadek,aktivniIndex);skutecna.value=fmt(String(z));skutecna.classList.remove('spatne');skutecna.classList.add('spravne');overlayAktivni.value=fmt(String(z));overlayAktivni.classList.add('spravne');let d=dalsi();if(d)aktivuj(d.r,d.i);else{skryjPrekryv();hraBezi=0;aktivniRadek=aktivniIndex=null;start.textContent='S T A R T';pridej(`${vyska.value}/${cifry.value}/${znamenko.value==='pm'?'+-':'+'}`);ohnostroj()}}else{overlayAktivni.classList.add('spatne');oznacOverlay()}}
 function konecHry(){hraBezi=0;aktivniRadek=aktivniIndex=null;hlaska.textContent='';start.textContent='S T A R T';skryjPrekryv();vytvor(0)}
-function obsluhaStartu(){mazani();uloz();hraBezi?kontrola():vytvor(1)}
-
 overlayAktivni.addEventListener('input',function(){this.classList.remove('spatne');let b=this.value.replace(/\s/g,'');if(/^-?\d*$/.test(b)){this.value=fmt(b);if(aktivniRadek!=null){nastavPismoOverlay();this.style.width=sirkaProText(vysledky[aktivniRadek][aktivniIndex])+'px'}}});
-overlayAktivni.addEventListener('pointerdown',function(){tapZacalVInputu=true});
-overlayAktivni.addEventListener('pointerup',function(){if(tapZacalVInputu&&znamenko.value==='pm')prepniMinusMobil();tapZacalVInputu=false});
-document.addEventListener('pointerdown',e=>{if(e.target!==overlayAktivni)tapZacalVInputu=false},true);
-
-start.addEventListener('pointerdown',e=>{
-  if(jeMobil()){
-    e.preventDefault();
-    startOsetrenPointerem=true;
-    tapZacalVInputu=false;
-    obsluhaStartu();
-    setTimeout(()=>startOsetrenPointerem=false,400);
-  }
-},{capture:true});
-start.onclick=()=>{if(startOsetrenPointerem)return;obsluhaStartu()};
-
-nastaveniToggle.onclick=()=>{mazani();nastaveni.classList.toggle('zavreno');uloz()};
-[vyska,cifry,znamenko].forEach(e=>e.onchange=()=>{mazani();uloz();konecHry()});
-mazaniHistorie.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();mazani()}};
-konec.onclick=()=>{mazani();konecHry()};
-rezim.onclick=()=>{mazani();document.body.classList.toggle('dark');rezim.textContent=document.body.classList.contains('dark')?'☀️':'🌙';uloz()};
-document.onkeydown=e=>{if(e.key==='Enter'&&document.activeElement!==mazaniHistorie){e.preventDefault();obsluhaStartu()}};
-window.onresize=()=>{if(hraBezi)zobrazPrekryv()};
-nacti();nactiHistorii();vytvor(0);
+nastaveniToggle.onclick=()=>{mazani();nastaveni.classList.toggle('zavreno');uloz()};[vyska,cifry,znamenko].forEach(e=>e.onchange=()=>{mazani();uloz();konecHry()});mazaniHistorie.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();mazani()}};start.onclick=()=>{mazani();uloz();hraBezi?kontrola():vytvor(1)};konec.onclick=()=>{mazani();konecHry()};rezim.onclick=()=>{mazani();document.body.classList.toggle('dark');rezim.textContent=document.body.classList.contains('dark')?'☀️':'🌙';uloz()};document.onkeydown=e=>{if(e.key==='Enter'&&document.activeElement!==mazaniHistorie){e.preventDefault();start.click()}};window.onresize=()=>{if(hraBezi)zobrazPrekryv()};nacti();nactiHistorii();vytvor(0);
 </script></body></html>
