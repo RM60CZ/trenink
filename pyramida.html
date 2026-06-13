@@ -31,8 +31,14 @@ select{color:var(--text);background:var(--input-bg);border:1px solid var(--input
 const $=id=>document.getElementById(id),pyramida=$('pyramida'),herniPlocha=$('herniPlocha'),prekryvPanel=$('prekryvPanel'),overlayAktivni=$('overlayAktivni'),overlayLevy=$('overlayLevy'),overlayPravy=$('overlayPravy'),vyska=$('vyska'),cifry=$('cifry'),znamenko=$('znamenko'),rezim=$('rezim'),start=$('start'),konec=$('konec'),nastaveni=$('nastaveni'),nastaveniToggle=$('nastaveniToggle'),mazaniHistorie=$('mazaniHistorie'),hlaska=$('hlaska'),historie=$('historie'),SR='pyramida_rezim',SV='pyramida_vyska',SC='pyramida_cifry',SZ='pyramida_znamenko',SH='pyramida_historie',SD='pyramida_historie_datum';let hraBezi=0,aktivniRadek=null,aktivniIndex=null,vysledky=[];
 const dnes=()=>{let d=new Date;return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`},fmt=v=>{if(v===''||v==null)return'';let s=String(v),m=s[0]=='-'?'-':'';s=s.replace('-','');return m+s.replace(/\B(?=(\d{3})+(?!\d))/g,' ')},cis=v=>Number(String(v).replace(/\s/g,'')),pole=(r,i)=>pyramida.querySelector(`input[data-r="${r}"][data-i="${i}"]`);
 
-function jeMobil(){
-  return window.matchMedia('(pointer: coarse)').matches;
+function jeMobil(){return window.matchMedia('(pointer: coarse)').matches}
+
+function kurzorNaKonec(){
+  setTimeout(()=>{
+    overlayAktivni.focus({preventScroll:false});
+    let k=overlayAktivni.value.length;
+    try{overlayAktivni.setSelectionRange(k,k)}catch(e){}
+  },20)
 }
 
 function prepniMinusMobil(){
@@ -42,23 +48,12 @@ function prepniMinusMobil(){
 
   let v=overlayAktivni.value.replace(/\s/g,'');
 
-  if(v.startsWith('-')){
-    v=v.slice(1);
-  }else{
-    v='-'+v;
-  }
+  if(v.startsWith('-'))v=v.slice(1);
+  else v='-'+v;
 
-  overlayAktivni.value=fmt(v);
-  overlayAktivni.classList.remove('spatne');
-
-  nastavPismoOverlay();
-  overlayAktivni.style.width=sirkaProText(vysledky[aktivniRadek][aktivniIndex])+'px';
-
-  setTimeout(()=>{
-    overlayAktivni.focus({preventScroll:false});
-    let konec=overlayAktivni.value.length;
-    overlayAktivni.setSelectionRange(konec,konec);
-  },20);
+  overlayAktivni.value=v;
+  overlayAktivni.dispatchEvent(new Event('input',{bubbles:true}));
+  kurzorNaKonec();
 }
 
 function zvetseniPismaOverlay(){
@@ -84,7 +79,7 @@ function oznacOverlay(){setTimeout(()=>{overlayAktivni.focus({preventScroll:fals
 function sirkaTextu(text,typ='cela'){text=fmt(String(text??0));let jeMobil=innerWidth<480,meric=document.createElement('span');meric.style.position='fixed';meric.style.left='-9999px';meric.style.top='-9999px';meric.style.visibility='hidden';meric.style.whiteSpace='nowrap';meric.style.fontFamily='Arial, sans-serif';meric.style.fontWeight='800';meric.style.fontSize=getComputedStyle(overlayAktivni).fontSize;meric.textContent=text;document.body.appendChild(meric);let realna=Math.ceil(meric.getBoundingClientRect().width);meric.remove();let w=realna+(jeMobil?50:70);if(typ==='pulka'){let zakladna=pole(+vyska.value,0)?.closest('.radek'),sirkaZakladny=zakladna?Math.floor(zakladna.getBoundingClientRect().width):Math.floor(innerWidth*.9),max=Math.floor(sirkaZakladny/2),min=jeMobil?120:150;return Math.min(Math.max(w,min),max)}let max=Math.min(innerWidth-20,jeMobil?380:620),min=jeMobil?130:160;return Math.min(Math.max(w,min),max)}
 function sirkaProText(h){return sirkaTextu(h,'cela')}function sirkaPoloviny(h){return sirkaTextu(h,'pulka')}
 function nastavPrekryvPozici(){if(aktivniRadek==null)return;let a=pole(aktivniRadek,aktivniIndex);if(!a)return;let pr=herniPlocha.getBoundingClientRect(),br=a.getBoundingClientRect();prekryvPanel.style.top=br.top-pr.top+'px'}
-function zobrazPrekryv(){if(aktivniRadek==null)return;nastavPismoOverlay();let a=pole(aktivniRadek,aktivniIndex),l=pole(aktivniRadek+1,aktivniIndex),p=pole(aktivniRadek+1,aktivniIndex+1);if(!a||!l||!p)return;overlayAktivni.value=a.value;overlayLevy.value=l.value;overlayPravy.value=p.value;overlayAktivni.classList.remove('spatne','spravne');let wA=sirkaProText(vysledky[aktivniRadek][aktivniIndex]),wSpodni=Math.max(sirkaPoloviny(l.value),sirkaPoloviny(p.value));overlayAktivni.style.width=wA+'px';overlayLevy.style.width=wSpodni+'px';overlayPravy.style.width=wSpodni+'px';nastavPrekryvPozici();prekryvPanel.classList.add('zobrazen');setTimeout(()=>{start.blur();overlayAktivni.focus({preventScroll:false});overlayAktivni.select()},80)}
+function zobrazPrekryv(){if(aktivniRadek==null)return;nastavPismoOverlay();let a=pole(aktivniRadek,aktivniIndex),l=pole(aktivniRadek+1,aktivniIndex),p=pole(aktivniRadek+1,aktivniIndex+1);if(!a||!l||!p)return;overlayAktivni.value=a.value;overlayLevy.value=l.value;overlayPravy.value=p.value;overlayAktivni.classList.remove('spatne','spravne');let wA=sirkaProText(vysledky[aktivniRadek][aktivniIndex]),wSpodni=Math.max(sirkaPoloviny(l.value),sirkaPoloviny(p.value));overlayAktivni.style.width=wA+'px';overlayLevy.style.width=wSpodni+'px';overlayPravy.style.width=wSpodni+'px';nastavPrekryvPozici();prekryvPanel.classList.add('zobrazen');setTimeout(()=>{start.blur();overlayAktivni.focus({preventScroll:false});if(jeMobil())kurzorNaKonec();else overlayAktivni.select()},80)}
 function skryjPrekryv(){prekryvPanel.classList.remove('zobrazen');overlayAktivni.value=overlayLevy.value=overlayPravy.value='';overlayAktivni.classList.remove('spatne','spravne')}
 function spocitejVysledky(){let R=+vyska.value;vysledky=[];for(let r=1;r<=R;r++)vysledky[r]=[];for(let i=0;i<R;i++)vysledky[R][i]=cis(pole(R,i).value);for(let r=R-1;r>=1;r--)for(let i=0;i<r;i++)vysledky[r][i]=vysledky[r+1][i]+vysledky[r+1][i+1]}
 function nacti(){let v=localStorage.getItem(SV),c=localStorage.getItem(SC),z=localStorage.getItem(SZ),r=localStorage.getItem(SR);if(v)vyska.value=v;if(c){if(+c>8)c='8';cifry.value=c}if(z)znamenko.value=z;document.body.classList.toggle('dark',r==='dark');rezim.textContent=r==='dark'?'☀️':'🌙'}
@@ -95,8 +90,6 @@ function vytvor(gen){pyramida.innerHTML='';hlaska.textContent='';skryjPrekryv();
 function kontrola(){hlaska.textContent='';overlayAktivni.classList.remove('spatne');let hodnota=overlayAktivni.value;if(!/^-?[0-9 ]*$/.test(hodnota)||!hodnota.trim()||hodnota.trim()==='-'){hlaska.textContent='Nepovolený znak!';overlayAktivni.classList.add('spatne');return oznacOverlay()}let ok=vysledky[aktivniRadek][aktivniIndex],z=cis(hodnota);if(z===ok){let skutecna=pole(aktivniRadek,aktivniIndex);skutecna.value=fmt(String(z));skutecna.classList.remove('spatne');skutecna.classList.add('spravne');overlayAktivni.value=fmt(String(z));overlayAktivni.classList.add('spravne');let d=dalsi();if(d)aktivuj(d.r,d.i);else{skryjPrekryv();hraBezi=0;aktivniRadek=aktivniIndex=null;start.textContent='S T A R T';pridej(`${vyska.value}/${cifry.value}/${znamenko.value==='pm'?'+-':'+'}`);ohnostroj()}}else{overlayAktivni.classList.add('spatne');oznacOverlay()}}
 function konecHry(){hraBezi=0;aktivniRadek=aktivniIndex=null;hlaska.textContent='';start.textContent='S T A R T';skryjPrekryv();vytvor(0)}
 overlayAktivni.addEventListener('input',function(){this.classList.remove('spatne');let b=this.value.replace(/\s/g,'');if(/^-?\d*$/.test(b)){this.value=fmt(b);if(aktivniRadek!=null){nastavPismoOverlay();this.style.width=sirkaProText(vysledky[aktivniRadek][aktivniIndex])+'px'}}});
-overlayAktivni.addEventListener('pointerup',function(e){
-  if(znamenko.value==='pm')prepniMinusMobil();
-});
+overlayAktivni.addEventListener('pointerup',function(e){if(znamenko.value==='pm')prepniMinusMobil()});
 nastaveniToggle.onclick=()=>{mazani();nastaveni.classList.toggle('zavreno');uloz()};[vyska,cifry,znamenko].forEach(e=>e.onchange=()=>{mazani();uloz();konecHry()});mazaniHistorie.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();mazani()}};start.onclick=()=>{mazani();uloz();hraBezi?kontrola():vytvor(1)};konec.onclick=()=>{mazani();konecHry()};rezim.onclick=()=>{mazani();document.body.classList.toggle('dark');rezim.textContent=document.body.classList.contains('dark')?'☀️':'🌙';uloz()};document.onkeydown=e=>{if(e.key==='Enter'&&document.activeElement!==mazaniHistorie){e.preventDefault();start.click()}};window.onresize=()=>{if(hraBezi)zobrazPrekryv()};nacti();nactiHistorii();vytvor(0);
 </script></body></html>
