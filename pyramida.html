@@ -56,7 +56,8 @@ function prepniMinusMobil(){
 
   setTimeout(()=>{
     overlayAktivni.focus({preventScroll:false});
-    overlayAktivni.select();
+    let konec=overlayAktivni.value.length;
+    overlayAktivni.setSelectionRange(konec,konec);
   },20);
 }
 
@@ -95,7 +96,7 @@ function kontrola(){hlaska.textContent='';overlayAktivni.classList.remove('spatn
 function konecHry(){hraBezi=0;aktivniRadek=aktivniIndex=null;hlaska.textContent='';start.textContent='S T A R T';skryjPrekryv();vytvor(0)}
 overlayAktivni.addEventListener('input',function(){this.classList.remove('spatne');let b=this.value.replace(/\s/g,'');if(/^-?\d*$/.test(b)){this.value=fmt(b);if(aktivniRadek!=null){nastavPismoOverlay();this.style.width=sirkaProText(vysledky[aktivniRadek][aktivniIndex])+'px'}}});
 overlayAktivni.addEventListener('pointerup',function(e){
-  prepniMinusMobil();
+  if(znamenko.value==='pm')prepniMinusMobil();
 });
 nastaveniToggle.onclick=()=>{mazani();nastaveni.classList.toggle('zavreno');uloz()};[vyska,cifry,znamenko].forEach(e=>e.onchange=()=>{mazani();uloz();konecHry()});mazaniHistorie.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();mazani()}};start.onclick=()=>{mazani();uloz();hraBezi?kontrola():vytvor(1)};konec.onclick=()=>{mazani();konecHry()};rezim.onclick=()=>{mazani();document.body.classList.toggle('dark');rezim.textContent=document.body.classList.contains('dark')?'☀️':'🌙';uloz()};document.onkeydown=e=>{if(e.key==='Enter'&&document.activeElement!==mazaniHistorie){e.preventDefault();start.click()}};window.onresize=()=>{if(hraBezi)zobrazPrekryv()};nacti();nactiHistorii();vytvor(0);
 </script></body></html>
