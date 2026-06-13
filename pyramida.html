@@ -24,7 +24,11 @@ body.dark{--bg:#0f172a;--card:rgba(30,41,59,.9);--text:#f8fafc;--muted:#cbd5e1;-
 const $=id=>document.getElementById(id),pyramida=$('pyramida'),herniPlocha=$('herniPlocha'),prekryvPanel=$('prekryvPanel'),overlayAktivni=$('overlayAktivni'),overlayLevy=$('overlayLevy'),overlayPravy=$('overlayPravy'),vyska=$('vyska'),cifry=$('cifry'),znamenko=$('znamenko'),rezim=$('rezim'),start=$('start'),konec=$('konec'),nastaveni=$('nastaveni'),nastaveniToggle=$('nastaveniToggle'),mazaniHistorie=$('mazaniHistorie'),hlaska=$('hlaska'),historie=$('historie'),SR='pyramida_rezim',SV='pyramida_vyska',SC='pyramida_cifry',SZ='pyramida_znamenko',SH='pyramida_historie',SD='pyramida_historie_datum';let hraBezi=0,aktivniRadek=null,aktivniIndex=null,vysledky=[];
 const dnes=()=>{let d=new Date;return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`},fmt=v=>{if(v===''||v==null)return'';let s=String(v),m=s[0]=='-'?'-':'';s=s.replace('-','');return m+s.replace(/\B(?=(\d{3})+(?!\d))/g,' ')},cis=v=>Number(String(v).replace(/\s/g,'')),pole=(r,i)=>pyramida.querySelector(`input[data-r="${r}"][data-i="${i}"]`);
 
-function zvetseniPismaOverlay(){return (8-Number(cifry.value))*2}
+function zvetseniPismaOverlay(){
+  let krok=window.innerWidth<=480?1:2;
+  return (8-Number(cifry.value))*krok;
+}
+
 function nastavPismoOverlay(){
   let z=zvetseniPismaOverlay();
   let mobil=innerWidth<=480;
