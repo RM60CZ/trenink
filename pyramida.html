@@ -98,7 +98,11 @@ function nastavPrekryvPozici(){
   let vrchol=pole(1,0);
   if(!vrchol)return;
   let pr=herniPlocha.getBoundingClientRect(),br=vrchol.getBoundingClientRect(),mezera=innerWidth<=480?8:10;
-  prekryvPanel.style.top=(br.bottom-pr.top+mezera)+'px';
+  if(innerWidth<=480){
+    prekryvPanel.style.top=(br.top-pr.top)+'px';
+  }else{
+    prekryvPanel.style.top=(br.bottom-pr.top+mezera)+'px';
+  }
 }
 
 function zobrazPrekryv(){
