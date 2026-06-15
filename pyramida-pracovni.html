@@ -1,286 +1,870 @@
-<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Pyramida čísel</title>
-<style>
-:root{--bg:#dfe3ea;--card:rgba(238,241,245,.92);--text:#172033;--muted:#5d6b86;--primary:#4f46e5;--primary-light:#818cf8;--input-bg:#f5f6f8;--input-border:#b9c1d1;--disabled-bg:#e1e5ec;--disabled-border:#c4cad5;--bottom-border:#facc15;--bottom-bg:#f3efd7;--success:#16a34a;--error:#dc2626;--active-bg:#eef2ff;--shadow:0 24px 60px rgba(60,70,95,.18)}
-body.dark{--bg:#0f172a;--card:rgba(30,41,59,.9);--text:#f8fafc;--muted:#cbd5e1;--primary:#818cf8;--primary-light:#a5b4fc;--input-bg:#111827;--input-border:#475569;--disabled-bg:#1e293b;--disabled-border:#334155;--bottom-border:#eab308;--bottom-bg:#292517;--success:#22c55e;--error:#f87171;--active-bg:#1e1b4b;--shadow:0 24px 60px rgba(0,0,0,.35)}
-*{box-sizing:border-box}body{font-family:Arial,sans-serif;min-height:100vh;margin:0;color:var(--text);background:radial-gradient(circle at top left,rgba(129,140,248,.18),transparent 32%),linear-gradient(135deg,var(--bg),#cfd5df);display:flex;justify-content:center;align-items:flex-start;padding:18px 10px;transition:background .3s,color .3s}body.dark{background:radial-gradient(circle at top left,rgba(129,140,248,.18),transparent 34%),linear-gradient(135deg,#020617,var(--bg))}
-.aplikace{position:relative;width:min(100%,860px);background:var(--card);border:1px solid rgba(148,163,184,.35);border-radius:28px;padding:24px 14px 30px;box-shadow:var(--shadow);overflow:visible}
-.hlavicka{position:relative;display:flex;align-items:center;justify-content:flex-start;gap:10px;margin-bottom:4px;padding:0 88px 0 0;text-align:left}
-h1{margin:0;font-size:clamp(26px,6vw,42px);letter-spacing:-.04em;line-height:1.05;white-space:nowrap}
-.nastaveni-kolo,.rezim{position:absolute;top:0;width:36px;height:36px;border:0;font-size:25px;cursor:pointer;color:inherit;background:transparent;box-shadow:none;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}
-.nastaveni-kolo{right:42px;font-size:24px}.rezim{right:0}
-.nastaveni-kolo.aktivni{color:var(--primary)}
-.nastaveni{text-align:center;margin-bottom:8px}.panel-nastaveni{overflow:hidden;max-height:190px;opacity:1;transition:max-height .25s,opacity .2s,margin .25s}.nastaveni.zavreno .panel-nastaveni{max-height:0;opacity:0;margin:0}
-.nastaveni-radky{display:grid;grid-template-columns:max-content max-content;justify-content:center;align-items:center;gap:8px 10px;margin:8px auto 0;width:max-content;max-width:100%}
-.nastaveni-popisek{font-size:clamp(17px,4.4vw,22px);font-weight:900;color:var(--text);text-align:left;white-space:nowrap}
-.pole{display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid rgba(148,163,184,.55);border-radius:999px;padding:2px 3px;width:clamp(132px,34vw,168px)}
-select{width:100%;color:var(--text);background:var(--input-bg);border:1px solid var(--input-border);border-radius:999px;font-size:clamp(16px,4vw,20px);font-weight:800;cursor:pointer;padding:8px 8px;text-align:center;text-align-last:center;max-width:100%}select option{text-align:center}
-.mazani-wrap{display:flex;justify-content:flex-start;align-items:center;margin:0}.mazani-historie{width:76px;height:34px;border-radius:999px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--input-bg);caret-color:var(--primary);font-size:14px;font-weight:700;text-align:center;padding:6px 8px;user-select:none;-webkit-user-select:none}
-.mazani-historie::placeholder{color:var(--input-bg);opacity:1;user-select:none;-webkit-user-select:none}.mazani-historie:focus{outline:0;border-color:var(--primary);box-shadow:0 0 0 4px rgba(129,140,248,.22)}body.dark .mazani-historie{color:var(--input-bg)}
-.mazani-historie::selection{color:var(--input-bg);background:var(--input-bg)}.mazani-historie::-moz-selection{color:var(--input-bg);background:var(--input-bg)}
-.hlaska{min-height:22px;margin:2px 0 8px;color:var(--error);font-size:15px;font-weight:800;text-align:center}
-.herni-plocha{position:relative;width:100%;overflow:visible;padding-top:0}.postranni-tlacitko{position:absolute;top:0;z-index:5}.postranni-tlacitko.vlevo{right:calc(50% + 82px)}.postranni-tlacitko.vpravo{left:calc(50% + 82px)}.pyramida{position:relative;width:100%;max-width:100%;display:flex;flex-direction:column;align-items:center;gap:clamp(5px,1.5vw,10px);overflow:visible;min-height:40px}.radek{position:relative;display:flex;justify-content:center;gap:clamp(3px,1vw,8px);width:100%;overflow:visible}
-.bunka-slot{position:relative;flex:0 0 clamp(34px,11vw,80px);width:clamp(34px,11vw,80px);height:clamp(40px,11vw,58px);overflow:visible}.bunka-slot input{width:100%;height:100%;color:var(--text);background:var(--input-bg);font-size:clamp(14px,3.8vw,20px);font-weight:700;text-align:center;border:2px solid var(--input-border);border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.25);padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:clip}.bunka-slot input:focus{outline:0;border-color:var(--primary);box-shadow:0 0 0 4px rgba(129,140,248,.22)}
-.bunka-slot input.spodni{border-color:var(--bottom-border);background:var(--bottom-bg);cursor:not-allowed;opacity:1}.bunka-slot input.zamcene{background:var(--disabled-bg);border-color:var(--disabled-border);cursor:not-allowed;opacity:.45}.bunka-slot input.spravne{color:var(--text);border-color:var(--success);box-shadow:0 0 0 4px rgba(34,197,94,.18);opacity:1}.bunka-slot input.spatne{color:var(--text);border-color:var(--error);box-shadow:0 0 0 4px rgba(220,38,38,.18)}
-.prekryv-panel{position:absolute;left:50%;transform:translateX(-50%);z-index:80;display:none;flex-direction:column;align-items:center;gap:8px;pointer-events:none;max-width:none}.prekryv-panel.zobrazen{display:flex}.prekryv-horni-wrap{display:flex;justify-content:center;width:100%}.prekryv-spodni-wrap{display:flex;justify-content:center;align-items:center;gap:0;width:100%}.prekryv-input{height:clamp(58px,15vw,82px);color:var(--text);background:var(--input-bg);font-size:clamp(20px,4.7vw,30px);font-weight:800;text-align:center;border:2px solid var(--input-border);border-radius:15px;padding:0 10px;white-space:nowrap;overflow:visible;text-overflow:clip;box-shadow:0 8px 20px rgba(15,23,42,.14);pointer-events:auto;min-width:0}
-#overlayLevy,#overlayPravy{padding-left:4px;padding-right:4px}.prekryv-input:focus{outline:0;border-color:var(--primary);box-shadow:0 0 0 5px rgba(129,140,248,.22)}#overlayAktivni{background:var(--active-bg);border-color:var(--primary);box-shadow:0 0 0 5px rgba(129,140,248,.22)}#overlayLevy{border-radius:15px 0 0 15px}#overlayPravy{border-radius:0 15px 15px 0}.prekryv-input.spatne{color:var(--text)!important;border:2px solid var(--error)!important;box-shadow:0 0 0 5px rgba(220,38,38,.35)!important}.prekryv-input.spravne{color:var(--text)!important;border:2px solid var(--success)!important;box-shadow:0 0 0 5px rgba(34,197,94,.25)!important}
-.akce{min-width:150px;border:0;color:#fff;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:999px;font-size:17px;font-weight:900;letter-spacing:.28em;cursor:pointer;padding:12px 24px;box-shadow:0 10px 22px rgba(79,70,229,.28);white-space:nowrap}.konec{background:linear-gradient(135deg,#64748b,#94a3b8)}
-.akce:disabled{cursor:not-allowed;opacity:.45;filter:grayscale(.35);box-shadow:none}
-.historie{min-height:24px;margin:14px 0 0;text-align:center;font-size:16px;font-weight:900;color:var(--success);word-spacing:8px}.ohnostroj{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9999}.jiskra{position:absolute;left:var(--x);top:var(--y);width:8px;height:8px;border-radius:50%;background:hsl(var(--hue),95%,60%);box-shadow:0 0 12px currentColor;animation:jiskraLet .9s ease-out forwards}
-@keyframes jiskraLet{from{transform:translate(0,0) scale(1);opacity:1}to{transform:translate(var(--dx),var(--dy)) scale(.1);opacity:0}}
-@media(max-width:760px){.herni-plocha{padding-top:54px}.postranni-tlacitko{top:0}.postranni-tlacitko.vlevo{right:calc(50% + 22px)}.postranni-tlacitko.vpravo{left:calc(50% + 22px)}}
-@media(max-width:480px){body{padding:10px 6px}.aplikace{padding:14px 8px 24px;border-radius:22px;overflow:visible}.hlavicka{padding:0 74px 0 0;gap:6px}.nastaveni-kolo,.rezim{width:34px;height:34px}.nastaveni-kolo{right:38px;font-size:23px}.rezim{font-size:24px}h1{font-size:clamp(24px,7vw,30px)}.mazani-historie{width:66px;height:32px;font-size:13px;padding:5px 6px}.nastaveni{margin-bottom:6px}.panel-nastaveni{max-height:180px}.nastaveni-radky{gap:7px 6px;margin-top:6px}.nastaveni-popisek{font-size:clamp(15px,4.1vw,18px)}.pole{width:clamp(116px,32vw,138px);padding:1px 2px}select{font-size:clamp(14px,3.8vw,17px);padding:7px 4px}.radek{gap:4px}.bunka-slot{flex:0 0 calc((100vw - 56px)/7);width:calc((100vw - 56px)/7);height:calc((100vw - 56px)/7);max-width:52px;max-height:52px;min-width:0}.bunka-slot input{font-size:clamp(13px,3.6vw,17px);border-radius:10px;padding:0 2px}.prekryv-panel{gap:6px}.prekryv-input{height:clamp(52px,15vw,72px);font-size:clamp(17px,4.4vw,24px);padding:0 6px}#overlayLevy,#overlayPravy{font-size:clamp(15px,4vw,22px);padding-left:2px;padding-right:2px}.akce{min-width:136px;font-size:15px;padding:11px 18px}}
-</style></head>
-<body><main class="aplikace"><header class="hlavicka"><h1>Pyramida čísel</h1><div class="mazani-wrap"><input id="mazaniHistorie" class="mazani-historie" type="text" autocomplete="off" spellcheck="false" aria-label="Zde můžete odstranit historii" placeholder="Vymazat"></div><button id="nastaveniToggle" class="nastaveni-kolo" type="button" aria-label="Otevřít nastavení">⚙</button><button id="rezim" class="rezim" type="button" aria-label="Přepnout tmavý/světlý režim">🌙</button></header>
-<section id="nastaveni" class="nastaveni zavreno"><div id="panelNastaveni" class="panel-nastaveni"><div class="nastaveni-radky"><label class="nastaveni-popisek" for="vyska">výška pyramidy</label><div class="pole"><select id="vyska" aria-label="Počet poschodí pyramidy"><option value="2">2 poschodí</option><option value="3">3 poschodí</option><option value="4">4 poschodí</option><option value="5">5 poschodí</option><option value="6">6 poschodí</option><option value="7" selected>7 poschodí</option></select></div><label class="nastaveni-popisek" for="cifry">počet cifer</label><div class="pole"><select id="cifry" aria-label="Počet cifer spodního řádku"><option value="1">1 cifra</option><option value="2" selected>2 cifry</option><option value="3">3 cifry</option><option value="4">4 cifry</option><option value="5">5 cifer</option><option value="6">6 cifer</option><option value="7">7 cifer</option><option value="8">8 cifer</option></select></div><label class="nastaveni-popisek" for="znamenko">sčítání - sčítání+odčítání</label><div class="pole"><select id="znamenko" aria-label="Typ čísel spodního řádku"><option value="p">+</option><option value="pm">+ -</option></select></div></div></div></section>
-<div id="hlaska" class="hlaska"></div><div class="herni-plocha" id="herniPlocha"><div class="postranni-tlacitko vlevo"><button id="start" class="akce" type="button">S T A R T</button></div><div class="pyramida" id="pyramida"></div><div id="prekryvPanel" class="prekryv-panel"><div class="prekryv-horni-wrap"><input id="overlayAktivni" class="prekryv-input" type="text" inputmode="numeric"></div><div class="prekryv-spodni-wrap"><input id="overlayLevy" class="prekryv-input" type="text" readonly tabindex="-1"><input id="overlayPravy" class="prekryv-input" type="text" readonly tabindex="-1"></div></div><div class="postranni-tlacitko vpravo"><button id="konec" class="akce konec" type="button">K O N E C</button></div></div><div id="historie" class="historie"></div></main>
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bináry   </title>
+    <style>
+        :root {
+            --bg-color: #f5f5f7; --text-color: #1d1d1f; --container-bg: #ffffff;
+            --border-color: #d2d2d7; --btn-bg: #e8e8ed; --btn-hover: #d2d2d7;
+            --primary-bg: #0071e3; --primary-text: #ffffff;
+            --success: #34c759; --error: #ff3b30;
+        }
+        [data-theme="dark"] {
+            --bg-color: #000000; --text-color: #f5f5f7; --container-bg: #1c1c1e;
+            --border-color: #38383a; --btn-bg: #2c2c2e; --btn-hover: #3a3a3c;
+        }
+
+        * { box-sizing: border-box; font-family: -apple-system, sans-serif; margin: 0; padding: 0; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-color);
+            display: flex; justify-content: center; padding: 10px; min-height: 100vh;
+        }
+
+        .app-container {
+            background-color: var(--container-bg); border-radius: 12px;
+            padding: 16px; width: 100%; max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 12px;
+        }
+
+        .header { display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 18px; white-space: pre-wrap; }
+        
+        .header-icons { display: flex; gap: 12px; align-items: center; }
+        .icon-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-color);
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        .settings-btn { font-size: 22px; }
+
+        .settings-group { display: none; flex-direction: column; gap: 8px; margin-top: 4px; }
+        select {
+            width: 100%; padding: 6px; border-radius: 6px;
+            border: 1px solid var(--border-color); background: var(--container-bg);
+            color: var(--text-color);
+        }
+
+        .info-text { 
+            font-size: 12px; 
+            color: #86868b; 
+            text-align: center; 
+            display: none;
+        }
+
+        .game-area { min-height: 160px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+
+        #secret-input {
+            width: 100%; padding: 8px; border-radius: 6px; text-align: center;
+            border: 1px solid var(--border-color); background: var(--container-bg);
+            color: var(--text-color); font-size: 14px;
+        }
+
+        .question { font-size: 28px; font-weight: bold; display: none; text-align: center;}
+
+        .input-with-back {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        #single-input {
+            width: 180px; padding: 8px; border-radius: 6px; text-align: center;
+            border: 2px solid var(--border-color); background: var(--container-bg);
+            color: var(--text-color); font-size: 18px; font-weight: bold;
+            outline: none;
+            height: 44px;
+        }
+        #single-input.success {
+            color: var(--success);
+            border-color: var(--success);
+        }
+        #single-input.error {
+            color: var(--error);
+            border-color: var(--error);
+        }
+
+        .back-btn {
+            background: var(--btn-bg); color: var(--text-color); border: none;
+            padding: 0; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer;
+            height: 44px;
+            width: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .back-btn:active { background: var(--btn-hover); }
+
+        .clear-btn {
+            background: var(--btn-bg); color: var(--text-color); border: none;
+            padding: 0 16px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .clear-btn:active { background: var(--btn-hover); }
+
+        .input-with-back.dec-mode .clear-btn {
+            flex: 1;
+            max-width: calc(100% - 180px - 8px - 48px - 8px);
+        }
+
+        .input-with-back.bin-mode .clear-btn {
+            flex: 1;
+            max-width: calc(100% - 180px - 8px - 48px - 8px);
+        }
+
+        .keypad { display: grid; gap: 6px; width: 100%; display: none; }
+        
+        .keypad.bin { 
+            grid-template-columns: 1fr;
+            width: 180px;
+            margin-right: auto;
+            margin-left: 0;
+        }
+
+        .keypad.dec { grid-template-columns: repeat(3, 1fr); }
+        
+        .key-btn {
+            background: var(--btn-bg); color: var(--text-color); border: none;
+            padding: 10px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer;
+        }
+        .key-btn:active { background: var(--btn-hover); }
+
+        .key-0 {
+            grid-column: span 2;
+        }
+
+        .main-action {
+            width: 100%; padding: 12px; border-radius: 8px;
+            background: var(--primary-bg); color: var(--primary-text);
+            border: none; font-size: 16px; font-weight: bold; cursor: pointer;
+        }
+
+        .history-container { border-top: 1px solid var(--border-color); padding-top: 10px; }
+        .history-title { font-size: 14px; font-weight: bold; margin-bottom: 8px; }
+        
+        .history-list { 
+            display: flex; flex-direction: row; flex-wrap: wrap; 
+            gap: 6px; padding-bottom: 8px;
+        }
+        .history-item {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: "Courier New", "Lucida Console", Consolas, monospace;
+            font-size: 14px;
+            display: inline-block;
+            background: var(--container-bg);
+            color: var(--text-color);
+            border: 1px solid transparent;
+            font-feature-settings: "zero" 0;
+        }
+        .history-item.correct {
+            color: var(--success);
+            border-color: var(--success);
+        }
+        .history-item.error {
+            color: var(--error);
+            border-color: var(--error);
+        }
+    </style>
+</head>
+<body data-theme="light">
+
+<div class="app-container">
+    <div class="header">
+        <h1 id="app-title">Bináry   </h1>
+        <div class="header-icons">
+            <button class="icon-btn" id="home-btn" onclick="goHome()" style="display: none;">🏠</button>
+            <button class="icon-btn settings-btn" onclick="toggleSettings()">⚙️</button>
+            <button class="icon-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
+        </div>
+    </div>
+
+    <div class="settings-group" id="settings-panel">
+        <select id="direction" onchange="updateInfo()">
+            <option value="dec2bin">Decimální na Binární</option>
+            <option value="bin2dec">Binární na Decimální</option>
+        </select>
+        <select id="bits" onchange="updateInfo()"></select>
+    </div>
+    
+    <div class="info-text" id="info"></div>
+
+    <div class="game-area">
+        <input type="text" id="secret-input"
+               inputmode="text"
+               placeholder="Zde můžete smazat historii...">
+        
+        <div class="question" id="question-display"></div>
+        
+        <div class="input-with-back" id="input-container">
+            <input type="text" id="single-input"
+                   inputmode="none"
+                   autocomplete="off"
+                   autocorrect="off"
+                   autocapitalize="off"
+                   spellcheck="false"
+                   style="display: none;">
+            <button class="back-btn" id="back-btn" onclick="deleteLeft()" style="display: none;">Zpět</button>
+            <button class="clear-btn" id="clear-btn" onclick="clearAll()" style="display: none;">Smazat</button>
+        </div>
+        
+        <div class="keypad bin" id="keypad-bin">
+            <button class="key-btn" onclick="typeVal('0')">0</button>
+            <button class="key-btn" onclick="typeVal('1')">1</button>
+        </div>
+
+        <div class="keypad dec" id="keypad-dec">
+            <button class="key-btn" onclick="typeVal('7')">7</button>
+            <button class="key-btn" onclick="typeVal('8')">8</button>
+            <button class="key-btn" onclick="typeVal('9')">9</button>
+            <button class="key-btn" onclick="typeVal('4')">4</button>
+            <button class="key-btn" onclick="typeVal('5')">5</button>
+            <button class="key-btn" onclick="typeVal('6')">6</button>
+            <button class="key-btn" onclick="typeVal('1')">1</button>
+            <button class="key-btn" onclick="typeVal('2')">2</button>
+            <button class="key-btn" onclick="typeVal('3')">3</button>
+            <button class="key-btn key-0" onclick="typeVal('0')">0</button>
+        </div>
+    </div>
+
+    <button class="main-action" id="main-btn" onclick="handleMainAction()">START</button>
+
+    <div class="history-container" id="history-container" style="display: none;">
+        <div class="history-title">Dnešní historie:</div>
+        <div class="history-list" id="history-list"></div>
+    </div>
+</div>
 
 <script>
-const $=id=>document.getElementById(id),pyramida=$('pyramida'),herniPlocha=$('herniPlocha'),prekryvPanel=$('prekryvPanel'),overlayAktivni=$('overlayAktivni'),overlayLevy=$('overlayLevy'),overlayPravy=$('overlayPravy'),vyska=$('vyska'),cifry=$('cifry'),znamenko=$('znamenko'),rezim=$('rezim'),start=$('start'),konec=$('konec'),nastaveni=$('nastaveni'),nastaveniToggle=$('nastaveniToggle'),mazaniHistorie=$('mazaniHistorie'),hlaska=$('hlaska'),historie=$('historie'),SR='pyramida_rezim',SV='pyramida_vyska',SC='pyramida_cifry',SZ='pyramida_znamenko',SH='pyramida_historie',SD='pyramida_historie_datum';
-let hraBezi=0,aktivniRadek=null,aktivniIndex=null,vysledky=[],akceBezi=false;
+    let state = 'init';
+    let currentDecValue = 0;
+    let expectedAnswer = "";
+    let expectedLength = 0;
+    let currentDisplayBits = 0;
 
-const dnes=()=>{let d=new Date;return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`},
-fmt=v=>{if(v===''||v==null)return'';let s=String(v).replace(/\s/g,''),m=s[0]=='-'?'-':'';s=s.replace('-','');return m+s.replace(/\B(?=(\d{3})+(?!\d))/g,' ')},
-cis=v=>Number(String(v).replace(/\s/g,'')),
-pole=(r,i)=>pyramida.querySelector(`input[data-r="${r}"][data-i="${i}"]`);
-
-function jeMobil(){return window.matchMedia('(pointer: coarse)').matches}
-function jeNastaveniOtevrene(){return !nastaveni.classList.contains('zavreno')}
-
-function nastavStavNastaveni(){
-  let otevreno=jeNastaveniOtevrene();
-  start.disabled=otevreno;
-  konec.disabled=otevreno;
-  nastaveniToggle.classList.toggle('aktivni',otevreno);
-  nastaveniToggle.setAttribute('aria-label',otevreno?'Zavřít nastavení':'Otevřít nastavení');
-}
-
-function kurzorNaKonecInputu(){
-  overlayAktivni.focus({preventScroll:false});
-  let k=overlayAktivni.value.length;
-  try{overlayAktivni.setSelectionRange(k,k)}catch(e){}
-}
-
-function prepniMinusVInputu(){
-  if(jeNastaveniOtevrene())return;
-  if(!jeMobil())return;
-  if(znamenko.value!=='pm')return;
-  if(!hraBezi)return;
-  if(aktivniRadek==null)return;
-
-  let v=overlayAktivni.value.replace(/\s/g,'');
-
-  if(v.startsWith('-'))v=v.slice(1);
-  else v='-'+v;
-
-  overlayAktivni.value=fmt(v);
-  overlayAktivni.classList.remove('spatne');
-
-  nastavPismoOverlay();
-  overlayAktivni.style.width=sirkaProText(vysledky[aktivniRadek][aktivniIndex])+'px';
-
-  requestAnimationFrame(kurzorNaKonecInputu);
-}
-
-function zvetseniPismaOverlay(){let krok=window.innerWidth<=480?1:2;return(8-Number(cifry.value))*krok}
-function nastavPismoOverlay(){let z=zvetseniPismaOverlay(),mobil=innerWidth<=480;overlayAktivni.style.fontSize=(mobil?24+z:30+z)+'px';overlayLevy.style.fontSize=(mobil?22+z:30+z)+'px';overlayPravy.style.fontSize=(mobil?22+z:30+z)+'px'}
-
-function uloz(){localStorage.setItem(SV,vyska.value);localStorage.setItem(SC,cifry.value);localStorage.setItem(SZ,znamenko.value);localStorage.setItem(SR,document.body.classList.contains('dark')?'dark':'light')}
-function nactiHistorii(){let d=dnes();if(localStorage.getItem(SD)!==d){localStorage.setItem(SD,d);localStorage.setItem(SH,'')}historie.innerHTML=localStorage.getItem(SH)||''}
-function pridej(z){let d=dnes();if(localStorage.getItem(SD)!==d){localStorage.setItem(SD,d);localStorage.setItem(SH,'')}let h=(localStorage.getItem(SH)||'')+`<span>${z}</span>&nbsp;&nbsp;`;localStorage.setItem(SH,h);historie.innerHTML=h}
-function vymazHistorii(){localStorage.setItem(SD,dnes());localStorage.setItem(SH,'');historie.innerHTML=''}
-function mazani(){if(mazaniHistorie.value.trim().toLowerCase()==='vymazat')vymazHistorii();mazaniHistorie.value=''}
-function ohnostroj(){let o=document.createElement('div');o.className='ohnostroj';document.body.appendChild(o);[{x:28,y:28},{x:50,y:20},{x:72,y:30},{x:40,y:42},{x:62,y:45}].forEach((v,k)=>{setTimeout(()=>{for(let i=0;i<28;i++){let s=document.createElement('span'),u=Math.random()*Math.PI*2,d=70+Math.random()*90;s.className='jiskra';s.style.setProperty('--x',v.x+'vw');s.style.setProperty('--y',v.y+'vh');s.style.setProperty('--dx',Math.cos(u)*d+'px');s.style.setProperty('--dy',Math.sin(u)*d+'px');s.style.setProperty('--hue',Math.random()*360|0);o.appendChild(s);setTimeout(()=>s.remove(),1e3)}},k*180)});setTimeout(()=>o.remove(),1800)}
-
-function oznacChybnyVysledek(puvodniText){
-  let text=String(puvodniText??'');
-  overlayAktivni.value=text;
-  overlayAktivni.classList.add('spatne');
-  nastavPismoOverlay();
-  if(aktivniRadek!=null)overlayAktivni.style.width=sirkaProText(vysledky[aktivniRadek][aktivniIndex])+'px';
-
-  requestAnimationFrame(()=>{
-    overlayAktivni.value=text;
-    overlayAktivni.classList.add('spatne');
-    overlayAktivni.focus({preventScroll:false});
-    try{overlayAktivni.setSelectionRange(0,overlayAktivni.value.length)}catch(e){overlayAktivni.select()}
-  });
-}
-
-function sirkaTextu(text,typ='cela'){text=fmt(String(text??0));let jeMobil=innerWidth<480,meric=document.createElement('span');meric.style.position='fixed';meric.style.left='-9999px';meric.style.top='-9999px';meric.style.visibility='hidden';meric.style.whiteSpace='nowrap';meric.style.fontFamily='Arial, sans-serif';meric.style.fontWeight='800';meric.style.fontSize=getComputedStyle(overlayAktivni).fontSize;meric.textContent=text;document.body.appendChild(meric);let realna=Math.ceil(meric.getBoundingClientRect().width);meric.remove();let w=realna+(jeMobil?50:70);if(typ==='pulka'){let zakladna=pole(+vyska.value,0)?.closest('.radek'),sirkaZakladny=zakladna?Math.floor(zakladna.getBoundingClientRect().width):Math.floor(innerWidth*.9),max=Math.floor(sirkaZakladny/2),min=jeMobil?120:150;return Math.min(Math.max(w,min),max)}let max=Math.min(innerWidth-20,jeMobil?380:620),min=jeMobil?130:160;return Math.min(Math.max(w,min),max)}
-function sirkaProText(h){return sirkaTextu(h,'cela')}
-function sirkaPoloviny(h){return sirkaTextu(h,'pulka')}
-
-function nastavPrekryvPozici(){
-  let vrchol=pole(1,0);
-  if(!vrchol)return;
-  let pr=herniPlocha.getBoundingClientRect(),br=vrchol.getBoundingClientRect(),mezera=innerWidth<=480?8:10;
-  if(innerWidth<=480){
-    prekryvPanel.style.top=(br.top-pr.top)+'px';
-  }else{
-    prekryvPanel.style.top=(br.bottom-pr.top+mezera)+'px';
-  }
-}
-
-function zobrazPrekryv(){
-  if(jeNastaveniOtevrene())return;
-  if(aktivniRadek==null)return;
-  nastavPismoOverlay();
-  let a=pole(aktivniRadek,aktivniIndex),l=pole(aktivniRadek+1,aktivniIndex),p=pole(aktivniRadek+1,aktivniIndex+1);
-  if(!a||!l||!p)return;
-  overlayAktivni.value=a.value;
-  overlayLevy.value=l.value;
-  overlayPravy.value=p.value;
-  overlayAktivni.classList.remove('spatne','spravne');
-  let wA=sirkaProText(vysledky[aktivniRadek][aktivniIndex]),wSpodni=Math.max(sirkaPoloviny(l.value),sirkaPoloviny(p.value));
-  overlayAktivni.style.width=wA+'px';
-  overlayLevy.style.width=wSpodni+'px';
-  overlayPravy.style.width=wSpodni+'px';
-  nastavPrekryvPozici();
-  prekryvPanel.classList.add('zobrazen');
-  setTimeout(()=>{if(!jeNastaveniOtevrene()){start.blur();overlayAktivni.focus({preventScroll:false});overlayAktivni.select()}},80);
-}
-
-function skryjPrekryv(){prekryvPanel.classList.remove('zobrazen');overlayAktivni.value=overlayLevy.value=overlayPravy.value='';overlayAktivni.classList.remove('spatne','spravne')}
-function spocitejVysledky(){let R=+vyska.value;vysledky=[];for(let r=1;r<=R;r++)vysledky[r]=[];for(let i=0;i<R;i++)vysledky[R][i]=cis(pole(R,i).value);for(let r=R-1;r>=1;r--)for(let i=0;i<r;i++)vysledky[r][i]=vysledky[r+1][i]+vysledky[r+1][i+1]}
-function nacti(){let v=localStorage.getItem(SV),c=localStorage.getItem(SC),z=localStorage.getItem(SZ),r=localStorage.getItem(SR);if(v)vyska.value=v;if(c){if(+c>8)c='8';cifry.value=c}if(z)znamenko.value=z;document.body.classList.toggle('dark',r==='dark');rezim.textContent=r==='dark'?'☀️':'🌙'}
-function nahoda(c){let min=c==1?0:10**(c-1),max=10**c-1,n=Math.floor(Math.random()*(max-min+1))+min;if(znamenko.value==='pm'&&Math.random()<.5)n=-n;return n}
-
-function aktivuj(r,i){
-  aktivniRadek=r;aktivniIndex=i;
-  pyramida.querySelectorAll('input').forEach(x=>{if(!x.classList.contains('spodni')&&!x.classList.contains('spravne')){x.classList.add('zamcene');x.readOnly=1;x.tabIndex=-1}});
-  let a=pole(r,i);
-  if(a){a.classList.remove('zamcene','spatne');a.readOnly=1;a.tabIndex=-1;zobrazPrekryv()}
-}
-
-function dalsi(){if(aktivniIndex+1<aktivniRadek)return{r:aktivniRadek,i:aktivniIndex+1};if(aktivniRadek-1>=1)return{r:aktivniRadek-1,i:0};return null}
-
-function vytvor(gen){
-  pyramida.innerHTML='';hlaska.textContent='';skryjPrekryv();vysledky=[];
-  let R=+vyska.value,C=+cifry.value;if(C>8){C=8;cifry.value='8'}
-  for(let r=1;r<=R;r++){
-    let row=document.createElement('div');row.className='radek';
-    for(let i=0;i<r;i++){
-      let slot=document.createElement('div'),x=document.createElement('input');
-      slot.className='bunka-slot';x.type='text';x.inputMode='numeric';x.dataset.r=r;x.dataset.i=i;
-      if(r===R){x.classList.add('spodni');x.readOnly=1;x.tabIndex=-1;x.value=gen?fmt(String(nahoda(C))):''}
-      else{x.value='';if(gen){x.classList.add('zamcene');x.readOnly=1;x.tabIndex=-1}}
-      slot.appendChild(x);row.appendChild(slot)
+    function formatDecimal(num) {
+        return num.toLocaleString('cs-CZ');
     }
-    pyramida.appendChild(row)
-  }
-  hraBezi=!!gen;start.textContent=gen?'D A L Š Í':'S T A R T';aktivniRadek=aktivniIndex=null;
-  if(gen){spocitejVysledky();aktivuj(R-1,0)}
-}
 
-function kontrola(){
-  if(jeNastaveniOtevrene())return;
-  hlaska.textContent='';
-  let hodnota=overlayAktivni.value;
-  overlayAktivni.classList.remove('spatne');
-
-  if(!hodnota.trim()||hodnota.trim()==='-'){
-    return;
-  }
-
-  if(!/^-?[0-9 ]*$/.test(hodnota)){
-    hlaska.textContent='Nepovolený znak!';
-    oznacChybnyVysledek(hodnota);
-    return;
-  }
-
-  let ok=vysledky[aktivniRadek][aktivniIndex],z=cis(hodnota);
-
-  if(z===ok){
-    let skutecna=pole(aktivniRadek,aktivniIndex);
-    skutecna.value=fmt(String(z));
-    skutecna.classList.remove('spatne');
-    skutecna.classList.add('spravne');
-    overlayAktivni.value=fmt(String(z));
-    overlayAktivni.classList.add('spravne');
-
-    let d=dalsi();
-    if(d)aktivuj(d.r,d.i);
-    else{
-      skryjPrekryv();
-      hraBezi=0;
-      aktivniRadek=aktivniIndex=null;
-      start.textContent='S T A R T';
-      pridej(`${vyska.value}/${cifry.value}/${znamenko.value==='pm'?'+-':'+'}`);
-      ohnostroj();
+    function removeLeadingZeros(str) {
+        let clean = str.replace(/\s/g, '');
+        let stripped = clean.replace(/^0+/, '');
+        return stripped === "" ? "0" : stripped;
     }
-  }else{
-    oznacChybnyVysledek(hodnota);
-  }
-}
 
-function konecHry(){hraBezi=0;aktivniRadek=aktivniIndex=null;hlaska.textContent='';start.textContent='S T A R T';skryjPrekryv();vytvor(0)}
-
-function spolecnaAkceEnterDalsi(){
-  if(jeNastaveniOtevrene())return;
-  if(akceBezi)return;
-  akceBezi=true;
-  mazani();
-  uloz();
-  if(hraBezi)kontrola();
-  else vytvor(1);
-  setTimeout(()=>akceBezi=false,80);
-}
-
-overlayAktivni.addEventListener('pointerdown',e=>{
-  if(jeNastaveniOtevrene())return;
-  if(jeMobil()&&znamenko.value==='pm'&&hraBezi&&aktivniRadek!=null){
-    e.preventDefault();
-    prepniMinusVInputu();
-  }
-});
-
-overlayAktivni.addEventListener('input',function(){
-  if(jeNastaveniOtevrene())return;
-  this.classList.remove('spatne');
-  let b=this.value.replace(/\s/g,'');
-  if(/^-?\d*$/.test(b)){
-    this.value=fmt(b);
-    if(aktivniRadek!=null){
-      nastavPismoOverlay();
-      this.style.width=sirkaProText(vysledky[aktivniRadek][aktivniIndex])+'px';
+    function formatBinary(binStr) {
+        let clean = binStr.replace(/\s/g, '');
+        if (clean === "") return "";
+        let result = "";
+        let count = 0;
+        for (let i = clean.length - 1; i >= 0; i--) {
+            result = clean[i] + result;
+            count++;
+            if (count % 5 === 0 && i > 0) {
+                result = " " + result;
+            }
+        }
+        return result;
     }
-  }
-});
 
-nastaveniToggle.onclick=()=>{
-  mazani();
-  nastaveni.classList.toggle('zavreno');
-  nastavStavNastaveni();
-  if(!jeNastaveniOtevrene()&&hraBezi)zobrazPrekryv();
-  if(jeNastaveniOtevrene())skryjPrekryv();
-  uloz();
-};
+    function formatBinaryForDisplay(binStr, displayBits) {
+        let clean = binStr.replace(/\s/g, '');
+        clean = clean.replace(/^0+/, '');
+        if (clean === "") clean = "0";
+        
+        while (clean.length < displayBits) {
+            clean = "0" + clean;
+        }
+        
+        clean = clean.substring(clean.length - displayBits);
+        
+        let result = "";
+        let count = 0;
+        for (let i = clean.length - 1; i >= 0; i--) {
+            result = clean[i] + result;
+            count++;
+            if (count % 5 === 0 && i > 0) {
+                result = " " + result;
+            }
+        }
+        return result;
+    }
 
-[vyska,cifry,znamenko].forEach(e=>e.onchange=()=>{mazani();uloz();konecHry()});
-mazaniHistorie.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();mazani()}};
+    function formatDecimalInput(value) {
+        let clean = value.replace(/\s/g, '');
+        clean = clean.replace(/\D/g, '');
+        if (clean === "") return "";
+        
+        let num = parseInt(clean, 10);
+        if (isNaN(num)) return "";
+        
+        return num.toLocaleString('cs-CZ').replace(/\./g, ' ');
+    }
 
-start.addEventListener('pointerdown',e=>{
-  if(jeMobil()){
-    e.preventDefault();
-    spolecnaAkceEnterDalsi();
-  }
-},{capture:true});
+    function extractDigits(input) {
+        return input.replace(/\D/g, '');
+    }
 
-start.onclick=e=>{
-  if(jeMobil())return;
-  spolecnaAkceEnterDalsi();
-};
+    function updateTitle() {
+        const direction = document.getElementById('direction').value;
+        const titleEl = document.getElementById('app-title');
+        if (direction === 'dec2bin') {
+            titleEl.innerText = 'Bináry   DEC → BIN';
+        } else {
+            titleEl.innerText = 'Bináry   BIN → DEC';
+        }
+    }
 
-konec.onclick=()=>{if(jeNastaveniOtevrene())return;mazani();konecHry()};
-rezim.onclick=()=>{mazani();document.body.classList.toggle('dark');rezim.textContent=document.body.classList.contains('dark')?'☀️':'🌙';uloz()};
+    function initApp() {
+        const savedTheme = localStorage.getItem('binTrainTheme') || 'light';
+        document.body.dataset.theme = savedTheme;
+        document.getElementById('theme-btn').innerText = savedTheme === 'dark' ? '☀️' : '🌙';
 
-document.onkeydown=e=>{
-  if(e.key==='Enter'&&document.activeElement!==mazaniHistorie){
-    e.preventDefault();
-    spolecnaAkceEnterDalsi();
-  }
-};
+        const bitSelect = document.getElementById('bits');
+        bitSelect.innerHTML = '';
+        for (let i = 5; i <= 15; i++) {
+            const maxVal = Math.pow(2, i) - 1;
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.innerHTML = `${i} bitů ≤ ${formatDecimal(maxVal)}`;
+            bitSelect.appendChild(opt);
+        }
 
-window.onresize=()=>{if(hraBezi&&!jeNastaveniOtevrene())zobrazPrekryv()};
-nacti();nactiHistorii();vytvor(0);nastavStavNastaveni();
-</script></body></html>
+        const savedDir = localStorage.getItem('binTrainDir');
+        if (savedDir) document.getElementById('direction').value = savedDir;
+        const savedBits = localStorage.getItem('binTrainBits');
+        if (savedBits) document.getElementById('bits').value = savedBits;
+
+        document.getElementById('settings-panel').style.display = 'none';
+        document.getElementById('info').style.display = 'none';
+
+        updateTitle();
+        checkHistoryDate();
+        updateInfo();
+        renderHistory();
+
+        goHome();
+    }
+
+    function goHome() {
+        state = 'init';
+        document.getElementById('home-btn').style.display = 'none';
+        document.getElementById('secret-input').style.display = 'block';
+        document.getElementById('question-display').style.display = 'none';
+        document.getElementById('single-input').style.display = 'none';
+        document.getElementById('single-input').value = '';
+        document.getElementById('back-btn').style.display = 'none';
+        document.getElementById('clear-btn').style.display = 'none';
+        document.getElementById('keypad-bin').style.display = 'none';
+        document.getElementById('keypad-dec').style.display = 'none';
+        document.getElementById('main-btn').innerText = "START";
+        document.getElementById('secret-input').focus();
+    }
+
+    function toggleTheme() {
+        const body = document.body;
+        const isDark = body.dataset.theme === 'dark';
+        const newTheme = isDark ? 'light' : 'dark';
+        body.dataset.theme = newTheme;
+        document.getElementById('theme-btn').innerText = newTheme === 'dark' ? '☀️' : '🌙';
+        localStorage.setItem('binTrainTheme', newTheme);
+    }
+
+    function toggleSettings() {
+        const panel = document.getElementById('settings-panel');
+        const info = document.getElementById('info');
+        const isHidden = panel.style.display === 'none' || panel.style.display === '';
+        
+        if (isHidden) {
+            panel.style.display = 'flex';
+            info.style.display = 'block';
+        } else {
+            panel.style.display = 'none';
+            info.style.display = 'none';
+        }
+    }
+
+    function updateInfo() {
+        const bits = parseInt(document.getElementById('bits').value);
+        const direction = document.getElementById('direction').value;
+        localStorage.setItem('binTrainBits', bits);
+        localStorage.setItem('binTrainDir', direction);
+        const maxNum = Math.pow(2, bits) - 1;
+        document.getElementById('info').innerText = `Rozsah: 0 až ${formatDecimal(maxNum)}`;
+        
+        updateTitle();
+        
+        if (state === 'playing') startGame();
+    }
+
+    function handleMainAction() {
+        if (state === 'init') {
+            const secret = document.getElementById('secret-input').value.trim();
+            if (secret.toLowerCase() === 'vymazat') {
+                localStorage.removeItem('binTrainHistory');
+                renderHistory();
+            }
+            document.getElementById('secret-input').style.display = 'none';
+            startGame();
+        } else if (state === 'playing') {
+            checkAnswer();
+        } else if (state === 'evaluated') {
+            startGame();
+        }
+    }
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            if (state === 'init') {
+                handleMainAction();
+            } else if (state === 'playing') {
+                checkAnswer();
+            }
+        }
+    });
+
+    document.getElementById('single-input').addEventListener('input', function(e) {
+        const direction = document.getElementById('direction').value;
+        const input = this;
+        const cursorPosition = input.selectionStart;
+        const originalValue = input.value;
+        
+        if (direction === 'dec2bin') {
+            if (/[^01\s]/.test(input.value)) {
+                const invalidChar = input.value.match(/[^01\s]/);
+                alert(`Nepovolený znak: "${invalidChar}". Povoleno pouze 0, 1 a mezera.`);
+                input.value = input.value.replace(/[^01\s]/g, '');
+                return;
+            }
+            
+            let clean = input.value.replace(/\s/g, '');
+            
+            if (clean.length > 15) {
+                alert("Maximální počet 0 a 1 je 15, překročili jste limit, opravte!");
+                clean = clean.substring(0, 15);
+            }
+            
+            let digitsBeforeCursor = 0;
+            for (let i = 0; i < cursorPosition && i < originalValue.length; i++) {
+                if (/[01]/.test(originalValue[i])) {
+                    digitsBeforeCursor++;
+                }
+            }
+            
+            let formatted = "";
+            let count = 0;
+            for (let i = clean.length - 1; i >= 0; i--) {
+                formatted = clean[i] + formatted;
+                count++;
+                if (count % 5 === 0 && i > 0) {
+                    formatted = " " + formatted;
+                }
+            }
+            
+            input.value = formatted;
+            
+            let newCursorPos = 0;
+            let digitCount = 0;
+            for (let i = 0; i < formatted.length; i++) {
+                if (/[01]/.test(formatted[i])) {
+                    digitCount++;
+                }
+                if (digitCount === digitsBeforeCursor) {
+                    newCursorPos = i + 1;
+                    break;
+                }
+                newCursorPos = i + 1;
+            }
+            
+            input.selectionStart = input.selectionEnd = newCursorPos;
+            
+        } else {
+            if (/[^\d\s]/.test(input.value)) {
+                const invalidChar = input.value.match(/[^\d\s]/);
+                alert(`Nepovolený znak: "${invalidChar}". Povolena pouze čísla.`);
+                input.value = input.value.replace(/[^\d\s]/g, '');
+                return;
+            }
+            
+            let digitsBeforeCursor = 0;
+            for (let i = 0; i < cursorPosition && i < originalValue.length; i++) {
+                if (/\d/.test(originalValue[i])) {
+                    digitsBeforeCursor++;
+                }
+            }
+            
+            const formatted = formatDecimalInput(input.value);
+            
+            input.value = formatted;
+            
+            let newCursorPos = 0;
+            let digitCount = 0;
+            for (let i = 0; i < formatted.length; i++) {
+                if (/\d/.test(formatted[i])) {
+                    digitCount++;
+                }
+                if (digitCount === digitsBeforeCursor) {
+                    newCursorPos = i + 1;
+                    break;
+                }
+                newCursorPos = i + 1;
+            }
+            
+            input.selectionStart = input.selectionEnd = newCursorPos;
+        }
+    });
+
+    function startGame() {
+        state = 'playing';
+        document.getElementById('home-btn').style.display = 'block';
+        document.getElementById('main-btn').innerText = "VÝSLEDEK (KONTROLA)";
+        
+        const bits = parseInt(document.getElementById('bits').value);
+        const direction = document.getElementById('direction').value;
+        const maxNum = Math.pow(2, bits) - 1;
+        
+        currentDecValue = Math.floor(Math.random() * (maxNum + 1));
+        const binString = currentDecValue.toString(2);
+
+        document.getElementById('question-display').style.display = 'block';
+        document.getElementById('single-input').style.display = 'block';
+        document.getElementById('back-btn').style.display = 'flex';
+        document.getElementById('clear-btn').style.display = 'flex';
+        document.getElementById('single-input').value = '';
+        document.getElementById('single-input').className = '';
+        document.getElementById('single-input').disabled = false;
+        document.getElementById('single-input').focus();
+
+        const inputContainer = document.getElementById('input-container');
+        
+        if (direction === 'dec2bin') {
+            document.getElementById('question-display').innerText = formatDecimal(currentDecValue);
+            expectedAnswer = binString;
+            expectedLength = bits;
+            document.getElementById('keypad-bin').style.display = 'grid';
+            document.getElementById('keypad-dec').style.display = 'none';
+            inputContainer.className = 'input-with-back bin-mode';
+        } else {
+            if (bits === 5) {
+                currentDisplayBits = 5;
+            } else if (bits <= 10) {
+                currentDisplayBits = 10;
+            } else {
+                currentDisplayBits = 15;
+            }
+            
+            document.getElementById('question-display').innerText = formatBinaryForDisplay(binString, currentDisplayBits);
+            expectedAnswer = currentDecValue.toString();
+            expectedLength = maxNum.toString().length;
+            document.getElementById('keypad-bin').style.display = 'none';
+            document.getElementById('keypad-dec').style.display = 'grid';
+            inputContainer.className = 'input-with-back dec-mode';
+        }
+    }
+
+    function deleteLeft() {
+        if (state !== 'playing') return;
+        const input = document.getElementById('single-input');
+        const direction = document.getElementById('direction').value;
+        
+        const cursorPos = input.selectionStart;
+        const value = input.value;
+        
+        if (cursorPos === 0) return;
+        
+        let deletePos = -1;
+        for (let i = cursorPos - 1; i >= 0; i--) {
+            if (direction === 'dec2bin') {
+                if (/[01]/.test(value[i])) {
+                    deletePos = i;
+                    break;
+                }
+            } else {
+                if (/\d/.test(value[i])) {
+                    deletePos = i;
+                    break;
+                }
+            }
+        }
+        
+        if (deletePos === -1) return;
+        
+        let newValue = value.substring(0, deletePos) + value.substring(deletePos + 1);
+        
+        if (direction === 'dec2bin') {
+            let clean = newValue.replace(/\s/g, '');
+            
+            let formatted = "";
+            let count = 0;
+            for (let i = clean.length - 1; i >= 0; i--) {
+                formatted = clean[i] + formatted;
+                count++;
+                if (count % 5 === 0 && i > 0) {
+                    formatted = " " + formatted;
+                }
+            }
+            
+            input.value = formatted;
+            
+            let newCursorPos = 0;
+            let digitCount = 0;
+            const targetDigits = value.substring(0, deletePos).replace(/\s/g, '').length;
+            for (let i = 0; i < formatted.length; i++) {
+                if (/[01]/.test(formatted[i])) {
+                    digitCount++;
+                }
+                if (digitCount === targetDigits) {
+                    newCursorPos = i + 1;
+                    break;
+                }
+                newCursorPos = i + 1;
+            }
+            
+            input.selectionStart = input.selectionEnd = newCursorPos;
+            
+        } else {
+            const formatted = formatDecimalInput(newValue);
+            input.value = formatted;
+            
+            let newCursorPos = 0;
+            let digitCount = 0;
+            const targetDigits = value.substring(0, deletePos).replace(/\s/g, '').length;
+            for (let i = 0; i < formatted.length; i++) {
+                if (/\d/.test(formatted[i])) {
+                    digitCount++;
+                }
+                if (digitCount === targetDigits) {
+                    newCursorPos = i + 1;
+                    break;
+                }
+                newCursorPos = i + 1;
+            }
+            
+            input.selectionStart = input.selectionEnd = newCursorPos;
+        }
+        
+        input.focus();
+    }
+
+    function clearAll() {
+        if (state !== 'playing') return;
+        const input = document.getElementById('single-input');
+        input.value = '';
+        input.focus();
+    }
+
+    function typeVal(val) {
+        if (state !== 'playing') return;
+        const direction = document.getElementById('direction').value;
+        const input = document.getElementById('single-input');
+        
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        const value = input.value;
+        
+        const hasSelection = start !== end;
+        
+        if (direction === 'bin2dec') {
+            if (!hasSelection && value.replace(/\s/g, '').length >= 6) return;
+            
+            const newValue = value.substring(0, start) + val + value.substring(end);
+            const formatted = formatDecimalInput(newValue);
+            input.value = formatted;
+            
+            let newCursorPos = 0;
+            let digitCount = 0;
+            const targetDigits = value.substring(0, start).replace(/\s/g, '').length + 1;
+            for (let i = 0; i < formatted.length; i++) {
+                if (/\d/.test(formatted[i])) {
+                    digitCount++;
+                }
+                if (digitCount === targetDigits) {
+                    newCursorPos = i + 1;
+                    break;
+                }
+                newCursorPos = i + 1;
+            }
+            input.selectionStart = input.selectionEnd = newCursorPos;
+            
+        } else {
+            if (val !== '0' && val !== '1' && val !== ' ') {
+                alert("Nepovolený znak! Povoleno pouze 0, 1 a mezera.");
+                return;
+            }
+            
+            if (!hasSelection) {
+                let digitsOnly = value.replace(/\s/g, '');
+                if (digitsOnly.length >= 15) {
+                    alert("Maximální počet 0 a 1 je 15, překročili jste limit, opravte!");
+                    return;
+                }
+            }
+            
+            let newValue = value.substring(0, start) + val + value.substring(end);
+            let clean = newValue.replace(/\s/g, '');
+            
+            if (clean.length > 15) {
+                alert("Maximální počet 0 a 1 je 15, překročili jste limit, opravte!");
+                clean = clean.substring(0, 15);
+            }
+            
+            let formatted = "";
+            let count = 0;
+            for (let i = clean.length - 1; i >= 0; i--) {
+                formatted = clean[i] + formatted;
+                count++;
+                if (count % 5 === 0 && i > 0) {
+                    formatted = " " + formatted;
+                }
+            }
+            
+            input.value = formatted;
+            
+            let digitsBefore = value.substring(0, start).replace(/\s/g, '').length;
+            if (!hasSelection) {
+                digitsBefore++;
+            }
+            
+            let newCursorPos = 0;
+            let digitCount = 0;
+            for (let i = 0; i < formatted.length; i++) {
+                if (/[01]/.test(formatted[i])) {
+                    digitCount++;
+                }
+                if (digitCount === digitsBefore) {
+                    newCursorPos = i + 1;
+                    break;
+                }
+                newCursorPos = i + 1;
+            }
+            
+            input.selectionStart = input.selectionEnd = newCursorPos;
+        }
+        
+        input.focus();
+    }
+
+    function checkAnswer() {
+        const direction = document.getElementById('direction').value;
+        const inputEl = document.getElementById('single-input');
+        const rawValue = inputEl.value.trim();
+        
+        document.getElementById('back-btn').style.display = 'none';
+        document.getElementById('clear-btn').style.display = 'none';
+        
+        if (direction === 'bin2dec') {
+            if (rawValue === '') {
+                state = 'evaluated';
+                document.getElementById('main-btn').innerText = "START";
+                inputEl.disabled = true;
+                inputEl.value = formatDecimal(parseInt(expectedAnswer));
+                inputEl.className = '';
+                return;
+            }
+            
+            const cleanUser = removeLeadingZeros(rawValue);
+            const cleanExpected = removeLeadingZeros(expectedAnswer);
+            const isCorrect = cleanUser === cleanExpected;
+            const formattedCorrect = formatDecimal(parseInt(cleanExpected));
+            
+            state = 'evaluated';
+            document.getElementById('main-btn').innerText = "START";
+            inputEl.disabled = true;
+            
+            if (isCorrect) {
+                inputEl.className = 'success';
+                inputEl.value = formattedCorrect;
+            } else {
+                inputEl.className = 'error';
+            }
+            
+            const binForHistory = formatBinary(currentDecValue.toString(2));
+            saveToHistory(`${binForHistory} = ${formattedCorrect}`, isCorrect);
+            
+        } else {
+            if (rawValue === '') {
+                state = 'evaluated';
+                document.getElementById('main-btn').innerText = "START";
+                inputEl.disabled = true;
+                inputEl.value = formatBinary(expectedAnswer);
+                inputEl.className = '';
+                return;
+            }
+
+            const cleanUser = removeLeadingZeros(rawValue);
+            const cleanExpected = removeLeadingZeros(expectedAnswer);
+            const isCorrect = cleanUser === cleanExpected;
+            
+            state = 'evaluated';
+            document.getElementById('main-btn').innerText = "START";
+            inputEl.disabled = true;
+            
+            const formattedCorrect = formatBinary(cleanExpected);
+            
+            if (isCorrect) {
+                inputEl.className = 'success';
+                inputEl.value = formattedCorrect;
+            } else {
+                inputEl.className = 'error';
+            }
+
+            const decFormatted = formatDecimal(currentDecValue);
+            saveToHistory(`${decFormatted} = ${formattedCorrect}`, isCorrect);
+        }
+    }
+
+    function checkHistoryDate() {
+        const today = new Date().toISOString().split('T')[0];
+        if (localStorage.getItem('binTrainDate') !== today) {
+            localStorage.removeItem('binTrainHistory');
+            localStorage.setItem('binTrainDate', today);
+        }
+    }
+
+    function saveToHistory(text, isCorrect) {
+        let history = JSON.parse(localStorage.getItem('binTrainHistory') || '[]');
+        history.unshift({ text, isCorrect });
+        localStorage.setItem('binTrainHistory', JSON.stringify(history));
+        renderHistory();
+    }
+
+    function renderHistory() {
+        const history = JSON.parse(localStorage.getItem('binTrainHistory') || '[]');
+        const container = document.getElementById('history-container');
+        const list = document.getElementById('history-list');
+        list.innerHTML = '';
+        if (history.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+        container.style.display = 'block';
+        history.forEach(item => {
+            const div = document.createElement('div');
+            div.className = `history-item ${item.isCorrect ? 'correct' : 'error'}`;
+            div.innerText = item.text;
+            list.appendChild(div);
+        });
+    }
+
+    window.onload = initApp;
+</script>
+</body>
+</html>
