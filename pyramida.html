@@ -4,28 +4,34 @@
 body.dark{--bg:#0f172a;--card:rgba(30,41,59,.9);--text:#f8fafc;--muted:#cbd5e1;--primary:#818cf8;--primary-light:#a5b4fc;--input-bg:#111827;--input-border:#475569;--disabled-bg:#1e293b;--disabled-border:#334155;--bottom-border:#eab308;--bottom-bg:#292517;--success:#22c55e;--error:#f87171;--active-bg:#1e1b4b;--shadow:0 24px 60px rgba(0,0,0,.35)}
 *{box-sizing:border-box}body{font-family:Arial,sans-serif;min-height:100vh;margin:0;color:var(--text);background:radial-gradient(circle at top left,rgba(129,140,248,.18),transparent 32%),linear-gradient(135deg,var(--bg),#cfd5df);display:flex;justify-content:center;align-items:flex-start;padding:18px 10px;transition:background .3s,color .3s}body.dark{background:radial-gradient(circle at top left,rgba(129,140,248,.18),transparent 34%),linear-gradient(135deg,#020617,var(--bg))}
 .aplikace{position:relative;width:min(100%,860px);background:var(--card);border:1px solid rgba(148,163,184,.35);border-radius:28px;padding:24px 14px 30px;box-shadow:var(--shadow);overflow:visible}
-.hlavicka{position:relative;display:flex;align-items:center;justify-content:flex-start;gap:10px;margin-bottom:4px;padding:0 42px 0 0;text-align:left}
+.hlavicka{position:relative;display:flex;align-items:center;justify-content:flex-start;gap:10px;margin-bottom:4px;padding:0 88px 0 0;text-align:left}
 h1{margin:0;font-size:clamp(26px,6vw,42px);letter-spacing:-.04em;line-height:1.05;white-space:nowrap}
-.rezim{position:absolute;top:0;right:0;width:36px;height:36px;border:0;font-size:25px;cursor:pointer;color:inherit;background:transparent;box-shadow:none;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}
-.nastaveni{text-align:center;margin-bottom:8px}.popis-toggle{border:0;background:transparent;color:var(--muted);font-size:15px;font-weight:700;cursor:pointer;padding:4px 8px;line-height:1.35}.popis-toggle:after{content:" ▼";font-size:24px;white-space:nowrap}.nastaveni.zavreno .popis-toggle:after{content:" ▲"}.panel-nastaveni{overflow:hidden;max-height:70px;opacity:1;transition:max-height .25s,opacity .2s,margin .25s}.nastaveni.zavreno .panel-nastaveni{max-height:0;opacity:0;margin:0}
-.mazani-wrap{display:flex;justify-content:flex-start;align-items:center;margin:0}.ovladani{display:flex;justify-content:center}
-.mazani-historie{width:76px;height:34px;border-radius:999px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--input-bg);caret-color:var(--primary);font-size:14px;font-weight:700;text-align:center;padding:6px 8px;user-select:none;-webkit-user-select:none}
+.nastaveni-kolo,.rezim{position:absolute;top:0;width:36px;height:36px;border:0;font-size:25px;cursor:pointer;color:inherit;background:transparent;box-shadow:none;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}
+.nastaveni-kolo{right:42px}.rezim{right:0}
+.nastaveni-kolo.aktivni{color:var(--primary)}
+.nastaveni{text-align:center;margin-bottom:8px}.panel-nastaveni{overflow:hidden;max-height:190px;opacity:1;transition:max-height .25s,opacity .2s,margin .25s}.nastaveni.zavreno .panel-nastaveni{max-height:0;opacity:0;margin:0}
+.nastaveni-radky{display:grid;grid-template-columns:max-content max-content;justify-content:center;align-items:center;gap:8px 10px;margin:8px auto 0;width:max-content;max-width:100%}
+.nastaveni-popisek{font-size:clamp(17px,4.4vw,22px);font-weight:900;color:var(--text);text-align:left;white-space:nowrap}
+.pole{display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid rgba(148,163,184,.55);border-radius:999px;padding:2px 3px;width:clamp(132px,34vw,168px)}
+select{width:100%;color:var(--text);background:var(--input-bg);border:1px solid var(--input-border);border-radius:999px;font-size:clamp(16px,4vw,20px);font-weight:800;cursor:pointer;padding:8px 8px;text-align:center;text-align-last:center;max-width:100%}select option{text-align:center}
+.mazani-wrap{display:flex;justify-content:flex-start;align-items:center;margin:0}.mazani-historie{width:76px;height:34px;border-radius:999px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--input-bg);caret-color:var(--primary);font-size:14px;font-weight:700;text-align:center;padding:6px 8px;user-select:none;-webkit-user-select:none}
 .mazani-historie::placeholder{color:var(--input-bg);opacity:1;user-select:none;-webkit-user-select:none}.mazani-historie:focus{outline:0;border-color:var(--primary);box-shadow:0 0 0 4px rgba(129,140,248,.22)}body.dark .mazani-historie{color:var(--input-bg)}
 .mazani-historie::selection{color:var(--input-bg);background:var(--input-bg)}.mazani-historie::-moz-selection{color:var(--input-bg);background:var(--input-bg)}
-.ovladani{flex-wrap:nowrap;align-items:center;gap:8px;margin:6px 0 2px}.pole{display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid rgba(148,163,184,.55);border-radius:999px;padding:2px 3px}
-select{color:var(--text);background:var(--input-bg);border:1px solid var(--input-border);border-radius:999px;font-size:15px;font-weight:700;cursor:pointer;padding:7px 8px;text-align:center;text-align-last:center;max-width:100%}select option{text-align:center}.hlaska{min-height:22px;margin:2px 0 8px;color:var(--error);font-size:15px;font-weight:800;text-align:center}
+.hlaska{min-height:22px;margin:2px 0 8px;color:var(--error);font-size:15px;font-weight:800;text-align:center}
 .herni-plocha{position:relative;width:100%;overflow:visible;padding-top:0}.postranni-tlacitko{position:absolute;top:0;z-index:5}.postranni-tlacitko.vlevo{right:calc(50% + 82px)}.postranni-tlacitko.vpravo{left:calc(50% + 82px)}.pyramida{position:relative;width:100%;max-width:100%;display:flex;flex-direction:column;align-items:center;gap:clamp(5px,1.5vw,10px);overflow:visible;min-height:40px}.radek{position:relative;display:flex;justify-content:center;gap:clamp(3px,1vw,8px);width:100%;overflow:visible}
 .bunka-slot{position:relative;flex:0 0 clamp(34px,11vw,80px);width:clamp(34px,11vw,80px);height:clamp(40px,11vw,58px);overflow:visible}.bunka-slot input{width:100%;height:100%;color:var(--text);background:var(--input-bg);font-size:clamp(14px,3.8vw,20px);font-weight:700;text-align:center;border:2px solid var(--input-border);border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.25);padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:clip}.bunka-slot input:focus{outline:0;border-color:var(--primary);box-shadow:0 0 0 4px rgba(129,140,248,.22)}
 .bunka-slot input.spodni{border-color:var(--bottom-border);background:var(--bottom-bg);cursor:not-allowed;opacity:1}.bunka-slot input.zamcene{background:var(--disabled-bg);border-color:var(--disabled-border);cursor:not-allowed;opacity:.45}.bunka-slot input.spravne{color:var(--text);border-color:var(--success);box-shadow:0 0 0 4px rgba(34,197,94,.18);opacity:1}.bunka-slot input.spatne{color:var(--text);border-color:var(--error);box-shadow:0 0 0 4px rgba(220,38,38,.18)}
 .prekryv-panel{position:absolute;left:50%;transform:translateX(-50%);z-index:80;display:none;flex-direction:column;align-items:center;gap:8px;pointer-events:none;max-width:none}.prekryv-panel.zobrazen{display:flex}.prekryv-horni-wrap{display:flex;justify-content:center;width:100%}.prekryv-spodni-wrap{display:flex;justify-content:center;align-items:center;gap:0;width:100%}.prekryv-input{height:clamp(58px,15vw,82px);color:var(--text);background:var(--input-bg);font-size:clamp(20px,4.7vw,30px);font-weight:800;text-align:center;border:2px solid var(--input-border);border-radius:15px;padding:0 10px;white-space:nowrap;overflow:visible;text-overflow:clip;box-shadow:0 8px 20px rgba(15,23,42,.14);pointer-events:auto;min-width:0}
 #overlayLevy,#overlayPravy{padding-left:4px;padding-right:4px}.prekryv-input:focus{outline:0;border-color:var(--primary);box-shadow:0 0 0 5px rgba(129,140,248,.22)}#overlayAktivni{background:var(--active-bg);border-color:var(--primary);box-shadow:0 0 0 5px rgba(129,140,248,.22)}#overlayLevy{border-radius:15px 0 0 15px}#overlayPravy{border-radius:0 15px 15px 0}.prekryv-input.spatne{color:var(--text)!important;border:2px solid var(--error)!important;box-shadow:0 0 0 5px rgba(220,38,38,.35)!important}.prekryv-input.spravne{color:var(--text)!important;border:2px solid var(--success)!important;box-shadow:0 0 0 5px rgba(34,197,94,.25)!important}
-.akce{min-width:150px;border:0;color:#fff;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:999px;font-size:17px;font-weight:900;letter-spacing:.28em;cursor:pointer;padding:12px 24px;box-shadow:0 10px 22px rgba(79,70,229,.28);white-space:nowrap}.konec{background:linear-gradient(135deg,#64748b,#94a3b8)}.historie{min-height:24px;margin:14px 0 0;text-align:center;font-size:16px;font-weight:900;color:var(--success);word-spacing:8px}.ohnostroj{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9999}.jiskra{position:absolute;left:var(--x);top:var(--y);width:8px;height:8px;border-radius:50%;background:hsl(var(--hue),95%,60%);box-shadow:0 0 12px currentColor;animation:jiskraLet .9s ease-out forwards}
+.akce{min-width:150px;border:0;color:#fff;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:999px;font-size:17px;font-weight:900;letter-spacing:.28em;cursor:pointer;padding:12px 24px;box-shadow:0 10px 22px rgba(79,70,229,.28);white-space:nowrap}.konec{background:linear-gradient(135deg,#64748b,#94a3b8)}
+.akce:disabled{cursor:not-allowed;opacity:.45;filter:grayscale(.35);box-shadow:none}
+.historie{min-height:24px;margin:14px 0 0;text-align:center;font-size:16px;font-weight:900;color:var(--success);word-spacing:8px}.ohnostroj{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9999}.jiskra{position:absolute;left:var(--x);top:var(--y);width:8px;height:8px;border-radius:50%;background:hsl(var(--hue),95%,60%);box-shadow:0 0 12px currentColor;animation:jiskraLet .9s ease-out forwards}
 @keyframes jiskraLet{from{transform:translate(0,0) scale(1);opacity:1}to{transform:translate(var(--dx),var(--dy)) scale(.1);opacity:0}}
 @media(max-width:760px){.herni-plocha{padding-top:54px}.postranni-tlacitko{top:0}.postranni-tlacitko.vlevo{right:calc(50% + 22px)}.postranni-tlacitko.vpravo{left:calc(50% + 22px)}}
-@media(max-width:480px){body{padding:10px 6px}.aplikace{padding:14px 8px 24px;border-radius:22px;overflow:visible}.hlavicka{padding:0 36px 0 0;gap:6px}.rezim{width:34px;height:34px;font-size:24px}h1{font-size:clamp(24px,7vw,30px)}.mazani-historie{width:66px;height:32px;font-size:13px;padding:5px 6px}.popis-toggle{font-size:14px;padding:4px 2px}.nastaveni{margin-bottom:6px}.panel-nastaveni{max-height:58px}.ovladani{gap:3px;margin:4px 0 0}.pole{padding:1px 2px}select{font-size:13px;padding:6px 3px}.radek{gap:4px}.bunka-slot{flex:0 0 calc((100vw - 56px)/7);width:calc((100vw - 56px)/7);height:calc((100vw - 56px)/7);max-width:52px;max-height:52px;min-width:0}.bunka-slot input{font-size:clamp(13px,3.6vw,17px);border-radius:10px;padding:0 2px}.prekryv-panel{gap:6px}.prekryv-input{height:clamp(52px,15vw,72px);font-size:clamp(17px,4.4vw,24px);padding:0 6px}#overlayLevy,#overlayPravy{font-size:clamp(15px,4vw,22px);padding-left:2px;padding-right:2px}.akce{min-width:136px;font-size:15px;padding:11px 18px}}
+@media(max-width:480px){body{padding:10px 6px}.aplikace{padding:14px 8px 24px;border-radius:22px;overflow:visible}.hlavicka{padding:0 74px 0 0;gap:6px}.nastaveni-kolo,.rezim{width:34px;height:34px}.nastaveni-kolo{right:38px}.rezim{font-size:24px}h1{font-size:clamp(24px,7vw,30px)}.mazani-historie{width:66px;height:32px;font-size:13px;padding:5px 6px}.nastaveni{margin-bottom:6px}.panel-nastaveni{max-height:180px}.nastaveni-radky{gap:7px 6px;margin-top:6px}.nastaveni-popisek{font-size:clamp(15px,4.1vw,18px)}.pole{width:clamp(116px,32vw,138px);padding:1px 2px}select{font-size:clamp(14px,3.8vw,17px);padding:7px 4px}.radek{gap:4px}.bunka-slot{flex:0 0 calc((100vw - 56px)/7);width:calc((100vw - 56px)/7);height:calc((100vw - 56px)/7);max-width:52px;max-height:52px;min-width:0}.bunka-slot input{font-size:clamp(13px,3.6vw,17px);border-radius:10px;padding:0 2px}.prekryv-panel{gap:6px}.prekryv-input{height:clamp(52px,15vw,72px);font-size:clamp(17px,4.4vw,24px);padding:0 6px}#overlayLevy,#overlayPravy{font-size:clamp(15px,4vw,22px);padding-left:2px;padding-right:2px}.akce{min-width:136px;font-size:15px;padding:11px 18px}}
 </style></head>
-<body><main class="aplikace"><header class="hlavicka"><h1>Pyramida čísel</h1><div class="mazani-wrap"><input id="mazaniHistorie" class="mazani-historie" type="text" autocomplete="off" spellcheck="false" aria-label="Zde můžete odstranit historii" placeholder="Vymazat"></div><button id="rezim" class="rezim" type="button" aria-label="Přepnout tmavý/světlý režim">🌙</button></header>
-<section id="nastaveni" class="nastaveni"><button id="nastaveniToggle" class="popis-toggle" type="button">Vyber poschodí pyramidy a cifry spodního řádku.</button><div id="panelNastaveni" class="panel-nastaveni"><div class="ovladani"><div class="pole"><select id="vyska" aria-label="Počet poschodí pyramidy"><option value="2">2 poschodí</option><option value="3">3 poschodí</option><option value="4">4 poschodí</option><option value="5">5 poschodí</option><option value="6">6 poschodí</option><option value="7" selected>7 poschodí</option></select></div><div class="pole"><select id="cifry" aria-label="Počet cifer spodního řádku"><option value="1">1 cifra</option><option value="2" selected>2 cifry</option><option value="3">3 cifry</option><option value="4">4 cifry</option><option value="5">5 cifer</option><option value="6">6 cifer</option><option value="7">7 cifer</option><option value="8">8 cifer</option></select></div><div class="pole"><select id="znamenko" aria-label="Typ čísel spodního řádku"><option value="p">+</option><option value="pm">+ -</option></select></div></div></div></section>
+<body><main class="aplikace"><header class="hlavicka"><h1>Pyramida čísel</h1><div class="mazani-wrap"><input id="mazaniHistorie" class="mazani-historie" type="text" autocomplete="off" spellcheck="false" aria-label="Zde můžete odstranit historii" placeholder="Vymazat"></div><button id="nastaveniToggle" class="nastaveni-kolo" type="button" aria-label="Otevřít nastavení">⚙️</button><button id="rezim" class="rezim" type="button" aria-label="Přepnout tmavý/světlý režim">🌙</button></header>
+<section id="nastaveni" class="nastaveni zavreno"><div id="panelNastaveni" class="panel-nastaveni"><div class="nastaveni-radky"><label class="nastaveni-popisek" for="vyska">výška pyramidy</label><div class="pole"><select id="vyska" aria-label="Počet poschodí pyramidy"><option value="2">2 poschodí</option><option value="3">3 poschodí</option><option value="4">4 poschodí</option><option value="5">5 poschodí</option><option value="6">6 poschodí</option><option value="7" selected>7 poschodí</option></select></div><label class="nastaveni-popisek" for="cifry">počet cifer</label><div class="pole"><select id="cifry" aria-label="Počet cifer spodního řádku"><option value="1">1 cifra</option><option value="2" selected>2 cifry</option><option value="3">3 cifry</option><option value="4">4 cifry</option><option value="5">5 cifer</option><option value="6">6 cifer</option><option value="7">7 cifer</option><option value="8">8 cifer</option></select></div><label class="nastaveni-popisek" for="znamenko">sčítání - sčítání+odčítání</label><div class="pole"><select id="znamenko" aria-label="Typ čísel spodního řádku"><option value="p">+</option><option value="pm">+ -</option></select></div></div></div></section>
 <div id="hlaska" class="hlaska"></div><div class="herni-plocha" id="herniPlocha"><div class="postranni-tlacitko vlevo"><button id="start" class="akce" type="button">S T A R T</button></div><div class="pyramida" id="pyramida"></div><div id="prekryvPanel" class="prekryv-panel"><div class="prekryv-horni-wrap"><input id="overlayAktivni" class="prekryv-input" type="text" inputmode="numeric"></div><div class="prekryv-spodni-wrap"><input id="overlayLevy" class="prekryv-input" type="text" readonly tabindex="-1"><input id="overlayPravy" class="prekryv-input" type="text" readonly tabindex="-1"></div></div><div class="postranni-tlacitko vpravo"><button id="konec" class="akce konec" type="button">K O N E C</button></div></div><div id="historie" class="historie"></div></main>
 
 <script>
@@ -38,6 +44,15 @@ cis=v=>Number(String(v).replace(/\s/g,'')),
 pole=(r,i)=>pyramida.querySelector(`input[data-r="${r}"][data-i="${i}"]`);
 
 function jeMobil(){return window.matchMedia('(pointer: coarse)').matches}
+function jeNastaveniOtevrene(){return !nastaveni.classList.contains('zavreno')}
+
+function nastavStavNastaveni(){
+  let otevreno=jeNastaveniOtevrene();
+  start.disabled=otevreno;
+  konec.disabled=otevreno;
+  nastaveniToggle.classList.toggle('aktivni',otevreno);
+  nastaveniToggle.setAttribute('aria-label',otevreno?'Zavřít nastavení':'Otevřít nastavení');
+}
 
 function kurzorNaKonecInputu(){
   overlayAktivni.focus({preventScroll:false});
@@ -46,6 +61,7 @@ function kurzorNaKonecInputu(){
 }
 
 function prepniMinusVInputu(){
+  if(jeNastaveniOtevrene())return;
   if(!jeMobil())return;
   if(znamenko.value!=='pm')return;
   if(!hraBezi)return;
@@ -106,6 +122,7 @@ function nastavPrekryvPozici(){
 }
 
 function zobrazPrekryv(){
+  if(jeNastaveniOtevrene())return;
   if(aktivniRadek==null)return;
   nastavPismoOverlay();
   let a=pole(aktivniRadek,aktivniIndex),l=pole(aktivniRadek+1,aktivniIndex),p=pole(aktivniRadek+1,aktivniIndex+1);
@@ -120,7 +137,7 @@ function zobrazPrekryv(){
   overlayPravy.style.width=wSpodni+'px';
   nastavPrekryvPozici();
   prekryvPanel.classList.add('zobrazen');
-  setTimeout(()=>{start.blur();overlayAktivni.focus({preventScroll:false});overlayAktivni.select()},80);
+  setTimeout(()=>{if(!jeNastaveniOtevrene()){start.blur();overlayAktivni.focus({preventScroll:false});overlayAktivni.select()}},80);
 }
 
 function skryjPrekryv(){prekryvPanel.classList.remove('zobrazen');overlayAktivni.value=overlayLevy.value=overlayPravy.value='';overlayAktivni.classList.remove('spatne','spravne')}
@@ -156,6 +173,7 @@ function vytvor(gen){
 }
 
 function kontrola(){
+  if(jeNastaveniOtevrene())return;
   hlaska.textContent='';
   let hodnota=overlayAktivni.value;
   overlayAktivni.classList.remove('spatne');
@@ -198,6 +216,7 @@ function kontrola(){
 function konecHry(){hraBezi=0;aktivniRadek=aktivniIndex=null;hlaska.textContent='';start.textContent='S T A R T';skryjPrekryv();vytvor(0)}
 
 function spolecnaAkceEnterDalsi(){
+  if(jeNastaveniOtevrene())return;
   if(akceBezi)return;
   akceBezi=true;
   mazani();
@@ -208,6 +227,7 @@ function spolecnaAkceEnterDalsi(){
 }
 
 overlayAktivni.addEventListener('pointerdown',e=>{
+  if(jeNastaveniOtevrene())return;
   if(jeMobil()&&znamenko.value==='pm'&&hraBezi&&aktivniRadek!=null){
     e.preventDefault();
     prepniMinusVInputu();
@@ -215,6 +235,7 @@ overlayAktivni.addEventListener('pointerdown',e=>{
 });
 
 overlayAktivni.addEventListener('input',function(){
+  if(jeNastaveniOtevrene())return;
   this.classList.remove('spatne');
   let b=this.value.replace(/\s/g,'');
   if(/^-?\d*$/.test(b)){
@@ -226,7 +247,15 @@ overlayAktivni.addEventListener('input',function(){
   }
 });
 
-nastaveniToggle.onclick=()=>{mazani();nastaveni.classList.toggle('zavreno');uloz()};
+nastaveniToggle.onclick=()=>{
+  mazani();
+  nastaveni.classList.toggle('zavreno');
+  nastavStavNastaveni();
+  if(!jeNastaveniOtevrene()&&hraBezi)zobrazPrekryv();
+  if(jeNastaveniOtevrene())skryjPrekryv();
+  uloz();
+};
+
 [vyska,cifry,znamenko].forEach(e=>e.onchange=()=>{mazani();uloz();konecHry()});
 mazaniHistorie.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();mazani()}};
 
@@ -242,7 +271,7 @@ start.onclick=e=>{
   spolecnaAkceEnterDalsi();
 };
 
-konec.onclick=()=>{mazani();konecHry()};
+konec.onclick=()=>{if(jeNastaveniOtevrene())return;mazani();konecHry()};
 rezim.onclick=()=>{mazani();document.body.classList.toggle('dark');rezim.textContent=document.body.classList.contains('dark')?'☀️':'🌙';uloz()};
 
 document.onkeydown=e=>{
@@ -252,6 +281,6 @@ document.onkeydown=e=>{
   }
 };
 
-window.onresize=()=>{if(hraBezi)zobrazPrekryv()};
-nacti();nactiHistorii();vytvor(0);
+window.onresize=()=>{if(hraBezi&&!jeNastaveniOtevrene())zobrazPrekryv()};
+nacti();nactiHistorii();vytvor(0);nastavStavNastaveni();
 </script></body></html>
