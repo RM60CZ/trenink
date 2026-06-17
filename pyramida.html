@@ -89,7 +89,26 @@ const $=i=>document.getElementById(i),
 
 let hraBezi=0,aktivniRadek=null,aktivniIndex=null,vysledky=[],akceBezi=false;
 
-const mapaCZ={'+':'1','ě':'2','š':'3','č':'4','ř':'5','ž':'6','ý':'7','á':'8','í':'9','é':'0','Ě':'2','Š':'3','Č':'4','Ř':'5','Ž':'6','Ý':'7','Á':'8','Í':'9','É':'0'};
+/*
+  Převod znaku na číslice:
+  - na CZ klávesnici vznikají pro Shift+čísla znaky jako Ě(=2) a Ř(=5)
+  - na SK klávesnici vznikají místo nich znaky Ľ(=2) a Ť(=5)
+  Proto mapujeme obě varianty → stejné číslo.
+*/
+const mapaCZ={
+  '+':'1',
+  'ě':'2','Ě':'2',        // CZ 2
+  'ľ':'2','Ľ':'2',        // SK 2 (alternativa)
+  'š':'3','Š':'3',
+  'č':'4','Č':'4',
+  'ř':'5','Ř':'5',        // CZ 5
+  'ť':'5','Ť':'5',        // SK 5 (alternativa)
+  'ž':'6','Ž':'6',
+  'ý':'7','Ý':'7',
+  'á':'8','Á':'8',
+  'í':'9','Í':'9',
+  'é':'0','É':'0'
+};
 
 const dnes=()=>{let d=new Date;return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 
@@ -402,7 +421,7 @@ function vycistiVstup(v){
     if(ch===' ')continue;
     if(/[0-9]/.test(ch))out+=ch;
     else if(ch==='-'&&out.indexOf('-')<0&&out.length===0)out+='-';
-    else if(mapaCZ[ch])out+=mapaCZ[ch];
+    else if(mapaCZ[ch])out+=mapaCZ[ch]; // tady funguje i SK alternativa (Ľ/ľ, Ť/ť)
     else spatne=true
   }
   return{v:fmt(out),spatne}
@@ -442,9 +461,10 @@ function zkusAuto(){
 
 function smazPosledni(){
   if(!hraBezi||aktivniRadek==null)return;
-  let f=overlayAktivni.value;
-  let s=overlayAktivni.selectionStart ?? f.length;
-  let e=overlayAktivni.selectionEnd ?? f.length;
+  overlayAktivni.focus();
+  let f=overlayAktivni.value,
+      s=overlayAktivni.selectionStart ?? f.length,
+      e=overlayAktivni.selectionEnd ?? f.length;
 
   let v=raw(f),
       rs=rawPozice(f,s),
@@ -453,11 +473,9 @@ function smazPosledni(){
   let novyPos=rs;
 
   if(rs!==re){
-    // smazat výběr
     v=v.slice(0,rs)+v.slice(re);
     novyPos=rs;
   }else if(rs>0){
-    // smazat znak před kurzorem
     v=v.slice(0,rs-1)+v.slice(rs);
     novyPos=rs-1;
   }
@@ -473,7 +491,6 @@ function prepniMinus(){
   if(!hraBezi||aktivniRadek==null)return;
   overlayAktivni.focus();
 
-  // pokud je vypnuté +-, tlačítko by nemělo být vidět, ale pro jistotu blokneme i tady:
   if(znamenko.value!=='pm') return;
 
   let f=overlayAktivni.value;
@@ -499,8 +516,6 @@ function vlozNaKurzor(k){
   if(!hraBezi||aktivniRadek==null)return;
   overlayAktivni.focus();
 
-  // číslice (včetně vložení '0') musí jít do pozice kurzoru
-  // a kurzor má hned skočit za vloženou číslici.
   let f=overlayAktivni.value;
   let s=overlayAktivni.selectionStart ?? f.length;
   let e=overlayAktivni.selectionEnd ?? f.length;
@@ -509,14 +524,12 @@ function vlozNaKurzor(k){
       rs=rawPozice(f,s),
       re=rawPozice(f,e);
 
-  // smaž výběr (pokud je) a vlož k na pozici rs
   v=v.slice(0,rs)+k+v.slice(re);
 
   overlayAktivni.value=fmt(v);
   overlayAktivni.classList.remove('spravne');
   hlaska.textContent='';
 
-  // kurzor posuneme za vložený znak
   nastavKurzorRaw(rs+1);
   zkusAuto()
 }
@@ -572,7 +585,6 @@ function kalkVloz(k){
   vlozNaKurzor(k)
 }
 
-// Input chování: vkládání/mazání musí respektovat kurzor/selection
 overlayAktivni.oninput=function(){
   let posRaw=rawPozice(this.value,this.selectionStart ?? this.value.length);
   let r=vycistiVstup(this.value);
@@ -583,20 +595,8 @@ overlayAktivni.oninput=function(){
   zkusAuto()
 };
 
-// UCHOVÁNO: žádné automatické přepínání minus při tapnutí na input.
-// (tohle bylo odstraněné podle předchozího požadavku)
-
-// Přepínání minus tlačítkem
-minusHlavni.onpointerdown=e=>{
-  e.preventDefault();
-  prepniMinus()
-};
-
-// Backspace dle pozice kurzoru/výběru
-backHlavni.onpointerdown=e=>{
-  e.preventDefault();
-  smazPosledni()
-};
+backHlavni.onpointerdown=e=>{e.preventDefault();smazPosledni()};
+minusHlavni.onpointerdown=e=>{e.preventDefault();prepniMinus()};
 
 kalkToggle.onclick=()=>{
   mazani();
