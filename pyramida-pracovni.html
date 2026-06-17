@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Pyramida</title>
 <style>
-:root{--bg:#c9ced6;--card:#d9dde4;--text:#172033;--p:#4f46e5;--p2:#818cf8;--inp:#e3e6eb;--bd:#a4adbd;--dis:#cfd4dc;--bot:#facc15;--botbg:#e4dfc7;--ok:#16a34a;--err:#dc2626;--act:#dce1ef}body.dark{--bg:#0f172a;--card:#1e293b;--text:#f8fafc;--p:#818cf8;--p2:#a5b4fc;--inp:#111827;--bd:#475569;--dis:#1e293b;--bot:#eab308;--botbg:#292517;--ok:#22c55e;--err:#f87171;--act:#1e1b4b}*{box-sizing:border-box}body{font-family:Arial,sans-serif;min-height:100vh;margin:0;color:var(--text);background:linear-gradient(135deg,var(--bg),#b7bec8);display:flex;justify-content:center;padding:18px 10px}.aplikace{position:relative;width:min(100%,860px);background:var(--card);border-radius:28px;padding:24px 14px 30px;box-shadow:0 24px 60px #0002;overflow:hidden}.hlavicka{position:relative;display:flex;align-items:center;gap:10px;margin-bottom:4px;padding-right:130px}h1{margin:0;font-size:clamp(26px,6vw,42px);letter-spacing:-.04em;white-space:nowrap}.kalk-toggle,.nastaveni-kolo,.rezim{position:absolute;top:0;width:36px;height:36px;border:2px solid transparent;border-radius:10px;font-size:25px;cursor:pointer;background:transparent;display:flex;align-items:center;justify-content:center}.kalk-toggle,.nastaveni-kolo{color:#6b7280}.rezim{color:inherit}.kalk-toggle{right:84px;font-size:24px;font-weight:900;font-family:Arial,sans-serif}.nastaveni-kolo{right:42px}.rezim{right:0}.nastaveni-kolo.aktivni,.kalk-toggle.aktivni{border-color:var(--err)}.panel-nastaveni{overflow:hidden;max-height:190px;opacity:1;transition:.25s}.nastaveni.zavreno .panel-nastaveni{max-height:0;opacity:0}.nastaveni-radky{display:grid;grid-template-columns:max-content max-content;justify-content:center;align-items:center;gap:8px 10px;margin:8px auto 0}.nastaveni-popisek{font-size:clamp(17px,4.4vw,22px);font-weight:900}.pole{border:1px solid #94a3b880;border-radius:999px;padding:2px 3px;width:clamp(132px,34vw,168px)}select{width:100%;color:var(--text);background:var(--inp);border:1px solid var(--bd);border-radius:999px;font-size:clamp(16px,4vw,20px);font-weight:800;padding:8px;text-align:center}.mazani-historie{width:76px;height:34px;border-radius:999px;border:1px solid var(--bd);background:var(--inp);color:var(--inp);caret-color:var(--p);font-size:14px;text-align:center}.mazani-historie::placeholder{color:var(--inp)}.mazani-historie:focus{outline:0;border-color:var(--p)}.hlaska{min-height:22px;margin:2px 0 8px;color:var(--err);font-size:15px;font-weight:800;text-align:center}.herni-plocha{position:relative;width:100%;overflow:visible}.postranni-tlacitko{position:absolute;top:0;z-index:5}.postranni-tlacitko.vpravo{left:calc(50% + 82px)}.pyramida{display:flex;flex-direction:column;align-items:center;gap:clamp(5px,1.5vw,10px);min-height:40px}.radek{display:flex;justify-content:center;gap:clamp(3px,1vw,8px);width:100%}.bunka-slot{flex:0 0 clamp(34px,11vw,80px);width:clamp(34px,11vw,80px);height:clamp(40px,11vw,58px)}.bunka-slot input{width:100%;height:100%;color:var(--text);background:var(--inp);font-size:clamp(14px,3.8vw,20px);font-weight:700;text-align:center;border:2px solid var(--bd);border-radius:14px;padding:0 4px}.bunka-slot input.spodni{border-color:var(--bot);background:var(--botbg)}.bunka-slot input.zamcene{background:var(--dis);opacity:.45}.bunka-slot input.spravne{border-color:var(--ok);box-shadow:0 0 0 4px #22c55e2e;opacity:1}.prekryv-panel{position:absolute;left:50%;transform:translateX(-50%);z-index:80;display:none;flex-direction:column;align-items:center;gap:8px;pointer-events:none;width:100%;max-width:calc(100vw - 16px)}.prekryv-panel.zobrazen{display:flex}.prekryv-horni-wrap{position:relative;width:100%;display:block;pointer-events:none;--polovina-vstupu:70px}.prekryv-spodni-wrap{display:flex;justify-content:center;max-width:calc(100vw - 16px);overflow:hidden}.prekryv-input{height:clamp(58px,15vw,82px);color:var(--text);background:var(--inp);font-size:clamp(20px,4.7vw,30px);font-weight:800;text-align:center;border:2px solid var(--bd);border-radius:15px;padding:0 8px;box-shadow:0 8px 20px #0002;pointer-events:auto;min-width:0}.prekryv-input:focus{outline:0;border-color:var(--p)}#overlayAktivni{background:var(--act);border-color:var(--p);display:block;margin:0 auto}#overlayLevy{border-radius:15px 0 0 15px}#overlayPravy{border-radius:0 15px 15px 0}.prekryv-input.spravne{border-color:var(--ok)!important}.back-btn,.minus-btn{position:absolute;top:50%;transform:translateY(-50%);height:clamp(58px,15vw,82px);width:clamp(50px,14vw,76px);border:0;background:transparent;color:var(--text);font-size:clamp(19px,5vw,28px);font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;pointer-events:auto;padding:0 0 2px;box-shadow:none}.back-btn{left:calc(50% + var(--polovina-vstupu) + 8px)}.minus-btn{right:calc(50% + var(--polovina-vstupu) + 8px)}.back-btn:active,.minus-btn:active{color:var(--p);background:transparent}.kalk-panel{position:absolute;left:50%;transform:translateX(-50%);z-index:70;display:none;grid-template-columns:repeat(3,64px);gap:8px;padding:12px;background:var(--card);border:1px solid var(--bd);border-radius:18px;box-shadow:0 18px 38px #0003}.kalk-panel.zobrazen{display:grid}.kalk-panel button{height:52px;border:1px solid var(--bd);border-radius:14px;background:var(--inp);color:var(--text);font-size:25px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}.kalk-panel button[data-k="0"]{grid-column:span 2}.kalk-panel button:active{background:var(--act);border-color:var(--p)}.akce{min-width:150px;border:0;color:#fff;background:linear-gradient(135deg,var(--p),var(--p2));border-radius:999px;font-size:17px;font-weight:900;letter-spacing:.28em;cursor:pointer;padding:12px 24px}.akce:disabled{opacity:.45}.historie{min-height:24px;margin:14px auto 0;text-align:center;font-size:16px;font-weight:900;color:var(--text);max-width:100%;width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.7}.historie .hist-ok{color:var(--ok);display:inline-block;margin:0 8px 6px}.ohnostroj{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9999}.jiskra{position:absolute;left:var(--x);top:var(--y);width:8px;height:8px;border-radius:50%;background:hsl(var(--h),95%,60%);animation:j .75s ease-out forwards}@keyframes j{to{transform:translate(var(--dx),var(--dy)) scale(.1);opacity:0}}@media(max-width:760px){.herni-plocha{padding-top:54px}.postranni-tlacitko.vpravo{left:50%;transform:translateX(-50%)}.kalk-toggle,.kalk-panel{display:none!important}.hlavicka{padding-right:88px}}@media(max-width:480px){body{padding:10px 6px}.aplikace{padding:14px 8px 24px}.hlavicka{padding-right:74px}h1{font-size:clamp(24px,7vw,30px)}.bunka-slot{flex:0 0 calc((100vw - 56px)/7);width:calc((100vw - 56px)/7);height:calc((100vw - 56px)/7);max-width:52px;max-height:52px}.akce{min-width:136px;font-size:15px;padding:11px 18px}.back-btn,.minus-btn{width:clamp(46px,13vw,64px);font-size:clamp(36px,10vw,50px);padding:0}.back-btn{left:calc(50% + var(--polovina-vstupu) + 4px)}.minus-btn{right:calc(50% + var(--polovina-vstupu) + 4px)}}
+:root{--bg:#c9ced6;--card:#d9dde4;--text:#172033;--p:#4f46e5;--p2:#818cf8;--inp:#e3e6eb;--bd:#a4adbd;--dis:#cfd4dc;--bot:#facc15;--botbg:#e4dfc7;--ok:#16a34a;--err:#dc2626;--act:#dce1ef}body.dark{--bg:#0f172a;--card:#1e293b;--text:#f8fafc;--p:#818cf8;--p2:#a5b4fc;--inp:#111827;--bd:#475569;--dis:#1e293b;--bot:#eab308;--botbg:#292517;--ok:#22c55e;--err:#f87171;--act:#1e1b4b}*{box-sizing:border-box}body{font-family:Arial,sans-serif;min-height:100vh;margin:0;color:var(--text);background:linear-gradient(135deg,var(--bg),#b7bec8);display:flex;justify-content:center;padding:18px 10px}.aplikace{position:relative;width:min(100%,860px);background:var(--card);border-radius:28px;padding:24px 14px 30px;box-shadow:0 24px 60px #0002;overflow:hidden}.hlavicka{position:relative;display:flex;align-items:center;gap:10px;margin-bottom:4px;padding-right:170px}h1{margin:0;font-size:clamp(26px,6vw,42px);letter-spacing:-.04em;white-space:nowrap}.kalk-toggle,.nastaveni-kolo,.rezim{position:absolute;top:0;width:36px;height:36px;border:2px solid transparent;border-radius:10px;font-size:25px;cursor:pointer;background:transparent;display:flex;align-items:center;justify-content:center}.kalk-toggle,.nastaveni-kolo{color:#6b7280}.rezim{color:inherit}.kalk-toggle{right:84px;font-size:24px;font-weight:900;font-family:Arial,sans-serif}.nastaveni-kolo{right:42px}.rezim{right:0}.nastaveni-kolo.aktivni,.kalk-toggle.aktivni{border-color:var(--err)}.panel-nastaveni{overflow:hidden;max-height:190px;opacity:1;transition:.25s}.nastaveni.zavreno .panel-nastaveni{max-height:0;opacity:0}.nastaveni-radky{display:grid;grid-template-columns:max-content max-content;justify-content:center;align-items:center;gap:8px 10px;margin:8px auto 0}.nastaveni-popisek{font-size:clamp(17px,4.4vw,22px);font-weight:900}.pole{border:1px solid #94a3b880;border-radius:999px;padding:2px 3px;width:clamp(132px,34vw,168px)}select{width:100%;color:var(--text);background:var(--inp);border:1px solid var(--bd);border-radius:999px;font-size:clamp(16px,4vw,20px);font-weight:800;padding:8px;text-align:center}.mazani-historie{width:76px;height:34px;border-radius:999px;border:1px solid var(--bd);background:var(--inp);color:var(--inp);caret-color:var(--p);font-size:14px;text-align:center}.mazani-historie::placeholder{color:var(--inp)}.mazani-historie:focus{outline:0;border-color:var(--p)}.hlaska{min-height:22px;margin:2px 0 8px;color:var(--err);font-size:15px;font-weight:800;text-align:center}.herni-plocha{position:relative;width:100%;overflow:visible}.postranni-tlacitko{position:absolute;top:0;z-index:5}.postranni-tlacitko.vpravo{left:calc(50% + 82px)}.pyramida{display:flex;flex-direction:column;align-items:center;gap:clamp(5px,1.5vw,10px);min-height:40px}.radek{display:flex;justify-content:center;gap:clamp(3px,1vw,8px);width:100%}.bunka-slot{flex:0 0 clamp(34px,11vw,80px);width:clamp(34px,11vw,80px);height:clamp(40px,11vw,58px)}.bunka-slot input{width:100%;height:100%;color:var(--text);background:var(--inp);font-size:clamp(14px,3.8vw,20px);font-weight:700;text-align:center;border:2px solid var(--bd);border-radius:14px;padding:0 4px}.bunka-slot input.spodni{border-color:var(--bot);background:var(--botbg)}.bunka-slot input.zamcene{background:var(--dis);opacity:.45}.bunka-slot input.spravne{border-color:var(--ok);box-shadow:0 0 0 4px #22c55e2e;opacity:1}.prekryv-panel{position:absolute;left:50%;transform:translateX(-50%);z-index:80;display:none;flex-direction:column;align-items:center;gap:8px;pointer-events:none;width:100%;max-width:calc(100vw - 16px)}.prekryv-panel.zobrazen{display:flex}.prekryv-horni-wrap{position:relative;width:100%;display:block;pointer-events:none;--polovina-vstupu:70px}.prekryv-spodni-wrap{display:flex;justify-content:center;max-width:calc(100vw - 16px);overflow:hidden}.prekryv-input{height:clamp(58px,15vw,82px);color:var(--text);background:var(--inp);font-size:clamp(20px,4.7vw,30px);font-weight:800;text-align:center;border:2px solid var(--bd);border-radius:15px;padding:0 8px;box-shadow:0 8px 20px #0002;pointer-events:auto;min-width:0}.prekryv-input:focus{outline:0;border-color:var(--p)}#overlayAktivni{background:var(--act);border-color:var(--p);display:block;margin:0 auto}#overlayLevy{border-radius:15px 0 0 15px}#overlayPravy{border-radius:0 15px 15px 0}.prekryv-input.spravne{border-color:var(--ok)!important}.back-btn,.minus-btn{position:absolute;top:50%;transform:translateY(-50%);height:clamp(58px,15vw,82px);width:clamp(50px,14vw,76px);border:0;background:transparent;color:var(--text);font-size:clamp(19px,5vw,28px);font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;pointer-events:auto;padding:0 0 2px;box-shadow:none}.back-btn{left:calc(50% + var(--polovina-vstupu) + 8px)}.minus-btn{right:calc(50% + var(--polovina-vstupu) + 8px)}.back-btn:active,.minus-btn:active{color:var(--p);background:transparent}.kalk-panel{position:absolute;left:50%;transform:translateX(-50%);z-index:70;display:none;grid-template-columns:repeat(3,64px);gap:8px;padding:12px;background:var(--card);border:1px solid var(--bd);border-radius:18px;box-shadow:0 18px 38px #0003}.kalk-panel.zobrazen{display:grid}.kalk-panel button{height:52px;border:1px solid var(--bd);border-radius:14px;background:var(--inp);color:var(--text);font-size:25px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}.kalk-panel button[data-k="0"]{grid-column:span 2}.kalk-panel button:active{background:var(--act);border-color:var(--p)}.akce{min-width:150px;border:0;color:#fff;background:linear-gradient(135deg,var(--p),var(--p2));border-radius:999px;font-size:17px;font-weight:900;letter-spacing:.28em;cursor:pointer;padding:12px 24px}.akce:disabled{opacity:.45}.historie{min-height:24px;margin:14px auto 0;text-align:center;font-size:16px;font-weight:900;color:var(--text);max-width:100%;width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.7}.historie .hist-ok{color:var(--ok);display:inline-block;margin:0 8px 6px}.ohnostroj{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9999}.jiskra{position:absolute;left:var(--x);top:var(--y);width:8px;height:8px;border-radius:50%;background:hsl(var(--h),95%,60%);animation:j .75s ease-out forwards}@keyframes j{to{transform:translate(var(--dx),var(--dy)) scale(.1);opacity:0}}.hlas-toggle{position:absolute;top:0;right:126px;height:36px;padding:0 10px;border:2px solid transparent;border-radius:10px;background:transparent;color:#6b7280;cursor:pointer;font-weight:900;display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px}.hlas-toggle.aktivni{border-color:var(--p);color:var(--p)}.hlas-dot{width:10px;height:10px;border-radius:50%;background:#94a3b8;box-shadow:0 0 0 3px #94a3b822}.hlas-toggle.aktivni .hlas-dot{background:var(--p);box-shadow:0 0 0 3px #818cf822}@media(max-width:760px){.herni-plocha{padding-top:54px}.postranni-tlacitko.vpravo{left:50%;transform:translateX(-50%)}.kalk-toggle,.kalk-panel{display:none!important}.hlas-toggle{display:none!important}.hlavicka{padding-right:88px}}@media(max-width:480px){body{padding:10px 6px}.aplikace{padding:14px 8px 24px}.hlavicka{padding-right:74px}h1{font-size:clamp(24px,7vw,30px)}.bunka-slot{flex:0 0 calc((100vw - 56px)/7);width:calc((100vw - 56px)/7);height:calc((100vw - 56px)/7);max-width:52px;max-height:52px}.akce{min-width:136px;font-size:15px;padding:11px 18px}.back-btn,.minus-btn{width:clamp(46px,13vw,64px);font-size:clamp(36px,10vw,50px);padding:0}.back-btn{left:calc(50% + var(--polovina-vstupu) + 4px)}.minus-btn{right:calc(50% + var(--polovina-vstupu) + 4px)}}
 </style>
 </head>
 
@@ -15,6 +15,12 @@
 <h1>Pyramida</h1>
 <input id="mazaniHistorie" class="mazani-historie" placeholder="Vymazat">
 <button id="kalkToggle" class="kalk-toggle">K</button>
+
+<button id="hlasToggle" class="hlas-toggle" type="button" aria-pressed="false" title="Hlas (vypnuto při startu)">
+  <span class="hlas-dot"></span>
+  <span>Hlas</span>
+</button>
+
 <button id="nastaveniToggle" class="nastaveni-kolo">⚙️</button>
 <button id="rezim" class="rezim">🌙</button>
 </header>
@@ -80,6 +86,7 @@ const $=i=>document.getElementById(i),
   znamenko=$('znamenko'),
   rezim=$('rezim'),
   start=$('start'),
+  hlasToggle=$('hlasToggle'),
   nastaveni=$('nastaveni'),
   nastaveniToggle=$('nastaveniToggle'),
   mazaniHistorie=$('mazaniHistorie'),
@@ -373,6 +380,17 @@ function vytvor(gen,data=null){
   }
 }
 
+function vycistiVstup(v){
+  let out='',spatne=false;
+  for(let ch of String(v)){
+    if(ch===' ')continue;
+    if(/[0-9]/.test(ch))out+=ch;
+    else if(ch==='-'&&out.indexOf('-')<0&&out.length===0)out+='-';
+    else if(mapaCZ[ch])out+=mapaCZ[ch]; // tady funguje i SK alternativa (Ľ/ľ, Ť/ť)
+    else spatne=true
+  }
+  return{v:fmt(out),spatne}
+}
 function vyplneneBunky(){
   let R=+vyska.value,o=[];
   for(let r=1;r<R;r++){
@@ -413,18 +431,6 @@ function obnovHru(){
     smazHru();
     return false
   }
-}
-
-function vycistiVstup(v){
-  let out='',spatne=false;
-  for(let ch of String(v)){
-    if(ch===' ')continue;
-    if(/[0-9]/.test(ch))out+=ch;
-    else if(ch==='-'&&out.indexOf('-')<0&&out.length===0)out+='-';
-    else if(mapaCZ[ch])out+=mapaCZ[ch]; // tady funguje i SK alternativa (Ľ/ľ, Ť/ť)
-    else spatne=true
-  }
-  return{v:fmt(out),spatne}
 }
 
 function zkusAuto(){
@@ -663,6 +669,248 @@ nacti();
 nactiHistorii();
 if(!obnovHru())vytvor(0);
 nastavStavNastaveni();
+
+/* =========================
+   HLASOVÝ VSTUP (WebSpeech)
+   ========================= */
+
+const VOICE_ERROR_TEXT = 'Zadejte správně znovu!';
+
+let recognition = null;
+let hlasZapnuto = false;
+
+// draft = jen číslice bez znaménka
+let voiceDraft = '';
+let voiceHasMinus = false;
+let voiceCommitBusy = false;
+
+function normalizeCS(s){
+  return String(s||'')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')   // bez diakritiky
+    .replace(/ctyr\s*i/g,'ctyri')     // oprava typické chyby v uznání
+    .replace(/[^a-z0-9\s-]/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function tokensFromTranscript(t){
+  const n = normalizeCS(t);
+  if(!n) return [];
+  return n.split(' ').filter(Boolean);
+}
+
+function isTecka(tok){
+  const t = normalizeCS(tok);
+  return t === 'tecka' || t === 'teck' || t === 'tecka.' || t === 'teckou';
+}
+function isZpet(tok){
+  const t = normalizeCS(tok);
+  return t === 'zpet' || t === 'zpět' || t === 'zpet.' || t === 'zpet↩';
+}
+function isMinus(tok){
+  const t = normalizeCS(tok);
+  return ['minus','mene','mense','minusu','mens','minusu','mene.','mense.'].includes(t);
+}
+
+const DIGIT_MAP = new Map([
+  ['0','0'],['1','1'],['2','2'],['3','3'],['4','4'],['5','5'],['6','6'],['7','7'],['8','8'],['9','9'],
+  ['nula', '0'],
+  ['jedna','1'],
+  ['jedno','1'],
+  ['dva','2'],
+  ['dve','2'],
+  ['tri','3'],
+  ['ctyri','4'],
+  ['ctyr','4'],
+  ['pet','5'],
+  ['sest','6'],
+  ['sedm','7'],
+  ['osm','8'],
+  ['devet','9']
+]);
+
+function resetVoiceState(){
+  voiceDraft = '';
+  voiceHasMinus = false;
+}
+
+function showVoiceErrorAndClearSlot(){
+  // voice chyby: text přesně podle dohody, a slot se vymaže
+  hlaska.textContent = VOICE_ERROR_TEXT;
+
+  overlayAktivni.classList.remove('spravne');
+  overlayAktivni.value = '';
+  try{ overlayAktivni.setSelectionRange(0,0); }catch{}
+
+  resetVoiceState();
+}
+
+function setOverlayToNumber(n){
+  overlayAktivni.classList.remove('spravne');
+  overlayAktivni.value = fmt(n);
+  try{
+    const p = overlayAktivni.value.length;
+    overlayAktivni.setSelectionRange(p,p);
+  }catch{}
+  hlaska.textContent = '';
+  zkusAuto();
+}
+
+function commitVoice(){
+  if(!hraBezi || aktivniRadek==null){
+    resetVoiceState();
+    return;
+  }
+  if(voiceCommitBusy) return;
+  voiceCommitBusy = true;
+
+  try{
+    const numStr = voiceDraft;
+    const czMode = znamenko.value; // 'p' nebo 'pm'
+
+    // "minus tečka" (bez čísla)
+    if(numStr === ''){
+      if(voiceHasMinus){
+        if(czMode === 'p'){
+          // v '+' režimu se "minus tečka" ignoruje
+          resetVoiceState();
+          hlaska.textContent='';
+          return;
+        }else{
+          // + - režim: konzervativně bereme jako hlasovou chybu
+          showVoiceErrorAndClearSlot();
+          return;
+        }
+      }
+      resetVoiceState();
+      return;
+    }
+
+    const num = Number(numStr);
+    if(!Number.isFinite(num) || num < 0 || num > 999){
+      showVoiceErrorAndClearSlot();
+      return;
+    }
+
+    if(voiceHasMinus){
+      if(czMode === 'p'){
+        // v '+' režimu "minus [číslo] tečka" = chyba + vymaže slot
+        showVoiceErrorAndClearSlot();
+        return;
+      }else{
+        setOverlayToNumber(-num);
+      }
+    }else{
+      setOverlayToNumber(num);
+    }
+  } finally {
+    resetVoiceState();
+    voiceCommitBusy = false;
+  }
+}
+
+function appendDigit(d){
+  if(voiceDraft.length >= 3){
+    showVoiceErrorAndClearSlot();
+    return;
+  }
+  voiceDraft += d;
+}
+
+function parseToken(tok){
+  if(isZpet(tok)){
+    resetVoiceState();
+    smazPosledni();
+    return;
+  }
+  if(isTecka(tok)){
+    commitVoice();
+    return;
+  }
+  if(isMinus(tok)){
+    voiceHasMinus = true;
+    return;
+  }
+  // číslice / číslovky
+  const t = normalizeCS(tok);
+  if(DIGIT_MAP.has(t)){
+    appendDigit(DIGIT_MAP.get(t));
+  }
+}
+
+function startHlas(){
+  if(hlasZapnuto) return;
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){
+    hlaska.textContent = 'Hlas není v tomto prohlížeči podporován.';
+    hlasToggle.disabled = true;
+    return;
+  }
+
+  recognition = new SR();
+  recognition.lang = 'cs-CZ';
+  recognition.interimResults = false;
+  recognition.continuous = true;
+
+  recognition.onresult = (event) => {
+    const res = event.results[event.results.length - 1];
+    const transcript = res && res[0] ? res[0].transcript : '';
+    if(!transcript) return;
+
+    const toks = tokensFromTranscript(transcript);
+    for(const tok of toks){
+      parseToken(tok);
+    }
+  };
+
+  recognition.onerror = () => {
+    // při chybě jen zkus restart (hlášku ukazujeme primárně při "voice chybách" z pravidel)
+  };
+
+  recognition.onend = () => {
+    if(hlasZapnuto){
+      try{ recognition.start(); }catch{}
+    }
+  };
+
+  try{
+    recognition.start();
+    hlasZapnuto = true;
+    hlasToggle.classList.add('aktivni');
+    hlasToggle.setAttribute('aria-pressed','true');
+  }catch{
+    hlasZapnuto = false;
+    hlasToggle.classList.remove('aktivni');
+    hlasToggle.setAttribute('aria-pressed','false');
+  }
+}
+
+function stopHlas(){
+  hlasZapnuto = false;
+  try{ recognition && recognition.stop(); }catch{}
+  recognition = null;
+  hlasToggle.classList.remove('aktivni');
+  hlasToggle.setAttribute('aria-pressed','false');
+  resetVoiceState();
+}
+
+hlasToggle.disabled = false;
+stopHlas(); // na startu vždy vypnuté
+
+hlasToggle.onclick = () => {
+  mazani(); // navazující chování jako u ostatních tlačítek
+  if(hlasZapnuto){
+    stopHlas();
+  }else{
+    resetVoiceState();
+    hlaska.textContent = '';
+    startHlas();
+  }
+};
+
 </script>
 </body>
 </html>
