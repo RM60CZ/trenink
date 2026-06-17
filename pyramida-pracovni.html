@@ -1,117 +1,38 @@
-<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pyramida</title><style>
-:root{--bg:#c9ced6;--card:#d9dde4;--text:#172033;--p:#4f46e5;--p2:#818cf8;--inp:#e3e6eb;--bd:#a4adbd;--dis:#cfd4dc;--bot:#facc15;--botbg:#e4dfc7;--ok:#16a34a;--err:#dc2626;--act:#dce1ef}
-body.dark{--bg:#0f172a;--card:#1e293b;--text:#f8fafc;--p:#818cf8;--p2:#a5b4fc;--inp:#111827;--bd:#475569;--dis:#1e293b;--bot:#eab308;--botbg:#292517;--ok:#22c55e;--err:#f87171;--act:#1e1b4b}
-*{box-sizing:border-box}
-body{font-family:Arial,sans-serif;min-height:100vh;margin:0;color:var(--text);background:linear-gradient(135deg,var(--bg),#b7bec8);display:flex;justify-content:center;padding:18px 10px}
-.aplikace{position:relative;width:min(100%,860px);background:var(--card);border-radius:28px;padding:24px 14px 30px;box-shadow:0 24px 60px #0002;overflow:hidden}
-.hlavicka{position:relative;display:flex;align-items:center;gap:10px;margin-bottom:4px;padding-right:130px}
-h1{margin:0;font-size:clamp(26px,6vw,42px);letter-spacing:-.04em;white-space:nowrap}
-.kalk-toggle,.nastaveni-kolo,.rezim{position:absolute;top:0;width:36px;height:36px;border:2px solid transparent;border-radius:10px;font-size:25px;cursor:pointer;background:transparent;display:flex;align-items:center;justify-content:center}
-.kalk-toggle,.nastaveni-kolo{color:#6b7280}.rezim{color:inherit}
-.kalk-toggle{right:84px;font-size:24px;font-weight:900;font-family:Arial,sans-serif}
-.nastaveni-kolo{right:42px}.rezim{right:0}
-.nastaveni-kolo.aktivni,.kalk-toggle.aktivni{border-color:var(--err)}
-.panel-nastaveni{overflow:hidden;max-height:190px;opacity:1;transition:.25s}
-.nastaveni.zavreno .panel-nastaveni{max-height:0;opacity:0}
-.nastaveni-radky{display:grid;grid-template-columns:max-content max-content;justify-content:center;align-items:center;gap:8px 10px;margin:8px auto 0}
-.nastaveni-popisek{font-size:clamp(17px,4.4vw,22px);font-weight:900}
-.pole{border:1px solid #94a3b880;border-radius:999px;padding:2px 3px;width:clamp(132px,34vw,168px)}
-select{width:100%;color:var(--text);background:var(--inp);border:1px solid var(--bd);border-radius:999px;font-size:clamp(16px,4vw,20px);font-weight:800;padding:8px;text-align:center}
-.mazani-historie{width:76px;height:34px;border-radius:999px;border:1px solid var(--bd);background:var(--inp);color:var(--inp);caret-color:var(--p);font-size:14px;text-align:center}
-.mazani-historie::placeholder{color:var(--inp)}
-.mazani-historie:focus{outline:0;border-color:var(--p)}
-.hlaska{min-height:22px;margin:2px 0 8px;color:var(--err);font-size:15px;font-weight:800;text-align:center}
-.herni-plocha{position:relative;width:100%;overflow:visible}
-.postranni-tlacitko{position:absolute;top:0;z-index:5}
-.postranni-tlacitko.vpravo{left:calc(50% + 82px)}
-.pyramida{display:flex;flex-direction:column;align-items:center;gap:clamp(5px,1.5vw,10px);min-height:40px}
-.radek{display:flex;justify-content:center;gap:clamp(3px,1vw,8px);width:100%}
-.bunka-slot{flex:0 0 clamp(34px,11vw,80px);width:clamp(34px,11vw,80px);height:clamp(40px,11vw,58px)}
-.bunka-slot input{width:100%;height:100%;color:var(--text);background:var(--inp);font-size:clamp(14px,3.8vw,20px);font-weight:700;text-align:center;border:2px solid var(--bd);border-radius:14px;padding:0 4px}
-.bunka-slot input.spodni{border-color:var(--bot);background:var(--botbg)}
-.bunka-slot input.zamcene{background:var(--dis);opacity:.45}
-.bunka-slot input.spravne{border-color:var(--ok);box-shadow:0 0 0 4px #22c55e2e;opacity:1}
-.pre kryv-panel{}
-.pre kryv-panel{}
-.prekryv-panel{position:absolute;left:50%;transform:translateX(-50%);z-index:80;display:none;flex-direction:column;align-items:center;gap:8px;pointer-events:none;width:100%;max-width:calc(100vw - 16px)}
-.prekryv-panel.zobrazen{display:flex}
-.prekryv-horni-wrap{position:relative;width:100%;display:block;pointer-events:none;--polovina-vstupu:70px}
-.prekryv-spodni-wrap{display:flex;justify-content:center;max-width:calc(100vw - 16px);overflow:hidden}
-.prekryv-input{height:clamp(58px,15vw,82px);color:var(--text);background:var(--inp);font-size:clamp(20px,4.7vw,30px);font-weight:800;text-align:center;border:2px solid var(--bd);border-radius:15px;padding:0 8px;box-shadow:0 8px 20px #0002;pointer-events:auto;min-width:0}
-.prekryv-input:focus{outline:0;border-color:var(--p)}
-.prekryv-input.spravne{border-color:var(--ok)!important}
-.back-btn,.minus-btn{position:absolute;top:50%;transform:translateY(-50%);height:clamp(58px,15vw,82px);width:clamp(50px,14vw,76px);border:0;background:transparent;color:var(--text);font-size:clamp(19px,5vw,28px);font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;pointer-events:auto;padding:0 0 2px;box-shadow:none}
-.back-btn{left:calc(50% + var(--polovina-vstupu) + 8px)}
-.minus-btn{right:calc(50% + var(--polovina-vstupu) + 8px)}
-.back-btn:active,.minus-btn:active{color:var(--p);background:transparent}
-.kalk-panel{position:absolute;left:50%;transform:translateX(-50%);z-index:70;display:none;grid-template-columns:repeat(3,64px);gap:8px;padding:12px;background:var(--card);border:1px solid var(--bd);border-radius:18px;box-shadow:0 18px 38px #0003}
-.kalk-panel.zobrazen{display:grid}
-.kalk-panel button{height:52px;border:1px solid var(--bd);border-radius:14px;background:var(--inp);color:var(--text);font-size:25px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
-.kalk-panel button[data-k="0"]{grid-column:span 2}
-.kalk-panel button:active{background:var(--act);border-color:var(--p)}
-.akce{min-width:150px;border:0;color:#fff;background:linear-gradient(135deg,var(--p),var(--p2));border-radius:999px;font-size:17px;font-weight:900;letter-spacing:.28em;cursor:pointer;padding:12px 24px}
-.akce:disabled{opacity:.45}
-.historie{min-height:24px;margin:14px auto 0;text-align:center;font-size:16px;font-weight:900;color:var(--text);max-width:100%;width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.7}
-.historie .hist-ok{color:var(--ok);display:inline-block;margin:0 8px 6px}
-.ohnostroj{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9999}
-.jiskra{position:absolute;left:var(--x);top:var(--y);width:8px;height:8px;border-radius:50%;background:hsl(var(--h),95%,60%);animation:j .75s ease-out forwards}
-@keyframes j{to{transform:translate(var(--dx),var(--dy)) scale(.1);opacity:0}}
-@media(max-width:760px){.herni-plocha{padding-top:54px}.postranni-tlacitko.vpravo{left:50%;transform:translateX(-50%)}.kalk-toggle,.kalk-panel{display:none!important}.hlavicka{padding-right:88px}}
-@media(max-width:480px){body{padding:10px 6px}.aplikace{padding:14px 8px 24px}.hlavicka{padding-right:74px}h1{font-size:clamp(24px,7vw,30px)}.bunka-slot{flex:0 0 calc((100vw - 56px)/7);width:calc((100vw - 56px)/7);height:calc((100vw - 56px)/7);max-width:52px;max-height:52px}.akce{min-width:136px;font-size:15px;padding:11px 18px}.back-btn,.minus-btn{width:clamp(46px,13vw,64px);font-size:clamp(36px,10vw,50px);padding:0}.back-btn{left:calc(50% + var(--polovina-vstupu) + 4px)}.minus-btn{right:calc(50% + var(--polovina-vstupu) + 4px)}}
-</style></head><body>
-<main class="aplikace">
-<header class="hlavicka"><h1>Pyramida</h1>
-<input id="mazaniHistorie" class="mazani-historie" placeholder="Vymazat">
-<button id="kalkToggle" class="kalk-toggle">K</button>
-<button id="nastaveniToggle" class="nastaveni-kolo">⚙️</button>
-<button id="rezim" class="rezim">🌙</button>
-</header>
-
-<section id="nastaveni" class="nastaveni zavreno"><div class="panel-nastaveni"><div class="nastaveni-radky">
-<label class="nastaveni-popisek">výška pyramidy</label>
-<div class="pole"><select id="vyska"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option selected>7</option></select></div>
-<label class="nastaveni-popisek">počet cifer</label>
-<div class="pole"><select id="cifry"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select></div>
-<label class="nastaveni-popisek">sčítání - sčítání+odčítání</label>
-<div class="pole"><select id="znamenko"><option value="p">+</option><option value="pm">+ -</option></select></div>
-</div></div></section>
-
-<div id="hlaska" class="hlaska"></div>
-
-<div class="herni-plocha" id="herniPlocha">
-<div class="pyramida" id="pyramida"></div>
-
-<div id="prekryvPanel" class="prekryv-panel">
-<div class="prekryv-horni-wrap" id="prekryvHorniWrap">
-<button id="minusHlavni" class="minus-btn" type="button">-</button>
-<input id="overlayAktivni" class="prekryv-input" inputmode="numeric">
-<button id="backHlavni" class="back-btn" type="button">↩</button>
-</div>
-<div class="prekryv-spodni-wrap">
-<input id="overlayLevy" class="prekryv-input" readonly>
-<input id="overlayPravy" class="prekryv-input" readonly>
-</div>
-</div>
-
-<div id="kalkPanel" class="kalk-panel">
-<button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
-<button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
-<button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
-<button data-k="0">0</button><button data-k="-">-</button>
-</div>
-
-<div class="postranni-tlacitko vpravo"><button id="start" class="akce">S T A R T</button></div>
-</div>
-
-<div id="historie" class="historie"></div>
-</main>
-
-<script>
-const $=i=>document.getElementById(i),pyramida=$('pyramida'),herniPlocha=$('herniPlocha'),prekryvPanel=$('prekryvPanel'),prekryvHorniWrap=$('prekryvHorniWrap'),overlayAktivni=$('overlayAktivni'),overlayLevy=$('overlayLevy'),overlayPravy=$('overlayPravy'),backHlavni=$('backHlavni'),minusHlavni=$('minusHlavni'),kalkToggle=$('kalkToggle'),kalkPanel=$('kalkPanel'),vyska=$('vyska'),cifry=$('cifry'),znamenko=$('znamenko'),rezim=$('rezim'),start=$('start'),nastaveni=$('nastaveni'),nastaveniToggle=$('nastaveniToggle'),mazaniHistorie=$('mazaniHistorie'),hlaska=$('hlaska'),historie=$('historie'),SR='pyramida_rezim',SV='pyramida_vyska',SC='pyramida_cifry',SZ='pyramida_znamenko',SH='pyramida_historie',SD='pyramida_historie_datum',SG='pyramida_rozehrana_hra';
+<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pyramida</title><style>:root{--bg:#c9ced6;--card:#d9dde4;--text:#172033;--p:#4f46e5;--p2:#818cf8;--inp:#e3e6eb;--bd:#a4adbd;--dis:#cfd4dc;--bot:#facc15;--botbg:#e4dfc7;--ok:#16a34a;--err:#dc2626;--act:#dce1ef}body.dark{--bg:#0f172a;--card:#1e293b;--text:#f8fafc;--p:#818cf8;--p2:#a5b4fc;--inp:#111827;--bd:#475569;--dis:#1e293b;--bot:#eab308;--botbg:#292517;--ok:#22c55e;--err:#f87171;--act:#1e1b4b}*{box-sizing:border-box}body{font-family:Arial,sans-serif;min-height:100vh;margin:0;color:var(--text);background:linear-gradient(135deg,var(--bg),#b7bec8);display:flex;justify-content:center;padding:18px 10px}.aplikace{position:relative;width:min(100%,860px);background:var(--card);border-radius:28px;padding:24px 14px 30px;box-shadow:0 24px 60px #0002;overflow:hidden}.hlavicka{position:relative;display:flex;align-items:center;gap:10px;margin-bottom:4px;padding-right:130px}h1{margin:0;font-size:clamp(26px,6vw,42px);letter-spacing:-.04em;white-space:nowrap}.kalk-toggle,.nastaveni-kolo,.rezim{position:absolute;top:0;width:36px;height:36px;border:2px solid transparent;border-radius:10px;font-size:25px;cursor:pointer;background:transparent;display:flex;align-items:center;justify-content:center}.kalk-toggle,.nastaveni-kolo{color:#6b7280}.rezim{color:inherit}.kalk-toggle{right:84px;font-size:24px;font-weight:900;font-family:Arial,sans-serif}.nastaveni-kolo{right:42px}.rezim{right:0}.nastaveni-kolo.aktivni,.kalk-toggle.aktivni{border-color:var(--err)}.panel-nastaveni{overflow:hidden;max-height:190px;opacity:1;transition:.25s}.nastaveni.zavreno .panel-nastaveni{max-height:0;opacity:0}.nastaveni-radky{display:grid;grid-template-columns:max-content max-content;justify-content:center;align-items:center;gap:8px 10px;margin:8px auto 0}.nastaveni-popisek{font-size:clamp(17px,4.4vw,22px);font-weight:900}.pole{border:1px solid #94a3b880;border-radius:999px;padding:2px 3px;width:clamp(132px,34vw,168px)}select{width:100%;color:var(--text);background:var(--inp);border:1px solid var(--bd);border-radius:999px;font-size:clamp(16px,4vw,20px);font-weight:800;padding:8px;text-align:center}.mazani-historie{width:76px;height:34px;border-radius:999px;border:1px solid var(--bd);background:var(--inp);color:var(--inp);caret-color:var(--p);font-size:14px;text-align:center}.mazani-historie::placeholder{color:var(--inp)}.mazani-historie:focus{outline:0;border-color:var(--p)}.hlaska{min-height:22px;margin:2px 0 8px;color:var(--err);font-size:15px;font-weight:800;text-align:center}.herni-plocha{position:relative;width:100%;overflow:visible}.postranni-tlacitko{position:absolute;top:0;z-index:5}.postranni-tlacitko.vpravo{left:calc(50% + 82px)}.pyramida{display:flex;flex-direction:column;align-items:center;gap:clamp(5px,1.5vw,10px);min-height:40px}.radek{display:flex;justify-content:center;gap:clamp(3px,1vw,8px);width:100%}.bunka-slot{flex:0 0 clamp(34px,11vw,80px);width:clamp(34px,11vw,80px);height:clamp(40px,11vw,58px)}.bunka-slot input{width:100%;height:100%;color:var(--text);background:var(--inp);font-size:clamp(14px,3.8vw,20px);font-weight:700;text-align:center;border:2px solid var(--bd);border-radius:14px;padding:0 4px}.bunka-slot input.spodni{border-color:var(--bot);background:var(--botbg)}.bunka-slot input.zamcene{background:var(--dis);opacity:.45}.bunka-slot input.spravne{border-color:var(--ok);box-shadow:0 0 0 4px #22c55e2e;opacity:1}.prekryv-panel{position:absolute;left:50%;transform:translateX(-50%);z-index:80;display:none;flex-direction:column;align-items:center;gap:8px;pointer-events:none;width:100%;max-width:calc(100vw - 16px)}.prekryv-panel.zobrazen{display:flex}.prekryv-horni-wrap{position:relative;width:100%;display:block;pointer-events:none;--polovina-vstupu:70px}.prekryv-spodni-wrap{display:flex;justify-content:center;max-width:calc(100vw - 16px);overflow:hidden}.prekryv-input{height:clamp(58px,15vw,82px);color:var(--text);background:var(--inp);font-size:clamp(20px,4.7vw,30px);font-weight:800;text-align:center;border:2px solid var(--bd);border-radius:15px;padding:0 8px;box-shadow:0 8px 20px #0002;pointer-events:auto;min-width:0}.prekryv-input:focus{outline:0;border-color:var(--p)}#overlayAktivni{background:var(--act);border-color:var(--p);display:block;margin:0 auto}#overlayLevy{border-radius:15px 0 0 15px}#overlayPravy{border-radius:0 15px 15px 0}.prekryv-input.spravne{border-color:var(--ok)!important}.back-btn,.minus-btn{position:absolute;top:50%;transform:translateY(-50%);height:clamp(58px,15vw,82px);width:clamp(50px,14vw,76px);border:0;background:transparent;color:var(--text);font-size:clamp(19px,5vw,28px);font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;pointer-events:auto;padding:0 0 2px;box-shadow:none}.back-btn{left:calc(50% + var(--polovina-vstupu) + 8px)}.minus-btn{right:calc(50% + var(--polovina-vstupu) + 8px)}.back-btn:active,.minus-btn:active{color:var(--p);background:transparent}.kalk-panel{position:absolute;left:50%;transform:translateX(-50%);z-index:70;display:none;grid-template-columns:repeat(3,64px);gap:8px;padding:12px;background:var(--card);border:1px solid var(--bd);border-radius:18px;box-shadow:0 18px 38px #0003}.kalk-panel.zobrazen{display:grid}.kalk-panel button{height:52px;border:1px solid var(--bd);border-radius:14px;background:var(--inp);color:var(--text);font-size:25px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}.kalk-panel button[data-k="0"]{grid-column:span 2}.kalk-panel button:active{background:var(--act);border-color:var(--p)}.akce{min-width:150px;border:0;color:#fff;background:linear-gradient(135deg,var(--p),var(--p2));border-radius:999px;font-size:17px;font-weight:900;letter-spacing:.28em;cursor:pointer;padding:12px 24px}.akce:disabled{opacity:.45}.historie{min-height:24px;margin:14px auto 0;text-align:center;font-size:16px;font-weight:900;color:var(--text);max-width:100%;width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.7}.historie .hist-ok{color:var(--ok);display:inline-block;margin:0 8px 6px}.ohnostroj{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9999}.jiskra{position:absolute;left:var(--x);top:var(--y);width:8px;height:8px;border-radius:50%;background:hsl(var(--h),95%,60%);animation:j .75s ease-out forwards}@keyframes j{to{transform:translate(var(--dx),var(--dy)) scale(.1);opacity:0}}@media(max-width:760px){.herni-plocha{padding-top:54px}.postranni-tlacitko.vpravo{left:50%;transform:translateX(-50%)}.kalk-toggle,.kalk-panel{display:none!important}.hlavicka{padding-right:88px}}@media(max-width:480px){body{padding:10px 6px}.aplikace{padding:14px 8px 24px}.hlavicka{padding-right:74px}h1{font-size:clamp(24px,7vw,30px)}.bunka-slot{flex:0 0 calc((100vw - 56px)/7);width:calc((100vw - 56px)/7);height:calc((100vw - 56px)/7);max-width:52px;max-height:52px}.akce{min-width:136px;font-size:15px;padding:11px 18px}.back-btn,.minus-btn{width:clamp(46px,13vw,64px);font-size:clamp(36px,10vw,50px);padding:0}.back-btn{left:calc(50% + var(--polovina-vstupu) + 4px)}.minus-btn{right:calc(50% + var(--polovina-vstupu) + 4px)}}</style></head><body><main class="aplikace"><header class="hlavicka"><h1>Pyramida</h1><input id="mazaniHistorie" class="mazani-historie" placeholder="Vymazat"><button id="kalkToggle" class="kalk-toggle">K</button><button id="nastaveniToggle" class="nastaveni-kolo">⚙️</button><button id="rezim" class="rezim">🌙</button></header><section id="nastaveni" class="nastaveni zavreno"><div class="panel-nastaveni"><div class="nastaveni-radky"><label class="nastaveni-popisek">výška pyramidy</label><div class="pole"><select id="vyska"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option selected>7</option></select></div><label class="nastaveni-popisek">počet cifer</label><div class="pole"><select id="cifry"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select></div><label class="nastaveni-popisek">sčítání - sčítání+odčítání</label><div class="pole"><select id="znamenko"><option value="p">+</option><option value="pm">+ -</option></select></div></div></div></section><div id="hlaska" class="hlaska"></div><div class="herni-plocha" id="herniPlocha"><div class="pyramida" id="pyramida"></div><div id="prekryvPanel" class="prekryv-panel"><div class="prekryv-horni-wrap" id="prekryvHorniWrap"><button id="minusHlavni" class="minus-btn" type="button">-</button><input id="overlayAktivni" class="prekryv-input" inputmode="numeric"><button id="backHlavni" class="back-btn" type="button">↩</button></div><div class="prekryv-spodni-wrap"><input id="overlayLevy" class="prekryv-input" readonly><input id="overlayPravy" class="prekryv-input" readonly></div></div><div id="kalkPanel" class="kalk-panel"><button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button data-k="0">0</button><button data-k="-">-</button></div><div class="postranni-tlacitko vpravo"><button id="start" class="akce">S T A R T</button></div></div><div id="historie" class="historie"></div></main><script>
+const $=i=>document.getElementById(i),
+pyramida=$('pyramida'),
+herniPlocha=$('herniPlocha'),
+prekryvPanel=$('prekryvPanel'),
+prekryvHorniWrap=$('prekryvHorniWrap'),
+overlayAktivni=$('overlayAktivni'),
+overlayLevy=$('overlayLevy'),
+overlayPravy=$('overlayPravy'),
+backHlavni=$('backHlavni'),
+minusHlavni=$('minusHlavni'),
+kalkToggle=$('kalkToggle'),
+kalkPanel=$('kalkPanel'),
+vyska=$('vyska'),
+cifry=$('cifry'),
+znamenko=$('znamenko'),
+rezim=$('rezim'),
+start=$('start'),
+nastaveni=$('nastaveni'),
+nastaveniToggle=$('nastaveniToggle'),
+mazaniHistorie=$('mazaniHistorie'),
+hlaska=$('hlaska'),
+historie=$('historie'),
+SR='pyramida_rezim',SV='pyramida_vyska',SC='pyramida_cifry',SZ='pyramida_znamenko',SH='pyramida_historie',SD='pyramida_historie_datum',SG='pyramida_rozehrana_hra';
 let hraBezi=0,aktivniRadek=null,aktivniIndex=null,vysledky=[],akceBezi=false;
+/* Převod znaku na číslice: - na CZ klávesnici vznikají pro Shift+čísla znaky jako Ě(=2) a Ř(=5) - na SK klávesnici vznikají místo nich znaky Ľ(=2) a Ť(=5) Proto mapujeme obě varianty → stejné číslo. */
 const mapaCZ={'+':'1','ě':'2','Ě':'2','ľ':'2','Ľ':'2','š':'3','Š':'3','č':'4','Č':'4','ř':'5','Ř':'5','ť':'5','Ť':'5','ž':'6','Ž':'6','ý':'7','Ý':'7','á':'8','Á':'8','í':'9','Í':'9','é':'0','É':'0'};
 const dnes=()=>{let d=new Date;return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
-const fmt=v=>{if(v===''||v==null)return'';let s=String(v).replace(/\s/g,''),m=s[0]=='-'?'-':'',t=s.replace(/-/g,'');return m+t.replace(/\B(?=(\d{3})+(?!\d))/g,' ')};
+const fmt=v=>{
+if(v===''||v==null)return'';
+let s=String(v).replace(/\s/g,''),
+m=s[0]=='-'?'-':'';
+s=s.replace(/-/g,'');
+return m+s.replace(/\B(?=(\d{3})+(?!\d))/g,' ')
+};
 const cis=v=>Number(String(v).replace(/\s/g,''));
 const pole=(r,i)=>pyramida.querySelector(`input[data-r="${r}"][data-i="${i}"]`);
 const jeNastaveniOtevrene=()=>!nastaveni.classList.contains('zavreno');
@@ -120,7 +41,7 @@ const jeKalkOtevrena=()=>kalkPanel.classList.contains('zobrazen');
 function aktualizujMinusTlacitko(){minusHlavni.style.display=znamenko.value==='pm'?'flex':'none'}
 function raw(v){return String(v||'').replace(/\s/g,'')}
 function rawPozice(f,pos){let n=0;for(let i=0;i<pos;i++)if(f[i]&&f[i]!==' ')n++;return n}
-function fmtPozice(f,rawPos){let n=0;for(let i=0;i<f.length;i++)if(f[i]!==' '){if(n===rawPos)return i;n++}return f.length}
+function fmtPozice(f,rawPos){let n=0;for(let i=0;i<f.length;i++){if(f[i]!==' '){if(n===rawPos)return i;n++}}return f.length}
 function nastavKurzorRaw(rawPos){requestAnimationFrame(()=>{let f=overlayAktivni.value,p=fmtPozice(f,rawPos);overlayAktivni.setSelectionRange(p,p)})}
 function uloz(){localStorage.setItem(SV,vyska.value);localStorage.setItem(SC,cifry.value);localStorage.setItem(SZ,znamenko.value);localStorage.setItem(SR,document.body.classList.contains('dark')?'dark':'light')}
 function nacti(){let v=localStorage.getItem(SV),c=localStorage.getItem(SC),z=localStorage.getItem(SZ),r=localStorage.getItem(SR);if(v)vyska.value=v;if(c)cifry.value=Math.min(+c,8);if(z)znamenko.value=z;document.body.classList.toggle('dark',r==='dark');rezim.textContent=r==='dark'?'☀️':'🌙';aktualizujMinusTlacitko()}
@@ -128,7 +49,7 @@ function upravHistorii(h){return String(h||'').replace(/&nbsp;/g,' ').replace(/\
 function nactiHistorii(){if(localStorage.getItem(SD)!==dnes()){localStorage.setItem(SD,dnes());localStorage.setItem(SH,'')}let h=upravHistorii(localStorage.getItem(SH)||'');localStorage.setItem(SH,h);historie.innerHTML=h}
 function pridej(z){if(localStorage.getItem(SD)!==dnes()){localStorage.setItem(SD,dnes());localStorage.setItem(SH,'')}let h=upravHistorii(localStorage.getItem(SH)||'')+`<span class="hist-ok">${z}</span> `;localStorage.setItem(SH,h);historie.innerHTML=h}
 function mazani(){if(mazaniHistorie.value.trim().toLowerCase()==='vymazat'){localStorage.setItem(SD,dnes());localStorage.setItem(SH,'');historie.innerHTML=''}mazaniHistorie.value=''}
-function nastavStavNastaveni(){let o=jeNastaveniOtevrene();start.disabled=o;n astaveniToggle.classList.toggle('aktivni',o)}
+function nastavStavNastaveni(){let o=jeNastaveniOtevrene();start.disabled=o;nastaveniToggle.classList.toggle('aktivni',o)}
 function nahoda(c){let n=Math.floor(Math.random()*(10**c-1))+1;if(znamenko.value==='pm'&&Math.random()<.5)n=-n;return n}
 function spocitejVysledky(){let R=+vyska.value;vysledky=[];for(let r=1;r<=R;r++)vysledky[r]=[];for(let i=0;i<R;i++)vysledky[R][i]=cis(pole(R,i).value);for(let r=R-1;r>=1;r--)for(let i=0;i<r;i++)vysledky[r][i]=vysledky[r+1][i]+vysledky[r+1][i+1]}
 function sirkaTextu(t){return Math.min(Math.max(String(fmt(t)).length*18+80,130),innerWidth-20)}
@@ -148,7 +69,7 @@ function smazHru(){localStorage.removeItem(SG)}
 function obnovHru(){try{let raw=localStorage.getItem(SG);if(!raw)return false;let data=JSON.parse(raw);if(!data||!data.spodni||!data.aktivniRadek)return false;vytvor(0,data);return true}catch(e){smazHru();return false}}
 function vycistiVstup(v){let out='',spatne=false;for(let ch of String(v)){if(ch===' ')continue;if(/[0-9]/.test(ch))out+=ch;else if(ch==='-'&&out.indexOf('-')<0&&out.length===0)out+='-';else if(mapaCZ[ch])out+=mapaCZ[ch];else spatne=true}return{v:fmt(out),spatne}}
 function zkusAuto(){if(!hraBezi||aktivniRadek==null)return;hlaska.textContent='';let h=overlayAktivni.value.trim();if(!h||h==='-'){ulozHru();return}let z=cis(h),ok=vysledky[aktivniRadek][aktivniIndex];if(z===ok){let s=pole(aktivniRadek,aktivniIndex);s.value=fmt(z);s.classList.add('spravne');overlayAktivni.value=fmt(z);overlayAktivni.classList.add('spravne');let d=dalsi();if(d){ohnostroj(1);setTimeout(()=>{overlayAktivni.value='';aktivuj(d.r,d.i)},120)}else{skryjPrekryv();hraBezi=0;aktivniRadek=aktivniIndex=null;start.textContent='S T A R T';pridej(`${vyska.value}/${cifry.value}/${znamenko.value==='pm'?'+-':'+'}`);smazHru();ohnostroj(3)}}else ulozHru()}
-function smazPosledni(){if(!hraBezi||aktivniRadek==null)return;overlayAktivni.focus();let f=overlayAktivni.value,s=overlayAktivni.selectionStart??f.length,e=overlayAktivni.selectionEnd??f.length,v=raw(f),rs=rawPozice(f,s),re=rawPozice(f,e);let novyPos=rs;if(rs!==re){v=v.slice(0,rs)+v.slice(re);novyPos=rs}else if(rs>0){v=v.slice(0,rs-1)+v.slice(rs);novyPos=rs-1}overlayAktivni.value=fmt(v);overlayAktivni.classList.remove('spravne');hlaska.textContent='';nastavKurzorRaw(novyPos);zkusAuto()}
+function smazPosledni(){if(!hraBezi||aktivniRadek==null)return;overlayAktivni.focus();let f=overlayAktivni.value,s=overlayAktivni.selectionStart??f.length,e=overlayAktivni.selectionEnd??f.length,v=raw(f),rs=rawPozice(f,s),re=rawPozice(f,e),novyPos=rs;if(rs!==re){v=v.slice(0,rs)+v.slice(re);novyPos=rs}else if(rs>0){v=v.slice(0,rs-1)+v.slice(rs);novyPos=rs-1}overlayAktivni.value=fmt(v);overlayAktivni.classList.remove('spravne');hlaska.textContent='';nastavKurzorRaw(novyPos);zkusAuto()}
 function prepniMinus(){if(!hraBezi||aktivniRadek==null)return;overlayAktivni.focus();if(znamenko.value!=='pm')return;let f=overlayAktivni.value,pos=rawPozice(f,overlayAktivni.selectionStart??f.length),v=raw(f);if(v.startsWith('-')){v=v.slice(1);pos=Math.max(0,pos-1)}else{v='-'+v;pos=pos+1}overlayAktivni.value=fmt(v);overlayAktivni.classList.remove('spravne');hlaska.textContent='';nastavKurzorRaw(pos);zkusAuto()}
 function vlozNaKurzor(k){if(!hraBezi||aktivniRadek==null)return;overlayAktivni.focus();let f=overlayAktivni.value,s=overlayAktivni.selectionStart??f.length,e=overlayAktivni.selectionEnd??f.length,v=raw(f),rs=rawPozice(f,s),re=rawPozice(f,e);v=v.slice(0,rs)+k+v.slice(re);overlayAktivni.value=fmt(v);overlayAktivni.classList.remove('spravne');hlaska.textContent='';nastavKurzorRaw(rs+1);zkusAuto()}
 function zrusNeboStart(){if(jeNastaveniOtevrene()||akceBezi)return;akceBezi=1;mazani();uloz();if(hraBezi){hraBezi=0;aktivniRadek=aktivniIndex=null;start.textContent='S T A R T';skryjPrekryv();smazHru();vytvor(0)}else{vytvor(1)}setTimeout(()=>akceBezi=0,80)}
@@ -157,7 +78,7 @@ function kalkVloz(k){if(!hraBezi||aktivniRadek==null)return;if(k==='-'){prepniMi
 overlayAktivni.oninput=function(){let posRaw=rawPozice(this.value,this.selectionStart??this.value.length),r=vycistiVstup(this.value);this.value=r.v;if(r.spatne)hlaska.textContent='Nepovolený znak!';else hlaska.textContent='';nastavKurzorRaw(posRaw);zkusAuto()};
 backHlavni.onpointerdown=e=>{e.preventDefault();smazPosledni()};
 minusHlavni.onpointerdown=e=>{e.preventDefault();prepniMinus()};
-kalkToggle.onclick=()=>{mazani();kalkPanel.classList.contains('zobrazen')?skryjKalk():zobrazKalk()};
+kalkToggle.onclick=()=>{mazani();jeKalkOtevrena()?skryjKalk():zobrazKalk()};
 kalkPanel.onpointerdown=e=>{let b=e.target.closest('button');if(!b)return;e.preventDefault();kalkVloz(b.dataset.k)};
 nastaveniToggle.onclick=()=>{mazani();nastaveni.classList.toggle('zavreno');nastavStavNastaveni();jeNastaveniOtevrene()?skryjPrekryv():hraBezi&&zobrazPrekryv();uloz()};
 [vyska,cifry,znamenko].forEach(e=>e.onchange=()=>{mazani();uloz();aktualizujMinusTlacitko();hraBezi=0;aktivniRadek=aktivniIndex=null;start.textContent='S T A R T';skryjPrekryv();smazHru();vytvor(0)});
