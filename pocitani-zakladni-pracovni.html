@@ -1,801 +1,211 @@
 <!DOCTYPE html>
 <html lang="cs" class="dark">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover"/>
-<title>Trénink počítání</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Inter','system-ui','sans-serif']}}}}
-</script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-.zelene{background:#15803d!important;border-color:#22c55e!important;color:#fff!important}
-.cervene{background:#b91c1c!important;border-color:#ef4444!important;color:#fff!important}
-input{-webkit-appearance:none;border-radius:.75rem}
-#inputWrapper{position:relative;overflow:hidden}
-#odpoved{position:relative;right:0;transition:right 0.15s ease}
-#odpoved::placeholder{text-align:center!important;font-size:1.5rem}
-@media(max-width:400px){#odpoved::placeholder{font-size:1rem}}
-#odpoved.hidden-text{color:transparent!important;caret-color:transparent!important;-webkit-text-fill-color:transparent!important}
-.math-text{white-space:pre;line-height:1.25;display:block;font-variant-numeric:tabular-nums}
-.worksheet-bg{background-color:#e2e8f0;background-image:radial-gradient(circle,#94a3b8 1px,transparent 1px);background-size:24px 24px}
-.dark .worksheet-bg{background-color:rgba(30,41,59,.4);background-image:radial-gradient(circle,#334155 1px,transparent 1px)}
-.btn-pulse{animation:pulse-blue 2.5s infinite}
-@keyframes pulse-blue{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,.45)}50%{box-shadow:0 0 0 10px rgba(37,99,235,0)}}
-.btn-glow{animation:glow 2.5s infinite}
-@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.45)}50%{box-shadow:0 0 0 10px rgba(16,185,129,0)}}
-.shake{animation:shake .5s both}
-@keyframes shake{10%,90%{transform:translate3d(-1px,0,0)}20%,80%{transform:translate3d(2px,0,0)}30%,50%,70%{transform:translate3d(-3px,0,0)}40%,60%{transform:translate3d(3px,0,0)}}
-.slide-up{animation:slideUp .3s forwards}
-@keyframes slideUp{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
-.pop{animation:pop .2s}
-@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
-.settings-panel{max-height:150px;opacity:1;overflow:hidden;transition:all .3s ease}
-.settings-panel.collapsed{max-height:0;opacity:0;margin:0!important;pointer-events:none}
-.scrollbar-hide::-webkit-scrollbar{display:none}
-.scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}
-.score-bar{position:sticky;top:0;z-index:40;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-#micBtn{transition:opacity .2s;visibility:hidden;opacity:0;pointer-events:none}
-#micBtn.shown{visibility:visible;opacity:1;pointer-events:auto}
-@keyframes mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.6)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
-#micBtn.listening{animation:mic-pulse 1.2s infinite;border-color:#ef4444!important}
-#homeBtn{transition:opacity .2s,visibility .2s}
-#homeBtn.hidden-btn{visibility:hidden;opacity:0;pointer-events:none}
-</style>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover"/>
+    <title>Trénink počítání</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Inter','system-ui','sans-serif']}}}}</script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}.zelene{background:#15803d!important;border-color:#22c55e!important;color:#fff!important}.cervene{background:#b91c1c!important;border-color:#ef4444!important;color:#fff!important}input{-webkit-appearance:none;border-radius:.75rem}#inputWrapper{position:relative;overflow:hidden}#odpoved{position:relative;right:0;transition:right 0.15s ease}#odpoved::placeholder{text-align:center!important;font-size:1.5rem}@media(max-width:400px){#odpoved::placeholder{font-size:1rem}}#odpoved.hidden-text{color:transparent!important;caret-color:transparent!important;-webkit-text-fill-color:transparent!important}.math-text{white-space:pre;line-height:1.25;display:block;font-variant-numeric:tabular-nums}.worksheet-bg{background-color:#e2e8f0;background-image:radial-gradient(circle,#94a3b8 1px,transparent 1px);background-size:24px 24px}.dark .worksheet-bg{background-color:rgba(30,41,59,.4);background-image:radial-gradient(circle,#334155 1px,transparent 1px)}.btn-pulse{animation:pulse-blue 2.5s infinite}@keyframes pulse-blue{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,.45)}50%{box-shadow:0 0 0 10px rgba(37,99,235,0)}}.btn-glow{animation:glow 2.5s infinite}@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.45)}50%{box-shadow:0 0 0 10px rgba(16,185,129,0)}}.shake{animation:shake .5s both}@keyframes shake{10%,90%{transform:translate3d(-1px,0,0)}20%,80%{transform:translate3d(2px,0,0)}30%,50%,70%{transform:translate3d(-3px,0,0)}40%,60%{transform:translate3d(3px,0,0)}}.slide-up{animation:slideUp .3s forwards}@keyframes slideUp{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}.pop{animation:pop .2s}@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}.settings-panel{max-height:150px;opacity:1;overflow:hidden;transition:all .3s ease}.settings-panel.collapsed{max-height:0;opacity:0;margin:0!important;pointer-events:none}.scrollbar-hide::-webkit-scrollbar{display:none}.scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}.score-bar{position:sticky;top:0;z-index:40;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}#micBtn{transition:opacity .2s;visibility:hidden;opacity:0;pointer-events:none}#micBtn.shown{visibility:visible;opacity:1;pointer-events:auto}@keyframes mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.6)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}#micBtn.listening{animation:mic-pulse 1.2s infinite;border-color:#ef4444!important}#homeBtn{transition:opacity .2s,visibility .2s}#homeBtn.hidden-btn{visibility:hidden;opacity:0;pointer-events:none}
+    </style>
 </head>
 <body class="bg-slate-200 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300 font-sans">
-<div class="w-full max-w-md mx-auto flex flex-col min-h-[100dvh]">
-
-<div class="score-bar bg-slate-300/80 dark:bg-slate-900/80 border-b border-slate-300 dark:border-slate-800 shadow-sm">
-<div class="px-4 py-2.5 flex items-center justify-between select-none">
-  <div class="flex items-center gap-3">
-    <div class="flex items-center gap-1.5">
-      <span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">✓</span>
-      <output id="scoreCorrect" class="text-lg font-black text-emerald-600 dark:text-emerald-400 tabular-nums">0</output>
+    <div class="w-full max-w-md mx-auto flex flex-col min-h-[100dvh]">
+        <div class="score-bar bg-slate-300/80 dark:bg-slate-900/80 border-b border-slate-300 dark:border-slate-800 shadow-sm">
+            <div class="px-4 py-2.5 flex items-center justify-between select-none">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1.5"><span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">✓</span><output id="scoreCorrect" class="text-lg font-black text-emerald-600 dark:text-emerald-400 tabular-nums">0</output></div>
+                    <div class="w-px h-5 bg-slate-300 dark:bg-slate-700"></div>
+                    <div class="flex items-center gap-1.5"><span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">✗</span><output id="scoreWrong" class="text-lg font-black text-rose-600 dark:text-rose-400 tabular-nums">0</output></div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <label class="flex items-center gap-1.5 cursor-pointer select-none">
+                        <span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Hlas</span>
+                        <div class="relative"><input type="checkbox" id="hlasCheck" class="sr-only peer"><div class="w-8 h-4 bg-slate-400 dark:bg-slate-600 peer-checked:bg-blue-600 rounded-full transition-colors duration-200"></div><div class="absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform duration-200 peer-checked:translate-x-4 shadow"></div></div>
+                    </label>
+                    <div class="w-px h-5 bg-slate-300 dark:bg-slate-700"></div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Série</span>
+                        <div class="flex items-center gap-1"><output id="streakCount" class="text-lg font-black text-amber-500 dark:text-amber-400 tabular-nums">0</output><svg class="w-4 h-4 text-amber-500 dark:text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/></svg></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex-1 overflow-y-auto px-4 py-3 space-y-3 scrollbar-hide">
+            <div class="bg-slate-200 dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-300 dark:border-slate-800 p-4">
+                <div class="flex items-start justify-between mb-3">
+                    <div><h1 class="text-lg font-black tracking-tight text-slate-800 dark:text-white uppercase">Trénink počítání</h1><div class="flex items-center gap-1.5 mt-0.5"><span id="currentDate" class="text-[11px] font-medium text-slate-400 dark:text-slate-500"></span></div></div>
+                    <div class="flex items-center gap-1">
+                        <button id="homeBtn" class="p-1.5 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors text-slate-400 text-lg leading-none hidden-btn">🏠</button>
+                        <button id="settingsToggle" class="p-1.5 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors text-slate-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>
+                        <button id="themeToggle" class="p-1.5 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"><svg id="themeIconMoon" class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg><svg id="themeIconSun" class="hidden w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg></button>
+                    </div>
+                </div>
+                <div id="settingsPanel" class="settings-panel mb-3 collapsed">
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="flex flex-col"><label class="text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1">Operace</label><select id="operace" class="bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-bold text-xs"><option value="+">+</option><option value="-">−</option><option value="*">x</option><option value="/">:</option></select></div>
+                        <div class="flex flex-col"><label class="text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1">1. Číslo</label><select id="cislice1" class="bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-xs"></select></div>
+                        <div class="flex flex-col"><label class="text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1">2. Číslo</label><select id="cislice2" class="bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-xs"></select></div>
+                    </div>
+                </div>
+                <div id="chyba" class="text-red-500 text-[10px] font-bold text-center h-4 overflow-hidden mb-1" role="alert"></div>
+                <div id="upperBox" class="bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 pl-4 pr-4 pb-1 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center">
+                    <div id="problemContainer" class="w-full overflow-x-auto scrollbar-hide flex flex-col items-end relative z-10 transition-all">
+                        <div id="priklad" class="math-text text-4xl font-semibold tracking-normal text-slate-700 dark:text-slate-200 tabular-nums" style="white-space: break-spaces;"></div>
+                        <div id="cara" class="math-text text-4xl text-slate-400 dark:border-slate-600 border-t-[3px] w-full mt-1 opacity-0 transition-opacity duration-300"></div>
+                    </div>
+                </div>
+                <div class="space-y-2.5">
+                    <div id="inputBox" class="relative bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-300 dark:border-slate-700 focus-within:border-blue-500 transition-all shadow-inner overflow-hidden flex">
+                        <div id="inputWrapper" class="w-full"><input type="text" id="odpoved" inputmode="text" enterkeyhint="done" autocomplete="off" placeholder="historie" class="w-full pl-4 pr-4 py-1 text-4xl sm:text-4xl font-semibold bg-transparent text-slate-800 dark:text-white outline-none text-center tabular-nums tracking-normal"></div>
+                        <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 scale-75 pointer-events-none"></div>
+                    </div>
+                    <div class="flex gap-2.5 items-stretch">
+                        <button id="micBtn" type="button" class="flex-shrink-0 px-4 py-3 flex items-center justify-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-sm transition-all touch-manipulation whitespace-nowrap"><svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4M12 3a4 4 0 014 4v4a4 4 0 01-8 0V7a4 4 0 014-4z"/></svg><span id="micLabel">Mikrofon</span></button>
+                        <button id="tlacitko" type="button" class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-black text-base rounded-xl shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest touch-manipulation btn-pulse flex items-center justify-center">START</button>
+                    </div>
+                </div>
+            </div>
+            <div id="historyContainer" class="px-1 opacity-0 transition-opacity duration-500 select-none">
+                <div class="text-[9px] font-bold uppercase text-slate-400 tracking-wider mb-1.5">Historie</div>
+                <div id="historyList" class="flex flex-wrap gap-1.5"><div id="historyEmpty" class="text-[11px] text-slate-400 italic">Zatím jste nevyřešil(a) žádný příklad</div></div>
+            </div>
+            <div class="h-4"></div>
+        </div>
     </div>
-    <div class="w-px h-5 bg-slate-300 dark:bg-slate-700"></div>
-    <div class="flex items-center gap-1.5">
-      <span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">✗</span>
-      <output id="scoreWrong" class="text-lg font-black text-rose-600 dark:text-rose-400 tabular-nums">0</output>
-    </div>
-  </div>
-  <div class="flex items-center gap-3">
-    <label class="flex items-center gap-1.5 cursor-pointer select-none">
-      <span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Hlas</span>
-      <div class="relative">
-        <input type="checkbox" id="hlasCheck" class="sr-only peer"/>
-        <div class="w-8 h-4 bg-slate-400 dark:bg-slate-600 peer-checked:bg-blue-600 rounded-full transition-colors duration-200"></div>
-        <div class="absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform duration-200 peer-checked:translate-x-4 shadow"></div>
-      </div>
-    </label>
-    <div class="w-px h-5 bg-slate-300 dark:bg-slate-700"></div>
-    <div class="flex items-center gap-2">
-      <span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Série</span>
-      <div class="flex items-center gap-1">
-        <output id="streakCount" class="text-lg font-black text-amber-500 dark:text-amber-400 tabular-nums">0</output>
-        <svg class="w-4 h-4 text-amber-500 dark:text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/></svg>
-      </div>
-    </div>
-  </div>
-</div>
-</div>
-
-<div class="flex-1 overflow-y-auto px-4 py-3 space-y-3 scrollbar-hide">
-<div class="bg-slate-200 dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-300 dark:border-slate-800 p-4">
-
-<div class="flex items-start justify-between mb-3">
-<div>
-  <h1 class="text-lg font-black tracking-tight text-slate-800 dark:text-white uppercase">Trénink počítání</h1>
-  <div class="flex items-center gap-1.5 mt-0.5">
-    <span id="currentDate" class="text-[11px] font-medium text-slate-400 dark:text-slate-500"></span>
-  </div>
-</div>
-<div class="flex items-center gap-1">
-  <button id="homeBtn" class="p-1.5 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors text-slate-400 text-lg leading-none hidden-btn">
-    🏠
-  </button>
-  <button id="settingsToggle" class="p-1.5 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors text-slate-400">
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-  </button>
-  <button id="themeToggle" class="p-1.5 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors">
-    <svg id="themeIconMoon" class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-    <svg id="themeIconSun" class="hidden w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-  </button>
-</div>
-</div>
-
-<div id="settingsPanel" class="settings-panel mb-3 collapsed">
-<div class="grid grid-cols-3 gap-2">
-  <div class="flex flex-col">
-    <label class="text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1">Operace</label>
-    <select id="operace" class="bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-bold text-xs">
-      <option value="+">+</option><option value="-">−</option><option value="*">x</option><option value="/">:</option>
-    </select>
-  </div>
-  <div class="flex flex-col">
-    <label class="text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1">1. Číslo</label>
-    <select id="cislice1" class="bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-xs"></select>
-  </div>
-  <div class="flex flex-col">
-    <label class="text-[9px] font-bold uppercase text-slate-500 mb-1 ml-1">2. Číslo</label>
-    <select id="cislice2" class="bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-xs"></select>
-  </div>
-</div>
-</div>
-
-<div id="chyba" class="text-red-500 text-[10px] font-bold text-center h-4 overflow-hidden mb-1" role="alert"></div>
-
-<div id="upperBox" class="bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 pl-4 pr-4 pb-1 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center">
-<div id="problemContainer" class="w-full overflow-x-auto scrollbar-hide flex flex-col items-end relative z-10 transition-all">
-  <div id="priklad" class="math-text text-4xl font-semibold tracking-normal text-slate-700 dark:text-slate-200 tabular-nums" style="white-space: break-spaces;"></div>
-  <div id="cara" class="math-text text-4xl text-slate-400 dark:text-slate-600 border-t-[3px] border-slate-400 dark:border-slate-600 w-full mt-1 opacity-0 transition-opacity duration-300"></div>
-</div>
-</div>
-
-<div class="space-y-2.5">
-  <div id="inputBox" class="relative bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-300 dark:border-slate-700 focus-within:border-blue-500 transition-all shadow-inner overflow-hidden flex">
-    <div id="inputWrapper" class="w-full">
-      <input type="text" id="odpoved" inputmode="text" enterkeyhint="done" autocomplete="off" placeholder="historie" class="w-full pl-4 pr-4 py-1 text-4xl sm:text-4xl font-semibold bg-transparent text-slate-800 dark:text-white outline-none text-center tabular-nums tracking-normal"/>
-    </div>
-    <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 scale-75 pointer-events-none"></div>
-  </div>
-  <div class="flex gap-2.5 items-stretch">
-    <button id="micBtn" type="button" class="flex-shrink-0 px-4 py-3 flex items-center justify-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-sm transition-all touch-manipulation whitespace-nowrap">
-      <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4M12 3a4 4 0 014 4v4a4 4 0 01-8 0V7a4 4 0 014-4z"/></svg>
-      <span id="micLabel">Mikrofon</span>
-    </button>
-    <button id="tlacitko" type="button" class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-black text-base rounded-xl shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest touch-manipulation btn-pulse flex items-center justify-center">START</button>
-  </div>
-</div>
-</div>
-
-<div id="historyContainer" class="px-1 opacity-0 transition-opacity duration-500 select-none">
-<div class="text-[9px] font-bold uppercase text-slate-400 tracking-wider mb-1.5">Historie</div>
-<div id="historyList" class="flex flex-wrap gap-1.5">
-  <div id="historyEmpty" class="text-[11px] text-slate-400 italic">Zatím jste nevyřešil(a) žádný příklad</div>
-</div>
-</div>
-<div class="h-4"></div>
-</div>
-</div>
-
-<script>
-(function(){
-
-var _id = function(id){ return document.getElementById(id); };
-var odpovedEl = _id('odpoved');
-var operaceEl = _id('operace');
-var cis1 = _id('cislice1');
-var cis2 = _id('cislice2');
-var chybaEl = _id('chyba');
-var prikladEl = _id('priklad');
-var caraEl = _id('cara');
-var btnEl = _id('tlacitko');
-var scoreC = _id('scoreCorrect');
-var scoreW = _id('scoreWrong');
-var streakEl = _id('streakCount');
-var histCont = _id('historyContainer');
-var histList = _id('historyList');
-var histEmpty = _id('historyEmpty');
-var themeToggle = _id('themeToggle');
-var themeIconSun = _id('themeIconSun');
-var themeIconMoon = _id('themeIconMoon');
-var hlasCheck = _id('hlasCheck');
-var micBtn = _id('micBtn');
-var micLabel = _id('micLabel');
-var inputBox = _id('inputBox');
-var homeBtn = _id('homeBtn');
-
-var KEY = 'matika_trenink_v4';
-var correct = 0, wrong = 0, streak = 0, history = [];
-var aktualniPriklad = null, zobrazitVysledek = false, isProcessing = false;
-
-// === DATE ===
-var today = new Date();
-var czMonths = ['ledna','února','března','dubna','května','června','července','srpna','září','října','listopadu','prosince'];
-var czDays = ['Neděle','Pondělí','Úterý','Středa','Čtvrtek','Pátek','Sobota'];
-_id('currentDate').textContent = czDays[today.getDay()] + ' ' + today.getDate() + '. ' + czMonths[today.getMonth()] + ' ' + today.getFullYear();
-var todayStr = today.toISOString().slice(0,10);
-
-// === THEME ===
-function updateThemeIcons(){
-  var isDark = document.documentElement.classList.contains('dark');
-  themeIconSun.classList.toggle('hidden', !isDark);
-  themeIconMoon.classList.toggle('hidden', isDark);
-}
-themeToggle.addEventListener('click', function(){
-  document.documentElement.classList.toggle('dark');
-  updateThemeIcons();
-});
-updateThemeIcons();
-
-// === HOME BUTTON VISIBILITY ===
-function updateHomeBtn(){
-  var onHome = !aktualniPriklad && !zobrazitVysledek;
-  homeBtn.classList.toggle('hidden-btn', onHome);
-}
-
-// === HOME BUTTON ACTION ===
-homeBtn.addEventListener('click', function(){
-  if(micListening) stopMic(false);
-  aktualniPriklad = null;
-  zobrazitVysledek = false;
-  isProcessing = false;
-  chybaEl.textContent = '';
-  resetToInitialState();
-});
-
-// === FORMAT ===
-function fmt(x){
-  if(typeof x === 'bigint') return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
-  if(typeof x !== 'number') return String(x);
-  if(Number.isInteger(x)) return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
-  var parts = x.toString().split('.');
-  var c = parts[0], d = parts[1];
-  return d ? c.replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0') + ',' + d : c.replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
-}
-
-function fmtInputStr(s){
-  s = s.replace(/\s|\u00A0/g, '');
-  var neg = s.charAt(0) === '-';
-  var abs = neg ? s.slice(1) : s;
-  var parts = abs.split('.');
-  var ip = parts[0], dp = parts[1];
-  var r = ip.replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
-  return (neg ? '-' : '') + r + (dp !== undefined ? ',' + dp : '');
-}
-
-function norm(s){ return s.trim().replace(/[\s\u00A0]+/g, '').replace(',', '.'); }
-function genNum(n){ var mn = Math.pow(10, n-1), mx = Math.pow(10, n) - 1; return Math.floor(Math.random() * (mx - mn + 1)) + mn; }
-function trunc4(n){ var parts = (n + '').split('.'); return parts[1] ? parts[0] + '.' + parts[1].substring(0, 4) : parts[0]; }
-
-// === LOAD / SAVE ===
-function load(){
-  try {
-    var raw = localStorage.getItem(KEY);
-    if(raw){
-      var s = JSON.parse(raw);
-      if(s.date === todayStr){ correct = s.correct || 0; wrong = s.wrong || 0; streak = s.streak || 0; history = s.history || []; }
-      if(s.operace) operaceEl.value = s.operace;
-      if(s.cislice1) cis1.value = s.cislice1;
-      if(s.cislice2) cis2.value = s.cislice2;
-    }
-  } catch(e){}
-}
-
-function save(){
-  try { localStorage.setItem(KEY, JSON.stringify({date:todayStr, correct:correct, wrong:wrong, streak:streak, history:history, operace:operaceEl.value, cislice1:cis1.value, cislice2:cis2.value})); } catch(e){}
-}
-
-// === INIT SELECTS ===
-for(var i = 1; i <= 9; i++){
-  cis1.innerHTML += '<option value="' + i + '">' + i + '</option>';
-  cis2.innerHTML += '<option value="' + i + '">' + i + '</option>';
-}
-if(!localStorage.getItem(KEY)){ cis1.value = '2'; cis2.value = '1'; operaceEl.value = '+'; } else { load(); }
-
-function updateCis2(){
-  var op = operaceEl.value, v1 = +cis1.value;
-  var opts = cis2.options;
-  for(var j = 0; j < opts.length; j++){ opts[j].disabled = (op === '-' && +opts[j].value > v1); }
-  if(+cis2.value > v1 && op === '-') cis2.value = v1;
-}
-updateCis2();
-operaceEl.addEventListener('change', function(){ updateCis2(); chybaEl.textContent = ''; save(); });
-cis1.addEventListener('change', function(){ updateCis2(); save(); });
-cis2.addEventListener('change', save);
-
-// === GENERATE ===
-function generate(){
-  var op = operaceEl.value, n1 = +cis1.value, n2 = +cis2.value;
-  chybaEl.textContent = '';
-  if(op === '-' && n1 < n2){ chybaEl.textContent = '❌ Při odčítání musí mít 1. číslo ≥ cifer než 2.'; return null; }
-  var a, b, iter = 0;
-  while(iter++ < 1000){
-    a = genNum(n1);
-    b = n2 === 1 ? Math.floor(Math.random() * 8) + 2 : genNum(n2);
-    if(op === '-' && a <= b) continue;
-    if(op === '/' && b === 0) continue;
-    break;
-  }
-  var vysledek, vysledekZ;
-  if(op === '+') { vysledek = vysledekZ = a + b; }
-  else if(op === '-') { vysledek = vysledekZ = a - b; }
-  else if(op === '*') { vysledek = vysledekZ = BigInt(a) * BigInt(b); }
-  else { vysledek = a / b; vysledekZ = trunc4(vysledek); }
-  return { a:a, b:b, op:op, vysledek:vysledek, vysledekZ:vysledekZ };
-}
-
-// === SHOW PROBLEM ===
-function showProblem(p){
-  var fa = fmt(p.a), fb = fmt(p.b);
-  var opUI = p.op === '*' ? 'x' : p.op === '/' ? ':' : p.op === '-' ? '−' : '+';
-  prikladEl.style.whiteSpace = 'normal';
-  prikladEl.classList.remove('math-text');
-  prikladEl.innerHTML = '<div class="flex justify-end gap-3 w-full"><div class="flex flex-col text-right select-none"><div class="invisible">0</div><div>' + opUI + '</div></div><div class="flex flex-col text-right"><div>' + fa + '</div><div>' + fb + '</div></div></div>';
-  caraEl.style.opacity = '0';
-  odpovedEl.setAttribute('inputmode', 'decimal');
-  odpovedEl.placeholder = 'Váš výsledek';
-  odpovedEl.style.textAlign = 'right';
-}
-
-// === START NEW PROBLEM ===
-function startNewProblem(){
-  var p = generate();
-  if(!p) return false;
-  aktualniPriklad = p;
-  showProblem(p);
-  odpovedEl.value = '';
-  odpovedEl.classList.remove('hidden-text');
-  spReset();
-  zobrazitVysledek = true;
-  updateBtn();
-  updateMicVisibility();
-  updateHomeBtn();
-  setTimeout(function(){
-    caraEl.style.opacity = '1';
-    if(hlasCheck.checked){ setTimeout(function(){ startMic(); }, 100); }
-    else { odpovedEl.focus(); }
-    isProcessing = false;
-  }, 50);
-  return true;
-}
-
-// === RESET TO INITIAL ===
-function resetToInitialState(){
-  aktualniPriklad = null;
-  zobrazitVysledek = false;
-  odpovedEl.value = '';
-  odpovedEl.classList.add('hidden-text');
-  odpovedEl.setAttribute('inputmode', 'text');
-  odpovedEl.placeholder = 'historie';
-  odpovedEl.style.textAlign = 'center';
-  prikladEl.innerHTML = '';
-  caraEl.style.opacity = '0';
-  updateMicVisibility();
-  updateBtn();
-  updateHomeBtn();
-  btnEl.focus();
-}
-
-// === CHECK FUNCTIONS ===
-function checkDivision(userStr, p){
-  var n = norm(userStr);
-  var trueStr = trunc4(p.vysledek);
-  var tParts = trueStr.split('.'), tc = tParts[0], td = tParts[1] || '';
-  var uParts = n.split('.'), uc = uParts[0], ud = uParts[1] || '';
-  if(uc !== tc) return { ok:false, bracket:0 };
-  var correctDecLen = td.length;
-  var userDec = ud;
-  while(userDec.length > correctDecLen && userDec.charAt(userDec.length-1) === '0') userDec = userDec.slice(0,-1);
-  var truePadded = td;
-  while(truePadded.length < Math.max(userDec.length, correctDecLen)) truePadded += '0';
-  for(var i = 0; i < userDec.length; i++){ if(userDec.charAt(i) !== truePadded.charAt(i)) return { ok:false, bracket:i+1 }; }
-  return { ok:true, bracket:userDec.length };
-}
-
-function check(input, p){
-  var n = norm(input);
-  if(!n) return false;
-  if(p.op === '/') return checkDivision(input, p).ok;
-  if(typeof p.vysledek === 'bigint'){ try { return BigInt(n) === p.vysledek; } catch(e){ return false; } }
-  var num = parseFloat(n);
-  return !isNaN(num) && Math.abs(num - p.vysledek) < 1e-9;
-}
-
-function findFirstWrongDigit(userInput, p){
-  var n = norm(userInput);
-  var cs, us;
-  if(typeof p.vysledek === 'bigint'){ cs = p.vysledek.toString(); try { us = BigInt(n).toString(); } catch(e){ return 1; } }
-  else { cs = String(p.vysledek); us = String(parseFloat(n)); }
-  var ml = Math.max(cs.length, us.length);
-  for(var i = 0; i < ml; i++){ if((cs[i]||'') !== (us[i]||'')) return i+1; }
-  return 0;
-}
-
-// === UI UPDATES ===
-function updateScores(){
-  scoreC.textContent = correct;
-  scoreW.textContent = wrong;
-  streakEl.textContent = streak;
-  streakEl.parentElement.classList.add('pop');
-  setTimeout(function(){ streakEl.parentElement.classList.remove('pop'); }, 200);
-}
-
-function updateBtn(){
-  btnEl.classList.remove('btn-pulse', 'btn-glow');
-  if(!zobrazitVysledek){ btnEl.textContent = 'START'; btnEl.classList.add('btn-pulse'); }
-  else { btnEl.textContent = '✓ VÝSLEDEK (kontrola)'; btnEl.classList.add('btn-glow'); }
-}
-
-function renderHistory(){
-  if(!history.length){ histEmpty.style.display = 'block'; histCont.style.opacity = '0'; var olds = histList.querySelectorAll('.hi'); for(var k=0;k<olds.length;k++) olds[k].remove(); return; }
-  histEmpty.style.display = 'none';
-  histCont.style.opacity = '1';
-  var olds = histList.querySelectorAll('.hi');
-  for(var k = 0; k < olds.length; k++) olds[k].remove();
-  for(var i = 0; i < history.length; i++){
-    var h = history[i];
-    var d = document.createElement('div');
-    d.className = 'hi slide-up px-2.5 py-1 rounded-md text-[12px] tabular-nums font-bold border ' + (h.correct ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300' : 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300');
-    d.style.animationDelay = (i * 50) + 'ms';
-    d.textContent = h.text + ' ' + (h.correct ? '✓' : '✗');
-    histList.appendChild(d);
-  }
-}
-
-function addHist(ok, userInput){
-  if(!aktualniPriklad) return;
-  var p = aktualniPriklad;
-  var v = p.vysledekZ !== undefined ? p.vysledekZ : p.vysledek;
-  var opStr = p.op === '*' ? 'x' : p.op === '/' ? ':' : p.op === '-' ? '−' : '+';
-  var bracketStr = '';
-  if(p.op === '/'){ var r = checkDivision(userInput, p); bracketStr = '(' + r.bracket + ')'; }
-  else if(!ok){ var pos = findFirstWrongDigit(userInput, p); if(pos > 0) bracketStr = '(' + pos + ')'; }
-  var text = fmt(p.a) + ' ' + opStr + ' ' + fmt(p.b) + ' = ' + fmt(v) + bracketStr;
-  history.unshift({ text:text, correct:ok });
-  renderHistory();
-}
-
-// ═══════════════════════════════════════════════════════════════
-// HLASOVÝ VSTUP
-// ═══════════════════════════════════════════════════════════════
-
-var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-var recognition = null, micListening = false, micAutoRestart = true;
-var spBuf = [];
-
-function spReset(){
-  spBuf = [];
-  odpovedEl.value = '';
-}
-
-// === ZPĚT/SPJET – vymaže poslední číslici ===
-function spBackspace(){
-  var current = norm(odpovedEl.value);
-  if(!current) return;
-  current = current.slice(0, -1);
-  spBuf = current ? current.split('').map(function(c){ return c === '.' ? '.' : parseInt(c, 10); }) : [];
-  odpovedEl.value = current ? fmtInputStr(current) : '';
-}
-
-function spFlush(){
-  if(!spBuf.length){ odpovedEl.value = ''; return; }
-  var dotIndex = spBuf.indexOf('.');
-  var intParts, decParts;
-  if(dotIndex === -1){ intParts = spBuf; decParts = []; }
-  else { intParts = spBuf.slice(0, dotIndex); decParts = spBuf.slice(dotIndex + 1); }
-  var intStr = intParts.map(function(x){ return String(x); }).join('');
-  var decStr = decParts.map(function(x){ return String(x); }).join('');
-  intStr = intStr.replace(/^0+(?=\d)/, '');
-  if(intStr === '') intStr = '0';
-  var result = dotIndex === -1 ? intStr : intStr + '.' + decStr;
-  odpovedEl.value = fmtInputStr(result);
-}
-
-// === APPEND nuly (zero/zirou/zírou) – přidá 000 napravo ===
-function spAppendZeros(){
-  var current = norm(odpovedEl.value);
-  var zeros = [0, 0, 0];
-  if(!current){
-    zeros.forEach(function(z){ spBuf.push(z); });
-  } else {
-    var dotIdx = current.indexOf('.');
-    if(dotIdx === -1){
-      spBuf = current.split('').map(function(c){ return parseInt(c,10); });
-    } else {
-      spBuf = current.split('').map(function(c){ return c === '.' ? '.' : parseInt(c,10); });
-    }
-    zeros.forEach(function(z){ spBuf.push(z); });
-  }
-  spFlush();
-}
-
-var WV = {
-  'žádná':0,'zadna':0,'nula':0,'nulu':0,'nuly':0,
-  'jedna':1,'jeden':1,'jedno':1,'jednu':1,'jedné':1,
-  'dvě':2,'dva':2,'dvou':2,'tři':3,'třech':3,
-  'čtyři':4,'čtyřech':4,'pět':5,'pěti':5,
-  'šest':6,'šesti':6,'sedm':7,'sedmi':7,
-  'osm':8,'osmi':8,'devět':9,'devíti':9,
-  'deset':10,'deseti':10,'jedenáct':11,'jedenácti':11,
-  'dvanáct':12,'dvanácti':12,'třináct':13,'třinácti':13,
-  'čtrnáct':14,'čtrnácti':14,'patnáct':15,'patnácti':15,
-  'šestnáct':16,'šestnácti':16,'sedmnáct':17,'sedmnácti':17,
-  'osmnáct':18,'osmnácti':18,'devatenáct':19,'devatenácti':19,
-  'dvacet':20,'dvaceti':20,'třicet':30,'třiceti':30,
-  'čtyřicet':40,'čtyřiceti':40,'padesát':50,'padesáti':50,
-  'šedesát':60,'šedesáti':60,'sedmdesát':70,'sedmdesáti':70,
-  'osmdesát':80,'osmdesáti':80,'devadesát':90,'devadesáti':90,
-  'sto':100,'sta':100,'stu':100,'stem':100,'stě':100,
-  'dvěstě':200,'dvěsta':200,'třista':300,'třísta':300,
-  'čtyřista':400,'čtyřsta':400
-};
-
-var IGNORE_WORDS = {'tisíc':1,'tisíce':1,'tisíců':1,'tisíci':1,'tisícům':1,'tisícem':1,'tisících':1,
-  'milion':1,'milión':1,'miliony':1,'milióny':1,'milionu':1,'miliónu':1,'milionů':1,'miliónů':1,
-  'miliarda':1,'miliardy':1,'miliard':1,'miliardě':1,'miliardám':1,'miliardou':1,'miliardách':1};
-
-var DEC_RE = /(?:^|\s)(celá|celé|celých|celych|cely|celi|cela|čárka|čárku|carka|carku|tečka|tečku|tecka|tecku)(?:\s|$)/;
-
-function evalPhrase(phrase, words, startIdx, len){
-  if(/^\d+$/.test(phrase)) return phrase;
-  if(WV[phrase] !== undefined) return WV[phrase];
-  if(len >= 2){
-    var w0 = words[startIdx], w1 = words[startIdx+1];
-    if((w1==='set'||w1==='sto'||w1==='sta'||w1==='stu'||w1==='stě') && WV[w0] !== undefined && WV[w0] >= 2 && WV[w0] <= 9) return WV[w0]*100;
-    if(WV[w0] !== undefined && WV[w0] >= 20 && WV[w0] <= 90 && WV[w1] !== undefined && WV[w1] >= 1 && WV[w1] <= 9) return WV[w0]+WV[w1];
-    if(w0==='sto'||w0==='sta'||w0==='stu'||w0==='stě'){
-      if(WV[w1] !== undefined && WV[w1] <= 99) return 100+WV[w1];
-      if(/^\d+$/.test(w1)) return 100+parseInt(w1,10);
-    }
-  }
-  if(len >= 3){
-    var w0 = words[startIdx], w1 = words[startIdx+1], w2 = words[startIdx+2];
-    var isHundred = (w1==='set'||w1==='sto'||w1==='sta'||w1==='stu'||w1==='stě') && WV[w0] >= 2 && WV[w0] <= 9;
-    if(isHundred){
-      var hundreds = WV[w0]*100;
-      if(len === 3){
-        if(WV[w2] !== undefined && WV[w2] <= 99) return hundreds+WV[w2];
-        if(/^\d+$/.test(w2)) return hundreds+parseInt(w2,10);
-      }
-      if(len === 4){
-        var w3 = words[startIdx+3];
-        if(WV[w2] !== undefined && WV[w2] >= 20 && WV[w2] <= 90 && WV[w3] !== undefined && WV[w3] >= 1 && WV[w3] <= 9) return hundreds+WV[w2]+WV[w3];
-      }
-    }
-    if(w0==='sto'||w0==='sta'||w0==='stu'||w0==='stě'){
-      if(len === 3 && WV[w1] !== undefined && WV[w1] >= 20 && WV[w1] <= 90 && WV[w2] !== undefined && WV[w2] >= 1 && WV[w2] <= 9) return 100+WV[w1]+WV[w2];
-    }
-  }
-  return null;
-}
-
-function parseVoiceTokens(words){
-  var result = [], i = 0;
-  while(i < words.length){
-    var w = words[i];
-    if(!w){ i++; continue; }
-    if(IGNORE_WORDS[w]){ i++; continue; }
-    var matched = false;
-    for(var len = 4; len >= 1; len--){
-      if(i+len > words.length) continue;
-      var phrase = words.slice(i, i+len).join(' ');
-      var val = evalPhrase(phrase, words, i, len);
-      if(val !== null && ((typeof val === 'number' && val >= 0)||(typeof val === 'string' && /^\d+$/.test(val)))){
-        result.push(val); i += len; matched = true; break;
-      }
-    }
-    if(!matched) i++;
-  }
-  return result;
-}
-
-function expandCompound(t){
-  return t.replace(/dvěstě/g,'dvě stě').replace(/třista/g,'tři sta').replace(/čtyřista/g,'čtyři sta')
-    .replace(/([a-záčďéěíňóřšťúůýž]+)set\b/g,'$1 set')
-    .replace(/(dvacet|třicet|čtyřicet|padesát|šedesát|sedmdesát|osmdesát|devadesát)(jedna|jeden|dvě|dva|tři|čtyři|pět|šest|sedm|osm|devět)/g,'$1 $2');
-}
-
-function updateMicVisibility(){
-  var show = hlasCheck.checked && zobrazitVysledek && aktualniPriklad;
-  micBtn.classList.toggle('shown', !!show);
-  if(!show && micListening) stopMic(false);
-}
-
-function buildRecognition(){
-  if(!SpeechRecognition) return null;
-  var r = new SpeechRecognition();
-  r.lang = 'cs-CZ';
-  r.continuous = true;
-  r.interimResults = false;
-  r.maxAlternatives = 1;
-
-  r.onstart = function(){
-    micListening = true;
-    micBtn.classList.add('listening');
-    micLabel.textContent = 'Mluvte…';
-    inputBox.style.borderColor = '#ef4444';
-  };
-
-  r.onend = function(){
-    micListening = false;
-    micBtn.classList.remove('listening');
-    micLabel.textContent = 'Mikrofon';
-    inputBox.style.borderColor = '';
-    if(micAutoRestart && hlasCheck.checked && zobrazitVysledek){
-      setTimeout(function(){ if(!micListening && hlasCheck.checked && zobrazitVysledek) r.start(); }, 300);
-    }
-  };
-
-  r.onerror = function(e){
-    if(e.error === 'not-allowed' || e.error === 'service-not-available'){
-      micAutoRestart = false; hlasCheck.checked = false; updateMicVisibility();
-      chybaEl.textContent = '⚠️ Mikrofon není dostupný';
-    }
-    micListening = false;
-  };
-
-  r.onresult = function(e){
-    var finalText = '';
-    for(var i = e.resultIndex; i < e.results.length; i++){
-      if(e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
-    }
-    if(!finalText.trim()) return;
-
-    var raw = finalText.trim().toLowerCase();
-    raw = raw.replace(/(\d)\s+(?=\d)/g, '$1');
-    raw = raw.replace(/[,.]/g, ' čárka ');
-    raw = raw.replace(/[?!;:_]/g, '');
-    raw = raw.replace(/\b(ukázat|ukazat|ukažte|ukazte|ukaž|ukaš)\b/g, ' ');
-
-    if(/chyba/.test(raw)){ spReset(); return; }
-
-    // === ZPĚT / SPJET – vymaže poslední číslici, lze opakovat ===
-    var zpetPocet = (raw.match(/\b(zpět|spjet)\b/g) || []).length;
-    for(var z = 0; z < zpetPocet; z++){ spBackspace(); }
-    if(zpetPocet > 0){ raw = raw.replace(/\b(zpět|spjet)\b/g, ' ').trim(); if(!raw){ return; } }
-
-    // === ZERO/ZIROU/ZÍROU – přidá 000 napravo ===
-    var zeroRe = /\b(zero|zirou|zírou)\b/g;
-    var hasZero = false;
-    while(zeroRe.exec(raw) !== null){ hasZero = true; spAppendZeros(); }
-    if(hasZero){ raw = raw.replace(/\b(zero|zirou|zírou)\b/g, ' ').trim(); if(!raw){ return; } }
-
-    var shouldSubmit = false;
-    if(/\b(ano|jo|joo)\b/.test(raw)){
-      shouldSubmit = true;
-      raw = raw.replace(/\b(ano|jo|joo)\b/g, ' ');
-    }
-
-    raw = expandCompound(raw);
-    raw = raw.trim();
-
-    if(raw){
-      var decMatch = raw.match(DEC_RE);
-      if(decMatch){
-        var before = raw.slice(0, decMatch.index).trim();
-        if(before){ parseVoiceTokens(before.split(/\s+/).filter(Boolean)).forEach(function(v){ spBuf.push(v); }); }
-        spBuf.push('.');
-        var after = raw.slice(decMatch.index + decMatch[0].length).trim();
-        if(after){ parseVoiceTokens(after.split(/\s+/).filter(Boolean)).forEach(function(v){ spBuf.push(v); }); }
-      } else {
-        parseVoiceTokens(raw.split(/\s+/).filter(Boolean)).forEach(function(v){ spBuf.push(v); });
-      }
-      spFlush();
-    }
-
-    if(shouldSubmit){
-      micAutoRestart = false;
-      stopMic(false);
-      setTimeout(function(){ handle(null, true); }, 100);
-    }
-  };
-
-  return r;
-}
-
-function startMic(){
-  if(!SpeechRecognition){ chybaEl.textContent = '⚠️ Prohlížeč nepodporuje hlasový vstup'; return; }
-  if(micListening) return;
-  micAutoRestart = true;
-  if(!recognition) recognition = buildRecognition();
-  try{ recognition.start(); } catch(e){}
-}
-
-function stopMic(reset){
-  micAutoRestart = false;
-  if(recognition && micListening){ try{ recognition.stop(); } catch(e){} }
-  if(reset){ recognition = null; }
-  micListening = false;
-  micBtn.classList.remove('listening');
-  micLabel.textContent = 'Mikrofon';
-  inputBox.style.borderColor = '';
-}
-
-hlasCheck.addEventListener('change', function(){
-  updateMicVisibility();
-  if(!hlasCheck.checked){ stopMic(true); }
-  else if(zobrazitVysledek && aktualniPriklad){ setTimeout(function(){ startMic(); }, 100); }
-});
-
-micBtn.addEventListener('click', function(){ if(micListening) stopMic(false); else startMic(); });
-micBtn.addEventListener('touchstart', function(e){ e.stopPropagation(); }, {passive:true});
-
-// === MAIN HANDLER ===
-function handle(e, fromVoice){
-  if(isProcessing) return;
-  isProcessing = true;
-  if(e) e.preventDefault();
-
-  if(!fromVoice && micListening) stopMic(false);
-
-  var parentDiv = odpovedEl.parentElement.parentElement;
-  parentDiv.classList.remove('zelene', 'cervene');
-  odpovedEl.classList.remove('text-white');
-
-  if(!aktualniPriklad && !zobrazitVysledek){
-    var inputVal = odpovedEl.value.trim();
-    if(!inputVal){
-      if(startNewProblem()) return;
-      isProcessing = false; return;
-    }
-    if(inputVal.toLowerCase() === 'vymazat'){
-      history = []; correct = 0; wrong = 0; streak = 0;
-      updateScores(); renderHistory(); save();
-      chybaEl.textContent = '✅ Historie smazána';
-      setTimeout(function(){ chybaEl.textContent = ''; }, 2000);
-      if(startNewProblem()) return;
-      isProcessing = false; return;
-    }
-    chybaEl.textContent = '⚠️ Špatné heslo';
-    setTimeout(function(){ chybaEl.textContent = ''; }, 2000);
-    resetToInitialState();
-    isProcessing = false; return;
-  }
-
-  if(zobrazitVysledek && aktualniPriklad){
-    var val = odpovedEl.value.trim();
-    var normVal = norm(val);
-
-    if(!val){
-      var vv = aktualniPriklad.vysledekZ !== undefined ? aktualniPriklad.vysledekZ : aktualniPriklad.vysledek;
-      odpovedEl.value = fmt(vv);
-      odpovedEl.classList.remove('hidden-text');
-      zobrazitVysledek = false; updateBtn();
-      updateMicVisibility();
-      btnEl.focus();
-      setTimeout(function(){ isProcessing = false; }, 50);
-      return;
-    }
-
-    if(!/^-?\d+([.,]\d*)?$/.test(normVal)){
-      chybaEl.textContent = '⚠️ Nepovolený znak!';
-      isProcessing = false;
-      if(!fromVoice) odpovedEl.focus();
-      return;
-    }
-
-    odpovedEl.value = fmtInputStr(normVal);
-    var ok;
-    if(aktualniPriklad.op === '/') ok = checkDivision(normVal, aktualniPriklad).ok;
-    else ok = check(normVal, aktualniPriklad);
-
-    parentDiv.classList.add(ok ? 'zelene' : 'cervene');
-    odpovedEl.classList.add('text-white');
-
-    if(ok){ correct++; streak++; }
-    else { wrong++; streak = 0; parentDiv.classList.add('shake'); setTimeout(function(){ parentDiv.classList.remove('shake'); }, 500); }
-
-    updateScores(); addHist(ok, normVal); save();
-    zobrazitVysledek = false; updateBtn();
-    updateMicVisibility();
-    btnEl.focus();
-    setTimeout(function(){ isProcessing = false; }, 150);
-    return;
-  }
-
-  if(aktualniPriklad && !zobrazitVysledek){
-    if(startNewProblem()) return;
-    isProcessing = false;
-  }
-}
-
-// === EVENT LISTENERS ===
-btnEl.addEventListener('touchstart', function(e){ handle(e, false); }, {passive:false});
-btnEl.addEventListener('click', function(e){ if(e.pointerType !== 'touch') handle(e, false); });
-odpovedEl.addEventListener('keydown', function(e){ if(e.key === 'Enter') handle(e, false); });
-_id('settingsToggle').addEventListener('click', function(){ _id('settingsPanel').classList.toggle('collapsed'); });
-
-// === INIT ===
-updateScores();
-updateBtn();
-renderHistory();
-resetToInitialState();
-
-})();
-</script>
+    <script>
+    (function(){
+        const UI = {};
+        ['odpoved','operace','cislice1','cislice2','chyba','priklad','cara','tlacitko','scoreCorrect','scoreWrong','streakCount','historyContainer','historyList','historyEmpty','themeToggle','themeIconSun','themeIconMoon','hlasCheck','micBtn','micLabel','inputBox','homeBtn','settingsToggle','settingsPanel','currentDate'].forEach(id => UI[id] = document.getElementById(id));
+        const KEY = 'matika_trenink_v4', today = new Date(), todayStr = today.toISOString().slice(0,10);
+        let correct = 0, wrong = 0, streak = 0, history = [], aktualniPriklad = null, zobrazitVysledek = false, isProcessing = false;
+        
+        UI.currentDate.textContent = ['Neděle','Pondělí','Úterý','Středa','Čtvrtek','Pátek','Sobota'][today.getDay()] + ' ' + today.getDate() + '. ' + ['ledna','února','března','dubna','května','června','července','srpna','září','října','listopadu','prosince'][today.getMonth()] + ' ' + today.getFullYear();
+        
+        // Hlasový slovník
+        const WV = {'žádná':0,'zadna':0,'nula':0,'nulu':0,'jedna':1,'jeden':1,'jedno':1,'dvě':2,'dva':2,'tři':3,'čtyři':4,'pět':5,'šest':6,'sedm':7,'osm':8,'devět':9,'deset':10,'jedenáct':11,'dvanáct':12,'třináct':13,'čtrnáct':14,'patnáct':15,'šestnáct':16,'sedmnáct':17,'osmnáct':18,'devatenáct':19,'dvacet':20,'třicet':30,'čtyřicet':40,'padesát':50,'šedesát':60,'sedmdesát':70,'osmdesát':80,'devadesát':90,'sto':100,'dvěstě':200,'třista':300,'čtyřista':400};
+        const IGNORE_WORDS = {'tisíc':1,'tisíce':1,'milion':1,'miliony':1,'milionu':1};
+        let micListening = false, spBuf = [], recognition;
+        
+        function updateTheme(){
+            const isDark = document.documentElement.classList.toggle('dark');
+            UI.themeIconSun.classList.toggle('hidden', !isDark);
+            UI.themeIconMoon.classList.toggle('hidden', isDark);
+        }
+        UI.themeToggle.onclick = updateTheme;
+
+        function fmt(x){
+            if(typeof x !== 'number') return String(x);
+            let p = x.toString().split('.');
+            let c = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
+            return p[1] ? c + ',' + p[1] : c;
+        }
+        function fmtInputStr(s){ return s.replace(/\s|\u00A0/g, '').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1\u00A0'); }
+        function norm(s){ return s.trim().replace(/[\s\u00A0]+/g, '').replace(',', '.'); }
+        function save(){ localStorage.setItem(KEY, JSON.stringify({date:todayStr, correct, wrong, streak, history, operace:UI.operace.value, cislice1:UI.cislice1.value, cislice2:UI.cislice2.value})); }
+        
+        function load(){
+            try {
+                let s = JSON.parse(localStorage.getItem(KEY));
+                if(s && s.date === todayStr){ ({correct, wrong, streak, history} = s); UI.operace.value = s.operace; UI.cislice1.value = s.cislice1; UI.cislice2.value = s.cislice2; }
+            } catch(e){}
+        }
+        
+        for(let i=1;i<=9;i++){ UI.cislice1.innerHTML += `<option value="${i}">${i}</option>`; UI.cislice2.innerHTML += `<option value="${i}">${i}</option>`; }
+        load();
+        
+        function updateCis2(){
+            let v1 = +UI.cislice1.value;
+            Array.from(UI.cislice2.options).forEach(o => o.disabled = (UI.operace.value === '-' && +o.value > v1));
+            if(+UI.cislice2.value > v1 && UI.operace.value === '-') UI.cislice2.value = v1;
+        }
+        updateCis2();
+        [UI.operace, UI.cislice1].forEach(el => el.onchange = () => { updateCis2(); UI.chyba.textContent = ''; save(); });
+        UI.cislice2.onchange = save;
+
+        function genNum(n){ return Math.floor(Math.random() * (Math.pow(10, n) - Math.pow(10, n-1) + 1)) + Math.pow(10, n-1); }
+        function generate(){
+            let op = UI.operace.value, n1 = +UI.cislice1.value, n2 = +UI.cislice2.value;
+            if(op === '-' && n1 < n2){ UI.chyba.textContent = '❌ 1. číslo musí být ≥ 2. při odčítání'; return null; }
+            let a, b;
+            for(let i=0; i<1000; i++){
+                a = genNum(n1); b = n2 === 1 ? Math.floor(Math.random()*8)+2 : genNum(n2);
+                if(op === '-' && a <= b) continue;
+                if(op === '/' && b === 0) continue;
+                break;
+            }
+            let res = (op==='+')?a+b:(op==='-')?a-b:(op==='*')?BigInt(a)*BigInt(b):a/b;
+            return {a, b, op, vysledek: res, vysledekZ: (op==='/') ? (Math.round(res*10000)/10000).toFixed(4) : res};
+        }
+
+        // Hlasová logika (zkrácená verze)
+        function spFlush(){
+            if(!spBuf.length){ UI.odpoved.value = ''; return; }
+            UI.odpoved.value = fmtInputStr(spBuf.join('').replace(/(\d{3})\.?/g,'$1'));
+        }
+        function buildMic(){
+            const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if(!Rec) return;
+            recognition = new Rec();
+            recognition.lang = 'cs-CZ';
+            recognition.continuous = true;
+            recognition.onstart = () => { micListening = true; UI.micBtn.classList.add('listening'); UI.micLabel.textContent = 'Mluvte…'; };
+            recognition.onend = () => { micListening = false; UI.micBtn.classList.remove('listening'); UI.micLabel.textContent = 'Mikrofon'; if(UI.hlasCheck.checked && zobrazitVysledek) recognition.start(); };
+            recognition.onresult = (e) => {
+                let text = e.results[e.results.length-1][0].transcript.toLowerCase();
+                if(text.includes('zpět')) { spBuf.pop(); spFlush(); }
+                else {
+                    text.split(' ').forEach(w => { if(WV[w]!==undefined) spBuf.push(WV[w]); });
+                    spFlush();
+                    if(text.includes('ano') || text.includes('hotovo')) handle();
+                }
+            };
+        }
+
+        function startNewProblem(){
+            let p = generate(); if(!p) return false;
+            aktualniPriklad = p;
+            UI.priklad.innerHTML = `<div class="flex justify-end gap-3 w-full"><div class="flex flex-col text-right select-none"><div class="invisible">0</div><div>${p.op==='*'? 'x':p.op==='/'?':':p.op==='-'?'−':'+'}</div></div><div class="flex flex-col text-right"><div>${fmt(p.a)}</div><div>${fmt(p.b)}</div></div></div>`;
+            UI.cara.style.opacity = '1'; UI.odpoved.value = ''; UI.odpoved.classList.remove('hidden-text'); UI.odpoved.focus();
+            zobrazitVysledek = true; updateUIState(); return true;
+        }
+
+        function updateUIState(){
+            UI.homeBtn.classList.toggle('hidden-btn', !aktualniPriklad);
+            UI.micBtn.classList.toggle('shown', !!(UI.hlasCheck.checked && zobrazitVysledek && aktualniPriklad));
+            UI.tlacitko.textContent = zobrazitVysledek ? '✓ VÝSLEDEK' : 'START';
+            UI.tlacitko.className = `flex-1 py-3 ${zobrazitVysledek?'bg-emerald-600 btn-glow':'bg-blue-600 btn-pulse'} text-white font-black text-base rounded-xl shadow-lg transition-all uppercase tracking-widest`;
+        }
+
+        function check(){
+            let val = norm(UI.odpoved.value);
+            let ok = (aktualniPriklad.op === '/') ? (Math.abs(parseFloat(val) - aktualniPriklad.vysledek) < 0.001) : (BigInt(val) === BigInt(aktualniPriklad.vysledek));
+            if(ok){ correct++; streak++; } else { wrong++; streak = 0; }
+            UI.scoreCorrect.textContent = correct; UI.scoreWrong.textContent = wrong; UI.streakCount.textContent = streak;
+            save(); renderHistory(ok); zobrazitVysledek = false; updateUIState();
+            if(recognition && micListening) recognition.stop();
+        }
+
+        function renderHistory(ok){
+            UI.historyEmpty.style.display = 'none'; UI.historyContainer.style.opacity = '1';
+            let d = document.createElement('div');
+            d.className = `slide-up px-2.5 py-1 rounded-md text-[12px] tabular-nums font-bold border ${ok?'bg-emerald-50 border-emerald-200 text-emerald-700':'bg-rose-50 border-rose-200 text-rose-700'}`;
+            d.textContent = `${fmt(aktualniPriklad.a)} ${aktualniPriklad.op} ${fmt(aktualniPriklad.b)} = ${aktualniPriklad.vysledekZ} ${ok?'✓':'✗'}`;
+            UI.historyList.prepend(d);
+        }
+
+        function handle(){
+            if(zobrazitVysledek) check(); 
+            else startNewProblem();
+        }
+
+        UI.tlacitko.onclick = handle;
+        UI.homeBtn.onclick = () => { aktualniPriklad = null; zobrazitVysledek = false; UI.odpoved.value=''; UI.priklad.innerHTML=''; updateUIState(); };
+        UI.settingsToggle.onclick = () => UI.settingsPanel.classList.toggle('collapsed');
+        UI.hlasCheck.onchange = () => { updateUIState(); if(UI.hlasCheck.checked) { if(!recognition) buildMic(); recognition.start(); } else if(recognition) recognition.stop(); };
+    })();
+    </script>
 </body>
 </html>
