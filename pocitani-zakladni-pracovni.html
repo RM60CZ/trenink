@@ -285,22 +285,38 @@ const buildRecognition=()=>{
     for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)finalText+=e.results[i][0].transcript+' ';
     if(!finalText.trim())return;
     let raw=finalText.trim().toLowerCase().replace(/(\d)\s+(?=\d)/g,'$1').replace(/[,.]/g,' čárka ').replace(/[?!;:_]/g,'').replace(/\b(ukázat|ukazat|ukažte|ukazte|ukaž|ukaš)\b/g,' ');
-    if(/chyba/.test(raw)){spReset();return}
+    
+    // Kontrola na chybu - reset
+    if(/chyba/.test(raw)){spReset();raw=raw.replace(/\bchyba\b/g,'').trim();if(!raw)return;}
+    
+    // Zpracování příkazu "zpět"
     const zpetPocet=(raw.match(/\b(zpět|spjet)\b/g)||[]).length;
     for(let z=0;z<zpetPocet;z++)spBackspace();
-    if(zpetPocet>0){raw=raw.replace(/\b(zpět|spjet)\b/g,'').trim();if(!raw)return}
-    // Nové příkazy pro vkládání nul
+    if(zpetPocet>0){raw=raw.replace(/\b(zpět|spjet)\b/g,'').trim();if(!raw)return;}
+    
+    // Zpracování příkazu "dvoj" / "dvojnula" - 2 nuly
     const dvojPocet=(raw.match(/\b(dvoj|dvojnula)\b/g)||[]).length;
     for(let d=0;d<dvojPocet;d++)spAppendZeros(2);
-    if(dvojPocet>0){raw=raw.replace(/\b(dvoj|dvojnula)\b/g,'').trim();if(!raw)return}
+    if(dvojPocet>0){raw=raw.replace(/\b(dvoj|dvojnula)\b/g,'').trim();if(!raw)return;}
+    
+    // Zpracování příkazu "troj" / "trojnula" - 3 nuly
     const trojPocet=(raw.match(/\b(troj|trojnula)\b/g)||[]).length;
     for(let t=0;t<trojPocet;t++)spAppendZeros(3);
-    if(trojPocet>0){raw=raw.replace(/\b(troj|trojnula)\b/g,'').trim();if(!raw)return}
-    // Původní příkaz pro tři nuly (pro zpětnou kompatibilitu)
-    let hasZero=false;
-    if(/\b(zero|zirou|zírou)\b/.test(raw)){hasZero=true;const m=raw.match(/\b(zero|zirou|zírou)\b/g);for(let i=0;i<m.length;i++)spAppendZeros(3);raw=raw.replace(/\b(zero|zirou|zírou)\b/g,'').trim();if(!raw)return}
+    if(trojPocet>0){raw=raw.replace(/\b(troj|trojnula)\b/g,'').trim();if(!raw)return;}
+    
+    // Zpracování příkazu "zero" / "zirou" / "zírou" - 3 nuly (zpětná kompatibilita)
+    if(/\b(zero|zirou|zírou)\b/.test(raw)){
+      const m=raw.match(/\b(zero|zirou|zírou)\b/g);
+      for(let i=0;i<m.length;i++)spAppendZeros(3);
+      raw=raw.replace(/\b(zero|zirou|zírou)\b/g,'').trim();
+      if(!raw)return;
+    }
+    
+    // Kontrola na odeslání výsledku
     let shouldSubmit=false;
     if(/\b(ano|jo|joo)\b/.test(raw)){shouldSubmit=true;raw=raw.replace(/\b(ano|jo|joo)\b/g,'')}
+    
+    // Zpracování čísel ze zbytku textu
     raw=expandCompound(raw).trim();
     if(raw){
       const decMatch=raw.match(DEC_RE);
@@ -328,8 +344,18 @@ micBtn.addEventListener('touchstart',e=>e.stopPropagation(),{passive:true});
 const spReset=()=>{spBuf=[];odpovedEl.value=''};
 const spBackspace=()=>{let current=norm(odpovedEl.value);if(!current)return;current=current.slice(0,-1);spBuf=current?current.split('').map(c=>c==='.'?'.':parseInt(c,10)):[];odpovedEl.value=current?fmtInputStr(current):''};
 const spFlush=()=>{if(!spBuf.length){odpovedEl.value='';return}const dotIndex=spBuf.indexOf('.');const intParts=dotIndex===-1?spBuf:spBuf.slice(0,dotIndex);const decParts=dotIndex===-1?[]:spBuf.slice(dotIndex+1);let intStr=intParts.map(String).join('').replace(/^0+(?=\d)/,'');if(!intStr)intStr='0';odpovedEl.value=fmtInputStr(dotIndex===-1?intStr:intStr+'.'+decParts.map(String).join(''))};
-// Upravená funkce pro přidávání nul - nyní přijímá parametr count
-const spAppendZeros=(count)=>{const current=norm(odpovedEl.value);if(!current){for(let i=0;i<count;i++)spBuf.push(0);}else{spBuf=current.split('').map(c=>c==='.'?'.':parseInt(c,10));for(let i=0;i<count;i++)spBuf.push(0);}spFlush()};
+
+// Opravená funkce pro přidávání nul - nyní správně přidává nuly i při opakovaném volání
+const spAppendZeros=(count)=>{
+  const current=norm(odpovedEl.value);
+  if(!current){
+    for(let i=0;i<count;i++)spBuf.push(0);
+  }else{
+    spBuf=current.split('').map(c=>c==='.'?'.':parseInt(c,10));
+    for(let i=0;i<count;i++)spBuf.push(0);
+  }
+  spFlush();
+};
 
 const handle=(e,fromVoice)=>{
   if(isProcessing)return;
