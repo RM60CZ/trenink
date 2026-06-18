@@ -150,7 +150,7 @@ const generate=()=>{
   chybaEl.textContent='';
   if(op==='-'&&n1<n2){chybaEl.textContent='❌ Při odčítání musí mít 1. číslo ≥ cifer než 2.';return null}
   let a,b,iter=0;
-  while(iter++<1000){a=genNum(n1);b=n2===1?Math.floor(Math.random()*8)+2:genNum(n2);if(op==='-'&&a<=b)continue;if(op==='/'&&b===0)continue;break}
+  while(iter++<<1000){a=genNum(n1);b=n2===1?Math.floor(Math.random()*8)+2:genNum(n2);if(op==='-'&&a<=b)continue;if(op==='/'&&b===0)continue;break}
   let vysledek,vysledekZ;
   if(op==='+')vysledek=vysledekZ=a+b;
   else if(op==='-')vysledek=vysledekZ=a-b;
@@ -185,8 +185,8 @@ const checkDivision=(userStr,p)=>{
   const n=norm(userStr),trueStr=trunc4(p.vysledek),[tc,td=trueStr.split('.')[1]||'']=trueStr.split('.'),[uc,ud=n.split('.')[1]||'']=n.split('.');
   if(uc!==tc)return{ok:false,bracket:0};
   let userDec=ud;while(userDec.length>td.length&&userDec.at(-1)==='0')userDec=userDec.slice(0,-1);
-  let truePadded=td;while(truePadded.length<Math.max(userDec.length,td.length))truePadded+='0';
-  for(let i=0;i<userDec.length;i++)if(userDec[i]!==truePadded[i])return{ok:false,bracket:i+1};
+  let truePadded=td;while(truePadded.length<<Math.max(userDec.length,td.length))truePadded+='0';
+  for(let i=0;i<<userDec.length;i++)if(userDec[i]!==truePadded[i])return{ok:false,bracket:i+1};
   return{ok:true,bracket:userDec.length};
 };
 
@@ -202,7 +202,7 @@ const findFirstWrongDigit=(userInput,p)=>{
   if(typeof p.vysledek==='bigint'){cs=p.vysledek.toString();try{us=BigInt(n).toString()}catch(e){return 1}}
   else{cs=String(p.vysledek);us=String(parseFloat(n))}
   const ml=Math.max(cs.length,us.length);
-  for(let i=0;i<ml;i++)if((cs[i]||'')!==(us[i]||''))return i+1;
+  for(let i=0;i<<ml;i++)if((cs[i]||'')!==(us[i]||''))return i+1;
   return 0;
 };
 
@@ -226,28 +226,28 @@ const addHist=(ok,userInput)=>{
 };
 
 // ═══════════════════════════════════════════════════════════════
-// HLASOVÝ VSTUP — rozšířený o řádová slova a desetinnou čárku
+// HLASOVÝ VSTUP — opravený (<< změněno na <)
 // ═══════════════════════════════════════════════════════════════
 
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 
-// Základní čísla (původní WV rozšířené)
 const WV=(s=>{const o={};s.split(';').forEach(p=>{const[v,w]=p.split(':');w.split(',').forEach(x=>o[x]=+v)});return o})('0:žádná,zadna,nula,nulu,nuly;1:jedna,jeden,jedno,jednu,jedné;2:dvě,dva,dvou;3:tři,třech;4:čtyři,čtyřech;5:pět,pěti;6:šest,šesti;7:sedm,sedmi;8:osm,osmi;9:devět,devíti;10:deset,deseti;11:jedenáct,jedenácti;12:dvanáct,dvanácti;13:třináct,třinácti;14:čtrnáct,čtrnácti;15:patnáct,patnácti;16:šestnáct,šestnácti;17:sedmnáct,sedmnácti;18:osmnáct,osmnácti;19:devatenáct,devatenácti;20:dvacet,dvaceti;30:třicet,třiceti;40:čtyřicet,čtyřiceti;50:padesát,padesáti;60:šedesát,šedesáti;70:sedmdesát,sedmdesáti;80:osmdesát,osmdesáti;90:devadesát,devadesáti;100:sto,sta,stu,stem,stě;200:dvěstě,dvěsta;300:třista,třísta;400:čtyřista,čtyřsta');
 
-// Řádová slova → násobitel (nové)
+const ZERO_SHORTCUTS={
+  'triple':[0,0,0],'troj':[0,0,0],'trojnula':[0,0,0],
+  'duo':[0,0],'dvoj':[0,0],'dvojnula':[0,0]
+};
+
 const ORDERS={
   'tisíc':1e3,'tisíce':1e3,'tisíců':1e3,'tisíci':1e3,'tisícům':1e3,'tisícem':1e3,'tisících':1e3,
   'milion':1e6,'milión':1e6,'miliony':1e6,'milióny':1e6,'milionu':1e6,'miliónu':1e6,'milionů':1e6,'miliónů':1e6,'milionem':1e6,'miliónem':1e6,
   'miliarda':1e9,'miliardy':1e9,'miliard':1e9,'miliardě':1e9,'miliardám':1e9,'miliardou':1e9,'miliardách':1e9
 };
 
-// Desetinná čárka (nové — rozšířené o celých/celé)
 const DECIMAL_WORDS=['celá','celých','celé','celych','cely','celi','cela','čárka','čárku','carka','carku'];
 
-// Ignorovaná slova BEZ řádových slov (nové — řádová slova už nejsou ignored)
 const IGNORE_WORDS=(s=>{const o={};s.split(',').forEach(x=>o[x]=1);return o})('tečka,tečku,tecka,tecku');
 
-// Původní evalPhrase s rozšířením o řádová slova
 const evalPhrase=(phrase,words,startIdx,len)=>{
   if(/^\d+$/.test(phrase))return phrase;
   if(WV[phrase]!==undefined)return WV[phrase];
@@ -272,24 +272,28 @@ const evalPhrase=(phrase,words,startIdx,len)=>{
   return null;
 };
 
-// Původní parseVoiceTokens s rozšířením o řádová slova a desetinnou čárku
 const parseVoiceTokens=words=>{
   const result=[];let i=0;
-  while(i<words.length){
+  while(i<<words.length){
     const w=words[i];
     if(!w){i++;continue}
-    // Řádové slovo = násobitel (nové)
+    
+    if(ZERO_SHORTCUTS[w]!==undefined){
+      ZERO_SHORTCUTS[w].forEach(z=>result.push(z));
+      i++;
+      continue;
+    }
+    
     if(ORDERS[w]!==undefined){
-      // Najdi předchozí číslo v result a vynásob ho
       if(result.length>0&&typeof result[result.length-1]==='number'){
         result[result.length-1]=result[result.length-1]*ORDERS[w];
       }else{
-        // Samotný řád bez čísla před ním = 1 × řád
         result.push(ORDERS[w]);
       }
       i++;
       continue;
     }
+    
     if(IGNORE_WORDS[w]){i++;continue}
     let matched=false;
     for(let len=4;len>=1;len--){
@@ -320,7 +324,7 @@ const buildRecognition=()=>{
     let raw=finalText.trim().toLowerCase().replace(/(\d)\s+(?=\d)/g,'$1').replace(/[,.]/g,' čárka ').replace(/[?!;:_]/g,'').replace(/\b(ukázat|ukazat|ukažte|ukazte|ukaž|ukaš)\b/g,' ');
     if(/chyba/.test(raw)){spReset();return}
     const zpetPocet=(raw.match(/\b(zpět|spjet)\b/g)||[]).length;
-    for(let z=0;z<zpetPocet;z++)spBackspace();
+    for(let z=0;z<<zpetPocet;z++)spBackspace();
     if(zpetPocet>0){raw=raw.replace(/\b(zpět|spjet)\b/g,'').trim();if(!raw)return}
     let hasZero=false;
     if(/\b(zero|zirou|zírou)\b/.test(raw)){hasZero=true;const m=raw.match(/\b(zero|zirou|zírou)\b/g);for(let i=0;i<m.length;i++)spAppendZeros();raw=raw.replace(/\b(zero|zirou|zírou)\b/g,'').trim();if(!raw)return}
@@ -328,7 +332,6 @@ const buildRecognition=()=>{
     if(/\b(ano|jo|joo)\b/.test(raw)){shouldSubmit=true;raw=raw.replace(/\b(ano|jo|joo)\b/g,'')}
     raw=expandCompound(raw).trim();
     if(raw){
-      // Detekce desetinné čárky (nové — rozšířené DECIMAL_WORDS)
       const decMatch=raw.match(new RegExp('(?:^|\\s)('+DECIMAL_WORDS.join('|')+')(?:\\s|$)'));
       if(decMatch){
         const before=raw.slice(0,decMatch.index).trim();
@@ -336,13 +339,29 @@ const buildRecognition=()=>{
         spBuf.push('.');
         const after=raw.slice(decMatch.index+decMatch[0].length).trim();
         if(after){
-          // Za čárkou: číselkový mód — každé slovo → číslice
           const afterWords=after.split(/\s+/).filter(Boolean);
           afterWords.forEach(w=>{
-            // Zkus najít číslo ve WV
-            if(WV[w]!==undefined)spBuf.push(WV[w]);
-            else{
-              // Zkus rozdělit na číslice (např. "dvanáct" → 1,2)
+            if(ZERO_SHORTCUTS[w]!==undefined){
+              ZERO_SHORTCUTS[w].forEach(z=>spBuf.push(z));
+              return;
+            }
+            if(WV[w]!==undefined){
+              const v=WV[w];
+              String(v).split('').forEach(d=>spBuf.push(parseInt(d,10)));
+              return;
+            }
+            let found=false;
+            for(let len=4;len>=1;len--){
+              if(afterWords.indexOf(w)+len>afterWords.length)continue;
+              const phrase=afterWords.slice(afterWords.indexOf(w),afterWords.indexOf(w)+len).join(' ');
+              const val=evalPhrase(phrase,afterWords,afterWords.indexOf(w),len);
+              if(val!==null&&((typeof val==='number'&&val>=0)||(typeof val==='string'&&/^\d+$/.test(val)))){
+                String(val).split('').forEach(d=>spBuf.push(parseInt(d,10)));
+                found=true;
+                break;
+              }
+            }
+            if(!found){
               const v=WV[w];
               if(v!==undefined)String(v).split('').forEach(d=>spBuf.push(parseInt(d,10)));
             }
