@@ -150,7 +150,7 @@ const generate=()=>{
   chybaEl.textContent='';
   if(op==='-'&&n1<n2){chybaEl.textContent='❌ Při odčítání musí mít 1. číslo ≥ cifer než 2.';return null}
   let a,b,iter=0;
-  while(iter++<<1000){a=genNum(n1);b=n2===1?Math.floor(Math.random()*8)+2:genNum(n2);if(op==='-'&&a<=b)continue;if(op==='/'&&b===0)continue;break}
+  while(iter++<1000){a=genNum(n1);b=n2===1?Math.floor(Math.random()*8)+2:genNum(n2);if(op==='-'&&a<=b)continue;if(op==='/'&&b===0)continue;break}
   let vysledek,vysledekZ;
   if(op==='+')vysledek=vysledekZ=a+b;
   else if(op==='-')vysledek=vysledekZ=a-b;
@@ -185,8 +185,8 @@ const checkDivision=(userStr,p)=>{
   const n=norm(userStr),trueStr=trunc4(p.vysledek),[tc,td=trueStr.split('.')[1]||'']=trueStr.split('.'),[uc,ud=n.split('.')[1]||'']=n.split('.');
   if(uc!==tc)return{ok:false,bracket:0};
   let userDec=ud;while(userDec.length>td.length&&userDec.at(-1)==='0')userDec=userDec.slice(0,-1);
-  let truePadded=td;while(truePadded.length<<Math.max(userDec.length,td.length))truePadded+='0';
-  for(let i=0;i<<userDec.length;i++)if(userDec[i]!==truePadded[i])return{ok:false,bracket:i+1};
+  let truePadded=td;while(truePadded.length<Math.max(userDec.length,td.length))truePadded+='0';
+  for(let i=0;i<userDec.length;i++)if(userDec[i]!==truePadded[i])return{ok:false,bracket:i+1};
   return{ok:true,bracket:userDec.length};
 };
 
@@ -202,7 +202,7 @@ const findFirstWrongDigit=(userInput,p)=>{
   if(typeof p.vysledek==='bigint'){cs=p.vysledek.toString();try{us=BigInt(n).toString()}catch(e){return 1}}
   else{cs=String(p.vysledek);us=String(parseFloat(n))}
   const ml=Math.max(cs.length,us.length);
-  for(let i=0;i<<ml;i++)if((cs[i]||'')!==(us[i]||''))return i+1;
+  for(let i=0;i<ml;i++)if((cs[i]||'')!==(us[i]||''))return i+1;
   return 0;
 };
 
@@ -225,28 +225,9 @@ const addHist=(ok,userInput)=>{
   renderHistory();
 };
 
-// ═══════════════════════════════════════════════════════════════
-// HLASOVÝ VSTUP — opravený (<< změněno na <)
-// ═══════════════════════════════════════════════════════════════
-
-const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-
 const WV=(s=>{const o={};s.split(';').forEach(p=>{const[v,w]=p.split(':');w.split(',').forEach(x=>o[x]=+v)});return o})('0:žádná,zadna,nula,nulu,nuly;1:jedna,jeden,jedno,jednu,jedné;2:dvě,dva,dvou;3:tři,třech;4:čtyři,čtyřech;5:pět,pěti;6:šest,šesti;7:sedm,sedmi;8:osm,osmi;9:devět,devíti;10:deset,deseti;11:jedenáct,jedenácti;12:dvanáct,dvanácti;13:třináct,třinácti;14:čtrnáct,čtrnácti;15:patnáct,patnácti;16:šestnáct,šestnácti;17:sedmnáct,sedmnácti;18:osmnáct,osmnácti;19:devatenáct,devatenácti;20:dvacet,dvaceti;30:třicet,třiceti;40:čtyřicet,čtyřiceti;50:padesát,padesáti;60:šedesát,šedesáti;70:sedmdesát,sedmdesáti;80:osmdesát,osmdesáti;90:devadesát,devadesáti;100:sto,sta,stu,stem,stě;200:dvěstě,dvěsta;300:třista,třísta;400:čtyřista,čtyřsta');
-
-const ZERO_SHORTCUTS={
-  'triple':[0,0,0],'troj':[0,0,0],'trojnula':[0,0,0],
-  'duo':[0,0],'dvoj':[0,0],'dvojnula':[0,0]
-};
-
-const ORDERS={
-  'tisíc':1e3,'tisíce':1e3,'tisíců':1e3,'tisíci':1e3,'tisícům':1e3,'tisícem':1e3,'tisících':1e3,
-  'milion':1e6,'milión':1e6,'miliony':1e6,'milióny':1e6,'milionu':1e6,'miliónu':1e6,'milionů':1e6,'miliónů':1e6,'milionem':1e6,'miliónem':1e6,
-  'miliarda':1e9,'miliardy':1e9,'miliard':1e9,'miliardě':1e9,'miliardám':1e9,'miliardou':1e9,'miliardách':1e9
-};
-
-const DECIMAL_WORDS=['celá','celých','celé','celych','cely','celi','cela','čárka','čárku','carka','carku'];
-
-const IGNORE_WORDS=(s=>{const o={};s.split(',').forEach(x=>o[x]=1);return o})('tečka,tečku,tecka,tecku');
+const IGNORE_WORDS=(s=>{const o={};s.split(',').forEach(x=>o[x]=1);return o})('tisíc,tisíce,tisíců,tisíci,tisícům,tisícem,tisících,milion,milión,miliony,milióny,milionu,miliónu,milionů,miliónů,miliarda,miliardy,miliard,miliardě,miliardám,miliardou,miliardách');
+const DEC_RE=/(?:^|\s)(celá|celé|celých|celych|cely|celi|cela|čárka|čárku|carka|carku|tečka|tečku|tecka|tecku)(?:\s|$)/;
 
 const evalPhrase=(phrase,words,startIdx,len)=>{
   if(/^\d+$/.test(phrase))return phrase;
@@ -274,27 +255,9 @@ const evalPhrase=(phrase,words,startIdx,len)=>{
 
 const parseVoiceTokens=words=>{
   const result=[];let i=0;
-  while(i<<words.length){
+  while(i<words.length){
     const w=words[i];
-    if(!w){i++;continue}
-    
-    if(ZERO_SHORTCUTS[w]!==undefined){
-      ZERO_SHORTCUTS[w].forEach(z=>result.push(z));
-      i++;
-      continue;
-    }
-    
-    if(ORDERS[w]!==undefined){
-      if(result.length>0&&typeof result[result.length-1]==='number'){
-        result[result.length-1]=result[result.length-1]*ORDERS[w];
-      }else{
-        result.push(ORDERS[w]);
-      }
-      i++;
-      continue;
-    }
-    
-    if(IGNORE_WORDS[w]){i++;continue}
+    if(!w||IGNORE_WORDS[w]){i++;continue}
     let matched=false;
     for(let len=4;len>=1;len--){
       if(i+len>words.length)continue;
@@ -324,49 +287,29 @@ const buildRecognition=()=>{
     let raw=finalText.trim().toLowerCase().replace(/(\d)\s+(?=\d)/g,'$1').replace(/[,.]/g,' čárka ').replace(/[?!;:_]/g,'').replace(/\b(ukázat|ukazat|ukažte|ukazte|ukaž|ukaš)\b/g,' ');
     if(/chyba/.test(raw)){spReset();return}
     const zpetPocet=(raw.match(/\b(zpět|spjet)\b/g)||[]).length;
-    for(let z=0;z<<zpetPocet;z++)spBackspace();
+    for(let z=0;z<zpetPocet;z++)spBackspace();
     if(zpetPocet>0){raw=raw.replace(/\b(zpět|spjet)\b/g,'').trim();if(!raw)return}
+    // Nové příkazy pro vkládání nul
+    const dvojPocet=(raw.match(/\b(dvoj|dvojnula)\b/g)||[]).length;
+    for(let d=0;d<dvojPocet;d++)spAppendZeros(2);
+    if(dvojPocet>0){raw=raw.replace(/\b(dvoj|dvojnula)\b/g,'').trim();if(!raw)return}
+    const trojPocet=(raw.match(/\b(troj|trojnula)\b/g)||[]).length;
+    for(let t=0;t<trojPocet;t++)spAppendZeros(3);
+    if(trojPocet>0){raw=raw.replace(/\b(troj|trojnula)\b/g,'').trim();if(!raw)return}
+    // Původní příkaz pro tři nuly (pro zpětnou kompatibilitu)
     let hasZero=false;
-    if(/\b(zero|zirou|zírou)\b/.test(raw)){hasZero=true;const m=raw.match(/\b(zero|zirou|zírou)\b/g);for(let i=0;i<m.length;i++)spAppendZeros();raw=raw.replace(/\b(zero|zirou|zírou)\b/g,'').trim();if(!raw)return}
+    if(/\b(zero|zirou|zírou)\b/.test(raw)){hasZero=true;const m=raw.match(/\b(zero|zirou|zírou)\b/g);for(let i=0;i<m.length;i++)spAppendZeros(3);raw=raw.replace(/\b(zero|zirou|zírou)\b/g,'').trim();if(!raw)return}
     let shouldSubmit=false;
     if(/\b(ano|jo|joo)\b/.test(raw)){shouldSubmit=true;raw=raw.replace(/\b(ano|jo|joo)\b/g,'')}
     raw=expandCompound(raw).trim();
     if(raw){
-      const decMatch=raw.match(new RegExp('(?:^|\\s)('+DECIMAL_WORDS.join('|')+')(?:\\s|$)'));
+      const decMatch=raw.match(DEC_RE);
       if(decMatch){
         const before=raw.slice(0,decMatch.index).trim();
         if(before)parseVoiceTokens(before.split(/\s+/).filter(Boolean)).forEach(v=>spBuf.push(v));
         spBuf.push('.');
         const after=raw.slice(decMatch.index+decMatch[0].length).trim();
-        if(after){
-          const afterWords=after.split(/\s+/).filter(Boolean);
-          afterWords.forEach(w=>{
-            if(ZERO_SHORTCUTS[w]!==undefined){
-              ZERO_SHORTCUTS[w].forEach(z=>spBuf.push(z));
-              return;
-            }
-            if(WV[w]!==undefined){
-              const v=WV[w];
-              String(v).split('').forEach(d=>spBuf.push(parseInt(d,10)));
-              return;
-            }
-            let found=false;
-            for(let len=4;len>=1;len--){
-              if(afterWords.indexOf(w)+len>afterWords.length)continue;
-              const phrase=afterWords.slice(afterWords.indexOf(w),afterWords.indexOf(w)+len).join(' ');
-              const val=evalPhrase(phrase,afterWords,afterWords.indexOf(w),len);
-              if(val!==null&&((typeof val==='number'&&val>=0)||(typeof val==='string'&&/^\d+$/.test(val)))){
-                String(val).split('').forEach(d=>spBuf.push(parseInt(d,10)));
-                found=true;
-                break;
-              }
-            }
-            if(!found){
-              const v=WV[w];
-              if(v!==undefined)String(v).split('').forEach(d=>spBuf.push(parseInt(d,10)));
-            }
-          });
-        }
+        if(after)parseVoiceTokens(after.split(/\s+/).filter(Boolean)).forEach(v=>spBuf.push(v));
       }else parseVoiceTokens(raw.split(/\s+/).filter(Boolean)).forEach(v=>spBuf.push(v));
       spFlush();
     }
@@ -385,7 +328,8 @@ micBtn.addEventListener('touchstart',e=>e.stopPropagation(),{passive:true});
 const spReset=()=>{spBuf=[];odpovedEl.value=''};
 const spBackspace=()=>{let current=norm(odpovedEl.value);if(!current)return;current=current.slice(0,-1);spBuf=current?current.split('').map(c=>c==='.'?'.':parseInt(c,10)):[];odpovedEl.value=current?fmtInputStr(current):''};
 const spFlush=()=>{if(!spBuf.length){odpovedEl.value='';return}const dotIndex=spBuf.indexOf('.');const intParts=dotIndex===-1?spBuf:spBuf.slice(0,dotIndex);const decParts=dotIndex===-1?[]:spBuf.slice(dotIndex+1);let intStr=intParts.map(String).join('').replace(/^0+(?=\d)/,'');if(!intStr)intStr='0';odpovedEl.value=fmtInputStr(dotIndex===-1?intStr:intStr+'.'+decParts.map(String).join(''))};
-const spAppendZeros=()=>{const current=norm(odpovedEl.value);if(!current)[0,0,0].forEach(z=>spBuf.push(z));else{spBuf=current.split('').map(c=>c==='.'?'.':parseInt(c,10));[0,0,0].forEach(z=>spBuf.push(z))}spFlush()};
+// Upravená funkce pro přidávání nul - nyní přijímá parametr count
+const spAppendZeros=(count)=>{const current=norm(odpovedEl.value);if(!current){for(let i=0;i<count;i++)spBuf.push(0);}else{spBuf=current.split('').map(c=>c==='.'?'.':parseInt(c,10));for(let i=0;i<count;i++)spBuf.push(0);}spFlush()};
 
 const handle=(e,fromVoice)=>{
   if(isProcessing)return;
