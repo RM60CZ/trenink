@@ -363,7 +363,7 @@ const spReset=()=>{spBuf=[];odpovedEl.value=''};
 const spBackspace=()=>{let current=norm(odpovedEl.value);if(!current)return;current=current.slice(0,-1);spBuf=current?current.split('').map(c=>c==='.'?'.':parseInt(c,10)):[];odpovedEl.value=current?fmtInputStr(current):''};
 const spFlush=()=>{if(!spBuf.length){odpovedEl.value='';return}const dotIndex=spBuf.indexOf('.');const intParts=dotIndex===-1?spBuf:spBuf.slice(0,dotIndex);const decParts=dotIndex===-1?[]:spBuf.slice(dotIndex+1);let intStr=intParts.map(String).join('').replace(/^0+(?=\d)/,'');if(!intStr)intStr='0';odpovedEl.value=fmtInputStr(dotIndex===-1?intStr:intStr+'.'+decParts.map(String).join(''))};
 
-// Univerzální funkce pro přidání N nul
+// Univerzální funkce pro přidání N nul - OPRAVENÝ NÁZEV
 const spAppendNula=(count)=>{
   const current=norm(odpovedEl.value);
   if(!current){
