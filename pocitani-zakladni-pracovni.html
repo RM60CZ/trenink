@@ -116,6 +116,8 @@ const $=id=>document.getElementById(id),odpovedEl=$('odpoved'),operaceEl=$('oper
 const KEY='matika_trenink_v4';
 let correct=0,wrong=0,streak=0,history=[],aktualniPriklad=null,zobrazitVysledek=false,isProcessing=false,micListening=false,micAutoRestart=true,spBuf=[],recognition=null;
 
+const MAX_DIGITS_FOR_DISPLAY=12; // Maximální počet číslic pro zobrazení výsledku
+
 const today=new Date(),czM='ledna,února,března,dubna,května,června,července,srpna,září,října,listopadu,prosince'.split(','),czD='Neděle,Pondělí,Úterý,Středa,Čtvrtek,Pátek,Sobota'.split(',');
 $('currentDate').textContent=`${czD[today.getDay()]} ${today.getDate()}. ${czM[today.getMonth()]} ${today.getFullYear()}`;
 const todayStr=today.toISOString().slice(0,10);
@@ -206,6 +208,20 @@ const findFirstWrongDigit=(userInput,p)=>{
   return 0;
 };
 
+const isResultTooLarge = (result) => {
+  const str = String(result);
+  const digitsOnly = str.replace(/[^0-9]/g, '');
+  return digitsOnly.length > MAX_DIGITS_FOR_DISPLAY;
+};
+
+const getDisplayResult = (p) => {
+  const v = p.vysledekZ !== undefined ? p.vysledekZ : p.vysledek;
+  if (isResultTooLarge(v)) {
+    return '⚠️ Překročení možností zobrazení celého výsledku, systém nezobrazí výsledek!';
+  }
+  return fmt(v);
+};
+
 const updateScores=()=>{scoreC.textContent=correct;scoreW.textContent=wrong;streakEl.textContent=streak;streakEl.parentElement.classList.add('pop');setTimeout(()=>streakEl.parentElement.classList.remove('pop'),200)};
 const updateBtn=()=>{btnEl.classList.remove('btn-pulse','btn-glow');if(!zobrazitVysledek){btnEl.textContent='START';btnEl.classList.add('btn-pulse')}else{btnEl.textContent='✓ VÝSLEDEK (kontrola)';btnEl.classList.add('btn-glow')}};
 
@@ -217,11 +233,13 @@ const renderHistory=()=>{
 
 const addHist=(ok,userInput)=>{
   if(!aktualniPriklad)return;
-  const p=aktualniPriklad,v=p.vysledekZ!==undefined?p.vysledekZ:p.vysledek,opStr=p.op==='*'?'x':p.op==='/'?':':p.op==='-'?'−':'+';
+  const p=aktualniPriklad,opStr=p.op==='*'?'x':p.op==='/'?':':p.op==='-'?'−':'+';
   let bracketStr='';
+  let displayResult = getDisplayResult(p);
+  
   if(p.op==='/')bracketStr='('+checkDivision(userInput,p).bracket+')';
   else if(!ok){const pos=findFirstWrongDigit(userInput,p);if(pos>0)bracketStr='('+pos+')'}
-  history.unshift({text:`${fmt(p.a)} ${opStr} ${fmt(p.b)} = ${fmt(v)}${bracketStr}`,correct:ok});
+  history.unshift({text:`${fmt(p.a)} ${opStr} ${fmt(p.b)} = ${displayResult}${bracketStr}`,correct:ok});
   renderHistory();
 };
 
@@ -296,18 +314,18 @@ const buildRecognition=()=>{
     
     // Zpracování příkazu "dvoj" / "dvojnula" - 2 nuly
     const dvojPocet=(raw.match(/\b(dvoj|dvojnula)\b/g)||[]).length;
-    for(let d=0;d<dvojPocet;d++)spAppendZeros(2);
+    for(let d=0;d<dvojPocet;d++)spAppendZero(1); // Přidá jednu nulu (ne 2) - změna na jednotlivé nuly
     if(dvojPocet>0){raw=raw.replace(/\b(dvoj|dvojnula)\b/g,'').trim();if(!raw)return;}
     
     // Zpracování příkazu "troj" / "trojnula" - 3 nuly
     const trojPocet=(raw.match(/\b(troj|trojnula)\b/g)||[]).length;
-    for(let t=0;t<trojPocet;t++)spAppendZeros(3);
+    for(let t=0;t<trojPocet;t++)spAppendZero(1); // Přidá jednu nulu (ne 3) - změna na jednotlivé nuly
     if(trojPocet>0){raw=raw.replace(/\b(troj|trojnula)\b/g,'').trim();if(!raw)return;}
     
-    // Zpracování příkazu "zero" / "zirou" / "zírou" - 3 nuly (zpětná kompatibilita)
+    // Zpracování příkazu "zero" / "zirou" / "zírou" - přidá JEDNU nulu
     if(/\b(zero|zirou|zírou)\b/.test(raw)){
       const m=raw.match(/\b(zero|zirou|zírou)\b/g);
-      for(let i=0;i<m.length;i++)spAppendZeros(3);
+      for(let i=0;i<m.length;i++)spAppendZero(1); // Přidá jednu nulu za každé "zero"
       raw=raw.replace(/\b(zero|zirou|zírou)\b/g,'').trim();
       if(!raw)return;
     }
@@ -345,8 +363,8 @@ const spReset=()=>{spBuf=[];odpovedEl.value=''};
 const spBackspace=()=>{let current=norm(odpovedEl.value);if(!current)return;current=current.slice(0,-1);spBuf=current?current.split('').map(c=>c==='.'?'.':parseInt(c,10)):[];odpovedEl.value=current?fmtInputStr(current):''};
 const spFlush=()=>{if(!spBuf.length){odpovedEl.value='';return}const dotIndex=spBuf.indexOf('.');const intParts=dotIndex===-1?spBuf:spBuf.slice(0,dotIndex);const decParts=dotIndex===-1?[]:spBuf.slice(dotIndex+1);let intStr=intParts.map(String).join('').replace(/^0+(?=\d)/,'');if(!intStr)intStr='0';odpovedEl.value=fmtInputStr(dotIndex===-1?intStr:intStr+'.'+decParts.map(String).join(''))};
 
-// Opravená funkce pro přidávání nul - nyní správně přidává nuly i při opakovaném volání
-const spAppendZeros=(count)=>{
+// Nová funkce pro přidání JEDNÉ nuly - zachová stávající obsah a přidá na konec
+const spAppendZero=(count)=>{
   const current=norm(odpovedEl.value);
   if(!current){
     for(let i=0;i<count;i++)spBuf.push(0);
@@ -385,8 +403,13 @@ const handle=(e,fromVoice)=>{
   if(zobrazitVysledek&&aktualniPriklad){
     const val=odpovedEl.value.trim(),normVal=norm(val);
     if(!val){
-      const vv=aktualniPriklad.vysledekZ!==undefined?aktualniPriklad.vysledekZ:aktualniPriklad.vysledek;
-      odpovedEl.value=fmt(vv);odpovedEl.classList.remove('hidden-text');
+      const v = aktualniPriklad.vysledekZ !== undefined ? aktualniPriklad.vysledekZ : aktualniPriklad.vysledek;
+      const displayResult = getDisplayResult(aktualniPriklad);
+      odpovedEl.value=displayResult;
+      if (displayResult.includes('⚠️')) {
+        chybaEl.textContent = displayResult;
+      }
+      odpovedEl.classList.remove('hidden-text');
       zobrazitVysledek=false;updateBtn();updateMicVisibility();btnEl.focus();
       setTimeout(()=>isProcessing=false,50);
       return;
