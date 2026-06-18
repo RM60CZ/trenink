@@ -314,18 +314,18 @@ const buildRecognition=()=>{
     
     // Zpracování příkazu "dvoj" / "dvojnula" - 2 nuly
     const dvojPocet=(raw.match(/\b(dvoj|dvojnula)\b/g)||[]).length;
-    for(let d=0;d<dvojPocet;d++)spAppendZero(1); // Přidá jednu nulu (ne 2) - změna na jednotlivé nuly
+    for(let d=0;d<dvojPocet;d++)spAppendNula(2);
     if(dvojPocet>0){raw=raw.replace(/\b(dvoj|dvojnula)\b/g,'').trim();if(!raw)return;}
     
     // Zpracování příkazu "troj" / "trojnula" - 3 nuly
     const trojPocet=(raw.match(/\b(troj|trojnula)\b/g)||[]).length;
-    for(let t=0;t<trojPocet;t++)spAppendZero(1); // Přidá jednu nulu (ne 3) - změna na jednotlivé nuly
+    for(let t=0;t<trojPocet;t++)spAppendNula(3);
     if(trojPocet>0){raw=raw.replace(/\b(troj|trojnula)\b/g,'').trim();if(!raw)return;}
     
-    // Zpracování příkazu "zero" / "zirou" / "zírou" - přidá JEDNU nulu
+    // Zpracování příkazu "zero" / "zirou" / "zírou" - JEDNA nula
     if(/\b(zero|zirou|zírou)\b/.test(raw)){
       const m=raw.match(/\b(zero|zirou|zírou)\b/g);
-      for(let i=0;i<m.length;i++)spAppendZero(1); // Přidá jednu nulu za každé "zero"
+      for(let i=0;i<m.length;i++)spAppendNula(1);
       raw=raw.replace(/\b(zero|zirou|zírou)\b/g,'').trim();
       if(!raw)return;
     }
@@ -363,8 +363,8 @@ const spReset=()=>{spBuf=[];odpovedEl.value=''};
 const spBackspace=()=>{let current=norm(odpovedEl.value);if(!current)return;current=current.slice(0,-1);spBuf=current?current.split('').map(c=>c==='.'?'.':parseInt(c,10)):[];odpovedEl.value=current?fmtInputStr(current):''};
 const spFlush=()=>{if(!spBuf.length){odpovedEl.value='';return}const dotIndex=spBuf.indexOf('.');const intParts=dotIndex===-1?spBuf:spBuf.slice(0,dotIndex);const decParts=dotIndex===-1?[]:spBuf.slice(dotIndex+1);let intStr=intParts.map(String).join('').replace(/^0+(?=\d)/,'');if(!intStr)intStr='0';odpovedEl.value=fmtInputStr(dotIndex===-1?intStr:intStr+'.'+decParts.map(String).join(''))};
 
-// Nová funkce pro přidání JEDNÉ nuly - zachová stávající obsah a přidá na konec
-const spAppendZero=(count)=>{
+// Univerzální funkce pro přidání N nul
+const spAppendNula=(count)=>{
   const current=norm(odpovedEl.value);
   if(!current){
     for(let i=0;i<count;i++)spBuf.push(0);
