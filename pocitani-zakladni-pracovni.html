@@ -111,12 +111,14 @@ input{-webkit-appearance:none;border-radius:.75rem}
 </div>
 </div>
 <script>
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
 (()=>{
 const $=id=>document.getElementById(id),odpovedEl=$('odpoved'),operaceEl=$('operace'),cis1=$('cislice1'),cis2=$('cislice2'),chybaEl=$('chyba'),prikladEl=$('priklad'),caraEl=$('cara'),btnEl=$('tlacitko'),scoreC=$('scoreCorrect'),scoreW=$('scoreWrong'),streakEl=$('streakCount'),histCont=$('historyContainer'),histList=$('historyList'),histEmpty=$('historyEmpty'),themeToggle=$('themeToggle'),themeIconSun=$('themeIconSun'),themeIconMoon=$('themeIconMoon'),hlasCheck=$('hlasCheck'),micBtn=$('micBtn'),micLabel=$('micLabel'),inputBox=$('inputBox'),homeBtn=$('homeBtn');
 const KEY='matika_trenink_v4';
 let correct=0,wrong=0,streak=0,history=[],aktualniPriklad=null,zobrazitVysledek=false,isProcessing=false,micListening=false,micAutoRestart=true,spBuf=[],recognition=null;
 
-const MAX_DIGITS_FOR_DISPLAY=12; // Maximální počet číslic pro zobrazení výsledku
+const MAX_DIGITS_FOR_DISPLAY=12;
 
 const today=new Date(),czM='ledna,února,března,dubna,května,června,července,srpna,září,října,listopadu,prosince'.split(','),czD='Neděle,Pondělí,Úterý,Středa,Čtvrtek,Pátek,Sobota'.split(',');
 $('currentDate').textContent=`${czD[today.getDay()]} ${today.getDate()}. ${czM[today.getMonth()]} ${today.getFullYear()}`;
@@ -217,7 +219,7 @@ const isResultTooLarge = (result) => {
 const getDisplayResult = (p) => {
   const v = p.vysledekZ !== undefined ? p.vysledekZ : p.vysledek;
   if (isResultTooLarge(v)) {
-    return '⚠️ Překročení možností zobrazení celého výsledku, systém nezobrazí výsledek!';
+    return '⚠️ Překročení možností zobrazení';
   }
   return fmt(v);
 };
@@ -304,25 +306,20 @@ const buildRecognition=()=>{
     if(!finalText.trim())return;
     let raw=finalText.trim().toLowerCase().replace(/(\d)\s+(?=\d)/g,'$1').replace(/[,.]/g,' čárka ').replace(/[?!;:_]/g,'').replace(/\b(ukázat|ukazat|ukažte|ukazte|ukaž|ukaš)\b/g,' ');
     
-    // Kontrola na chybu - reset
     if(/chyba/.test(raw)){spReset();raw=raw.replace(/\bchyba\b/g,'').trim();if(!raw)return;}
     
-    // Zpracování příkazu "zpět"
     const zpetPocet=(raw.match(/\b(zpět|spjet)\b/g)||[]).length;
     for(let z=0;z<zpetPocet;z++)spBackspace();
     if(zpetPocet>0){raw=raw.replace(/\b(zpět|spjet)\b/g,'').trim();if(!raw)return;}
     
-    // Zpracování příkazu "dvoj" / "dvojnula" - 2 nuly
     const dvojPocet=(raw.match(/\b(dvoj|dvojnula)\b/g)||[]).length;
     for(let d=0;d<dvojPocet;d++)spAppendNula(2);
     if(dvojPocet>0){raw=raw.replace(/\b(dvoj|dvojnula)\b/g,'').trim();if(!raw)return;}
     
-    // Zpracování příkazu "troj" / "trojnula" - 3 nuly
     const trojPocet=(raw.match(/\b(troj|trojnula)\b/g)||[]).length;
     for(let t=0;t<trojPocet;t++)spAppendNula(3);
     if(trojPocet>0){raw=raw.replace(/\b(troj|trojnula)\b/g,'').trim();if(!raw)return;}
     
-    // Zpracování příkazu "zero" / "zirou" / "zírou" - JEDNA nula
     if(/\b(zero|zirou|zírou)\b/.test(raw)){
       const m=raw.match(/\b(zero|zirou|zírou)\b/g);
       for(let i=0;i<m.length;i++)spAppendNula(1);
@@ -330,11 +327,9 @@ const buildRecognition=()=>{
       if(!raw)return;
     }
     
-    // Kontrola na odeslání výsledku
     let shouldSubmit=false;
     if(/\b(ano|jo|joo)\b/.test(raw)){shouldSubmit=true;raw=raw.replace(/\b(ano|jo|joo)\b/g,'')}
     
-    // Zpracování čísel ze zbytku textu
     raw=expandCompound(raw).trim();
     if(raw){
       const decMatch=raw.match(DEC_RE);
@@ -363,7 +358,6 @@ const spReset=()=>{spBuf=[];odpovedEl.value=''};
 const spBackspace=()=>{let current=norm(odpovedEl.value);if(!current)return;current=current.slice(0,-1);spBuf=current?current.split('').map(c=>c==='.'?'.':parseInt(c,10)):[];odpovedEl.value=current?fmtInputStr(current):''};
 const spFlush=()=>{if(!spBuf.length){odpovedEl.value='';return}const dotIndex=spBuf.indexOf('.');const intParts=dotIndex===-1?spBuf:spBuf.slice(0,dotIndex);const decParts=dotIndex===-1?[]:spBuf.slice(dotIndex+1);let intStr=intParts.map(String).join('').replace(/^0+(?=\d)/,'');if(!intStr)intStr='0';odpovedEl.value=fmtInputStr(dotIndex===-1?intStr:intStr+'.'+decParts.map(String).join(''))};
 
-// Univerzální funkce pro přidání N nul - OPRAVENÝ NÁZEV
 const spAppendNula=(count)=>{
   const current=norm(odpovedEl.value);
   if(!current){
