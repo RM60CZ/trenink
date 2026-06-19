@@ -290,16 +290,13 @@ const buildRecognition=()=>{
     for(let z=0;z<zpetPocet;z++)spBackspace();
     if(zpetPocet>0){raw=raw.replace(/\b(zpět|spjet)\b/g,'').trim();if(!raw)return}
     
-    // Zpracování příkazů DVOJ a TROJ
-    // Počet výskytů jednotlivých příkazů
+    // DVOJ = 00, TROJ = 000
     const trojCount=(raw.match(/\btroj\b/gi)||[]).length;
     const dvojCount=(raw.match(/\bdvoj\b/gi)||[]).length;
     
-    // Přidáme nuly NEJPRVE
     for(let i=0;i<trojCount;i++)spAppendTripleZeros();
     for(let i=0;i<dvojCount;i++)spAppendDoubleZeros();
     
-    // Odstraníme příkazy z textu
     raw=raw.replace(/\b(dvoj|troj)\b/gi,'').trim();
     
     if(!raw)return;
@@ -335,22 +332,18 @@ const spBackspace=()=>{let current=norm(odpovedEl.value);if(!current)return;curr
 const spFlush=()=>{if(!spBuf.length){odpovedEl.value='';return}const dotIndex=spBuf.indexOf('.');const intParts=dotIndex===-1?spBuf:spBuf.slice(0,dotIndex);const decParts=dotIndex===-1?[]:spBuf.slice(dotIndex+1);let intStr=intParts.map(String).join('').replace(/^0+(?=\d)/,'');if(!intStr)intStr='0';odpovedEl.value=fmtInputStr(dotIndex===-1?intStr:intStr+'.'+decParts.map(String).join(''))};
 
 const spAppendDoubleZeros=()=>{
-  const current = norm(odpovedEl.value);
-  spBuf = [];
-  if (current) {
-    spBuf = current.split('').map(c => c === '.' ? '.' : parseInt(c, 10));
-  }
-  spBuf.push(0, 0);
+  const current=norm(odpovedEl.value);
+  spBuf=[];
+  if(current){spBuf=current.split('').map(c=>c==='.'?'.':parseInt(c,10))}
+  spBuf.push(0,0);
   spFlush();
 };
 
 const spAppendTripleZeros=()=>{
-  const current = norm(odpovedEl.value);
-  spBuf = [];
-  if (current) {
-    spBuf = current.split('').map(c => c === '.' ? '.' : parseInt(c, 10));
-  }
-  spBuf.push(0, 0, 0);
+  const current=norm(odpovedEl.value);
+  spBuf=[];
+  if(current){spBuf=current.split('').map(c=>c==='.'?'.':parseInt(c,10))}
+  spBuf.push(0,0,0);
   spFlush();
 };
 
