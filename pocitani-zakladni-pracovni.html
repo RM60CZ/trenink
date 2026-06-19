@@ -304,10 +304,10 @@ const buildRecognition=()=>{
     for(let t=0;t<trojPocet;t++)spAppendZeros(3);
     if(trojPocet>0){raw=raw.replace(/\b(troj|trojnula)\b/g,'').trim();if(!raw)return;}
     
-    // Zpracování příkazu "zero" / "zirou" / "zírou" - 3 nuly (zpětná kompatibilita)
+    // Zpracování příkazu "zero" / "zirou" / "zírou" - nyní přidává 1 nulu
     if(/\b(zero|zirou|zírou)\b/.test(raw)){
       const m=raw.match(/\b(zero|zirou|zírou)\b/g);
-      for(let i=0;i<m.length;i++)spAppendZeros(3);
+      for(let i=0;i<m.length;i++)spAppendZeros(1);
       raw=raw.replace(/\b(zero|zirou|zírou)\b/g,'').trim();
       if(!raw)return;
     }
@@ -345,15 +345,9 @@ const spReset=()=>{spBuf=[];odpovedEl.value=''};
 const spBackspace=()=>{let current=norm(odpovedEl.value);if(!current)return;current=current.slice(0,-1);spBuf=current?current.split('').map(c=>c==='.'?'.':parseInt(c,10)):[];odpovedEl.value=current?fmtInputStr(current):''};
 const spFlush=()=>{if(!spBuf.length){odpovedEl.value='';return}const dotIndex=spBuf.indexOf('.');const intParts=dotIndex===-1?spBuf:spBuf.slice(0,dotIndex);const decParts=dotIndex===-1?[]:spBuf.slice(dotIndex+1);let intStr=intParts.map(String).join('').replace(/^0+(?=\d)/,'');if(!intStr)intStr='0';odpovedEl.value=fmtInputStr(dotIndex===-1?intStr:intStr+'.'+decParts.map(String).join(''))};
 
-// Opravená funkce pro přidávání nul - nyní správně přidává nuly i při opakovaném volání
+// Funkce pro přidávání nul - vždy vymaže buffer a přidá nové nuly
 const spAppendZeros=(count)=>{
-  const current=norm(odpovedEl.value);
-  if(!current){
-    for(let i=0;i<count;i++)spBuf.push(0);
-  }else{
-    spBuf=current.split('').map(c=>c==='.'?'.':parseInt(c,10));
-    for(let i=0;i<count;i++)spBuf.push(0);
-  }
+  for(let i=0;i<count;i++)spBuf.push(0);
   spFlush();
 };
 
