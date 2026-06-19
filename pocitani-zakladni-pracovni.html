@@ -88,7 +88,7 @@ input{-webkit-appearance:none;border-radius:.75rem}
 <div id="chyba" class="text-red-500 text-[10px] font-bold text-center h-4 overflow-hidden mb-1" role="alert"></div>
 <div id="upperBox" class="bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 pl-4 pr-4 pb-1 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center">
 <div id="problemContainer" class="w-full overflow-x-auto scrollbar-hide flex flex-col items-end relative z-10 transition-all">
-  <div id="priklad" class="math-text text-4xl font-semibold tracking-normal text-slate-700 dark:text-slate-200 tabular-nums" style="white-space:break-spaces;"></div>
+  <div id="priklad" class=" math-text text-4xl font-semibold tracking-normal text-slate-700 dark:text-slate-200 tabular-nums" style="white-space:break-spaces;"></div>
   <div id="cara" class="math-text text-4xl text-slate-400 dark:text-slate-600 border-t-[3px] border-slate-400 dark:border-slate-600 w-full mt-1 opacity-0 transition-opacity duration-300"></div>
 </div>
 </div>
@@ -225,403 +225,426 @@ const addHist=(ok,userInput)=>{
   renderHistory();
 };
 
-// Opravený slovník čísel
-const WV=(s=>{const o={};s.split(';').forEach(p=>{const[v,w]=p.split(':');w.split(',').forEach(x=>o[x.trim()]=+v)});return o})(
-  '0:žádná,zadna,nula,nulu,nuly;'+
-  '1:jedna,jeden,jedno,jednu,jedné,jednička;'+
-  '2:dvě,dva,dvou,dvojka,dvojku;'+
-  '3:tři,třech,trojka,trojku;'+
-  '4:čtyři,čtyřech,čtyřka,čtyřku;'+
-  '5:pět,pěti,pětka,pětku;'+
-  '6:šest,šesti,šestka,šestku;'+
-  '7:sedm,sedmi,sedmička,sedmičku;'+
-  '8:osm,osmi,osmička,osmičku;'+
-  '9:devět,devíti,devítka,devítku;'+
-  '10:deset,deseti,desítka,desítku;'+
-  '11:jedenáct,jedenácti;'+
-  '12:dvanáct,dvanácti;'+
-  '13:třináct,třinácti;'+
-  '14:čtrnáct,čtrnácti;'+
-  '15:patnáct,patnácti;'+
-  '16:šestnáct,šestnácti;'+
-  '17:sedmnáct,sedmnácti;'+
-  '18:osmnáct,osmnácti;'+
-  '19:devatenáct,devatenácti;'+
-  '20:dvacet,dvaceti,dvacítka,dvacítku;'+
-  '30:třicet,třiceti;'+
-  '40:čtyřicet,čtyřiceti;'+
-  '50:padesát,padesáti;'+
-  '60:šedesát,šedesáti;'+
-  '70:sedmdesát,sedmdesáti;'+
-  '80:osmdesát,osmdesáti;'+
-  '90:devadesát,devadesáti;'+
-  '100:sto,sta,stu,stem,stě,stovka,stovku'
-);
-
-const IGNORE_WORDS=(s=>{const o={};s.split(',').forEach(x=>o[x.trim()]=1);return o})(
-  'tisíc,tisíce,tisíců,tisíci,tisícům,tisícem,tisících,milion,milión,miliony,milióny,milionu,miliónu,milionů,miliónů,miliarda,miliardy,miliard,miliardě,miliardám,miliardou,miliardách'
-);
-const DEC_RE=/(?:^|\s)(celá|celé|celých|celych|cely|celi|cela|čárka|čárku|carka|carku|tečka|tečku|tecka|tecku)(?:\s|$)/;
-
-const evalPhrase=(phrase,words,startIdx,len)=>{
-  if(/^\d+$/.test(phrase))return phrase;
-  if(WV[phrase]!==undefined)return WV[phrase];
-  const w0=words[startIdx],w1=words[startIdx+1],w2=words[startIdx+2],w3=words[startIdx+3];
-  if(len>=2){
-    if(['set','sto','sta','stu','stě'].includes(w1)&&WV[w0]>=2&&WV[w0]<=9)return WV[w0]*100;
-    if(WV[w0]>=20&&WV[w0]<=90&&WV[w1]>=1&&WV[w1]<=9)return WV[w0]+WV[w1];
-    if(['sto','sta','stu','stě'].includes(w0)){
-      if(WV[w1]!==undefined&&WV[w1]<=99)return 100+WV[w1];
-      if(/^\d+$/.test(w1))return 100+parseInt(w1,10);
-    }
-    if(w0==='sto'&&WV[w1]>=1&&WV[w1]<=9)return 100+WV[w1];
-  }
-  if(len>=3){
-    const isH=['set','sto','sta','stu','stě'].includes(w1)&&WV[w0]>=2&&WV[w0]<=9;
-    if(isH){
-      const h=WV[w0]*100;
-      if(len===3){if(WV[w2]!==undefined&&WV[w2]<=99)return h+WV[w2];if(/^\d+$/.test(w2))return h+parseInt(w2,10)}
-      if(len===4&&WV[w2]>=20&&WV[w2]<=90&&WV[w3]>=1&&WV[w3]<=9)return h+WV[w2]+WV[w3];
-    }
-    if(['sto','sta','stu','stě'].includes(w0)&&len===3&&WV[w1]>=20&&WV[w1]<=90&&WV[w2]>=1&&WV[w2]<=9)return 100+WV[w1]+WV[w2];
-  }
-  return null;
+// JEDNODUCHÝ SLOVNÍK ČÍSEL - přímé mapování
+const WORD_TO_NUM = {
+  // 0
+  'nula': '0', 'nulu': '0', 'nuly': '0', 'žádná': '0', 'zadna': '0',
+  // 1
+  'jedna': '1', 'jeden': '1', 'jedno': '1', 'jednu': '1', 'jedna': '1',
+  'jednička': '1', 'jednicka': '1', 'jedničku': '1', 'jednicku': '1',
+  // 2
+  'dva': '2', 'dvě': '2', 'dve': '2', 'dvou': '2', 'dvojka': '2',
+  'dvojku': '2',
+  // 3
+  'tři': '3', 'tri': '3', 'třech': '3', 'trech': '3', 'trojka': '3',
+  'trojku': '3',
+  // 4
+  'čtyři': '4', 'ctyri': '4', 'čtyřech': '4', 'ctyrech': '4', 'čtyřka': '4',
+  'ctyrka': '4', 'čtyřku': '4', 'ctyrku': '4',
+  // 5
+  'pět': '5', 'pet': '5', 'pěti': '5', 'peti': '5', 'pětka': '5',
+  'petka': '5', 'pětku': '5', 'petku': '5',
+  // 6
+  'šest': '6', 'sest': '6', 'šesti': '6', 'sesti': '6', 'šestka': '6',
+  'sestka': '6', 'šestku': '6', 'sestku': '6',
+  // 7
+  'sedm': '7', 'sedmi': '7', 'sedmička': '7', 'sedmicka': '7',
+  'sedmičku': '7', 'sedmicku': '7',
+  // 8
+  'osm': '8', 'osmi': '8', 'osmička': '8', 'osmicka': '8',
+  'osmičku': '8', 'osmicku': '8',
+  // 9
+  'devět': '9', 'devet': '9', 'devíti': '9', 'deviti': '9', 'devítka': '9',
+  'devitka': '9', 'devítku': '9', 'devitku': '9',
+  // 10
+  'deset': '10', 'deseti': '10', 'desítka': '10', 'desitka': '10',
+  'desítku': '10', 'desitku': '10',
+  // 20
+  'dvacet': '20', 'dvaceti': '20',
+  // 30
+  'třicet': '30', 'tricet': '30', 'třiceti': '30', 'triceti': '30',
+  // 40
+  'čtyřicet': '40', 'ctyricet': '40', 'čtyřiceti': '40', 'ctyriceti': '40',
+  // 50
+  'padesát': '50', 'padesat': '50', 'padesáti': '50', 'padesati': '50',
+  // 60
+  'šedesát': '60', 'sedesat': '60', 'šedesáti': '60', 'sedesati': '60',
+  // 70
+  'sedmdesát': '70', 'sedmdesat': '70', 'sedmdesáti': '70', 'sedmdesati': '70',
+  // 80
+  'osmdesát': '80', 'osmdesat': '80', 'osmdesáti': '80', 'osmdesati': '80',
+  // 90
+  'devadesát': '90', 'devadesat': '90', 'devadesáti': '90', 'devadesati': '90',
+  // 100
+  'sto': '100', 'sta': '100', 'stu': '100', 'stem': '100', 'stě': '100',
+  'ste': '100', 'stovka': '100', 'stovku': '100'
 };
 
-const parseVoiceTokens=words=>{
-  const result=[];let i=0;
-  while(i<words.length){
-    const w=words[i];
-    if(!w||IGNORE_WORDS[w]){i++;continue}
-    let matched=false;
-    for(let len=4;len>=1;len--){
-      if(i+len>words.length)continue;
-      const phrase=words.slice(i,i+len).join(' '),val=evalPhrase(phrase,words,i,len);
-      if(val!==null&&((typeof val==='number'&&val>=0)||(typeof val==='string'&&/^\d+$/.test(val)))){
-        result.push(val);
-        i+=len;
-        matched=true;
+// Zpracování složených čísel
+const processNumberWords = (words) => {
+  let result = [];
+  let i = 0;
+  
+  while (i < words.length) {
+    let found = false;
+    
+    // Zkusíme 4 slova
+    for (let len = 4; len >= 1; len--) {
+      if (i + len > words.length) continue;
+      
+      const phrase = words.slice(i, i + len).join(' ');
+      let value = null;
+      
+      // Zpracování "dvě stě" -> 200
+      if (len === 2 && (words[i] === 'dvě' || words[i] === 'dve' || words[i] === 'tři' || words[i] === 'tri' || words[i] === 'čtyři' || words[i] === 'ctyri') && (words[i+1] === 'stě' || words[i+1] === 'ste' || words[i+1] === 'set')) {
+        const h = { 'dvě': 2, 'dve': 2, 'tři': 3, 'tri': 3, 'čtyři': 4, 'ctyri': 4 };
+        value = h[words[i]] * 100;
+      }
+      
+      // Zpracování "sto dvacet pět" -> 125
+      if (!value && len === 2 && (words[i] === 'sto' || words[i] === 'sta') && WORD_TO_NUM[words[i+1]]) {
+        value = 100 + parseInt(WORD_TO_NUM[words[i+1]], 10);
+      }
+      
+      // Zpracování "sto dvacet pět" se 3 slovy
+      if (!value && len === 3 && (words[i] === 'sto' || words[i] === 'sta') && WORD_TO_NUM[words[i+1]] && parseInt(WORD_TO_NUM[words[i+1]], 10) >= 20) {
+        const desitky = parseInt(WORD_TO_NUM[words[i+1]], 10);
+        if (words[i+2] && WORD_TO_NUM[words[i+2]] && parseInt(WORD_TO_NUM[words[i+2]], 10) >= 1 && parseInt(WORD_TO_NUM[words[i+2]], 10) <= 9) {
+          value = 100 + desitky + parseInt(WORD_TO_NUM[words[i+2]], 10);
+        }
+      }
+      
+      // Zpracování "dvacet pět" -> 25
+      if (!value && len === 2 && WORD_TO_NUM[words[i]] && parseInt(WORD_TO_NUM[words[i]], 10) >= 20 && parseInt(WORD_TO_NUM[words[i]], 10) <= 90 && WORD_TO_NUM[words[i+1]] && parseInt(WORD_TO_NUM[words[i+1]], 10) >= 1 && parseInt(WORD_TO_NUM[words[i+1]], 10) <= 9) {
+        value = parseInt(WORD_TO_NUM[words[i]], 10) + parseInt(WORD_TO_NUM[words[i+1]], 10);
+      }
+      
+      // Zpracování "dvě stě dvacet pět" -> 225
+      if (!value && len === 4 && (words[i] === 'dvě' || words[i] === 'dve' || words[i] === 'tři' || words[i] === 'tri' || words[i] === 'čtyři' || words[i] === 'ctyri') && (words[i+1] === 'stě' || words[i+1] === 'ste' || words[i+1] === 'set')) {
+        const h = { 'dvě': 2, 'dve': 2, 'tři': 3, 'tri': 3, 'čtyři': 4, 'ctyri': 4 };
+        const stovky = h[words[i]] * 100;
+        if (WORD_TO_NUM[words[i+2]] && parseInt(WORD_TO_NUM[words[i+2]], 10) >= 20 && parseInt(WORD_TO_NUM[words[i+2]], 10) <= 90 && words[i+3] && WORD_TO_NUM[words[i+3]] && parseInt(WORD_TO_NUM[words[i+3]], 10) >= 1 && parseInt(WORD_TO_NUM[words[i+3]], 10) <= 9) {
+          value = stovky + parseInt(WORD_TO_NUM[words[i+2]], 10) + parseInt(WORD_TO_NUM[words[i+3]], 10);
+        }
+      }
+      
+      // Zpracování "dvě stě pět" -> 205
+      if (!value && len === 3 && (words[i] === 'dvě' || words[i] === 'dve' || words[i] === 'tři' || words[i] === 'tri' || words[i] === 'čtyři' || words[i] === 'ctyri') && (words[i+1] === 'stě' || words[i+1] === 'ste' || words[i+1] === 'set')) {
+        const h = { 'dvě': 2, 'dve': 2, 'tři': 3, 'tri': 3, 'čtyři': 4, 'ctyri': 4 };
+        const stovky = h[words[i]] * 100;
+        if (words[i+2] && WORD_TO_NUM[words[i+2]] && parseInt(WORD_TO_NUM[words[i+2]], 10) >= 1 && parseInt(WORD_TO_NUM[words[i+2]], 10) <= 9) {
+          value = stovky + parseInt(WORD_TO_NUM[words[i+2]], 10);
+        }
+      }
+      
+      // Samostatné slovo
+      if (!value && len === 1 && WORD_TO_NUM[words[i]]) {
+        value = parseInt(WORD_TO_NUM[words[i]], 10);
+      }
+      
+      if (value !== null) {
+        // Rozložíme na jednotlivé číslice
+        const str = String(value);
+        for (let c of str) {
+          result.push(parseInt(c, 10));
+        }
+        i += len;
+        found = true;
         break;
       }
     }
-    if(!matched){
-      // Zkusíme přímé vyhledání v WV
-      if(WV[w]!==undefined){
-        result.push(WV[w]);
-        i++;
-      } else {
-        i++;
-      }
+    
+    if (!found) {
+      i++;
     }
   }
+  
   return result;
 };
 
-const expandCompound=t=>{
-  return t
-    .replace(/dvěstě/g,'dvě stě')
-    .replace(/třista/g,'tři sta')
-    .replace(/čtyřista/g,'čtyři sta')
-    .replace(/([a-záčďéěíňóřšťúůýž]+)set\b/g,'$1 set')
-    .replace(/(dvacet|třicet|čtyřicet|padesát|šedesát|sedmdesát|osmdesát|devadesát)(jedna|jeden|dvě|dva|tři|čtyři|pět|šest|sedm|osm|devět)/g,'$1 $2');
-};
-
-// Funkce pro vložení hodnoty na pozici kurzoru
-const insertValueAtCursor=(value)=>{
-  const start=odpovedEl.selectionStart;
-  const end=odpovedEl.selectionEnd;
-  const currentValue=odpovedEl.value;
-  const strValue=String(value);
+// Funkce pro vložení číslice na pozici kurzoru
+const insertDigitAtCursor = (digit) => {
+  const start = odpovedEl.selectionStart;
+  const end = odpovedEl.selectionEnd;
+  const currentValue = odpovedEl.value;
+  const strDigit = String(digit);
   
-  const newValue=currentValue.substring(0,start)+strValue+currentValue.substring(end);
-  odpovedEl.value=newValue;
+  const newValue = currentValue.substring(0, start) + strDigit + currentValue.substring(end);
+  odpovedEl.value = newValue;
   
-  // Posuneme kurzor za vloženou hodnotu
-  odpovedEl.setSelectionRange(start+strValue.length,start+strValue.length);
-  
-  // Debug
-  console.log('Vloženo:', value, 'jako:', strValue, 'na pozici:', start, 'nová hodnota:', odpovedEl.value);
+  // Posuneme kurzor za vloženou číslici
+  odpovedEl.setSelectionRange(start + 1, start + 1);
 };
 
 // Funkce pro smazání 1 číslice vlevo od kurzoru
-const backspaceAtCursor=()=>{
-  const start=odpovedEl.selectionStart;
-  const end=odpovedEl.selectionEnd;
+const backspaceAtCursor = () => {
+  const start = odpovedEl.selectionStart;
+  const end = odpovedEl.selectionEnd;
   
-  if(start===0)return; // Kurzor je na začátku, nelze smazat
+  if (start === 0) return;
   
-  const currentValue=odpovedEl.value;
-  // Smažeme 1 znak vlevo od kurzoru
-  const newValue=currentValue.substring(0,start-1)+currentValue.substring(end);
-  odpovedEl.value=newValue;
+  const currentValue = odpovedEl.value;
+  const newValue = currentValue.substring(0, start - 1) + currentValue.substring(end);
+  odpovedEl.value = newValue;
   
-  // Kurzor zůstane na stejném místě (posuneme ho o 1 doleva)
-  odpovedEl.setSelectionRange(start-1,start-1);
+  odpovedEl.setSelectionRange(start - 1, start - 1);
 };
 
 // Funkce pro smazání celého čísla
-const clearAll=()=>{
-  odpovedEl.value='';
-  odpovedEl.setSelectionRange(0,0);
+const clearAll = () => {
+  odpovedEl.value = '';
+  odpovedEl.setSelectionRange(0, 0);
 };
 
-const updateMicVisibility=()=>{const show=hlasCheck.checked&&zobrazitVysledek&&aktualniPriklad;micBtn.classList.toggle('shown',!!show);if(!show&&micListening)stopMic(false)};
+const updateMicVisibility = () => {
+  const show = hlasCheck.checked && zobrazitVysledek && aktualniPriklad;
+  micBtn.classList.toggle('shown', !!show);
+  if (!show && micListening) stopMic(false);
+};
 
-const buildRecognition=()=>{
+const buildRecognition = () => {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SpeechRecognition){
-    console.error('SpeechRecognition není podporován');
-    return null;
-  }
-  const r=new SpeechRecognition();
-  r.lang='cs-CZ';r.continuous=false;r.interimResults=false;r.maxAlternatives=1;
-  r.onstart=()=>{
-    micListening=true;
+  if (!SpeechRecognition) return null;
+  
+  const r = new SpeechRecognition();
+  r.lang = 'cs-CZ';
+  r.continuous = false;
+  r.interimResults = false;
+  r.maxAlternatives = 1;
+  
+  r.onstart = () => {
+    micListening = true;
     micBtn.classList.add('listening');
-    micLabel.textContent='Mluvte…';
-    inputBox.style.borderColor='#ef4444';
-    console.log('Rozpoznávání spuštěno');
+    micLabel.textContent = 'Mluvte…';
+    inputBox.style.borderColor = '#ef4444';
   };
-  r.onend=()=>{
-    micListening=false;
+  
+  r.onend = () => {
+    micListening = false;
     micBtn.classList.remove('listening');
-    micLabel.textContent='Mikrofon';
-    inputBox.style.borderColor='';
-    console.log('Rozpoznávání ukončeno');
-    // Restartujeme rozpoznávání pro další příkaz
-    if(micAutoRestart&&hlasCheck.checked&&zobrazitVysledek){
-      setTimeout(()=>{
-        if(!micListening&&hlasCheck.checked&&zobrazitVysledek){
+    micLabel.textContent = 'Mikrofon';
+    inputBox.style.borderColor = '';
+    
+    if (micAutoRestart && hlasCheck.checked && zobrazitVysledek) {
+      setTimeout(() => {
+        if (!micListening && hlasCheck.checked && zobrazitVysledek) {
           recognition = buildRecognition();
-          if(recognition) try{recognition.start()}catch(e){}
+          if (recognition) try { recognition.start(); } catch(e) {}
         }
-      },100)
+      }, 100);
     }
   };
-  r.onerror=e=>{
-    console.error('Chyba rozpoznávání:', e.error);
-    if(e.error==='not-allowed'||e.error==='service-not-available'){
-      micAutoRestart=false;
-      hlasCheck.checked=false;
+  
+  r.onerror = (e) => {
+    if (e.error === 'not-allowed' || e.error === 'service-not-available') {
+      micAutoRestart = false;
+      hlasCheck.checked = false;
       updateMicVisibility();
-      chybaEl.textContent='⚠️ Mikrofon není dostupný';
+      chybaEl.textContent = '⚠️ Mikrofon není dostupný';
     }
-    micListening=false;
+    micListening = false;
   };
-  r.onresult=e=>{
-    let finalText='';
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      if(e.results[i].isFinal) finalText+=e.results[i][0].transcript+' ';
+  
+  r.onresult = (e) => {
+    let finalText = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
     }
-    if(!finalText.trim()){
-      console.log('Prázdný výsledek');
-      return;
-    }
+    if (!finalText.trim()) return;
     
-    console.log('Rozpoznán text:', finalText);
+    let raw = finalText.trim().toLowerCase()
+      .replace(/[?!;:_]/g, '')
+      .replace(/\b(ukázat|ukazat|ukažte|ukazte|ukaž|ukaš)\b/g, ' ');
     
-    let raw=finalText.trim().toLowerCase()
-      .replace(/(\d)\s+(?=\d)/g,'$1')
-      .replace(/[,.]/g,' čárka ')
-      .replace(/[?!;:_]/g,'')
-      .replace(/\b(ukázat|ukazat|ukažte|ukazte|ukaž|ukaš)\b/g,' ');
+    console.log('Rozpoznáno:', raw);
     
-    console.log('Upravený text:', raw);
-    
-    // Kontrola na chybu - smaže celé číslo
-    if(/chyba/.test(raw)){
-      console.log('Příkaz: chyba');
+    // Kontrola na "chyba" - smaže celé
+    if (/chyba/.test(raw)) {
       clearAll();
-      raw=raw.replace(/\bchyba\b/g,'').trim();
       return;
     }
     
-    // Zpracování příkazu "zpět" - smaže 1 číslici vlevo od kurzoru
-    const zpetPocet=(raw.match(/\b(zpět|spjet)\b/g)||[]).length;
-    for(let z=0;z<zpetPocet;z++){
-      console.log('Příkaz: zpět');
+    // "zpět" - smaže 1 číslici
+    if (/\b(zpět|spjet)\b/.test(raw)) {
       backspaceAtCursor();
-    }
-    if(zpetPocet>0){
-      raw=raw.replace(/\b(zpět|spjet)\b/g,'').trim();
       return;
     }
     
-    // Zpracování příkazu "dvoj" / "dvojnula" - vloží 2 nuly na pozici kurzoru
-    const dvojPocet=(raw.match(/\b(dvoj|dvojnula)\b/g)||[]).length;
-    for(let d=0;d<dvojPocet;d++){
-      console.log('Příkaz: dvoj');
-      insertValueAtCursor(0);
-      insertValueAtCursor(0);
-    }
-    if(dvojPocet>0){
-      raw=raw.replace(/\b(dvoj|dvojnula)\b/g,'').trim();
+    // "dvoj" - 2 nuly
+    if (/\b(dvoj|dvojnula)\b/.test(raw)) {
+      insertDigitAtCursor(0);
+      insertDigitAtCursor(0);
       return;
     }
     
-    // Zpracování příkazu "troj" / "trojnula" - vloží 3 nuly na pozici kurzoru
-    const trojPocet=(raw.match(/\b(troj|trojnula)\b/g)||[]).length;
-    for(let t=0;t<trojPocet;t++){
-      console.log('Příkaz: troj');
-      insertValueAtCursor(0);
-      insertValueAtCursor(0);
-      insertValueAtCursor(0);
-    }
-    if(trojPocet>0){
-      raw=raw.replace(/\b(troj|trojnula)\b/g,'').trim();
+    // "troj" - 3 nuly
+    if (/\b(troj|trojnula)\b/.test(raw)) {
+      insertDigitAtCursor(0);
+      insertDigitAtCursor(0);
+      insertDigitAtCursor(0);
       return;
     }
     
-    // Zpracování příkazu "zero" / "zirou" / "zírou" - vloží 1 nulu na pozici kurzoru
-    if(/\b(zero|zirou|zírou)\b/.test(raw)){
-      const m=raw.match(/\b(zero|zirou|zírou)\b/g);
-      for(let i=0;i<m.length;i++){
-        console.log('Příkaz: zero');
-        insertValueAtCursor(0);
-      }
-      raw=raw.replace(/\b(zero|zirou|zírou)\b/g,'').trim();
+    // "zero" - 1 nula
+    if (/\b(zero|zirou|zírou)\b/.test(raw)) {
+      insertDigitAtCursor(0);
       return;
     }
     
-    // Kontrola na odeslání výsledku
-    let shouldSubmit=false;
-    if(/\b(ano|jo|joo)\b/.test(raw)){
-      shouldSubmit=true;
-      raw=raw.replace(/\b(ano|jo|joo)\b/g,'');
+    // "ano" - odeslání
+    const shouldSubmit = /\b(ano|jo|joo)\b/.test(raw);
+    if (shouldSubmit) {
+      raw = raw.replace(/\b(ano|jo|joo)\b/g, '').trim();
     }
     
-    // Zpracování čísel ze zbytku textu
-    raw=expandCompound(raw).trim();
-    console.log('Po expanzi:', raw);
-    
-    if(raw){
-      const decMatch=raw.match(DEC_RE);
-      if(decMatch){
-        console.log('Desetinné číslo:', decMatch);
-        const before=raw.slice(0,decMatch.index).trim();
-        if(before){
-          const words=before.split(/\s+/).filter(Boolean);
-          const tokens=parseVoiceTokens(words);
-          console.log('Tokeny před des. čárkou:', tokens);
-          tokens.forEach(v=>insertValueAtCursor(v));
-        }
-        insertValueAtCursor('.');
-        const after=raw.slice(decMatch.index+decMatch[0].length).trim();
-        if(after){
-          const words=after.split(/\s+/).filter(Boolean);
-          const tokens=parseVoiceTokens(words);
-          console.log('Tokeny po des. čárce:', tokens);
-          tokens.forEach(v=>insertValueAtCursor(v));
-        }
-      }else{
-        const words=raw.split(/\s+/).filter(Boolean);
-        const tokens=parseVoiceTokens(words);
-        console.log('Tokeny:', tokens);
-        tokens.forEach(v=>insertValueAtCursor(v));
+    if (raw) {
+      const words = raw.split(/\s+/).filter(Boolean);
+      const digits = processNumberWords(words);
+      console.log('Číslice:', digits);
+      
+      for (let d of digits) {
+        insertDigitAtCursor(d);
       }
     }
     
-    if(shouldSubmit){
-      console.log('Odesílám výsledek');
-      micAutoRestart=false;
+    if (shouldSubmit) {
+      micAutoRestart = false;
       stopMic(false);
-      setTimeout(()=>handle(null,true),100);
+      setTimeout(() => handle(null, true), 100);
     }
   };
+  
   return r;
 };
 
-const startMic=()=>{
+const startMic = () => {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SpeechRecognition){
-    chybaEl.textContent='⚠️ Prohlížeč nepodporuje hlasový vstup';
+  if (!SpeechRecognition) {
+    chybaEl.textContent = '⚠️ Prohlížeč nepodporuje hlasový vstup';
     return;
   }
-  if(micListening) return;
-  micAutoRestart=true;
+  if (micListening) return;
+  micAutoRestart = true;
   recognition = buildRecognition();
-  if(!recognition) return;
-  try{ recognition.start(); } catch(e){}
+  if (!recognition) return;
+  try { recognition.start(); } catch(e) {}
 };
 
-const stopMic=reset=>{
-  micAutoRestart=false;
-  if(recognition&&micListening){
-    try{ recognition.stop(); } catch(e){}
+const stopMic = (reset) => {
+  micAutoRestart = false;
+  if (recognition && micListening) {
+    try { recognition.stop(); } catch(e) {}
   }
-  if(reset) recognition=null;
-  micListening=false;
+  if (reset) recognition = null;
+  micListening = false;
   micBtn.classList.remove('listening');
-  micLabel.textContent='Mikrofon';
-  inputBox.style.borderColor='';
+  micLabel.textContent = 'Mikrofon';
+  inputBox.style.borderColor = '';
 };
 
-hlasCheck.addEventListener('change',()=>{
+hlasCheck.addEventListener('change', () => {
   updateMicVisibility();
-  if(!hlasCheck.checked){
+  if (!hlasCheck.checked) {
     stopMic(true);
-  } else if(zobrazitVysledek&&aktualniPriklad){
-    setTimeout(()=>startMic(),100);
+  } else if (zobrazitVysledek && aktualniPriklad) {
+    setTimeout(() => startMic(), 100);
   }
 });
 
-micBtn.addEventListener('click',()=>micListening?stopMic(false):startMic());
-micBtn.addEventListener('touchstart',e=>e.stopPropagation(),{passive:true});
+micBtn.addEventListener('click', () => micListening ? stopMic(false) : startMic());
+micBtn.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
 
-const handle=(e,fromVoice)=>{
-  if(isProcessing)return;
-  isProcessing=true;
-  if(e)e.preventDefault();
-  if(!fromVoice&&micListening)stopMic(false);
-  const P=odpovedEl.parentElement.parentElement;
-  P.classList.remove('zelene','cervene');odpovedEl.classList.remove('text-white');
+const handle = (e, fromVoice) => {
+  if (isProcessing) return;
+  isProcessing = true;
+  if (e) e.preventDefault();
+  if (!fromVoice && micListening) stopMic(false);
+  
+  const P = odpovedEl.parentElement.parentElement;
+  P.classList.remove('zelene', 'cervene');
+  odpovedEl.classList.remove('text-white');
 
-  if(!aktualniPriklad&&!zobrazitVysledek){
-    const inputVal=odpovedEl.value.trim();
-    if(!inputVal){if(startNewProblem())return;isProcessing=false;return}
-    if(inputVal.toLowerCase()==='vymazat'){
-      history=[];correct=0;wrong=0;streak=0;
-      updateScores();renderHistory();save();
-      chybaEl.textContent='✅ Historie smazána';
-      setTimeout(()=>chybaEl.textContent='',2000);
-      if(startNewProblem())return;
-      isProcessing=false;return;
-    }
-    chybaEl.textContent='⚠️ Špatné heslo';
-    setTimeout(()=>chybaEl.textContent='',2000);
-    resetToInitialState();
-    isProcessing=false;return;
-  }
-
-  if(zobrazitVysledek&&aktualniPriklad){
-    const val=odpovedEl.value.trim(),normVal=norm(val);
-    if(!val){
-      const vv=aktualniPriklad.vysledekZ!==undefined?aktualniPriklad.vysledekZ:aktualniPriklad.vysledek;
-      odpovedEl.value=fmt(vv);odpovedEl.classList.remove('hidden-text');
-      zobrazitVysledek=false;updateBtn();updateMicVisibility();btnEl.focus();
-      setTimeout(()=>isProcessing=false,50);
+  if (!aktualniPriklad && !zobrazitVysledek) {
+    const inputVal = odpovedEl.value.trim();
+    if (!inputVal) {
+      if (startNewProblem()) return;
+      isProcessing = false;
       return;
     }
-    if(!/^-?\d+([.,]\d*)?$/.test(normVal)){chybaEl.textContent='⚠️ Nepovolený znak!';isProcessing=false;if(!fromVoice)odpovedEl.focus();return}
-    odpovedEl.value=fmtInputStr(normVal);
-    const ok=aktualniPriklad.op==='/'?checkDivision(normVal,aktualniPriklad).ok:check(normVal,aktualniPriklad);
-    P.classList.add(ok?'zelene':'cervene');odpovedEl.classList.add('text-white');
-    if(ok){correct++;streak++}else{wrong++;streak=0;P.classList.add('shake');setTimeout(()=>P.classList.remove('shake'),500)}
-    updateScores();addHist(ok,normVal);save();
-    zobrazitVysledek=false;updateBtn();updateMicVisibility();btnEl.focus();
-    setTimeout(()=>isProcessing=false,150);
+    if (inputVal.toLowerCase() === 'vymazat') {
+      history = []; correct = 0; wrong = 0; streak = 0;
+      updateScores(); renderHistory(); save();
+      chybaEl.textContent = '✅ Historie smazána';
+      setTimeout(() => chybaEl.textContent = '', 2000);
+      if (startNewProblem()) return;
+      isProcessing = false;
+      return;
+    }
+    chybaEl.textContent = '⚠️ Špatné heslo';
+    setTimeout(() => chybaEl.textContent = '', 2000);
+    resetToInitialState();
+    isProcessing = false;
     return;
   }
 
-  if(aktualniPriklad&&!zobrazitVysledek){if(startNewProblem())return;isProcessing=false}
+  if (zobrazitVysledek && aktualniPriklad) {
+    const val = odpovedEl.value.trim();
+    const normVal = norm(val);
+    
+    if (!val) {
+      const vv = aktualniPriklad.vysledekZ !== undefined ? aktualniPriklad.vysledekZ : aktualniPriklad.vysledek;
+      odpovedEl.value = fmt(vv);
+      odpovedEl.classList.remove('hidden-text');
+      zobrazitVysledek = false;
+      updateBtn();
+      updateMicVisibility();
+      btnEl.focus();
+      setTimeout(() => isProcessing = false, 50);
+      return;
+    }
+    
+    if (!/^-?\d+([.,]\d*)?$/.test(normVal)) {
+      chybaEl.textContent = '⚠️ Nepovolený znak!';
+      isProcessing = false;
+      if (!fromVoice) odpovedEl.focus();
+      return;
+    }
+    
+    odpovedEl.value = fmtInputStr(normVal);
+    const ok = aktualniPriklad.op === '/' ? checkDivision(normVal, aktualniPriklad).ok : check(normVal, aktualniPriklad);
+    
+    P.classList.add(ok ? 'zelene' : 'cervene');
+    odpovedEl.classList.add('text-white');
+    
+    if (ok) { correct++; streak++; }
+    else { wrong++; streak = 0; P.classList.add('shake'); setTimeout(() => P.classList.remove('shake'), 500); }
+    
+    updateScores();
+    addHist(ok, normVal);
+    save();
+    zobrazitVysledek = false;
+    updateBtn();
+    updateMicVisibility();
+    btnEl.focus();
+    setTimeout(() => isProcessing = false, 150);
+    return;
+  }
+
+  if (aktualniPriklad && !zobrazitVysledek) {
+    if (startNewProblem()) return;
+    isProcessing = false;
+  }
 };
 
-btnEl.addEventListener('touchstart',e=>handle(e,false),{passive:false});
-btnEl.addEventListener('click',e=>{if(e.pointerType!=='touch')handle(e,false)});
-odpovedEl.addEventListener('keydown',e=>{if(e.key==='Enter')handle(e,false)});
-$('settingsToggle').addEventListener('click',()=>$('settingsPanel').classList.toggle('collapsed'));
+btnEl.addEventListener('touchstart', (e) => handle(e, false), { passive: false });
+btnEl.addEventListener('click', (e) => { if (e.pointerType !== 'touch') handle(e, false); });
+odpovedEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') handle(e, false); });
+$('settingsToggle').addEventListener('click', () => $('settingsPanel').classList.toggle('collapsed'));
 
-updateScores();updateBtn();renderHistory();resetToInitialState();
+updateScores();
+updateBtn();
+renderHistory();
+resetToInitialState();
 })();
 </script>
 </body>
