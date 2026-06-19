@@ -8,16 +8,14 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Inter','system-ui','sans-serif']}}}}</script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',system-ui,sans-serif}
 .zelene{background:#15803d!important;border-color:#22c55e!important;color:#fff!important}
 .cervene{background:#b91c1c!important;border-color:#ef4444!important;color:#fff!important}
 input{-webkit-appearance:none;border-radius:.75rem}
 #inputWrapper{position:relative;overflow:hidden}
 #odpoved{position:relative;right:0;transition:right .15s ease}
-#odpoved::placeholder{text-align:center!important;font-size:1.5rem}
-@media(max-width:400px){#odpoved::placeholder{font-size:1rem}}
+#odpoved::placeholder{text-align:center!important}
 #odpoved.hidden-text{color:transparent!important;caret-color:transparent!important;-webkit-text-fill-color:transparent!important}
-.math-text{white-space:pre;line-height:1.25;display:block;font-variant-numeric:tabular-nums}
 .worksheet-bg{background:#e2e8f0 radial-gradient(circle,#94a3b8 1px,transparent 1px)/24px 24px}
 .dark .worksheet-bg{background:rgba(30,41,59,.4) radial-gradient(circle,#334155 1px,transparent 1px)}
 .btn-pulse{animation:pulse-blue 2.5s infinite}
@@ -26,26 +24,15 @@ input{-webkit-appearance:none;border-radius:.75rem}
 @keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.45)}50%{box-shadow:0 0 0 10px rgba(16,185,129,0)}}
 .shake{animation:shake .5s both}
 @keyframes shake{10%,90%{transform:translate3d(-1px,0,0)}20%,80%{transform:translate3d(2px,0,0)}30%,50%,70%{transform:translate3d(-3px,0,0)}40%,60%{transform:translate3d(3px,0,0)}}
-.slide-up{animation:slideUp .3s forwards}
-@keyframes slideUp{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
 .pop{animation:pop .2s}
 @keyframes pop{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
 .settings-panel{max-height:150px;opacity:1;overflow:hidden;transition:all .3s ease}
 .settings-panel.collapsed{max-height:0;opacity:0;margin:0!important;pointer-events:none}
-.scrollbar-hide::-webkit-scrollbar{display:none}
-.scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}
-.score-bar{position:sticky;top:0;z-index:40;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-#micBtn,#homeBtn{transition:opacity .2s}
-#micBtn{visibility:hidden;opacity:0;pointer-events:none}
-#micBtn.shown{visibility:visible;opacity:1;pointer-events:auto}
-@keyframes mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.6)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
-#micBtn.listening{animation:mic-pulse 1.2s infinite;border-color:#ef4444!important}
-#homeBtn.hidden-btn{visibility:hidden;opacity:0;pointer-events:none}
 </style>
 </head>
-<body class="bg-slate-200 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300 font-sans">
+<body class="bg-slate-200 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300">
 <div class="w-full max-w-md mx-auto flex flex-col min-h-[100dvh]">
-<div class="score-bar bg-slate-300/80 dark:bg-slate-900/80 border-b border-slate-300 dark:border-slate-800 shadow-sm">
+<div class="sticky top-0 z-40 bg-slate-300/80 dark:bg-slate-900/80 border-b border-slate-300 dark:border-slate-800 shadow-sm">
 <div class="px-4 py-2.5 flex items-center justify-between select-none">
   <div class="flex items-center gap-3">
     <div class="flex items-center gap-1.5"><span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">✓</span><output id="scoreCorrect" class="text-lg font-black text-emerald-600 dark:text-emerald-400 tabular-nums">0</output></div>
@@ -60,12 +47,12 @@ input{-webkit-appearance:none;border-radius:.75rem}
     <div class="w-px h-5 bg-slate-300 dark:bg-slate-700"></div>
     <div class="flex items-center gap-2">
       <span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Série</span>
-      <div class="flex items-center gap-1"><output id="streakCount" class="text-lg font-black text-amber-500 dark:text-amber-400 tabular-nums">0</output><svg class="w-4 h-4 text-amber-500 dark:text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/></svg></div>
+      <div class="flex items-center gap-1"><output id="streakCount" class="text-lg font-black text-amber-500 dark:text-amber-400 tabular-nums">0</output><svg class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/></svg></div>
     </div>
   </div>
 </div>
 </div>
-<div class="flex-1 overflow-y-auto px-4 py-3 space-y-3 scrollbar-hide">
+<div class="flex-1 overflow-y-auto px-4 py-3 space-y-3">
 <div class="bg-slate-200 dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-300 dark:border-slate-800 p-4">
 <div class="flex items-start justify-between mb-3">
 <div>
@@ -73,7 +60,7 @@ input{-webkit-appearance:none;border-radius:.75rem}
   <div class="flex items-center gap-1.5 mt-0.5"><span id="currentDate" class="text-[11px] font-medium text-slate-400 dark:text-slate-500"></span></div>
 </div>
 <div class="flex items-center gap-1">
-  <button id="homeBtn" class="p-1.5 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors text-slate-400 text-lg leading-none hidden-btn">🏠</button>
+  <button id="homeBtn" class="hidden p-1.5 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors text-slate-400 text-lg leading-none">🏠</button>
   <button id="settingsToggle" class="p-1.5 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors text-slate-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>
   <button id="themeToggle" class="p-1.5 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors"><svg id="themeIconMoon" class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg><svg id="themeIconSun" class="hidden w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg></button>
 </div>
@@ -87,19 +74,18 @@ input{-webkit-appearance:none;border-radius:.75rem}
 </div>
 <div id="chyba" class="text-red-500 text-[10px] font-bold text-center h-4 overflow-hidden mb-1" role="alert"></div>
 <div id="upperBox" class="bg-slate-200 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-800 rounded-xl pt-4 pl-4 pr-4 pb-1 mb-3 worksheet-bg relative overflow-hidden flex flex-col justify-center">
-<div id="problemContainer" class="w-full overflow-x-auto scrollbar-hide flex flex-col items-end relative z-10 transition-all">
-  <div id="priklad" class=" math-text text-4xl font-semibold tracking-normal text-slate-700 dark:text-slate-200 tabular-nums" style="white-space:break-spaces;"></div>
-  <div id="cara" class="math-text text-4xl text-slate-400 dark:text-slate-600 border-t-[3px] border-slate-400 dark:border-slate-600 w-full mt-1 opacity-0 transition-opacity duration-300"></div>
+<div id="problemContainer" class="w-full overflow-x-auto flex flex-col items-end relative z-10 transition-all">
+  <div id="priklad" class="text-4xl font-semibold tracking-normal text-slate-700 dark:text-slate-200"></div>
+  <div id="cara" class="text-4xl text-slate-400 dark:text-slate-600 border-t-[3px] border-slate-400 dark:border-slate-600 w-full mt-1 opacity-0 transition-opacity duration-300"></div>
 </div>
 </div>
 <div class="space-y-2.5">
   <div id="inputBox" class="relative bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-300 dark:border-slate-700 focus-within:border-blue-500 transition-all shadow-inner overflow-hidden flex">
-    <div id="inputWrapper" class="w-full"><input type="text" id="odpoved" inputmode="text" enterkeyhint="done" autocomplete="off" placeholder="historie" class="w-full pl-4 pr-4 py-1 text-4xl sm:text-4xl font-semibold bg-transparent text-slate-800 dark:text-white outline-none text-center tabular-nums tracking-normal"/></div>
-    <div id="inputIcon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-all duration-200 scale-75 pointer-events-none"></div>
+    <div id="inputWrapper" class="w-full"><input type="text" id="odpoved" inputmode="text" enterkeyhint="done" autocomplete="off" placeholder="historie" class="w-full pl-4 pr-4 py-1 text-4xl font-semibold bg-transparent text-slate-800 dark:text-white outline-none text-center tabular-nums"/></div>
   </div>
   <div class="flex gap-2.5 items-stretch">
-    <button id="micBtn" type="button" class="flex-shrink-0 px-4 py-3 flex items-center justify-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-sm transition-all touch-manipulation whitespace-nowrap"><svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4M12 3a4 4 0 014 4v4a4 4 0 01-8 0V7a4 4 0 014-4z"/></svg><span id="micLabel">Mikrofon</span></button>
-    <button id="tlacitko" type="button" class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-black text-base rounded-xl shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest touch-manipulation btn-pulse flex items-center justify-center">START</button>
+    <button id="micBtn" type="button" class="hidden flex-shrink-0 px-4 py-3 flex items-center justify-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-sm transition-all whitespace-nowrap"><svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4M12 3a4 4 0 014 4v4a4 4 0 01-8 0V7a4 4 0 014-4z"/></svg><span id="micLabel">Mikrofon</span></button>
+    <button id="tlacitko" type="button" class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-black text-base rounded-xl shadow-lg shadow-blue-500/20 transition-all uppercase tracking-widest btn-pulse">START</button>
   </div>
 </div>
 </div>
@@ -107,544 +93,673 @@ input{-webkit-appearance:none;border-radius:.75rem}
 <div class="text-[9px] font-bold uppercase text-slate-400 tracking-wider mb-1.5">Historie</div>
 <div id="historyList" class="flex flex-wrap gap-1.5"><div id="historyEmpty" class="text-[11px] text-slate-400 italic">Zatím jste nevyřešil(a) žádný příklad</div></div>
 </div>
-<div class="h-4"></div>
 </div>
 </div>
 <script>
-(()=>{
-const $=id=>document.getElementById(id),odpovedEl=$('odpoved'),operaceEl=$('operace'),cis1=$('cislice1'),cis2=$('cislice2'),chybaEl=$('chyba'),prikladEl=$('priklad'),caraEl=$('cara'),btnEl=$('tlacitko'),scoreC=$('scoreCorrect'),scoreW=$('scoreWrong'),streakEl=$('streakCount'),histCont=$('historyContainer'),histList=$('historyList'),histEmpty=$('historyEmpty'),themeToggle=$('themeToggle'),themeIconSun=$('themeIconSun'),themeIconMoon=$('themeIconMoon'),hlasCheck=$('hlasCheck'),micBtn=$('micBtn'),micLabel=$('micLabel'),inputBox=$('inputBox'),homeBtn=$('homeBtn');
-const KEY='matika_trenink_v4';
-let correct=0,wrong=0,streak=0,history=[],aktualniPriklad=null,zobrazitVysledek=false,isProcessing=false,micListening=false,micAutoRestart=true,recognition=null;
+(() => {
+  const $ = id => document.getElementById(id);
+  const odpovedEl = $('odpoved');
+  const operaceEl = $('operace');
+  const cis1 = $('cislice1');
+  const cis2 = $('cislice2');
+  const chybaEl = $('chyba');
+  const prikladEl = $('priklad');
+  const caraEl = $('cara');
+  const btnEl = $('tlacitko');
+  const scoreC = $('scoreCorrect');
+  const scoreW = $('scoreWrong');
+  const streakEl = $('streakCount');
+  const histCont = $('historyContainer');
+  const histList = $('historyList');
+  const histEmpty = $('historyEmpty');
+  const themeToggle = $('themeToggle');
+  const themeIconSun = $('themeIconSun');
+  const themeIconMoon = $('themeIconMoon');
+  const hlasCheck = $('hlasCheck');
+  const micBtn = $('micBtn');
+  const micLabel = $('micLabel');
+  const inputBox = $('inputBox');
+  const homeBtn = $('homeBtn');
 
-const today=new Date(),czM='ledna,února,března,dubna,května,června,července,srpna,září,října,listopadu,prosince'.split(','),czD='Neděle,Pondělí,Úterý,Středa,Čtvrtek,Pátek,Sobota'.split(',');
-$('currentDate').textContent=`${czD[today.getDay()]} ${today.getDate()}. ${czM[today.getMonth()]} ${today.getFullYear()}`;
-const todayStr=today.toISOString().slice(0,10);
+  const KEY = 'matika_trenink_v4';
+  let correct = 0, wrong = 0, streak = 0, history = [];
+  let aktualniPriklad = null;
+  let zobrazitVysledek = false;
+  let isProcessing = false;
+  let micListening = false;
+  let recognition = null;
 
-const updateThemeIcons=()=>{const d=document.documentElement.classList.contains('dark');themeIconSun.classList.toggle('hidden',!d);themeIconMoon.classList.toggle('hidden',d)};
-themeToggle.addEventListener('click',()=>{document.documentElement.classList.toggle('dark');updateThemeIcons()});
-updateThemeIcons();
+  // Date
+  const today = new Date();
+  const czM = 'ledna,února,března,dubna,května,června,července,srpna,září,října,listopadu,prosince'.split(',');
+  const czD = 'Neděle,Pondělí,Úterý,Středa,Čtvrtek,Pátek,Sobota'.split(',');
+  $('currentDate').textContent = `${czD[today.getDay()]} ${today.getDate()}. ${czM[today.getMonth()]} ${today.getFullYear()}`;
+  const todayStr = today.toISOString().slice(0, 10);
 
-const updateHomeBtn=()=>homeBtn.classList.toggle('hidden-btn',!aktualniPriklad&&!zobrazitVysledek);
-homeBtn.addEventListener('click',()=>{if(micListening)stopMic(false);aktualniPriklad=null;zobrazitVysledek=false;isProcessing=false;chybaEl.textContent='';resetToInitialState()});
+  // Theme
+  const updateThemeIcons = () => {
+    const isDark = document.documentElement.classList.contains('dark');
+    themeIconSun.classList.toggle('hidden', !isDark);
+    themeIconMoon.classList.toggle('hidden', isDark);
+  };
+  themeToggle.addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+    updateThemeIcons();
+  });
+  updateThemeIcons();
 
-const fmt=x=>{if(typeof x==='bigint')return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'\u00A0');if(typeof x!=='number')return String(x);const[c,d]=x.toString().split('.');return c.replace(/\B(?=(\d{3})+(?!\d))/g,'\u00A0')+(d?','+d:'')};
-const fmtInputStr=s=>{s=s.replace(/\s|\u00A0/g,'');const neg=s[0]==='-',abs=neg?s.slice(1):s,[ip,dp]=abs.split('.');return(neg?'-':'')+ip.replace(/\B(?=(\d{3})+(?!\d))/g,'\u00A0')+(dp!==undefined?','+dp:'')};
-const norm=s=>s.trim().replace(/[\s\u00A0]+/g,'').replace(',','.');
-const genNum=n=>{const mn=10**(n-1),mx=10**n-1;return Math.floor(Math.random()*(mx-mn+1))+mn};
-const trunc4=n=>{const[c,d]=String(n).split('.');return d?c+'.'+d.slice(0,4):c};
+  // Home button
+  homeBtn.addEventListener('click', () => {
+    if (micListening) stopMic();
+    aktualniPriklad = null;
+    zobrazitVysledek = false;
+    isProcessing = false;
+    chybaEl.textContent = '';
+    resetToInitialState();
+  });
 
-const load=()=>{try{const r=localStorage.getItem(KEY);if(r){const s=JSON.parse(r);if(s.date===todayStr){correct=s.correct||0;wrong=s.wrong||0;streak=s.streak||0;history=s.history||[]}if(s.operace)operaceEl.value=s.operace;if(s.cislice1)cis1.value=s.cislice1;if(s.cislice2)cis2.value=s.cislice2}}catch(e){}};
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({date:todayStr,correct,wrong,streak,history,operace:operaceEl.value,cislice1:cis1.value,cislice2:cis2.value}))}catch(e){}};
+  // Format numbers
+  const fmt = x => {
+    if (typeof x === 'bigint') return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
+    const [c, d] = String(x).split('.');
+    return c.replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0') + (d ? ',' + d : '');
+  };
 
-for(let i=1;i<=9;i++)cis1.innerHTML+=`<option value="${i}">${i}</option>`,cis2.innerHTML+=`<option value="${i}">${i}</option>`;
-if(!localStorage.getItem(KEY)){cis1.value='2';cis2.value='1';operaceEl.value='+'}else load();
+  const norm = s => s.trim().replace(/[\s\u00A0]+/g, '').replace(',', '.');
 
-const updateCis2=()=>{const op=operaceEl.value,v1=+cis1.value;[...cis2.options].forEach(o=>o.disabled=op==='-'&&+o.value>v1);if(+cis2.value>v1&&op==='-')cis2.value=v1};
-updateCis2();
-operaceEl.addEventListener('change',()=>{updateCis2();chybaEl.textContent='';save()});
-cis1.addEventListener('change',()=>{updateCis2();save()});
-cis2.addEventListener('change',save);
+  // Generate numbers
+  const genNum = n => {
+    const mn = 10 ** (n - 1), mx = 10 ** n - 1;
+    return Math.floor(Math.random() * (mx - mn + 1)) + mn;
+  };
 
-const generate=()=>{
-  const op=operaceEl.value,n1=+cis1.value,n2=+cis2.value;
-  chybaEl.textContent='';
-  if(op==='-'&&n1<n2){chybaEl.textContent='❌ Při odčítání musí mít 1. číslo ≥ cifer než 2.';return null}
-  let a,b,iter=0;
-  while(iter++<1000){a=genNum(n1);b=n2===1?Math.floor(Math.random()*8)+2:genNum(n2);if(op==='-'&&a<=b)continue;if(op==='/'&&b===0)continue;break}
-  let vysledek,vysledekZ;
-  if(op==='+')vysledek=vysledekZ=a+b;
-  else if(op==='-')vysledek=vysledekZ=a-b;
-  else if(op==='*')vysledek=vysledekZ=BigInt(a)*BigInt(b);
-  else{vysledek=a/b;vysledekZ=trunc4(vysledek)}
-  return{a,b,op,vysledek,vysledekZ};
-};
-
-const showProblem=p=>{
-  const fa=fmt(p.a),fb=fmt(p.b),opUI=p.op==='*'?'x':p.op==='/'?':':p.op==='-'?'−':'+';
-  prikladEl.style.whiteSpace='normal';prikladEl.classList.remove('math-text');
-  prikladEl.innerHTML=`<div class="flex justify-end gap-3 w-full"><div class="flex flex-col text-right select-none"><div class="invisible">0</div><div>${opUI}</div></div><div class="flex flex-col text-right"><div>${fa}</div><div>${fb}</div></div></div>`;
-  caraEl.style.opacity='0';
-  odpovedEl.setAttribute('inputmode','decimal');odpovedEl.placeholder='Váš výsledek';odpovedEl.style.textAlign='right';
-};
-
-const startNewProblem=()=>{
-  const p=generate();if(!p)return false;
-  aktualniPriklad=p;showProblem(p);odpovedEl.value='';odpovedEl.classList.remove('hidden-text');
-  zobrazitVysledek=true;updateBtn();updateMicVisibility();updateHomeBtn();
-  setTimeout(()=>{caraEl.style.opacity='1';if(hlasCheck.checked)setTimeout(()=>startMic(),100);else odpovedEl.focus();isProcessing=false},50);
-  return true;
-};
-
-const resetToInitialState=()=>{
-  aktualniPriklad=null;zobrazitVysledek=false;odpovedEl.value='';odpovedEl.classList.add('hidden-text');
-  odpovedEl.setAttribute('inputmode','text');odpovedEl.placeholder='historie';odpovedEl.style.textAlign='center';
-  prikladEl.innerHTML='';caraEl.style.opacity='0';updateMicVisibility();updateBtn();updateHomeBtn();btnEl.focus();
-};
-
-const checkDivision=(userStr,p)=>{
-  const n=norm(userStr),trueStr=trunc4(p.vysledek),[tc,td=trueStr.split('.')[1]||'']=trueStr.split('.'),[uc,ud=n.split('.')[1]||'']=n.split('.');
-  if(uc!==tc)return{ok:false,bracket:0};
-  let userDec=ud;while(userDec.length>td.length&&userDec.at(-1)==='0')userDec=userDec.slice(0,-1);
-  let truePadded=td;while(truePadded.length<Math.max(userDec.length,td.length))truePadded+='0';
-  for(let i=0;i<userDec.length;i++)if(userDec[i]!==truePadded[i])return{ok:false,bracket:i+1};
-  return{ok:true,bracket:userDec.length};
-};
-
-const check=(input,p)=>{
-  const n=norm(input);if(!n)return false;
-  if(p.op==='/')return checkDivision(input,p).ok;
-  if(typeof p.vysledek==='bigint'){try{return BigInt(n)===p.vysledek}catch(e){return false}}
-  const num=parseFloat(n);return!isNaN(num)&&Math.abs(num-p.vysledek)<1e-9;
-};
-
-const findFirstWrongDigit=(userInput,p)=>{
-  const n=norm(userInput);let cs,us;
-  if(typeof p.vysledek==='bigint'){cs=p.vysledek.toString();try{us=BigInt(n).toString()}catch(e){return 1}}
-  else{cs=String(p.vysledek);us=String(parseFloat(n))}
-  const ml=Math.max(cs.length,us.length);
-  for(let i=0;i<ml;i++)if((cs[i]||'')!==(us[i]||''))return i+1;
-  return 0;
-};
-
-const updateScores=()=>{scoreC.textContent=correct;scoreW.textContent=wrong;streakEl.textContent=streak;streakEl.parentElement.classList.add('pop');setTimeout(()=>streakEl.parentElement.classList.remove('pop'),200)};
-const updateBtn=()=>{btnEl.classList.remove('btn-pulse','btn-glow');if(!zobrazitVysledek){btnEl.textContent='START';btnEl.classList.add('btn-pulse')}else{btnEl.textContent='✓ VÝSLEDEK (kontrola)';btnEl.classList.add('btn-glow')}};
-
-const renderHistory=()=>{
-  if(!history.length){histEmpty.style.display='block';histCont.style.opacity='0';histList.querySelectorAll('.hi').forEach(e=>e.remove());return}
-  histEmpty.style.display='none';histCont.style.opacity='1';histList.querySelectorAll('.hi').forEach(e=>e.remove());
-  history.forEach((h,i)=>{const d=document.createElement('div');d.className='hi slide-up px-2.5 py-1 rounded-md text-[12px] tabular-nums font-bold border '+(h.correct?'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300':'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300');d.style.animationDelay=i*50+'ms';d.textContent=h.text+' '+(h.correct?'✓':'✗');histList.appendChild(d)});
-};
-
-const addHist=(ok,userInput)=>{
-  if(!aktualniPriklad)return;
-  const p=aktualniPriklad,v=p.vysledekZ!==undefined?p.vysledekZ:p.vysledek,opStr=p.op==='*'?'x':p.op==='/'?':':p.op==='-'?'−':'+';
-  let bracketStr='';
-  if(p.op==='/')bracketStr='('+checkDivision(userInput,p).bracket+')';
-  else if(!ok){const pos=findFirstWrongDigit(userInput,p);if(pos>0)bracketStr='('+pos+')'}
-  history.unshift({text:`${fmt(p.a)} ${opStr} ${fmt(p.b)} = ${fmt(v)}${bracketStr}`,correct:ok});
-  renderHistory();
-};
-
-// JEDNODUCHÝ SLOVNÍK ČÍSEL - přímé mapování
-const WORD_TO_NUM = {
-  // 0
-  'nula': '0', 'nulu': '0', 'nuly': '0', 'žádná': '0', 'zadna': '0',
-  // 1
-  'jedna': '1', 'jeden': '1', 'jedno': '1', 'jednu': '1', 'jedna': '1',
-  'jednička': '1', 'jednicka': '1', 'jedničku': '1', 'jednicku': '1',
-  // 2
-  'dva': '2', 'dvě': '2', 'dve': '2', 'dvou': '2', 'dvojka': '2',
-  'dvojku': '2',
-  // 3
-  'tři': '3', 'tri': '3', 'třech': '3', 'trech': '3', 'trojka': '3',
-  'trojku': '3',
-  // 4
-  'čtyři': '4', 'ctyri': '4', 'čtyřech': '4', 'ctyrech': '4', 'čtyřka': '4',
-  'ctyrka': '4', 'čtyřku': '4', 'ctyrku': '4',
-  // 5
-  'pět': '5', 'pet': '5', 'pěti': '5', 'peti': '5', 'pětka': '5',
-  'petka': '5', 'pětku': '5', 'petku': '5',
-  // 6
-  'šest': '6', 'sest': '6', 'šesti': '6', 'sesti': '6', 'šestka': '6',
-  'sestka': '6', 'šestku': '6', 'sestku': '6',
-  // 7
-  'sedm': '7', 'sedmi': '7', 'sedmička': '7', 'sedmicka': '7',
-  'sedmičku': '7', 'sedmicku': '7',
-  // 8
-  'osm': '8', 'osmi': '8', 'osmička': '8', 'osmicka': '8',
-  'osmičku': '8', 'osmicku': '8',
-  // 9
-  'devět': '9', 'devet': '9', 'devíti': '9', 'deviti': '9', 'devítka': '9',
-  'devitka': '9', 'devítku': '9', 'devitku': '9',
-  // 10
-  'deset': '10', 'deseti': '10', 'desítka': '10', 'desitka': '10',
-  'desítku': '10', 'desitku': '10',
-  // 20
-  'dvacet': '20', 'dvaceti': '20',
-  // 30
-  'třicet': '30', 'tricet': '30', 'třiceti': '30', 'triceti': '30',
-  // 40
-  'čtyřicet': '40', 'ctyricet': '40', 'čtyřiceti': '40', 'ctyriceti': '40',
-  // 50
-  'padesát': '50', 'padesat': '50', 'padesáti': '50', 'padesati': '50',
-  // 60
-  'šedesát': '60', 'sedesat': '60', 'šedesáti': '60', 'sedesati': '60',
-  // 70
-  'sedmdesát': '70', 'sedmdesat': '70', 'sedmdesáti': '70', 'sedmdesati': '70',
-  // 80
-  'osmdesát': '80', 'osmdesat': '80', 'osmdesáti': '80', 'osmdesati': '80',
-  // 90
-  'devadesát': '90', 'devadesat': '90', 'devadesáti': '90', 'devadesati': '90',
-  // 100
-  'sto': '100', 'sta': '100', 'stu': '100', 'stem': '100', 'stě': '100',
-  'ste': '100', 'stovka': '100', 'stovku': '100'
-};
-
-// Zpracování složených čísel
-const processNumberWords = (words) => {
-  let result = [];
-  let i = 0;
-  
-  while (i < words.length) {
-    let found = false;
-    
-    // Zkusíme 4 slova
-    for (let len = 4; len >= 1; len--) {
-      if (i + len > words.length) continue;
-      
-      const phrase = words.slice(i, i + len).join(' ');
-      let value = null;
-      
-      // Zpracování "dvě stě" -> 200
-      if (len === 2 && (words[i] === 'dvě' || words[i] === 'dve' || words[i] === 'tři' || words[i] === 'tri' || words[i] === 'čtyři' || words[i] === 'ctyri') && (words[i+1] === 'stě' || words[i+1] === 'ste' || words[i+1] === 'set')) {
-        const h = { 'dvě': 2, 'dve': 2, 'tři': 3, 'tri': 3, 'čtyři': 4, 'ctyri': 4 };
-        value = h[words[i]] * 100;
-      }
-      
-      // Zpracování "sto dvacet pět" -> 125
-      if (!value && len === 2 && (words[i] === 'sto' || words[i] === 'sta') && WORD_TO_NUM[words[i+1]]) {
-        value = 100 + parseInt(WORD_TO_NUM[words[i+1]], 10);
-      }
-      
-      // Zpracování "sto dvacet pět" se 3 slovy
-      if (!value && len === 3 && (words[i] === 'sto' || words[i] === 'sta') && WORD_TO_NUM[words[i+1]] && parseInt(WORD_TO_NUM[words[i+1]], 10) >= 20) {
-        const desitky = parseInt(WORD_TO_NUM[words[i+1]], 10);
-        if (words[i+2] && WORD_TO_NUM[words[i+2]] && parseInt(WORD_TO_NUM[words[i+2]], 10) >= 1 && parseInt(WORD_TO_NUM[words[i+2]], 10) <= 9) {
-          value = 100 + desitky + parseInt(WORD_TO_NUM[words[i+2]], 10);
+  // Load/Save
+  const load = () => {
+    try {
+      const r = localStorage.getItem(KEY);
+      if (r) {
+        const s = JSON.parse(r);
+        if (s.date === todayStr) {
+          correct = s.correct || 0;
+          wrong = s.wrong || 0;
+          streak = s.streak || 0;
+          history = s.history || [];
         }
+        if (s.operace) operaceEl.value = s.operace;
+        if (s.cislice1) cis1.value = s.cislice1;
+        if (s.cislice2) cis2.value = s.cislice2;
       }
-      
-      // Zpracování "dvacet pět" -> 25
-      if (!value && len === 2 && WORD_TO_NUM[words[i]] && parseInt(WORD_TO_NUM[words[i]], 10) >= 20 && parseInt(WORD_TO_NUM[words[i]], 10) <= 90 && WORD_TO_NUM[words[i+1]] && parseInt(WORD_TO_NUM[words[i+1]], 10) >= 1 && parseInt(WORD_TO_NUM[words[i+1]], 10) <= 9) {
-        value = parseInt(WORD_TO_NUM[words[i]], 10) + parseInt(WORD_TO_NUM[words[i+1]], 10);
-      }
-      
-      // Zpracování "dvě stě dvacet pět" -> 225
-      if (!value && len === 4 && (words[i] === 'dvě' || words[i] === 'dve' || words[i] === 'tři' || words[i] === 'tri' || words[i] === 'čtyři' || words[i] === 'ctyri') && (words[i+1] === 'stě' || words[i+1] === 'ste' || words[i+1] === 'set')) {
-        const h = { 'dvě': 2, 'dve': 2, 'tři': 3, 'tri': 3, 'čtyři': 4, 'ctyri': 4 };
-        const stovky = h[words[i]] * 100;
-        if (WORD_TO_NUM[words[i+2]] && parseInt(WORD_TO_NUM[words[i+2]], 10) >= 20 && parseInt(WORD_TO_NUM[words[i+2]], 10) <= 90 && words[i+3] && WORD_TO_NUM[words[i+3]] && parseInt(WORD_TO_NUM[words[i+3]], 10) >= 1 && parseInt(WORD_TO_NUM[words[i+3]], 10) <= 9) {
-          value = stovky + parseInt(WORD_TO_NUM[words[i+2]], 10) + parseInt(WORD_TO_NUM[words[i+3]], 10);
-        }
-      }
-      
-      // Zpracování "dvě stě pět" -> 205
-      if (!value && len === 3 && (words[i] === 'dvě' || words[i] === 'dve' || words[i] === 'tři' || words[i] === 'tri' || words[i] === 'čtyři' || words[i] === 'ctyri') && (words[i+1] === 'stě' || words[i+1] === 'ste' || words[i+1] === 'set')) {
-        const h = { 'dvě': 2, 'dve': 2, 'tři': 3, 'tri': 3, 'čtyři': 4, 'ctyri': 4 };
-        const stovky = h[words[i]] * 100;
-        if (words[i+2] && WORD_TO_NUM[words[i+2]] && parseInt(WORD_TO_NUM[words[i+2]], 10) >= 1 && parseInt(WORD_TO_NUM[words[i+2]], 10) <= 9) {
-          value = stovky + parseInt(WORD_TO_NUM[words[i+2]], 10);
-        }
-      }
-      
-      // Samostatné slovo
-      if (!value && len === 1 && WORD_TO_NUM[words[i]]) {
-        value = parseInt(WORD_TO_NUM[words[i]], 10);
-      }
-      
-      if (value !== null) {
-        // Rozložíme na jednotlivé číslice
-        const str = String(value);
-        for (let c of str) {
-          result.push(parseInt(c, 10));
-        }
-        i += len;
-        found = true;
-        break;
-      }
-    }
-    
-    if (!found) {
-      i++;
-    }
+    } catch (e) {}
+  };
+
+  const save = () => {
+    localStorage.setItem(KEY, JSON.stringify({
+      date: todayStr, correct, wrong, streak, history,
+      operace: operaceEl.value, cislice1: cis1.value, cislice2: cis2.value
+    }));
+  };
+
+  // Setup selects
+  for (let i = 1; i <= 9; i++) {
+    cis1.innerHTML += `<option value="${i}">${i}</option>`;
+    cis2.innerHTML += `<option value="${i}">${i}</option>`;
   }
-  
-  return result;
-};
+  if (!localStorage.getItem(KEY)) {
+    cis1.value = '2'; cis2.value = '1'; operaceEl.value = '+';
+  } else load();
 
-// Funkce pro vložení číslice na pozici kurzoru
-const insertDigitAtCursor = (digit) => {
-  const start = odpovedEl.selectionStart;
-  const end = odpovedEl.selectionEnd;
-  const currentValue = odpovedEl.value;
-  const strDigit = String(digit);
-  
-  const newValue = currentValue.substring(0, start) + strDigit + currentValue.substring(end);
-  odpovedEl.value = newValue;
-  
-  // Posuneme kurzor za vloženou číslici
-  odpovedEl.setSelectionRange(start + 1, start + 1);
-};
+  const updateCis2 = () => {
+    const op = operaceEl.value, v1 = +cis1.value;
+    [...cis2.options].forEach(o => o.disabled = op === '-' && +o.value > v1);
+    if (+cis2.value > v1 && op === '-') cis2.value = v1;
+  };
+  updateCis2();
+  operaceEl.addEventListener('change', () => { updateCis2(); save(); });
+  cis1.addEventListener('change', () => { updateCis2(); save(); });
+  cis2.addEventListener('change', save);
 
-// Funkce pro smazání 1 číslice vlevo od kurzoru
-const backspaceAtCursor = () => {
-  const start = odpovedEl.selectionStart;
-  const end = odpovedEl.selectionEnd;
-  
-  if (start === 0) return;
-  
-  const currentValue = odpovedEl.value;
-  const newValue = currentValue.substring(0, start - 1) + currentValue.substring(end);
-  odpovedEl.value = newValue;
-  
-  odpovedEl.setSelectionRange(start - 1, start - 1);
-};
+  // Generate problem
+  const generate = () => {
+    const op = operaceEl.value, n1 = +cis1.value, n2 = +cis2.value;
+    chybaEl.textContent = '';
+    if (op === '-' && n1 < n2) {
+      chybaEl.textContent = '❌ Při odčítání musí mít 1. číslo ≥ cifer než 2.';
+      return null;
+    }
+    let a, b, iter = 0;
+    while (iter++ < 1000) {
+      a = genNum(n1);
+      b = n2 === 1 ? Math.floor(Math.random() * 8) + 2 : genNum(n2);
+      if (op === '-' && a <= b) continue;
+      if (op === '/' && b === 0) continue;
+      break;
+    }
+    let vysledek, vysledekZ;
+    if (op === '+') vysledek = vysledekZ = a + b;
+    else if (op === '-') vysledek = vysledekZ = a - b;
+    else if (op === '*') vysledek = vysledekZ = BigInt(a) * BigInt(b);
+    else {
+      vysledek = a / b;
+      const [c, d] = String(vysledek).split('.');
+      vysledekZ = d ? c + '.' + d.slice(0, 4) : c;
+    }
+    return { a, b, op, vysledek, vysledekZ };
+  };
 
-// Funkce pro smazání celého čísla
-const clearAll = () => {
-  odpovedEl.value = '';
-  odpovedEl.setSelectionRange(0, 0);
-};
+  const showProblem = p => {
+    const fa = fmt(p.a), fb = fmt(p.b);
+    const opUI = p.op === '*' ? 'x' : p.op === '/' ? ':' : p.op === '-' ? '−' : '+';
+    prikladEl.innerHTML = `<div class="flex justify-end gap-3 w-full"><div class="flex flex-col text-right select-none"><div class="invisible">0</div><div>${opUI}</div></div><div class="flex flex-col text-right"><div>${fa}</div><div>${fb}</div></div></div>`;
+    caraEl.style.opacity = '0';
+    odpovedEl.setAttribute('inputmode', 'decimal');
+    odpovedEl.placeholder = 'Váš výsledek';
+    odpovedEl.style.textAlign = 'right';
+  };
 
-const updateMicVisibility = () => {
-  const show = hlasCheck.checked && zobrazitVysledek && aktualniPriklad;
-  micBtn.classList.toggle('shown', !!show);
-  if (!show && micListening) stopMic(false);
-};
+  const startNewProblem = () => {
+    const p = generate();
+    if (!p) return false;
+    aktualniPriklad = p;
+    showProblem(p);
+    odpovedEl.value = '';
+    odpovedEl.classList.remove('hidden-text');
+    zobrazitVysledek = true;
+    updateBtn();
+    updateMicVisibility();
+    homeBtn.classList.remove('hidden');
+    setTimeout(() => {
+      caraEl.style.opacity = '1';
+      if (hlasCheck.checked) setTimeout(() => startMic(), 100);
+      else odpovedEl.focus();
+      isProcessing = false;
+    }, 50);
+    return true;
+  };
 
-const buildRecognition = () => {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) return null;
+  const resetToInitialState = () => {
+    aktualniPriklad = null;
+    zobrazitVysledek = false;
+    odpovedEl.value = '';
+    odpovedEl.classList.add('hidden-text');
+    odpovedEl.setAttribute('inputmode', 'text');
+    odpovedEl.placeholder = 'historie';
+    odpovedEl.style.textAlign = 'center';
+    prikladEl.innerHTML = '';
+    caraEl.style.opacity = '0';
+    updateBtn();
+    updateMicVisibility();
+    homeBtn.classList.add('hidden');
+    btnEl.focus();
+  };
+
+  // Check functions
+  const checkDivision = (userStr, p) => {
+    const n = norm(userStr);
+    const trueStr = p.vysledekZ;
+    const [tc, td = ''] = trueStr.split('.');
+    const [uc, ud = ''] = n.split('.');
+    if (uc !== tc) return { ok: false, bracket: 0 };
+    let userDec = ud;
+    while (userDec.length > td.length && userDec.at(-1) === '0') userDec = userDec.slice(0, -1);
+    let truePadded = td;
+    while (truePadded.length < Math.max(userDec.length, td.length)) truePadded += '0';
+    for (let i = 0; i < userDec.length; i++) {
+      if (userDec[i] !== truePadded[i]) return { ok: false, bracket: i + 1 };
+    }
+    return { ok: true, bracket: userDec.length };
+  };
+
+  const check = (input, p) => {
+    const n = norm(input);
+    if (!n) return false;
+    if (p.op === '/') return checkDivision(input, p).ok;
+    if (typeof p.vysledek === 'bigint') {
+      try { return BigInt(n) === p.vysledek; } catch (e) { return false; }
+    }
+    return Math.abs(parseFloat(n) - p.vysledek) < 1e-9;
+  };
+
+  const findFirstWrongDigit = (userInput, p) => {
+    const n = norm(userInput);
+    let cs, us;
+    if (typeof p.vysledek === 'bigint') {
+      cs = p.vysledek.toString();
+      try { us = BigInt(n).toString(); } catch (e) { return 1; }
+    } else {
+      cs = String(p.vysledek);
+      us = String(parseFloat(n));
+    }
+    const ml = Math.max(cs.length, us.length);
+    for (let i = 0; i < ml; i++) {
+      if ((cs[i] || '') !== (us[i] || '')) return i + 1;
+    }
+    return 0;
+  };
+
+  const updateScores = () => {
+    scoreC.textContent = correct;
+    scoreW.textContent = wrong;
+    streakEl.textContent = streak;
+  };
+
+  const updateBtn = () => {
+    btnEl.classList.remove('btn-pulse', 'btn-glow');
+    if (!zobrazitVysledek) {
+      btnEl.textContent = 'START';
+      btnEl.classList.add('btn-pulse');
+    } else {
+      btnEl.textContent = '✓ VÝSLEDEK (kontrola)';
+      btnEl.classList.add('btn-glow');
+    }
+  };
+
+  const renderHistory = () => {
+    if (!history.length) {
+      histEmpty.style.display = 'block';
+      histCont.style.opacity = '0';
+      return;
+    }
+    histEmpty.style.display = 'none';
+    histCont.style.opacity = '1';
+    histList.innerHTML = '';
+    history.forEach((h, i) => {
+      const d = document.createElement('div');
+      d.className = `px-2.5 py-1 rounded-md text-[12px] tabular-nums font-bold border ${
+        h.correct ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
+        : 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300'
+      }`;
+      d.textContent = h.text + ' ' + (h.correct ? '✓' : '✗');
+      histList.appendChild(d);
+    });
+  };
+
+  const addHist = (ok, userInput) => {
+    if (!aktualniPriklad) return;
+    const p = aktualniPriklad;
+    const v = p.vysledekZ !== undefined ? p.vysledekZ : p.vysledek;
+    const opStr = p.op === '*' ? 'x' : p.op === '/' ? ':' : p.op === '-' ? '−' : '+';
+    let bracketStr = '';
+    if (p.op === '/') bracketStr = '(' + checkDivision(userInput, p).bracket + ')';
+    else if (!ok) {
+      const pos = findFirstWrongDigit(userInput, p);
+      if (pos > 0) bracketStr = '(' + pos + ')';
+    }
+    history.unshift({ text: `${fmt(p.a)} ${opStr} ${fmt(p.b)} = ${fmt(v)}${bracketStr}`, correct: ok });
+    renderHistory();
+  };
+
+  // ===== NOVÝ CHYTRÝ PARSER ČÍSEL Z ŘEČI =====
   
-  const r = new SpeechRecognition();
-  r.lang = 'cs-CZ';
-  r.continuous = false;
-  r.interimResults = false;
-  r.maxAlternatives = 1;
-  
-  r.onstart = () => {
-    micListening = true;
-    micBtn.classList.add('listening');
-    micLabel.textContent = 'Mluvte…';
-    inputBox.style.borderColor = '#ef4444';
+  // Základní mapování slov na číselné hodnoty
+  const NUM_VALUES = {
+    'nula': 0, 'nulu': 0, 'nuly': 0,
+    'jedna': 1, 'jeden': 1, 'jedno': 1, 'jednu': 1,
+    'dva': 2, 'dvě': 2, 'dve': 2, 'dvou': 2,
+    'tři': 3, 'tri': 3, 'třech': 3, 'trech': 3,
+    'čtyři': 4, 'ctyri': 4, 'čtyřech': 4, 'ctyrech': 4,
+    'pět': 5, 'pet': 5, 'pěti': 5, 'peti': 5,
+    'šest': 6, 'sest': 6, 'šesti': 6, 'sesti': 6,
+    'sedm': 7, 'sedmi': 7,
+    'osm': 8, 'osmi': 8,
+    'devět': 9, 'devet': 9, 'devíti': 9, 'deviti': 9,
+    'deset': 10, 'deseti': 10,
+    'dvacet': 20, 'dvaceti': 20,
+    'třicet': 30, 'tricet': 30, 'třiceti': 30, 'triceti': 30,
+    'čtyřicet': 40, 'ctyricet': 40, 'čtyřiceti': 40, 'ctyriceti': 40,
+    'padesát': 50, 'padesat': 50, 'padesáti': 50, 'padesati': 50,
+    'šedesát': 60, 'sedesat': 60, 'šedesáti': 60, 'sedesati': 60,
+    'sedmdesát': 70, 'sedmdesat': 70, 'sedmdesáti': 70, 'sedmdesati': 70,
+    'osmdesát': 80, 'osmdesat': 80, 'osmdesáti': 80, 'osmdesati': 80,
+    'devadesát': 90, 'devadesat': 90, 'devadesáti': 90, 'devadesati': 90,
   };
   
-  r.onend = () => {
+  // Speciální slova pro stovky
+  const STOVKA_WORDS = ['sto', 'sta', 'stu', 'stem', 'stě', 'ste'];
+  
+  // Parsování českého číselného výrazu na číslo
+  const parseCzechNumber = (words) => {
+    // Nejprve sloučíme slova, která patří k sobě
+    let tokens = [];
+    let i = 0;
+    
+    while (i < words.length) {
+      let found = false;
+      
+      // Zkusíme nejdelší match (4 slova)
+      for (let len = 4; len >= 1; len--) {
+        if (i + len > words.length) continue;
+        
+        const phrase = words.slice(i, i + len);
+        
+        // Zpracování: [číslo 2-9] + [stě/sta/ste/set] = stovky
+        if (len >= 2 && isHundredBase(phrase[1]) && NUM_VALUES[phrase[0]] >= 2 && NUM_VALUES[phrase[0]] <= 9) {
+          const stovky = NUM_VALUES[phrase[0]] * 100;
+          
+          // Zbytek po stovkách
+          let zbytek = 0;
+          if (len === 3) {
+            // [stovky] + [desítky/jednotky]
+            zbytek = processRemaining(phrase.slice(2));
+          } else if (len === 4) {
+            // [stovky] + [desítky] + [jednotky]
+            zbytek = processTwoPartNumber(phrase[2], phrase[3]);
+          }
+          
+          tokens.push(stovky + zbytek);
+          i += len;
+          found = true;
+          break;
+        }
+        
+        // Zpracování: "sto/sta" + zbytek
+        if (len >= 2 && STOVKA_WORDS.includes(phrase[0])) {
+          let zbytek = 0;
+          if (len === 2) {
+            zbytek = processSingleNumber(phrase[1]);
+          } else if (len === 3) {
+            zbytek = processTwoPartNumber(phrase[1], phrase[2]);
+          }
+          tokens.push(100 + zbytek);
+          i += len;
+          found = true;
+          break;
+        }
+        
+        // Zpracování: [desítky 20-90] + [jednotky 1-9]
+        if (len === 2) {
+          const val = processTwoPartNumber(phrase[0], phrase[1]);
+          if (val !== null) {
+            tokens.push(val);
+            i += 2;
+            found = true;
+            break;
+          }
+        }
+        
+        // Jednotlivé slovo
+        if (len === 1) {
+          const val = processSingleNumber(phrase[0]);
+          if (val !== null) {
+            tokens.push(val);
+            i++;
+            found = true;
+            break;
+          }
+        }
+      }
+      
+      if (!found) {
+        i++;
+      }
+    }
+    
+    // Sečteme všechny tokeny
+    if (tokens.length === 0) return null;
+    return tokens.reduce((a, b) => a + b, 0);
+  };
+  
+  const isHundredBase = (word) => {
+    return ['stě', 'ste', 'sta', 'set', 'stě'].includes(word);
+  };
+  
+  const processSingleNumber = (word) => {
+    if (NUM_VALUES[word] !== undefined) return NUM_VALUES[word];
+    if (STOVKA_WORDS.includes(word)) return 100;
+    return null;
+  };
+  
+  const processTwoPartNumber = (word1, word2) => {
+    const v1 = NUM_VALUES[word1];
+    const v2 = NUM_VALUES[word2];
+    
+    if (v1 !== undefined && v2 !== undefined) {
+      // Desítky + jednotky
+      if (v1 >= 20 && v1 <= 90 && v2 >= 1 && v2 <= 9) {
+        return v1 + v2;
+      }
+      // Dvě samostatná čísla
+      return v1 + v2;
+    }
+    return null;
+  };
+  
+  const processRemaining = (words) => {
+    if (words.length === 0) return 0;
+    if (words.length === 1) {
+      const val = processSingleNumber(words[0]);
+      return val !== null ? val : 0;
+    }
+    if (words.length === 2) {
+      const val = processTwoPartNumber(words[0], words[1]);
+      return val !== null ? val : 0;
+    }
+    return 0;
+  };
+
+  // Vloží číslo na pozici kurzoru
+  const insertNumberAtCursor = (number) => {
+    const text = String(number);
+    const start = odpovedEl.selectionStart;
+    const end = odpovedEl.selectionEnd;
+    const currentValue = odpovedEl.value;
+    const newValue = currentValue.substring(0, start) + text + currentValue.substring(end);
+    odpovedEl.value = newValue;
+    odpovedEl.setSelectionRange(start + text.length, start + text.length);
+  };
+
+  // Hlasové ovládání
+  const updateMicVisibility = () => {
+    const show = hlasCheck.checked && zobrazitVysledek && aktualniPriklad;
+    micBtn.style.display = show ? 'flex' : 'none';
+    if (!show && micListening) stopMic();
+  };
+
+  const buildRecognition = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return null;
+    
+    const r = new SpeechRecognition();
+    r.lang = 'cs-CZ';
+    r.continuous = false;
+    r.interimResults = false;
+    r.maxAlternatives = 1;
+    
+    r.onstart = () => {
+      micListening = true;
+      micBtn.classList.add('listening');
+      micLabel.textContent = 'Mluvte…';
+      inputBox.style.borderColor = '#ef4444';
+    };
+    
+    r.onend = () => {
+      micListening = false;
+      micBtn.classList.remove('listening');
+      micLabel.textContent = 'Mikrofon';
+      inputBox.style.borderColor = '';
+      if (hlasCheck.checked && zobrazitVysledek) {
+        recognition = buildRecognition();
+        if (recognition) try { recognition.start(); } catch(e) {}
+      }
+    };
+    
+    r.onerror = (e) => {
+      if (e.error === 'not-allowed') {
+        hlasCheck.checked = false;
+        updateMicVisibility();
+        chybaEl.textContent = '⚠️ Mikrofon není dostupný';
+      }
+      micListening = false;
+    };
+    
+    r.onresult = (e) => {
+      let finalText = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
+      }
+      if (!finalText.trim()) return;
+      
+      let raw = finalText.trim().toLowerCase().replace(/[?!;:_]/g, '');
+      
+      // Zpracování příkazů
+      if (/chyba/.test(raw)) {
+        odpovedEl.value = '';
+        odpovedEl.setSelectionRange(0, 0);
+        return;
+      }
+      
+      if (/\b(zpět|spjet|zpet)\b/.test(raw)) {
+        const start = odpovedEl.selectionStart;
+        if (start > 0) {
+          const currentValue = odpovedEl.value;
+          odpovedEl.value = currentValue.substring(0, start - 1) + currentValue.substring(odpovedEl.selectionEnd);
+          odpovedEl.setSelectionRange(start - 1, start - 1);
+        }
+        return;
+      }
+      
+      if (/\b(ano|jo|joo)\b/.test(raw)) {
+        handle(null, true);
+        return;
+      }
+      
+      // Zpracování čísel
+      const words = raw.split(/\s+/).filter(Boolean);
+      const number = parseCzechNumber(words);
+      
+      if (number !== null) {
+        insertNumberAtCursor(number);
+      }
+    };
+    
+    return r;
+  };
+
+  const startMic = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      chybaEl.textContent = '⚠️ Prohlížeč nepodporuje hlasový vstup';
+      return;
+    }
+    if (micListening) return;
+    recognition = buildRecognition();
+    if (!recognition) return;
+    try { recognition.start(); } catch(e) {}
+  };
+
+  const stopMic = () => {
+    if (recognition && micListening) {
+      try { recognition.stop(); } catch(e) {}
+    }
     micListening = false;
     micBtn.classList.remove('listening');
     micLabel.textContent = 'Mikrofon';
     inputBox.style.borderColor = '';
-    
-    if (micAutoRestart && hlasCheck.checked && zobrazitVysledek) {
-      setTimeout(() => {
-        if (!micListening && hlasCheck.checked && zobrazitVysledek) {
-          recognition = buildRecognition();
-          if (recognition) try { recognition.start(); } catch(e) {}
-        }
-      }, 100);
-    }
   };
-  
-  r.onerror = (e) => {
-    if (e.error === 'not-allowed' || e.error === 'service-not-available') {
-      micAutoRestart = false;
-      hlasCheck.checked = false;
-      updateMicVisibility();
-      chybaEl.textContent = '⚠️ Mikrofon není dostupný';
+
+  hlasCheck.addEventListener('change', () => {
+    if (!hlasCheck.checked) stopMic();
+    updateMicVisibility();
+    if (hlasCheck.checked && zobrazitVysledek && aktualniPriklad) {
+      setTimeout(() => startMic(), 100);
     }
-    micListening = false;
-  };
-  
-  r.onresult = (e) => {
-    let finalText = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      if (e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
-    }
-    if (!finalText.trim()) return;
+  });
+
+  micBtn.addEventListener('click', () => micListening ? stopMic() : startMic());
+
+  const handle = (e, fromVoice) => {
+    if (isProcessing) return;
+    isProcessing = true;
+    if (e) e.preventDefault();
+    if (!fromVoice && micListening) stopMic();
     
-    let raw = finalText.trim().toLowerCase()
-      .replace(/[?!;:_]/g, '')
-      .replace(/\b(ukázat|ukazat|ukažte|ukazte|ukaž|ukaš)\b/g, ' ');
-    
-    console.log('Rozpoznáno:', raw);
-    
-    // Kontrola na "chyba" - smaže celé
-    if (/chyba/.test(raw)) {
-      clearAll();
-      return;
-    }
-    
-    // "zpět" - smaže 1 číslici
-    if (/\b(zpět|spjet)\b/.test(raw)) {
-      backspaceAtCursor();
-      return;
-    }
-    
-    // "dvoj" - 2 nuly
-    if (/\b(dvoj|dvojnula)\b/.test(raw)) {
-      insertDigitAtCursor(0);
-      insertDigitAtCursor(0);
-      return;
-    }
-    
-    // "troj" - 3 nuly
-    if (/\b(troj|trojnula)\b/.test(raw)) {
-      insertDigitAtCursor(0);
-      insertDigitAtCursor(0);
-      insertDigitAtCursor(0);
-      return;
-    }
-    
-    // "zero" - 1 nula
-    if (/\b(zero|zirou|zírou)\b/.test(raw)) {
-      insertDigitAtCursor(0);
-      return;
-    }
-    
-    // "ano" - odeslání
-    const shouldSubmit = /\b(ano|jo|joo)\b/.test(raw);
-    if (shouldSubmit) {
-      raw = raw.replace(/\b(ano|jo|joo)\b/g, '').trim();
-    }
-    
-    if (raw) {
-      const words = raw.split(/\s+/).filter(Boolean);
-      const digits = processNumberWords(words);
-      console.log('Číslice:', digits);
-      
-      for (let d of digits) {
-        insertDigitAtCursor(d);
+    const P = odpovedEl.parentElement.parentElement;
+    P.classList.remove('zelene', 'cervene');
+    odpovedEl.classList.remove('text-white');
+
+    if (!aktualniPriklad && !zobrazitVysledek) {
+      const inputVal = odpovedEl.value.trim();
+      if (!inputVal) {
+        if (startNewProblem()) return;
+        isProcessing = false;
+        return;
       }
-    }
-    
-    if (shouldSubmit) {
-      micAutoRestart = false;
-      stopMic(false);
-      setTimeout(() => handle(null, true), 100);
-    }
-  };
-  
-  return r;
-};
-
-const startMic = () => {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    chybaEl.textContent = '⚠️ Prohlížeč nepodporuje hlasový vstup';
-    return;
-  }
-  if (micListening) return;
-  micAutoRestart = true;
-  recognition = buildRecognition();
-  if (!recognition) return;
-  try { recognition.start(); } catch(e) {}
-};
-
-const stopMic = (reset) => {
-  micAutoRestart = false;
-  if (recognition && micListening) {
-    try { recognition.stop(); } catch(e) {}
-  }
-  if (reset) recognition = null;
-  micListening = false;
-  micBtn.classList.remove('listening');
-  micLabel.textContent = 'Mikrofon';
-  inputBox.style.borderColor = '';
-};
-
-hlasCheck.addEventListener('change', () => {
-  updateMicVisibility();
-  if (!hlasCheck.checked) {
-    stopMic(true);
-  } else if (zobrazitVysledek && aktualniPriklad) {
-    setTimeout(() => startMic(), 100);
-  }
-});
-
-micBtn.addEventListener('click', () => micListening ? stopMic(false) : startMic());
-micBtn.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
-
-const handle = (e, fromVoice) => {
-  if (isProcessing) return;
-  isProcessing = true;
-  if (e) e.preventDefault();
-  if (!fromVoice && micListening) stopMic(false);
-  
-  const P = odpovedEl.parentElement.parentElement;
-  P.classList.remove('zelene', 'cervene');
-  odpovedEl.classList.remove('text-white');
-
-  if (!aktualniPriklad && !zobrazitVysledek) {
-    const inputVal = odpovedEl.value.trim();
-    if (!inputVal) {
-      if (startNewProblem()) return;
-      isProcessing = false;
-      return;
-    }
-    if (inputVal.toLowerCase() === 'vymazat') {
-      history = []; correct = 0; wrong = 0; streak = 0;
-      updateScores(); renderHistory(); save();
-      chybaEl.textContent = '✅ Historie smazána';
+      if (inputVal.toLowerCase() === 'vymazat') {
+        history = [];
+        correct = 0;
+        wrong = 0;
+        streak = 0;
+        updateScores();
+        renderHistory();
+        save();
+        chybaEl.textContent = '✅ Historie smazána';
+        setTimeout(() => chybaEl.textContent = '', 2000);
+        if (startNewProblem()) return;
+        isProcessing = false;
+        return;
+      }
+      chybaEl.textContent = '⚠️ Špatné heslo';
       setTimeout(() => chybaEl.textContent = '', 2000);
-      if (startNewProblem()) return;
+      resetToInitialState();
       isProcessing = false;
       return;
     }
-    chybaEl.textContent = '⚠️ Špatné heslo';
-    setTimeout(() => chybaEl.textContent = '', 2000);
-    resetToInitialState();
-    isProcessing = false;
-    return;
-  }
 
-  if (zobrazitVysledek && aktualniPriklad) {
-    const val = odpovedEl.value.trim();
-    const normVal = norm(val);
-    
-    if (!val) {
-      const vv = aktualniPriklad.vysledekZ !== undefined ? aktualniPriklad.vysledekZ : aktualniPriklad.vysledek;
-      odpovedEl.value = fmt(vv);
-      odpovedEl.classList.remove('hidden-text');
+    if (zobrazitVysledek && aktualniPriklad) {
+      const val = odpovedEl.value.trim();
+      const normVal = norm(val);
+      
+      if (!val) {
+        const vv = aktualniPriklad.vysledekZ !== undefined ? aktualniPriklad.vysledekZ : aktualniPriklad.vysledek;
+        odpovedEl.value = fmt(vv);
+        odpovedEl.classList.remove('hidden-text');
+        zobrazitVysledek = false;
+        updateBtn();
+        updateMicVisibility();
+        btnEl.focus();
+        setTimeout(() => isProcessing = false, 50);
+        return;
+      }
+      
+      if (!/^-?\d+([.,]\d*)?$/.test(normVal)) {
+        chybaEl.textContent = '⚠️ Nepovolený znak!';
+        isProcessing = false;
+        if (!fromVoice) odpovedEl.focus();
+        return;
+      }
+      
+      const ok = aktualniPriklad.op === '/' ? checkDivision(normVal, aktualniPriklad).ok : check(normVal, aktualniPriklad);
+      
+      P.classList.add(ok ? 'zelene' : 'cervene');
+      odpovedEl.classList.add('text-white');
+      
+      if (ok) { correct++; streak++; }
+      else { wrong++; streak = 0; P.classList.add('shake'); setTimeout(() => P.classList.remove('shake'), 500); }
+      
+      updateScores();
+      addHist(ok, normVal);
+      save();
       zobrazitVysledek = false;
       updateBtn();
       updateMicVisibility();
       btnEl.focus();
-      setTimeout(() => isProcessing = false, 50);
+      setTimeout(() => isProcessing = false, 150);
       return;
     }
-    
-    if (!/^-?\d+([.,]\d*)?$/.test(normVal)) {
-      chybaEl.textContent = '⚠️ Nepovolený znak!';
+
+    if (aktualniPriklad && !zobrazitVysledek) {
+      if (startNewProblem()) return;
       isProcessing = false;
-      if (!fromVoice) odpovedEl.focus();
-      return;
     }
-    
-    odpovedEl.value = fmtInputStr(normVal);
-    const ok = aktualniPriklad.op === '/' ? checkDivision(normVal, aktualniPriklad).ok : check(normVal, aktualniPriklad);
-    
-    P.classList.add(ok ? 'zelene' : 'cervene');
-    odpovedEl.classList.add('text-white');
-    
-    if (ok) { correct++; streak++; }
-    else { wrong++; streak = 0; P.classList.add('shake'); setTimeout(() => P.classList.remove('shake'), 500); }
-    
-    updateScores();
-    addHist(ok, normVal);
-    save();
-    zobrazitVysledek = false;
-    updateBtn();
-    updateMicVisibility();
-    btnEl.focus();
-    setTimeout(() => isProcessing = false, 150);
-    return;
-  }
+  };
 
-  if (aktualniPriklad && !zobrazitVysledek) {
-    if (startNewProblem()) return;
-    isProcessing = false;
-  }
-};
+  btnEl.addEventListener('click', (e) => handle(e, false));
+  odpovedEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') handle(e, false); });
+  $('settingsToggle').addEventListener('click', () => $('settingsPanel').classList.toggle('collapsed'));
 
-btnEl.addEventListener('touchstart', (e) => handle(e, false), { passive: false });
-btnEl.addEventListener('click', (e) => { if (e.pointerType !== 'touch') handle(e, false); });
-odpovedEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') handle(e, false); });
-$('settingsToggle').addEventListener('click', () => $('settingsPanel').classList.toggle('collapsed'));
-
-updateScores();
-updateBtn();
-renderHistory();
-resetToInitialState();
+  updateScores();
+  updateBtn();
+  renderHistory();
+  resetToInitialState();
 })();
 </script>
 </body>
