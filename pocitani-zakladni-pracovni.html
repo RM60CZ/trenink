@@ -290,13 +290,28 @@ const buildRecognition=()=>{
     for(let z=0;z<zpetPocet;z++)spBackspace();
     if(zpetPocet>0){raw=raw.replace(/\b(zpět|spjet)\b/g,'').trim();if(!raw)return}
     
-    // DVOJ = 00, TROJ = 000
+    // ZPRACOVÁNÍ PŘÍKAZŮ DVOJ A TROJ - JEDNODUŠE A JASNĚ
     const trojCount=(raw.match(/\btroj\b/gi)||[]).length;
     const dvojCount=(raw.match(/\bdvoj\b/gi)||[]).length;
     
-    for(let i=0;i<trojCount;i++)spAppendTripleZeros();
-    for(let i=0;i<dvojCount;i++)spAppendDoubleZeros();
+    // Přidej nuly NEJDŘÍV
+    for(let i=0;i<trojCount;i++){
+      const current=norm(odpovedEl.value);
+      spBuf=[];
+      if(current){spBuf=current.split('').map(c=>c==='.'?'.':parseInt(c,10))}
+      spBuf.push(0,0,0);
+      spFlush();
+    }
     
+    for(let i=0;i<dvojCount;i++){
+      const current=norm(odpovedEl.value);
+      spBuf=[];
+      if(current){spBuf=current.split('').map(c=>c==='.'?'.':parseInt(c,10))}
+      spBuf.push(0,0);
+      spFlush();
+    }
+    
+    // Odstraň příkazy z textu
     raw=raw.replace(/\b(dvoj|troj)\b/gi,'').trim();
     
     if(!raw)return;
@@ -330,22 +345,6 @@ micBtn.addEventListener('touchstart',e=>e.stopPropagation(),{passive:true});
 const spReset=()=>{spBuf=[];odpovedEl.value=''};
 const spBackspace=()=>{let current=norm(odpovedEl.value);if(!current)return;current=current.slice(0,-1);spBuf=current?current.split('').map(c=>c==='.'?'.':parseInt(c,10)):[];odpovedEl.value=current?fmtInputStr(current):''};
 const spFlush=()=>{if(!spBuf.length){odpovedEl.value='';return}const dotIndex=spBuf.indexOf('.');const intParts=dotIndex===-1?spBuf:spBuf.slice(0,dotIndex);const decParts=dotIndex===-1?[]:spBuf.slice(dotIndex+1);let intStr=intParts.map(String).join('').replace(/^0+(?=\d)/,'');if(!intStr)intStr='0';odpovedEl.value=fmtInputStr(dotIndex===-1?intStr:intStr+'.'+decParts.map(String).join(''))};
-
-const spAppendDoubleZeros=()=>{
-  const current=norm(odpovedEl.value);
-  spBuf=[];
-  if(current){spBuf=current.split('').map(c=>c==='.'?'.':parseInt(c,10))}
-  spBuf.push(0,0);
-  spFlush();
-};
-
-const spAppendTripleZeros=()=>{
-  const current=norm(odpovedEl.value);
-  spBuf=[];
-  if(current){spBuf=current.split('').map(c=>c==='.'?'.':parseInt(c,10))}
-  spBuf.push(0,0,0);
-  spFlush();
-};
 
 const handle=(e,fromVoice)=>{
   if(isProcessing)return;
