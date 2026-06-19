@@ -114,7 +114,7 @@ input{-webkit-appearance:none;border-radius:.75rem}
 (()=>{
 const $=id=>document.getElementById(id),odpovedEl=$('odpoved'),operaceEl=$('operace'),cis1=$('cislice1'),cis2=$('cislice2'),chybaEl=$('chyba'),prikladEl=$('priklad'),caraEl=$('cara'),btnEl=$('tlacitko'),scoreC=$('scoreCorrect'),scoreW=$('scoreWrong'),streakEl=$('streakCount'),histCont=$('historyContainer'),histList=$('historyList'),histEmpty=$('historyEmpty'),themeToggle=$('themeToggle'),themeIconSun=$('themeIconSun'),themeIconMoon=$('themeIconMoon'),hlasCheck=$('hlasCheck'),micBtn=$('micBtn'),micLabel=$('micLabel'),inputBox=$('inputBox'),homeBtn=$('homeBtn');
 const KEY='matika_trenink_v4';
-let correct=0,wrong=0,streak=0,history=[],aktualniPriklad=null,zobrazitVysledek=false,isProcessing=false,micListening=false,micAutoRestart=true,spBuf=[],recognition=null;
+let correct=0,wrong=0,streak=0,history=[],aktualniPriklad=null,zobrazitVysledek=false,isProcessing=false,micListening=false,micAutoRestart=true,recognition=null;
 
 const today=new Date(),czM='ledna,února,března,dubna,května,června,července,srpna,září,října,listopadu,prosince'.split(','),czD='Neděle,Pondělí,Úterý,Středa,Čtvrtek,Pátek,Sobota'.split(',');
 $('currentDate').textContent=`${czD[today.getDay()]} ${today.getDate()}. ${czM[today.getMonth()]} ${today.getFullYear()}`;
@@ -169,7 +169,7 @@ const showProblem=p=>{
 
 const startNewProblem=()=>{
   const p=generate();if(!p)return false;
-  aktualniPriklad=p;showProblem(p);odpovedEl.value='';odpovedEl.classList.remove('hidden-text');spReset();
+  aktualniPriklad=p;showProblem(p);odpovedEl.value='';odpovedEl.classList.remove('hidden-text');
   zobrazitVysledek=true;updateBtn();updateMicVisibility();updateHomeBtn();
   setTimeout(()=>{caraEl.style.opacity='1';if(hlasCheck.checked)setTimeout(()=>startMic(),100);else odpovedEl.focus();isProcessing=false},50);
   return true;
@@ -271,6 +271,42 @@ const parseVoiceTokens=words=>{
 
 const expandCompound=t=>t.replace(/dvěstě/g,'dvě stě').replace(/třista/g,'tři sta').replace(/čtyřista/g,'čtyři sta').replace(/([a-záčďéěíňóřšťúůýž]+)set\b/g,'$1 set').replace(/(dvacet|třicet|čtyřicet|padesát|šedesát|sedmdesát|osmdesát|devadesát)(jedna|jeden|dvě|dva|tři|čtyři|pět|šest|sedm|osm|devět)/g,'$1 $2');
 
+// Funkce pro vložení číslice na pozici kurzoru
+const insertDigitAtCursor=(digit)=>{
+  const start=odpovedEl.selectionStart;
+  const end=odpovedEl.selectionEnd;
+  const currentValue=odpovedEl.value;
+  
+  // Pokud je něco vybráno, nahradíme to
+  const newValue=currentValue.substring(0,start)+String(digit)+currentValue.substring(end);
+  odpovedEl.value=newValue;
+  
+  // Posuneme kurzor za vloženou číslici
+  odpovedEl.setSelectionRange(start+1,start+1);
+};
+
+// Funkce pro smazání 1 číslice vlevo od kurzoru
+const backspaceAtCursor=()=>{
+  const start=odpovedEl.selectionStart;
+  const end=odpovedEl.selectionEnd;
+  
+  if(start===0)return; // Kurzor je na začátku, nelze smazat
+  
+  const currentValue=odpovedEl.value;
+  // Smažeme 1 znak vlevo od kurzoru
+  const newValue=currentValue.substring(0,start-1)+currentValue.substring(end);
+  odpovedEl.value=newValue;
+  
+  // Kurzor zůstane na stejném místě (posuneme ho o 1 doleva)
+  odpovedEl.setSelectionRange(start-1,start-1);
+};
+
+// Funkce pro smazání celého čísla
+const clearAll=()=>{
+  odpovedEl.value='';
+  odpovedEl.setSelectionRange(0,0);
+};
+
 const updateMicVisibility=()=>{const show=hlasCheck.checked&&zobrazitVysledek&&aktualniPriklad;micBtn.classList.toggle('shown',!!show);if(!show&&micListening)stopMic(false)};
 
 const buildRecognition=()=>{
@@ -286,28 +322,32 @@ const buildRecognition=()=>{
     if(!finalText.trim())return;
     let raw=finalText.trim().toLowerCase().replace(/(\d)\s+(?=\d)/g,'$1').replace(/[,.]/g,' čárka ').replace(/[?!;:_]/g,'').replace(/\b(ukázat|ukazat|ukažte|ukazte|ukaž|ukaš)\b/g,' ');
     
-    // Kontrola na chybu - reset
-    if(/chyba/.test(raw)){spReset();raw=raw.replace(/\bchyba\b/g,'').trim();if(!raw)return;}
+    // Kontrola na chybu - smaže celé číslo
+    if(/chyba/.test(raw)){
+      clearAll();
+      raw=raw.replace(/\bchyba\b/g,'').trim();
+      if(!raw)return;
+    }
     
-    // Zpracování příkazu "zpět"
+    // Zpracování příkazu "zpět" - smaže 1 číslici vlevo od kurzoru
     const zpetPocet=(raw.match(/\b(zpět|spjet)\b/g)||[]).length;
-    for(let z=0;z<zpetPocet;z++)spBackspace();
+    for(let z=0;z<zpetPocet;z++)backspaceAtCursor();
     if(zpetPocet>0){raw=raw.replace(/\b(zpět|spjet)\b/g,'').trim();if(!raw)return;}
     
-    // Zpracování příkazu "dvoj" / "dvojnula" - 2 nuly
+    // Zpracování příkazu "dvoj" / "dvojnula" - vloží 2 nuly na pozici kurzoru
     const dvojPocet=(raw.match(/\b(dvoj|dvojnula)\b/g)||[]).length;
-    for(let d=0;d<dvojPocet;d++)spAppendZeros(2);
+    for(let d=0;d<dvojPocet;d++){for(let i=0;i<2;i++)insertDigitAtCursor(0);}
     if(dvojPocet>0){raw=raw.replace(/\b(dvoj|dvojnula)\b/g,'').trim();if(!raw)return;}
     
-    // Zpracování příkazu "troj" / "trojnula" - 3 nuly
+    // Zpracování příkazu "troj" / "trojnula" - vloží 3 nuly na pozici kurzoru
     const trojPocet=(raw.match(/\b(troj|trojnula)\b/g)||[]).length;
-    for(let t=0;t<trojPocet;t++)spAppendZeros(3);
+    for(let t=0;t<trojPocet;t++){for(let i=0;i<3;i++)insertDigitAtCursor(0);}
     if(trojPocet>0){raw=raw.replace(/\b(troj|trojnula)\b/g,'').trim();if(!raw)return;}
     
-    // Zpracování příkazu "zero" / "zirou" / "zírou" - nyní přidává 1 nulu
+    // Zpracování příkazu "zero" / "zirou" / "zírou" - vloží 1 nulu na pozici kurzoru
     if(/\b(zero|zirou|zírou)\b/.test(raw)){
       const m=raw.match(/\b(zero|zirou|zírou)\b/g);
-      for(let i=0;i<m.length;i++)spAppendZeros(1);
+      for(let i=0;i<m.length;i++)insertDigitAtCursor(0);
       raw=raw.replace(/\b(zero|zirou|zírou)\b/g,'').trim();
       if(!raw)return;
     }
@@ -322,12 +362,20 @@ const buildRecognition=()=>{
       const decMatch=raw.match(DEC_RE);
       if(decMatch){
         const before=raw.slice(0,decMatch.index).trim();
-        if(before)parseVoiceTokens(before.split(/\s+/).filter(Boolean)).forEach(v=>spBuf.push(v));
-        spBuf.push('.');
+        if(before){
+          const tokens=parseVoiceTokens(before.split(/\s+/).filter(Boolean));
+          tokens.forEach(v=>insertDigitAtCursor(v));
+        }
+        insertDigitAtCursor('.');
         const after=raw.slice(decMatch.index+decMatch[0].length).trim();
-        if(after)parseVoiceTokens(after.split(/\s+/).filter(Boolean)).forEach(v=>spBuf.push(v));
-      }else parseVoiceTokens(raw.split(/\s+/).filter(Boolean)).forEach(v=>spBuf.push(v));
-      spFlush();
+        if(after){
+          const tokens=parseVoiceTokens(after.split(/\s+/).filter(Boolean));
+          tokens.forEach(v=>insertDigitAtCursor(v));
+        }
+      }else{
+        const tokens=parseVoiceTokens(raw.split(/\s+/).filter(Boolean));
+        tokens.forEach(v=>insertDigitAtCursor(v));
+      }
     }
     if(shouldSubmit){micAutoRestart=false;stopMic(false);setTimeout(()=>handle(null,true),100)}
   };
@@ -340,16 +388,6 @@ const stopMic=reset=>{micAutoRestart=false;if(recognition&&micListening)try{reco
 hlasCheck.addEventListener('change',()=>{updateMicVisibility();if(!hlasCheck.checked)stopMic(true);else if(zobrazitVysledek&&aktualniPriklad)setTimeout(()=>startMic(),100)});
 micBtn.addEventListener('click',()=>micListening?stopMic(false):startMic());
 micBtn.addEventListener('touchstart',e=>e.stopPropagation(),{passive:true});
-
-const spReset=()=>{spBuf=[];odpovedEl.value=''};
-const spBackspace=()=>{let current=norm(odpovedEl.value);if(!current)return;current=current.slice(0,-1);spBuf=current?current.split('').map(c=>c==='.'?'.':parseInt(c,10)):[];odpovedEl.value=current?fmtInputStr(current):''};
-const spFlush=()=>{if(!spBuf.length){odpovedEl.value='';return}const dotIndex=spBuf.indexOf('.');const intParts=dotIndex===-1?spBuf:spBuf.slice(0,dotIndex);const decParts=dotIndex===-1?[]:spBuf.slice(dotIndex+1);let intStr=intParts.map(String).join('').replace(/^0+(?=\d)/,'');if(!intStr)intStr='0';odpovedEl.value=fmtInputStr(dotIndex===-1?intStr:intStr+'.'+decParts.map(String).join(''))};
-
-// Funkce pro přidávání nul - vždy vymaže buffer a přidá nové nuly
-const spAppendZeros=(count)=>{
-  for(let i=0;i<count;i++)spBuf.push(0);
-  spFlush();
-};
 
 const handle=(e,fromVoice)=>{
   if(isProcessing)return;
