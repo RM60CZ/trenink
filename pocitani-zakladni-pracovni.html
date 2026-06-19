@@ -229,7 +229,7 @@ const WV=(s=>{const o={};s.split(';').forEach(p=>{const[v,w]=p.split(':');w.spli
 const IGNORE_WORDS=(s=>{const o={};s.split(',').forEach(x=>o[x]=1);return o})('tisíc,tisíce,tisíců,tisíci,tisícům,tisícem,tisících,milion,milión,miliony,milióny,milionu,miliónu,milionů,miliónů,miliarda,miliardy,miliard,miliardě,miliardám,miliardou,miliardách');
 const DEC_RE=/(?:^|\s)(celá|celé|celých|celych|cely|celi|cela|čárka|čárku|carka|carku|tečka|tečku|tecka|tecku)(?:\s|$)/;
 
-// Slova pro přidávání nul - POUZE dvoj a troj, bez dvojnula a trojnula
+// Slova pro přidávání nul - JEN dvoj a troj
 const SINGLE_ZERO = ['zirou', 'zero', 'zírou', 'zéro', 'zerro', 'zira', 'ziru', 'zire'];
 const DOUBLE_ZERO = ['dvoj'];
 const TRIPLE_ZERO = ['troj'];
@@ -295,28 +295,33 @@ const buildRecognition=()=>{
     for(let z=0;z<zpetPocet;z++)spBackspace();
     if(zpetPocet>0){raw=raw.replace(/\b(zpět|spjet)\b/g,'').trim();if(!raw)return}
     
-    // Zpracování pro přidávání nul
-    // 1. Nejprve trojitá nula (troj)
-    const tripleRegex = new RegExp('\\b(' + TRIPLE_ZERO.join('|') + ')\\b', 'g');
-    const tripleMatches = raw.match(tripleRegex);
-    if (tripleMatches) {
-      for (let i = 0; i < tripleMatches.length; i++) spAppendTripleZeros();
+    // 1. Trojitá nula (troj)
+    const tripleRegex = new RegExp('\\b(' + TRIPLE_ZERO.join('|') + ')\\b', 'gi');
+    let tripleMatch;
+    while ((tripleMatch = tripleRegex.exec(raw)) !== null) {
+      spAppendTripleZeros();
+    }
+    if (tripleRegex.test(raw)) {
       raw = raw.replace(tripleRegex, '').trim();
     }
     
-    // 2. Potom dvojitá nula (dvoj)
-    const doubleRegex = new RegExp('\\b(' + DOUBLE_ZERO.join('|') + ')\\b', 'g');
-    const doubleMatches = raw.match(doubleRegex);
-    if (doubleMatches) {
-      for (let i = 0; i < doubleMatches.length; i++) spAppendDoubleZeros();
+    // 2. Dvojitá nula (dvoj)
+    const doubleRegex = new RegExp('\\b(' + DOUBLE_ZERO.join('|') + ')\\b', 'gi');
+    let doubleMatch;
+    while ((doubleMatch = doubleRegex.exec(raw)) !== null) {
+      spAppendDoubleZeros();
+    }
+    if (doubleRegex.test(raw)) {
       raw = raw.replace(doubleRegex, '').trim();
     }
     
-    // 3. Nakonec jednotlivá nula (zero, zirou, zírou)
-    const singleRegex = new RegExp('\\b(' + SINGLE_ZERO.join('|') + ')\\b', 'g');
-    const singleMatches = raw.match(singleRegex);
-    if (singleMatches) {
-      for (let i = 0; i < singleMatches.length; i++) spAppendSingleZero();
+    // 3. Jednotlivá nula (zero, zirou, zírou)
+    const singleRegex = new RegExp('\\b(' + SINGLE_ZERO.join('|') + ')\\b', 'gi');
+    let singleMatch;
+    while ((singleMatch = singleRegex.exec(raw)) !== null) {
+      spAppendSingleZero();
+    }
+    if (singleRegex.test(raw)) {
       raw = raw.replace(singleRegex, '').trim();
     }
     
@@ -352,7 +357,6 @@ const spReset=()=>{spBuf=[];odpovedEl.value=''};
 const spBackspace=()=>{let current=norm(odpovedEl.value);if(!current)return;current=current.slice(0,-1);spBuf=current?current.split('').map(c=>c==='.'?'.':parseInt(c,10)):[];odpovedEl.value=current?fmtInputStr(current):''};
 const spFlush=()=>{if(!spBuf.length){odpovedEl.value='';return}const dotIndex=spBuf.indexOf('.');const intParts=dotIndex===-1?spBuf:spBuf.slice(0,dotIndex);const decParts=dotIndex===-1?[]:spBuf.slice(dotIndex+1);let intStr=intParts.map(String).join('').replace(/^0+(?=\d)/,'');if(!intStr)intStr='0';odpovedEl.value=fmtInputStr(dotIndex===-1?intStr:intStr+'.'+decParts.map(String).join(''))};
 
-// Funkce pro přidání 1 nuly (pro "zero", "zirou", "zírou")
 const spAppendSingleZero=()=>{
   const current = norm(odpovedEl.value);
   if (!current) {
@@ -364,7 +368,6 @@ const spAppendSingleZero=()=>{
   spFlush();
 };
 
-// Funkce pro přidání 2 nul (pro "dvoj")
 const spAppendDoubleZeros=()=>{
   const current = norm(odpovedEl.value);
   if (!current) {
@@ -376,7 +379,6 @@ const spAppendDoubleZeros=()=>{
   spFlush();
 };
 
-// Funkce pro přidání 3 nul (pro "troj")
 const spAppendTripleZeros=()=>{
   const current = norm(odpovedEl.value);
   if (!current) {
