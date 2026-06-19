@@ -225,56 +225,154 @@ const addHist=(ok,userInput)=>{
   renderHistory();
 };
 
-const WV=(s=>{const o={};s.split(';').forEach(p=>{const[v,w]=p.split(':');w.split(',').forEach(x=>o[x]=+v)});return o})('0:žádná,zadna,nula,nulu,nuly;1:jedna,jeden,jedno,jednu,jedné;2:dvě,dva,dvou;3:tři,třech;4:čtyři,čtyřech;5:pět,pěti;6:šest,šesti;7:sedm,sedmi;8:osm,osmi;9:devět,devíti;10:deset,deseti;11:jedenáct,jedenácti;12:dvanáct,dvanácti;13:třináct,třinácti;14:čtrnáct,čtrnácti;15:patnáct,patnácti;16:šestnáct,šestnácti;17:sedmnáct,sedmnácti;18:osmnáct,osmnácti;19:devatenáct,devatenácti;20:dvacet,dvaceti;30:třicet,třiceti;40:čtyřicet,čtyřiceti;50:padesát,padesáti;60:šedesát,šedesáti;70:sedmdesát,sedmdesáti;80:osmdesát,osmdesáti;90:devadesát,devadesáti;100:sto,sta,stu,stem,stě;200:dvěstě,dvěsta;300:třista,třísta;400:čtyřista,čtyřsta');
+// ===== OPRAVENÝ SLOVNÍK WV =====
+const WV=(s=>{const o={};s.split(';').forEach(p=>{const[v,w]=p.split(':');w.split(',').forEach(x=>o[x]=+v)});return o})(
+  '0:žádná,zadna,nula,nulu,nuly;'+
+  '1:jedna,jeden,jedno,jednu,jedné,jednička;'+
+  '2:dvě,dva,dvou,dvojka;'+
+  '3:tři,třech,trojka;'+
+  '4:čtyři,čtyřech,čtyřka;'+
+  '5:pět,pěti,pětka;pětku;'+
+  '6:šest,šesti,šestka;'+
+  '7:sedm,sedmi,sedmička;'+
+  '8:osm,osmi,osmička;'+
+  '9:devět,devíti,devítka;'+
+  '10:deset,deseti,desítka;'+
+  '11:jedenáct,jedenácti;'+
+  '12:dvanáct,dvanácti;'+
+  '13:třináct,třinácti;'+
+  '14:čtrnáct,čtrnácti;'+
+  '15:patnáct,patnácti;'+
+  '16:šestnáct,šestnácti;'+
+  '17:sedmnáct,sedmnácti;'+
+  '18:osmnáct,osmnácti;'+
+  '19:devatenáct,devatenácti;'+
+  '20:dvacet,dvaceti;'+
+  '30:třicet,třiceti;'+
+  '40:čtyřicet,čtyřiceti;'+
+  '50:padesát,padesáti;'+
+  '60:šedesát,šedesáti;'+
+  '70:sedmdesát,sedmdesáti;'+
+  '80:osmdesát,osmdesáti;'+
+  '90:devadesát,devadesáti;'+
+  '100:sto,sta,stu,stem,stě,ste,set'
+);
 const IGNORE_WORDS=(s=>{const o={};s.split(',').forEach(x=>o[x]=1);return o})('tisíc,tisíce,tisíců,tisíci,tisícům,tisícem,tisících,milion,milión,miliony,milióny,milionu,miliónu,milionů,miliónů,miliarda,miliardy,miliard,miliardě,miliardám,miliardou,miliardách');
 const DEC_RE=/(?:^|\s)(celá|celé|celých|celych|cely|celi|cela|čárka|čárku|carka|carku|tečka|tečku|tecka|tecku)(?:\s|$)/;
 
+// ===== OPRAVENÁ FUNKCE expandCompound =====
+const expandCompound=t=>{
+  let r = t.toLowerCase();
+  // Základní rozklady složených číslovek
+  r = r.replace(/dvěstě/g, 'dvě stě');
+  r = r.replace(/třista/g, 'tři sta');
+  r = r.replace(/čtyřista/g, 'čtyři sta');
+  r = r.replace(/pětiset/g, 'pět set');
+  r = r.replace(/šestiset/g, 'šest set');
+  r = r.replace(/sedmiset/g, 'sedm set');
+  r = r.replace(/osmiset/g, 'osm set');
+  r = r.replace(/devítiset/g, 'devět set');
+  
+  // Spojení desítek a jednotek (např. "dvacetjedna" -> "dvacet jedna")
+  r = r.replace(/(dvacet|třicet|čtyřicet|padesát|šedesát|sedmdesát|osmdesát|devadesát)(jedna|jeden|dvě|dva|tři|čtyři|pět|šest|sedm|osm|devět)/g, '$1 $2');
+  
+  // "sto" spojené s další číslicí (např. "stopět" -> "sto pět")
+  r = r.replace(/sto(jedna|jeden|dvě|dva|tři|čtyři|pět|šest|sedm|osm|devět)/g, 'sto $1');
+  r = r.replace(/sto(dvacet|třicet|čtyřicet|padesát|šedesát|sedmdesát|osmdesát|devadesát)/g, 'sto $1');
+  
+  return r;
+};
+
+// ===== OPRAVENÁ FUNKCE evalPhrase =====
 const evalPhrase=(phrase,words,startIdx,len)=>{
   if(/^\d+$/.test(phrase))return phrase;
+  
+  // Základní slova (0-100)
   if(WV[phrase]!==undefined)return WV[phrase];
+  
   const w0=words[startIdx],w1=words[startIdx+1],w2=words[startIdx+2],w3=words[startIdx+3];
-  if(len>=2){
-    if(['set','sto','sta','stu','stě'].includes(w1)&&WV[w0]>=2&&WV[w0]<=9)return WV[w0]*100;
-    if(WV[w0]>=20&&WV[w0]<=90&&WV[w1]>=1&&WV[w1]<=9)return WV[w0]+WV[w1];
-    if(['sto','sta','stu','stě'].includes(w0)){
-      if(WV[w1]!==undefined&&WV[w1]<=99)return 100+WV[w1];
-      if(/^\d+$/.test(w1))return 100+parseInt(w1,10);
-    }
+  
+  // "sto", "sta", "stě", "set" samostatně
+  if(['sto','sta','stě','set','stem','stu','ste'].includes(w0)){
+    if(len===1) return 100;  // samotné "sto" = 100
+    // "sto + něco" např. "sto pět" = 105
+    if(WV[w1]!==undefined && WV[w1]<=99) return 100 + parseInt(WV[w1],10);
+    if(/^\d+$/.test(w1)) return 100 + parseInt(w1,10);
+    // "sto dvacet pět" = 125
+    if(len>=3 && WV[w1]>=20 && WV[w1]<=90 && WV[w2]>=1 && WV[w2]<=9) return 100 + WV[w1] + WV[w2];
   }
-  if(len>=3){
-    const isH=['set','sto','sta','stu','stě'].includes(w1)&&WV[w0]>=2&&WV[w0]<=9;
-    if(isH){
-      const h=WV[w0]*100;
-      if(len===3){if(WV[w2]!==undefined&&WV[w2]<=99)return h+WV[w2];if(/^\d+$/.test(w2))return h+parseInt(w2,10)}
-      if(len===4&&WV[w2]>=20&&WV[w2]<=90&&WV[w3]>=1&&WV[w3]<=9)return h+WV[w2]+WV[w3];
+  
+  // Dvě stě, tři sta, čtyři sta atd.
+  if(WV[w0]>=2 && WV[w0]<=9 && ['set','sto','sta','stu','stě','stem','ste'].includes(w1)){
+    const h = WV[w0] * 100;
+    if(len===2) return h;  // "dvě stě" = 200
+    if(len===3){
+      // "dvě stě pět" = 205
+      if(WV[w2]!==undefined && WV[w2]<=99){
+        if(WV[w2]>=20 && WV[w2]<=90) return null; // necháme na len=4
+        return h + parseInt(WV[w2],10);
+      }
+      if(/^\d+$/.test(w2)) return h + parseInt(w2,10);
     }
-    if(['sto','sta','stu','stě'].includes(w0)&&len===3&&WV[w1]>=20&&WV[w1]<=90&&WV[w2]>=1&&WV[w2]<=9)return 100+WV[w1]+WV[w2];
+    if(len===4 && WV[w2]>=20 && WV[w2]<=90 && WV[w3]>=1 && WV[w3]<=9) return h + WV[w2] + WV[w3];
   }
+  
+  // Desítky + jednotky
+  if(WV[w0]>=20 && WV[w0]<=90){
+    if(len===1) return WV[w0];  // "dvacet" = 20
+    if(len===2 && WV[w1]>=1 && WV[w1]<=9) return WV[w0] + WV[w1];  // "dvacet pět" = 25
+  }
+  
   return null;
 };
 
+// ===== OPRAVENÁ FUNKCE parseVoiceTokens =====
 const parseVoiceTokens=words=>{
   const result=[];let i=0;
   while(i<words.length){
     const w=words[i];
     if(!w||IGNORE_WORDS[w]){i++;continue}
     let matched=false;
-    for(let len=4;len>=1;len--){
-      if(i+len>words.length)continue;
-      const phrase=words.slice(i,i+len).join(' '),val=evalPhrase(phrase,words,i,len);
-      if(val!==null&&((typeof val==='number'&&val>=0)||(typeof val==='string'&&/^\d+$/.test(val)))){result.push(val);i+=len;matched=true;break}
+    
+    // Nejdříve zkusíme samostatné slovo ze slovníku
+    if(WV[w]!==undefined){
+      result.push(WV[w]);
+      i++;
+      continue;
     }
-    if(!matched)i++;
+    
+    // Zkusíme delší fráze (4,3,2 slova)
+    for(let len=4;len>=2;len--){
+      if(i+len>words.length)continue;
+      const phrase=words.slice(i,i+len).join(' ');
+      const val=evalPhrase(phrase,words,i,len);
+      if(val!==null&&((typeof val==='number'&&val>=0)||(typeof val==='string'&&/^\d+$/.test(val)))){
+        result.push(val);
+        i+=len;
+        matched=true;
+        break;
+      }
+    }
+    
+    if(!matched){
+      // Zkusíme, jestli to není číslo napsané číslicemi
+      const numMatch = w.match(/^(\d+)$/);
+      if(numMatch) {
+        result.push(parseInt(numMatch[1], 10));
+        i++;
+      } else {
+        i++;
+      }
+    }
   }
   return result;
 };
 
-const expandCompound=t=>t.replace(/dvěstě/g,'dvě stě').replace(/třista/g,'tři sta').replace(/čtyřista/g,'čtyři sta').replace(/([a-záčďéěíňóřšťúůýž]+)set\b/g,'$1 set').replace(/(dvacet|třicet|čtyřicet|padesát|šedesát|sedmdesát|osmdesát|devadesát)(jedna|jeden|dvě|dva|tři|čtyři|pět|šest|sedm|osm|devět)/g,'$1 $2');
-
 const updateMicVisibility=()=>{const show=hlasCheck.checked&&zobrazitVysledek&&aktualniPriklad;micBtn.classList.toggle('shown',!!show);if(!show&&micListening)stopMic(false)};
 
 const buildRecognition=()=>{
-  if(!SpeechRecognition)return null;
+  if(!window.SpeechRecognition && !window.webkitSpeechRecognition) return null;
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   const r=new SpeechRecognition();
   r.lang='cs-CZ';r.continuous=true;r.interimResults=false;r.maxAlternatives=1;
   r.onstart=()=>{micListening=true;micBtn.classList.add('listening');micLabel.textContent='Mluvte…';inputBox.style.borderColor='#ef4444'};
@@ -290,11 +388,10 @@ const buildRecognition=()=>{
     for(let z=0;z<zpetPocet;z++)spBackspace();
     if(zpetPocet>0){raw=raw.replace(/\b(zpět|spjet)\b/g,'').trim();if(!raw)return}
     
-    // ZPRACOVÁNÍ PŘÍKAZŮ DVOJ A TROJ - JEDNODUŠE A JASNĚ
+    // Zpracování příkazů dvoj a troj
     const trojCount=(raw.match(/\btroj\b/gi)||[]).length;
     const dvojCount=(raw.match(/\bdvoj\b/gi)||[]).length;
     
-    // Přidej nuly NEJDŘÍV
     for(let i=0;i<trojCount;i++){
       const current=norm(odpovedEl.value);
       spBuf=[];
@@ -311,9 +408,7 @@ const buildRecognition=()=>{
       spFlush();
     }
     
-    // Odstraň příkazy z textu
     raw=raw.replace(/\b(dvoj|troj)\b/gi,'').trim();
-    
     if(!raw)return;
     
     let shouldSubmit=false;
@@ -335,7 +430,13 @@ const buildRecognition=()=>{
   return r;
 };
 
-const startMic=()=>{if(!SpeechRecognition){chybaEl.textContent='⚠️ Prohlížeč nepodporuje hlasový vstup';return}if(micListening)return;micAutoRestart=true;if(!recognition)recognition=buildRecognition();try{recognition.start()}catch(e){}};
+const startMic=()=>{
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRecognition){chybaEl.textContent='⚠️ Prohlížeč nepodporuje hlasový vstup';return}
+  if(micListening)return;micAutoRestart=true;
+  if(!recognition)recognition=buildRecognition();
+  try{recognition.start()}catch(e){}
+};
 const stopMic=reset=>{micAutoRestart=false;if(recognition&&micListening)try{recognition.stop()}catch(e){}if(reset)recognition=null;micListening=false;micBtn.classList.remove('listening');micLabel.textContent='Mikrofon';inputBox.style.borderColor=''};
 
 hlasCheck.addEventListener('change',()=>{updateMicVisibility();if(!hlasCheck.checked)stopMic(true);else if(zobrazitVysledek&&aktualniPriklad)setTimeout(()=>startMic(),100)});
