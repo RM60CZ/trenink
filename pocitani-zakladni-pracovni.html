@@ -271,18 +271,18 @@ const parseVoiceTokens=words=>{
 
 const expandCompound=t=>t.replace(/dvěstě/g,'dvě stě').replace(/třista/g,'tři sta').replace(/čtyřista/g,'čtyři sta').replace(/([a-záčďéěíňóřšťúůýž]+)set\b/g,'$1 set').replace(/(dvacet|třicet|čtyřicet|padesát|šedesát|sedmdesát|osmdesát|devadesát)(jedna|jeden|dvě|dva|tři|čtyři|pět|šest|sedm|osm|devět)/g,'$1 $2');
 
-// Funkce pro vložení číslice na pozici kurzoru
-const insertDigitAtCursor=(digit)=>{
+// Funkce pro vložení hodnoty na pozici kurzoru
+const insertValueAtCursor=(value)=>{
   const start=odpovedEl.selectionStart;
   const end=odpovedEl.selectionEnd;
   const currentValue=odpovedEl.value;
+  const strValue=String(value);
   
-  // Pokud je něco vybráno, nahradíme to
-  const newValue=currentValue.substring(0,start)+String(digit)+currentValue.substring(end);
+  const newValue=currentValue.substring(0,start)+strValue+currentValue.substring(end);
   odpovedEl.value=newValue;
   
-  // Posuneme kurzor za vloženou číslici
-  odpovedEl.setSelectionRange(start+1,start+1);
+  // Posuneme kurzor za vloženou hodnotu
+  odpovedEl.setSelectionRange(start+strValue.length,start+strValue.length);
 };
 
 // Funkce pro smazání 1 číslice vlevo od kurzoru
@@ -310,11 +310,26 @@ const clearAll=()=>{
 const updateMicVisibility=()=>{const show=hlasCheck.checked&&zobrazitVysledek&&aktualniPriklad;micBtn.classList.toggle('shown',!!show);if(!show&&micListening)stopMic(false)};
 
 const buildRecognition=()=>{
-  if(!SpeechRecognition)return null;
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRecognition) return null;
   const r=new SpeechRecognition();
-  r.lang='cs-CZ';r.continuous=true;r.interimResults=false;r.maxAlternatives=1;
+  r.lang='cs-CZ';r.continuous=false;r.interimResults=false;r.maxAlternatives=1;
   r.onstart=()=>{micListening=true;micBtn.classList.add('listening');micLabel.textContent='Mluvte…';inputBox.style.borderColor='#ef4444'};
-  r.onend=()=>{micListening=false;micBtn.classList.remove('listening');micLabel.textContent='Mikrofon';inputBox.style.borderColor='';if(micAutoRestart&&hlasCheck.checked&&zobrazitVysledek)setTimeout(()=>{if(!micListening&&hlasCheck.checked&&zobrazitVysledek)r.start()},300)};
+  r.onend=()=>{
+    micListening=false;
+    micBtn.classList.remove('listening');
+    micLabel.textContent='Mikrofon';
+    inputBox.style.borderColor='';
+    // Restartujeme rozpoznávání pro další příkaz
+    if(micAutoRestart&&hlasCheck.checked&&zobrazitVysledek){
+      setTimeout(()=>{
+        if(!micListening&&hlasCheck.checked&&zobrazitVysledek){
+          recognition = buildRecognition();
+          try{recognition.start()}catch(e){}
+        }
+      },100)
+    }
+  };
   r.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-available'){micAutoRestart=false;hlasCheck.checked=false;updateMicVisibility();chybaEl.textContent='⚠️ Mikrofon není dostupný'}micListening=false};
   r.onresult=e=>{
     let finalText='';
@@ -336,18 +351,18 @@ const buildRecognition=()=>{
     
     // Zpracování příkazu "dvoj" / "dvojnula" - vloží 2 nuly na pozici kurzoru
     const dvojPocet=(raw.match(/\b(dvoj|dvojnula)\b/g)||[]).length;
-    for(let d=0;d<dvojPocet;d++){for(let i=0;i<2;i++)insertDigitAtCursor(0);}
+    for(let d=0;d<dvojPocet;d++){for(let i=0;i<2;i++)insertValueAtCursor(0);}
     if(dvojPocet>0){raw=raw.replace(/\b(dvoj|dvojnula)\b/g,'').trim();if(!raw)return;}
     
     // Zpracování příkazu "troj" / "trojnula" - vloží 3 nuly na pozici kurzoru
     const trojPocet=(raw.match(/\b(troj|trojnula)\b/g)||[]).length;
-    for(let t=0;t<trojPocet;t++){for(let i=0;i<3;i++)insertDigitAtCursor(0);}
+    for(let t=0;t<trojPocet;t++){for(let i=0;i<3;i++)insertValueAtCursor(0);}
     if(trojPocet>0){raw=raw.replace(/\b(troj|trojnula)\b/g,'').trim();if(!raw)return;}
     
     // Zpracování příkazu "zero" / "zirou" / "zírou" - vloží 1 nulu na pozici kurzoru
     if(/\b(zero|zirou|zírou)\b/.test(raw)){
       const m=raw.match(/\b(zero|zirou|zírou)\b/g);
-      for(let i=0;i<m.length;i++)insertDigitAtCursor(0);
+      for(let i=0;i<m.length;i++)insertValueAtCursor(0);
       raw=raw.replace(/\b(zero|zirou|zírou)\b/g,'').trim();
       if(!raw)return;
     }
@@ -364,17 +379,17 @@ const buildRecognition=()=>{
         const before=raw.slice(0,decMatch.index).trim();
         if(before){
           const tokens=parseVoiceTokens(before.split(/\s+/).filter(Boolean));
-          tokens.forEach(v=>insertDigitAtCursor(v));
+          tokens.forEach(v=>insertValueAtCursor(v));
         }
-        insertDigitAtCursor('.');
+        insertValueAtCursor('.');
         const after=raw.slice(decMatch.index+decMatch[0].length).trim();
         if(after){
           const tokens=parseVoiceTokens(after.split(/\s+/).filter(Boolean));
-          tokens.forEach(v=>insertDigitAtCursor(v));
+          tokens.forEach(v=>insertValueAtCursor(v));
         }
       }else{
         const tokens=parseVoiceTokens(raw.split(/\s+/).filter(Boolean));
-        tokens.forEach(v=>insertDigitAtCursor(v));
+        tokens.forEach(v=>insertValueAtCursor(v));
       }
     }
     if(shouldSubmit){micAutoRestart=false;stopMic(false);setTimeout(()=>handle(null,true),100)}
@@ -382,7 +397,14 @@ const buildRecognition=()=>{
   return r;
 };
 
-const startMic=()=>{if(!SpeechRecognition){chybaEl.textContent='⚠️ Prohlížeč nepodporuje hlasový vstup';return}if(micListening)return;micAutoRestart=true;if(!recognition)recognition=buildRecognition();try{recognition.start()}catch(e){}};
+const startMic=()=>{
+  if(!window.SpeechRecognition && !window.webkitSpeechRecognition){chybaEl.textContent='⚠️ Prohlížeč nepodporuje hlasový vstup';return}
+  if(micListening)return;
+  micAutoRestart=true;
+  recognition = buildRecognition();
+  if(!recognition) return;
+  try{recognition.start()}catch(e){}
+};
 const stopMic=reset=>{micAutoRestart=false;if(recognition&&micListening)try{recognition.stop()}catch(e){}if(reset)recognition=null;micListening=false;micBtn.classList.remove('listening');micLabel.textContent='Mikrofon';inputBox.style.borderColor=''};
 
 hlasCheck.addEventListener('change',()=>{updateMicVisibility();if(!hlasCheck.checked)stopMic(true);else if(zobrazitVysledek&&aktualniPriklad)setTimeout(()=>startMic(),100)});
