@@ -229,11 +229,6 @@ const WV=(s=>{const o={};s.split(';').forEach(p=>{const[v,w]=p.split(':');w.spli
 const IGNORE_WORDS=(s=>{const o={};s.split(',').forEach(x=>o[x]=1);return o})('tisíc,tisíce,tisíců,tisíci,tisícům,tisícem,tisících,milion,milión,miliony,milióny,milionu,miliónu,milionů,miliónů,miliarda,miliardy,miliard,miliardě,miliardám,miliardou,miliardách');
 const DEC_RE=/(?:^|\s)(celá|celé|celých|celych|cely|celi|cela|čárka|čárku|carka|carku|tečka|tečku|tecka|tecku)(?:\s|$)/;
 
-// Slova pro přidávání nul - JEN dvoj a troj
-const SINGLE_ZERO = ['zirou', 'zero', 'zírou', 'zéro', 'zerro', 'zira', 'ziru', 'zire'];
-const DOUBLE_ZERO = ['dvoj'];
-const TRIPLE_ZERO = ['troj'];
-
 const evalPhrase=(phrase,words,startIdx,len)=>{
   if(/^\d+$/.test(phrase))return phrase;
   if(WV[phrase]!==undefined)return WV[phrase];
@@ -295,37 +290,19 @@ const buildRecognition=()=>{
     for(let z=0;z<zpetPocet;z++)spBackspace();
     if(zpetPocet>0){raw=raw.replace(/\b(zpět|spjet)\b/g,'').trim();if(!raw)return}
     
-    // 1. Trojitá nula (troj)
-    const tripleRegex = new RegExp('\\b(' + TRIPLE_ZERO.join('|') + ')\\b', 'gi');
-    let tripleMatch;
-    while ((tripleMatch = tripleRegex.exec(raw)) !== null) {
-      spAppendTripleZeros();
-    }
-    if (tripleRegex.test(raw)) {
-      raw = raw.replace(tripleRegex, '').trim();
-    }
+    // Zpracování příkazů DVOJ a TROJ
+    // Počet výskytů jednotlivých příkazů
+    const trojCount=(raw.match(/\btroj\b/gi)||[]).length;
+    const dvojCount=(raw.match(/\bdvoj\b/gi)||[]).length;
     
-    // 2. Dvojitá nula (dvoj)
-    const doubleRegex = new RegExp('\\b(' + DOUBLE_ZERO.join('|') + ')\\b', 'gi');
-    let doubleMatch;
-    while ((doubleMatch = doubleRegex.exec(raw)) !== null) {
-      spAppendDoubleZeros();
-    }
-    if (doubleRegex.test(raw)) {
-      raw = raw.replace(doubleRegex, '').trim();
-    }
+    // Přidáme nuly NEJPRVE
+    for(let i=0;i<trojCount;i++)spAppendTripleZeros();
+    for(let i=0;i<dvojCount;i++)spAppendDoubleZeros();
     
-    // 3. Jednotlivá nula (zero, zirou, zírou)
-    const singleRegex = new RegExp('\\b(' + SINGLE_ZERO.join('|') + ')\\b', 'gi');
-    let singleMatch;
-    while ((singleMatch = singleRegex.exec(raw)) !== null) {
-      spAppendSingleZero();
-    }
-    if (singleRegex.test(raw)) {
-      raw = raw.replace(singleRegex, '').trim();
-    }
+    // Odstraníme příkazy z textu
+    raw=raw.replace(/\b(dvoj|troj)\b/gi,'').trim();
     
-    if (!raw) return;
+    if(!raw)return;
     
     let shouldSubmit=false;
     if(/\b(ano|jo|joo)\b/.test(raw)){shouldSubmit=true;raw=raw.replace(/\b(ano|jo|joo)\b/g,'')}
@@ -357,36 +334,23 @@ const spReset=()=>{spBuf=[];odpovedEl.value=''};
 const spBackspace=()=>{let current=norm(odpovedEl.value);if(!current)return;current=current.slice(0,-1);spBuf=current?current.split('').map(c=>c==='.'?'.':parseInt(c,10)):[];odpovedEl.value=current?fmtInputStr(current):''};
 const spFlush=()=>{if(!spBuf.length){odpovedEl.value='';return}const dotIndex=spBuf.indexOf('.');const intParts=dotIndex===-1?spBuf:spBuf.slice(0,dotIndex);const decParts=dotIndex===-1?[]:spBuf.slice(dotIndex+1);let intStr=intParts.map(String).join('').replace(/^0+(?=\d)/,'');if(!intStr)intStr='0';odpovedEl.value=fmtInputStr(dotIndex===-1?intStr:intStr+'.'+decParts.map(String).join(''))};
 
-const spAppendSingleZero=()=>{
-  const current = norm(odpovedEl.value);
-  if (!current) {
-    spBuf.push(0);
-  } else {
-    spBuf = current.split('').map(c => c === '.' ? '.' : parseInt(c, 10));
-    spBuf.push(0);
-  }
-  spFlush();
-};
-
 const spAppendDoubleZeros=()=>{
   const current = norm(odpovedEl.value);
-  if (!current) {
-    spBuf.push(0, 0);
-  } else {
+  spBuf = [];
+  if (current) {
     spBuf = current.split('').map(c => c === '.' ? '.' : parseInt(c, 10));
-    spBuf.push(0, 0);
   }
+  spBuf.push(0, 0);
   spFlush();
 };
 
 const spAppendTripleZeros=()=>{
   const current = norm(odpovedEl.value);
-  if (!current) {
-    spBuf.push(0, 0, 0);
-  } else {
+  spBuf = [];
+  if (current) {
     spBuf = current.split('').map(c => c === '.' ? '.' : parseInt(c, 10));
-    spBuf.push(0, 0, 0);
   }
+  spBuf.push(0, 0, 0);
   spFlush();
 };
 
