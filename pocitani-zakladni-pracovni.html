@@ -75,7 +75,7 @@
 
         function zobrazPriklad() {
             document.getElementById('priklad').textContent = `${aktualniPriklad.a} + ${aktualniPriklad.b} = ?`;
-            document.getElementById('odpoved').value = ''; // vždy prázdné na začátku
+            document.getElementById('odpoved').value = '';
             document.getElementById('vysledek').textContent = '';
             document.getElementById('odpoved').focus();
         }
@@ -107,7 +107,7 @@
             zobrazPriklad();
         }
 
-        // === Převod českého textu na číslo (přesně jako v hlas-pracovni) ===
+        // === Hlasové rozpoznávání – vylepšená verze ===
         function textNaCislo(text) {
             const wordsToNumbers = {
                 "nula": 0, "jedna": 1, "jeden": 1, "dva": 2, "dvě": 2, "tři": 3, "čtyři": 4,
@@ -151,7 +151,6 @@
             return total > 0 ? total : null;
         }
 
-        // === Hlasové rozpoznávání – přesně podle logiky hlas-pracovni ===
         function spustHlasoveRozpoznani() {
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
                 alert("Váš prohlížeč nepodporuje hlasové rozpoznávání.");
@@ -168,39 +167,19 @@
                 const transcript = event.results[0][0].transcript.trim();
                 console.log("Rozpoznáno:", transcript);
 
-                const inputEl = document.getElementById('odpoved');
-                const aktualniText = inputEl.value; // může být "" nebo "5" atd.
-                const celkovaDelka = aktualniPriklad.spravne.toString().length;
-
-                // Pokud už máme plný výsledek, nic nedělej
-                if (aktualniText.length >= celkovaDelka) {
+                const cislo = textNaCislo(transcript);
+                if (cislo !== null) {
+                    document.getElementById('odpoved').value = cislo;
                     overitOdpoved();
-                    return;
-                }
-
-                const noveCislo = textNaCislo(transcript);
-                if (noveCislo === null || isNaN(noveCislo)) {
-                    alert("Nerozuměl jsem. Zkuste např. 'pět' nebo 'šedesát sedm'.");
-                    return;
-                }
-
-                // Kolik číslic potřebujeme pro tento krok?
-                const potrebnaDelka = celkovaDelka - aktualniText.length;
-                const noveCisloString = noveCislo.toString().padStart(potrebnaDelka, '0');
-                const novyText = (aktualniText + noveCisloString).substring(0, celkovaDelka);
-
-                inputEl.value = novyText;
-
-                // Pokud je výsledek kompletní, automaticky ověř
-                if (novyText.length === celkovaDelka) {
-                    setTimeout(overitOdpoved, 300);
+                } else {
+                    alert("Nepodařilo se rozpoznat platné číslo. Zkuste např. říct 'dvacet pět' nebo '42'.");
                 }
             };
 
             recognition.onerror = function(event) {
+                console.error("Chyba hlasu:", event.error);
                 if (event.error !== 'no-speech') {
-                    console.error("Chyba hlasu:", event.error);
-                    alert("Hlas selhal: " + event.error);
+                    alert("Hlasové rozpoznávání selhalo: " + event.error);
                 }
             };
 
@@ -215,7 +194,7 @@
         document.getElementById('hlas-switch').addEventListener('change', function(e) {
             if (e.target.checked) {
                 spustHlasoveRozpoznani();
-                // Vypnout přepínač po spuštění (jako v původním chování)
+                // Po dokončení vždy vypni přepínač
                 setTimeout(() => {
                     e.target.checked = false;
                 }, 100);
