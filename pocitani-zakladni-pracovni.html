@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Počítání – základní úroveň</title>
     <style>
-        /* TVŮJ ORIGINÁLNÍ CSS BEZ ZMĚN (kromě drobné opravy pro ikony) */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
@@ -112,7 +111,6 @@
         .spravne { color: #4CAF50; text-shadow: 0 0 10px #4CAF50; }
         .spatne { color: #F44336; text-shadow: 0 0 10px #F44336; }
 
-        /* Animace pro správnou/špatnou odpověď */
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
@@ -124,7 +122,6 @@
     </style>
 </head>
 <body>
-    <!-- TVŮJ ORIGINÁLNÍ ROZVRHY IKON -->
     <div class="controls">
         <label style="display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 8px 15px; border-radius: 20px;">
             <input type="checkbox" id="hlas-switch" style="width: 20px; height: 20px; cursor: pointer;">
@@ -149,7 +146,7 @@
     <button onclick="novyPriklad()">Nový příklad</button>
 
     <script>
-        // === GENEROVÁNÍ PŘÍKLADU (tvá originální logika) ===
+        // === GENEROVÁNÍ PŘÍKLADU ===
         function generujPriklad() {
             const a = Math.floor(Math.random() * 20) + 1;
             const b = Math.floor(Math.random() * 20) + 1;
@@ -166,7 +163,7 @@
             document.getElementById('odpoved').classList.remove('pulse');
         }
 
-        // === PŘEVOD TEXTU NA ČÍSLO (přesně z tvého hlas-pracovni) ===
+        // === ZKOPIROVÁNO PŘESNĚ Z https://rm60cz.github.io/trenink/hlas-pracovni ===
         function textNaCislo(text) {
             const wordsToNumbers = {
                 "nula": 0, "jedna": 1, "jeden": 1, "dva": 2, "dvě": 2, "tři": 3, "čtyři": 4,
@@ -189,10 +186,10 @@
                 if (wordsToNumbers[word] !== undefined) {
                     const num = wordsToNumbers[word];
                     if (num === 100) {
-                        current = current * 100 || 100;
+                        current = (current || 1) * 100;
                         total += current;
                         current = 0;
-                    } else if (num >= 20) {
+                    } else if (num >= 20 || num === 0) {
                         current += num;
                     } else {
                         current += num;
@@ -209,68 +206,56 @@
             return total > 0 ? total : null;
         }
 
-        // === HLASOVÉ ROZPOZNÁVÁNÍ (100% funkční v Chrome) ===
         function spustHlasoveRozpoznani() {
-            try {
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if (!SpeechRecognition) {
-                    throw new Error("Prohlížeč nepodporuje hlasové rozpoznávání");
+            if (!('webkitSpeechRecognition' in window)) {
+                alert("Hlasové rozpoznávání funguje pouze v prohlížeči Chrome nebo Edge.");
+                document.getElementById('hlas-switch').checked = false;
+                return;
+            }
+
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = 'cs-CZ';
+            recognition.interimResults = false;
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript.trim();
+                const inputEl = document.getElementById('odpoved');
+                const aktualniText = inputEl.value;
+                const noveCislo = textNaCislo(transcript);
+
+                if (noveCislo === null || isNaN(noveCislo)) {
+                    alert("Nerozuměl jsem. Zkuste např. 'pět' nebo 'šedesát sedm'.");
+                    return;
                 }
 
-                const recognition = new SpeechRecognition();
-                recognition.lang = 'cs-CZ';
-                recognition.interimResults = false;
-                recognition.maxAlternatives = 1;
+                let noveCisloString = noveCislo.toString();
 
-                recognition.onresult = function(event) {
-                    const transcript = event.results[0][0].transcript.trim();
-                    console.log("Rozpoznáno:", transcript);
+                // KLÍČOVÁ LOGIKA Z TVÉHO PROGRAMU:
+                if (aktualniText !== '') {
+                    noveCisloString = noveCisloString.padStart(3, '0');
+                }
 
-                    const inputEl = document.getElementById('odpoved');
-                    const aktualniText = inputEl.value;
-                    const noveCislo = textNaCislo(transcript);
+                inputEl.value = aktualniText + noveCisloString;
+                const celkovaDelka = aktualniPriklad.spravne.toString().length;
 
-                    if (noveCislo === null || isNaN(noveCislo)) {
-                        alert("Nerozuměl jsem. Řekněte např. 'pět' nebo 'osmdesát devět'.");
-                        return;
-                    }
+                if (inputEl.value.length >= celkovaDelka) {
+                    overitOdpoved();
+                }
+            };
 
-                    let noveCisloString = noveCislo.toString();
-
-                    // KLÍČOVÉ PRAVIDLO Z TVÉHO PROGRAMU:
-                    // Pokud už je v poli něco zapsáno → VŽDY doplň na 3 číslice!
-                    if (aktualniText !== '') {
-                        noveCisloString = noveCisloString.padStart(3, '0');
-                    }
-
-                    const novyText = aktualniText + noveCisloString;
-                    inputEl.value = novyText;
-
-                    // Automatické odeslání při dosažení délky výsledku
-                    const celkovaDelka = aktualniPriklad.spravne.toString().length;
-                    if (novyText.length >= celkovaDelka) {
-                        overitOdpoved();
-                    }
-                };
-
-                recognition.onerror = function(event) {
+            recognition.onerror = function(event) {
+                if (event.error !== 'no-speech' && event.error !== 'audio-capture') {
                     console.error("Chyba hlasu:", event.error);
-                    if (event.error !== 'no-speech' && event.error !== 'audio-capture') {
-                        alert("Chyba hlasu: " + event.error);
-                    }
-                };
-
-                recognition.onend = function() {
-                    document.getElementById('hlas-switch').checked = false;
-                };
-
-                recognition.start();
-            } catch (e) {
-                console.error("Kritická chyba hlasu:", e);
-                alert("Hlasové rozpoznávání selhalo: " + e.message + 
-                      "\n\nProgram bude fungovat pouze s klávesnicí.");
+                    alert("Chyba hlasového rozpoznávání: " + event.error);
+                }
                 document.getElementById('hlas-switch').checked = false;
-            }
+            };
+
+            recognition.onend = function() {
+                document.getElementById('hlas-switch').checked = false;
+            };
+
+            recognition.start();
         }
 
         // === OVĚŘENÍ ODPOVĚDI ===
@@ -319,7 +304,6 @@
 
         // === INICIALIZACE ===
         window.addEventListener('load', function() {
-            // Povolení hlasu pouze v Chrome/Edge
             const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
             const isEdge = /Edg/.test(navigator.userAgent);
             
