@@ -1,227 +1,37 @@
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Počítání – základní úroveň</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-        }
-        .controls {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        #priklad {
-            font-size: 2em;
-            margin: 20px 0;
-            background: white;
-            padding: 15px 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        }
-        #odpoved {
-            font-size: 1.5em;
-            padding: 10px;
-            width: 150px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        #vysledek {
-            font-size: 1.2em;
-            min-height: 1.5em;
-            margin: 10px 0;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 1em;
-            cursor: pointer;
-        }
-        .spravne { color: green; }
-        .spatne { color: red; }
-    </style>
-</head>
-<body>
-    <div class="controls">
-        <label>
-            <input type="checkbox" id="hlas-switch" />
-            Hlas
-        </label>
-    </div>
+function spustHlasoveRozpoznani() {
+    if (!('webkitSpeechRecognition' in window)) {
+        alert("Hlas není podporován.");
+        return;
+    }
 
-    <div id="priklad">Načítání...</div>
-    <input type="text" id="odpoved" autofocus />
-    <div id="vysledek"></div>
-    <button onclick="novyPriklad()">Nový příklad</button>
+    const recognition = new webkitSpeechRecognition();
+    recognition.lang = 'cs-CZ';
 
-    <script>
-        // === Generování příkladu ===
-        function generujPriklad() {
-            const a = Math.floor(Math.random() * 20) + 1;
-            const b = Math.floor(Math.random() * 20) + 1;
-            return { a, b, spravne: a + b };
+    recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript.trim();
+        const cislo = textNaCislo(transcript);
+        if (cislo === null) {
+            alert("Nerozuměl jsem.");
+            return;
         }
 
-        let aktualniPriklad = generujPriklad();
+        const input = document.getElementById('odpoved');
+        const aktualni = input.value;
+        const celkovaDelka = aktualniPriklad.spravne.toString().length;
+        const chybiPocet = celkovaDelka - aktualni.length;
 
-        function zobrazPriklad() {
-            document.getElementById('priklad').textContent = `${aktualniPriklad.a} + ${aktualniPriklad.b} = ?`;
-            document.getElementById('odpoved').value = '';
-            document.getElementById('vysledek').textContent = '';
-            document.getElementById('odpoved').focus();
+        if (chybiPocet <= 0) {
+            overitOdpoved();
+            return;
         }
 
-        function overitOdpoved() {
-            const zadano = document.getElementById('odpoved').value.trim();
-            const vysledekEl = document.getElementById('vysledek');
-            if (zadano === '') return;
+        const doplnCislo = cislo.toString().padStart(chybiPocet, '0');
+        input.value = aktualni + doplnCislo;
 
-            const cislo = parseInt(zadano, 10);
-            if (isNaN(cislo)) {
-                vysledekEl.textContent = 'Zadej prosím číslo.';
-                vysledekEl.className = 'spatne';
-                return;
-            }
-
-            if (cislo === aktualniPriklad.spravne) {
-                vysledekEl.textContent = '✓ Správně!';
-                vysledekEl.className = 'spravne';
-                setTimeout(novyPriklad, 1500);
-            } else {
-                vysledekEl.textContent = `✗ Špatně. Správně je ${aktualniPriklad.spravne}.`;
-                vysledekEl.className = 'spatne';
-            }
+        if (input.value.length === celkovaDelka) {
+            setTimeout(overitOdpoved, 200);
         }
+    };
 
-        function novyPriklad() {
-            aktualniPriklad = generujPriklad();
-            zobrazPriklad();
-        }
-
-        // === Převod českého textu na číslo (přesně jako v hlas-pracovni) ===
-        function textNaCislo(text) {
-            const wordsToNumbers = {
-                "nula": 0, "jedna": 1, "jeden": 1, "dva": 2, "dvě": 2, "tři": 3, "čtyři": 4,
-                "pět": 5, "šest": 6, "sedm": 7, "osm": 8, "devět": 9, "deset": 10,
-                "jedenáct": 11, "dvanáct": 12, "třináct": 13, "čtrnáct": 14, "patnáct": 15,
-                "šestnáct": 16, "sedmnáct": 17, "osmnáct": 18, "devatenáct": 19,
-                "dvacet": 20, "třicet": 30, "čtyřicet": 40, "padesát": 50,
-                "šedesát": 60, "sedmdesát": 70, "osmdesát": 80, "devadesát": 90,
-                "sto": 100
-            };
-
-            let total = 0;
-            let current = 0;
-            const words = text.toLowerCase()
-                .replace(/[^\wáčďéěíňóřšťúůýž]/g, ' ')
-                .split(/\s+/)
-                .filter(w => w);
-
-            for (const word of words) {
-                if (wordsToNumbers[word] !== undefined) {
-                    const num = wordsToNumbers[word];
-                    if (num === 100) {
-                        current = current * 100 || 100;
-                        total += current;
-                        current = 0;
-                    } else if (num >= 20) {
-                        current += num;
-                    } else {
-                        current += num;
-                    }
-                }
-            }
-            total += current;
-
-            // Pokud nebylo nalezeno slovní číslo, zkus číslice
-            if (total === 0) {
-                const digitMatch = text.match(/\d+/);
-                return digitMatch ? parseInt(digitMatch[0], 10) : null;
-            }
-
-            return total > 0 ? total : null;
-        }
-
-        // === Hlasové rozpoznávání – PŘESNĚ podle logiky hlas-pracovni ===
-        function spustHlasoveRozpoznani() {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                alert("Váš prohlížeč nepodporuje hlasové rozpoznávání.");
-                return;
-            }
-
-            const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const recognition = new Recognition();
-            recognition.lang = 'cs-CZ';
-            recognition.interimResults = false;
-
-            recognition.onresult = function(event) {
-                const transcript = event.results[0][0].transcript.trim();
-                console.log("Rozpoznáno:", transcript);
-
-                const inputEl = document.getElementById('odpoved');
-                const aktualniText = inputEl.value;
-                const noveCislo = textNaCislo(transcript);
-
-                if (noveCislo === null || isNaN(noveCislo)) {
-                    alert("Nerozuměl jsem. Zkuste např. 'pět' nebo 'osmdesát devět'.");
-                    return;
-                }
-
-                let noveCisloString = noveCislo.toString();
-
-                // Pokud už je v poli něco zapsáno → vždy doplň na 3 číslice!
-                if (aktualniText !== '') {
-                    noveCisloString = noveCisloString.padStart(3, '0');
-                }
-
-                // Ořízni, pokud přesáhne celkovou délku
-                const celkovaDelka = aktualniPriklad.spravne.toString().length;
-                const novyText = (aktualniText + noveCisloString).substring(0, celkovaDelka);
-
-                inputEl.value = novyText;
-
-                // Automatické odeslání, pokud je výsledek kompletní
-                if (novyText.length === celkovaDelka) {
-                    setTimeout(overitOdpoved, 300);
-                }
-            };
-
-            recognition.onerror = function(event) {
-                if (event.error !== 'no-speech') {
-                    console.error("Chyba hlasu:", event.error);
-                    alert("Hlas selhal: " + event.error);
-                }
-            };
-
-            recognition.start();
-        }
-
-        // === Event listenery ===
-        document.getElementById('odpoved').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') overitOdpoved();
-        });
-
-        document.getElementById('hlas-switch').addEventListener('change', function(e) {
-            if (e.target.checked) {
-                spustHlasoveRozpoznani();
-                // Automaticky vypnout přepínač po spuštění
-                setTimeout(() => {
-                    e.target.checked = false;
-                }, 100);
-            }
-        });
-
-        // První příklad
-        zobrazPriklad();
-    </script>
-</body>
-</html>
+    recognition.start();
+}
