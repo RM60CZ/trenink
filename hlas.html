@@ -53,16 +53,13 @@
     <h1>Hlas → čísla (jen 1 a 2)</h1>
 
     <div class="row">
-      <input id="textInput" type="text" placeholder="Zde se budou objevovat jen: 1 nebo 2" />
-
+      <input id="textInput" type="text" placeholder="Řekni: jeden/jedna → 1, dva/dvě → 2" />
       <button id="clearBtn" type="button">Vymazat</button>
-
-      <button id="listenBtn" type="button" class="inactive">Pauza</button>
+      <button id="listenBtn" type="button">Pauza</button>
     </div>
 
     <div class="muted">
-      Do inputu se vkládají <b>jen</b> číslice: <b>1</b> při „jeden/jedna“ a <b>2</b> při „dva/dvě“.
-      Ostatní slova ignorujeme.
+      Pouze slova <b>„jeden“, „jedna“, „dva“, „dvě“</b> se převedou na číslice. Vše ostatní se ignoruje.
     </div>
 
     <div class="status" id="status">Stav: připraveno.</div>
@@ -76,37 +73,20 @@
       const statusEl = document.getElementById("status");
       const logEl = document.getElementById("log");
       const inputEl = document.getElementById("textInput");
-
       const listenBtn = document.getElementById("listenBtn");
       const clearBtn = document.getElementById("clearBtn");
 
       let recognition = null;
-      let listening = false;
+      let isListening = false;
 
-      // Regex přepis (chytá i drobné odchylky typu "dve", "dvě" apod.)
-      // Pozn.: chytáme jen celá slova pomocí hranic \b, aby se to nepřilepovalo na jiné části.
-      function extractDigits(text) {
-        const s = (text || "").toLowerCase();
-
-        // Seznamy pro 1 a 2 (včetně variant bez háčku)
-        const oneRe = /\b(jeden|jedna)\b/g;
-        const twoRe = /\b(dva|dvě|dve|dvo?u)\b/g; 
-        // dvo?u je jen nouzově (často SR řekne pád, ale ty to nechceš; nechávám jen aby to netrvalo nekonečně.
-        // Pokud chceš přísně jen "dva/dvě", smaž tuto část.
-
-        let digits = "";
-
-        // Každé nalezení přidá odpovídající číslo (počítáme více výskytů)
-        const ones = s.match(oneRe);
-        if (ones) digits += "1".repeat(ones.length);
-
-        const twos = s.match(twoRe);
-        if (twos) digits += "2".repeat(twos.length);
-
-        // Zaručení: nikdy nic jiného než 1/2
-        digits = digits.replace(/[^12]/g, "");
-        return digits;
-      }
+      // Povolená slova → číslice
+      const allowedWords = {
+        "jeden": "1",
+        "jedna": "1",
+        "dva": "2",
+        "dvě": "2",
+        "dve": "2" // pro případ bez diakritiky
+      };
 
       function log(msg) {
         logEl.value += msg + "\n";
@@ -117,9 +97,8 @@
         statusEl.textContent = "Stav: " + msg;
       }
 
-      function setListenUIActive(isActive) {
-        listening = isActive;
-        if (isActive) {
+      function updateListenButton() {
+        if (isListening) {
           listenBtn.classList.add("active");
           listenBtn.textContent = "Spuštěno";
           setStatus("poslouchám… (mikrofon zapnutý)");
@@ -130,81 +109,101 @@
         }
       }
 
+      function processTranscript(text) {
+        const words = text
+          .toLowerCase()
+          .replace(/[.,!?;:"]/g, " ")
+          .split(/\s+/)
+          .filter(w => w);
+
+        let result = "";
+        for (const word of words) {
+          if (allowedWords.hasOwnProperty(word)) {
+            result += allowedWords[word];
+          }
+        }
+        return result;
+      }
+
       function setupRecognition() {
         if (!SpeechRecognition) {
-          setStatus("SpeechRecognition nepodporuje tento prohlížeč (zkus Chrome/Edge).");
+          setStatus("SpeechRecognition není podporován (zkus Chrome/Edge).");
           listenBtn.disabled = true;
           return;
         }
 
         recognition = new SpeechRecognition();
         recognition.lang = "cs-CZ";
-        recognition.interimResults = true;
-        recognition.continuous = true;
+        recognition.continuous = true;     // běží pořád
+        recognition.interimResults = false; // NEUKAZUJEME interim → žádný text mezitím!
 
         recognition.onstart = () => {
-          setListenUIActive(true);
-          log(">> start");
+          isListening = true;
+          updateListenButton();
+          log(">> mikrofon zapnut");
         };
 
-        recognition.onerror = (e) => {
-          log("!! error: " + (e.error || "neznámá"));
+        recognition.onerror = (event) => {
+          log("!! chyba: " + event.error);
+          if (event.error === "no-speech" || event.error === "audio-capture") {
+            // Pokud nic nerozpoznal, nevypínáme – necháme běžet
+          }
         };
 
         recognition.onend = () => {
-          setListenUIActive(false);
-          log("<< end");
+          // Automaticky restartujeme, pokud jsme stále chtěli poslouchat
+          if (isListening) {
+            try {
+              recognition.start();
+            } catch (e) {
+              log("!! restart failed: " + e.message);
+              isListening = false;
+              updateListenButton();
+            }
+          } else {
+            updateListenButton();
+          }
+          log("<< mikrofon vypnut nebo restart");
         };
 
         recognition.onresult = (event) => {
-          // NENÍ možné, aby se sem dostal text, pokud:
-          // - appendujeme jen digits (1/2)
-          // - a digits se skládá jen z 1/2
-          let appended = "";
+          const transcript = event.results[event.resultIndex][0].transcript.trim();
+          log("[rozpoznáno] " + transcript);
 
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            const res = event.results[i];
-            const transcript = (res[0] && res[0].transcript) ? res[0].transcript : "";
-
-            if (res.isFinal) {
-              log("[final transcript] " + transcript);
-              const digits = extractDigits(transcript);
-              if (digits) {
-                appended += digits;
-              }
-            }
+          const digits = processTranscript(transcript);
+          if (digits) {
+            inputEl.value += digits;
+            log("[vloženo] " + digits);
           }
-
-          if (appended) {
-            inputEl.value = (inputEl.value + appended);
-            log("[appended digits] " + appended);
-          }
+          // Pokud žádné povolené slovo → nic se nevloží
         };
       }
 
       listenBtn.addEventListener("click", () => {
         if (!recognition) return;
 
-        if (!listening) {
+        if (isListening) {
+          isListening = false;
+          recognition.stop();
+        } else {
+          isListening = true;
           try {
             recognition.start();
-          } catch (err) {
-            log("!! start error: " + (err && err.message ? err.message : String(err)));
+          } catch (e) {
+            log("!! nelze spustit: " + e.message);
+            isListening = false;
+            updateListenButton();
           }
-        } else {
-          recognition.stop();
         }
       });
 
       clearBtn.addEventListener("click", () => {
         inputEl.value = "";
-        log("[clear]");
-        inputEl.focus();
+        log("[vymazáno]");
       });
 
       setupRecognition();
-      setListenUIActive(false);
-      setStatus("připraveno");
+      updateListenButton();
       log("------------------------------------------------");
     </script>
   </body>
