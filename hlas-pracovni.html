@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Hlas → čísla (čárka = ,)</title>
+    <title>Hlas → čísla (opraveno: čísla + čárka)</title>
     <style>
       body { font-family: system-ui, sans-serif; padding: 20px; max-width: 800px; background: #fafafa; }
       .row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
@@ -16,15 +16,13 @@
   <body>
     <h1>🎙️ Hlas → čísla</h1>
     <div class="row">
-      <input id="textInput" type="text" placeholder="Řekni '5', pak 'čárka', pak '7' → 5,007" readonly />
+      <input id="textInput" type="text" placeholder="Řekni 'dvacet pět', pak 'čárka', pak '7'" readonly />
       <button id="clearBtn">Vymazat</button>
       <button id="listenBtn">Start</button>
     </div>
     <div class="hint">
-      ✅ Podporované příkazy pro desetinnou čárku:<br>
-      &nbsp;&nbsp;• <code>celá</code>, <code>celé</code>, <code>celých</code><br>
-      &nbsp;&nbsp;• <code>čárka</code>, <code>carka</code><br>
-      ✅ Vkládají <strong>jen čárku</strong> – nikdy žádné <code>000</code>!<br>
+      ✅ Čísla: <code>tři</code>, <code>tri</code>, <code>dvacet pět</code>, <code>123</code><br>
+      ✅ Čárka: <code>celá</code>, <code>čárka</code>, <code>carka</code> → jen <code>,</code><br>
       ✅ První číslo beze změny, další jako <code>XXX</code>
     </div>
     <textarea id="log" readonly></textarea>
@@ -46,73 +44,105 @@
 
       function extractNumber(text) {
         if (!text) return null;
-        const asDigit = text.trim();
-        if (/^\d+$/.test(asDigit)) {
-          const num = parseInt(asDigit, 10);
+        const trimmed = text.trim();
+        if (/^\d+$/.test(trimmed)) {
+          const num = parseInt(trimmed, 10);
           return (num >= 0 && num <= 999) ? num : null;
         }
 
-        let norm = text.toLowerCase().replace(/[^a-z0-9áčďéěíňóřšťúůýž\s]/g, ' ');
+        let norm = text.toLowerCase()
+          .replace(/[^a-z0-9áčďéěíňóřšťúůýž\s]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+        norm = norm.replace(/\ba\b/g, '');
+        const words = norm.split(' ').filter(w => w);
 
-        const replacements = [
-          ["nula", " 0 "],
-          ["jedna", " 1 "], ["jeden", " 1 "],
-          ["dva", " 2 "], ["dvě", " 2 "],
-          ["tri", " 3 "], ["tři", " 3 "],
-          ["ctyri", " 4 "], ["čtyři", " 4 "],
-          ["pet", " 5 "], ["pět", " 5 "],
-          ["sest", " 6 "], ["šest", " 6 "],
-          ["sedm", " 7 "],
-          ["osm", " 8 "],
-          ["devet", " 9 "], ["devět", " 9 "],
-          
-          ["deset", " 10 "],
-          ["jedenact", " 11 "], ["jedenáct", " 11 "],
-          ["dvanact", " 12 "], ["dvanáct", " 12 "],
-          ["trinact", " 13 "], ["třináct", " 13 "],
-          ["ctrnact", " 14 "], ["čtrnáct", " 14 "],
-          ["patnact", " 15 "], ["patnáct", " 15 "],
-          ["sestnact", " 16 "], ["šestnáct", " 16 "],
-          ["sedmnact", " 17 "], ["sedmnáct", " 17 "],
-          ["osmnact", " 18 "], ["osmnáct", " 18 "],
-          ["devatenact", " 19 "], ["devatenáct", " 19 "],
-          
-          ["dvacet", " 20 "],
-          ["tricet", " 30 "], ["třicet", " 30 "],
-          ["ctyricet", " 40 "], ["čtyřicet", " 40 "],
-          ["padesat", " 50 "], ["padesát", " 50 "],
-          ["šedesát", " 60 "],
-          ["sedmdesat", " 70 "], ["sedmdesát", " 70 "],
-          ["osmdesat", " 80 "], ["osmdesát", " 80 "],
-          ["devadesat", " 90 "], ["devadesát", " 90 "],
-          
-          ["sto", " 100 "],
-          ["dveste", " 200 "], ["dvě stě", " 200 "],
-          ["trista", " 300 "], ["tři sta", " 300 "],
-          ["ctyrista", " 400 "], ["čtyři sta", " 400 "],
-          ["petset", " 500 "], ["pět set", " 500 "],
-          ["sestset", " 600 "], ["šest set", " 600 "],
-          ["sedmset", " 700 "], ["sedm set", " 700 "],
-          ["osmset", " 800 "], ["osm set", " 800 "],
-          ["devetset", " 900 "], ["devět set", " 900 "]
-        ];
-
-        for (const [from, to] of replacements) {
-          const re = new RegExp(`\\b${from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
-          norm = norm.replace(re, to);
+        if (words.length === 1 && (words[0] === 'nula' || words[0] === 'nůla')) {
+          return 0;
         }
 
-        const tokens = norm.trim().split(/\s+/).filter(t => t !== "" && /^\d+$/.test(t));
-        if (tokens.length === 0) return null;
+        const jednotky = {
+          'jedna': 1, 'jeden': 1,
+          'dva': 2, 'dvě': 2,
+          'tri': 3, 'tři': 3,
+          'ctyri': 4, 'čtyři': 4,
+          'pet': 5, 'pět': 5,
+          'sest': 6, 'šest': 6,
+          'sedm': 7,
+          'osm': 8,
+          'devet': 9, 'devět': 9
+        };
+
+        const teens = {
+          'deset': 10,
+          'jedenact': 11, 'jedenáct': 11,
+          'dvanact': 12, 'dvanáct': 12,
+          'trinact': 13, 'třináct': 13,
+          'ctrnact': 14, 'čtrnáct': 14,
+          'patnact': 15, 'patnáct': 15,
+          'sestnact': 16, 'šestnáct': 16,
+          'sedmnact': 17, 'sedmnáct': 17,
+          'osmnact': 18, 'osmnáct': 18,
+          'devatenact': 19, 'devatenáct': 19
+        };
+
+        const desitky = {
+          'dvacet': 20,
+          'tricet': 30, 'třicet': 30,
+          'ctyricet': 40, 'čtyřicet': 40,
+          'padesat': 50, 'padesát': 50,
+          'šedesát': 60,
+          'sedmdesat': 70, 'sedmdesát': 70,
+          'osmdesat': 80, 'osmdesát': 80,
+          'devadesat': 90, 'devadesát': 90
+        };
+
+        const stovky = {
+          'sto': 100,
+          'dveste': 200, 'dvě stě': 200, 'dvěste': 200,
+          'trista': 300, 'tři sta': 300,
+          'ctyrista': 400, 'čtyři sta': 400,
+          'petset': 500, 'pět set': 500,
+          'sestset': 600, 'šest set': 600,
+          'sedmset': 700, 'sedm set': 700,
+          'osmset': 800, 'osm set': 800,
+          'devetset': 900, 'devět set': 900
+        };
 
         let total = 0;
-        for (const t of tokens) total += parseInt(t, 10);
+        let remaining = words.join(' ');
+
+        for (const [phrase, value] of Object.entries(stovky)) {
+          if (remaining.includes(phrase)) {
+            total += value;
+            remaining = remaining.replace(phrase, '').replace(/\s+/g, ' ').trim();
+            break;
+          }
+        }
+
+        const restWords = remaining.split(' ').filter(w => w);
+        let restValue = 0;
+
+        if (restWords.length === 1) {
+          const w = restWords[0];
+          if (teens[w] !== undefined) restValue = teens[w];
+          else if (desitky[w] !== undefined) restValue = desitky[w];
+          else if (jednotky[w] !== undefined) restValue = jednotky[w];
+        } else if (restWords.length === 2) {
+          const d = desitky[restWords[0]] || 0;
+          const j = jednotky[restWords[1]] || 0;
+          if (d >= 20 && d <= 90 && j >= 1 && j <= 9) {
+            restValue = d + j;
+          }
+        }
+
+        total += restValue;
         return (total >= 0 && total <= 999) ? total : null;
       }
 
       function setupRecognition() {
         if (!SpeechRecognition) {
-          alert("Hlasové rozpoznávání funguje jen v Chrome/Edge.");
+          alert("Použij Chrome nebo Edge.");
           return;
         }
 
@@ -127,15 +157,15 @@
 
           let currentRaw = inputEl.value.replace(/ /g, '');
 
-          // 🔑 DETEKCE PŘÍKAZU PRO ČÁRKU: celá/celé/celých + čárka/carka
+          // 🔑 ČÁRKA: celá/celé/celých/čárka/carka
           if (/\b(cel[áaé]|celych|cely|cel[ýy]|čárka|carka)\b/i.test(transcript)) {
             if (currentRaw === "") {
               inputEl.value = "0,";
             } else if (!currentRaw.endsWith(',')) {
               inputEl.value = currentRaw + ',';
             }
-            log("→ Vložena čárka");
-            return; // ⚠️ DŮLEŽITÉ: ukončíme – žádné číslo se nespracuje!
+            log("→ ČÁRKA");
+            return;
           }
 
           const number = extractNumber(transcript);
@@ -145,7 +175,7 @@
           }
 
           if (currentRaw === "") {
-            inputEl.value = number.toString(); // první číslo beze změny
+            inputEl.value = number.toString();
             log("→ první: " + number);
           } else {
             const padded = String(number).padStart(3, '0');
@@ -183,7 +213,7 @@
         log("🧹 Vymazáno");
       };
 
-      log("🚀 Připraveno. Zkuste: '5', 'čárka', '7' → 5,007");
+      log("🚀 Připraveno. Zkuste: 'dvacet pět', 'čárka', '7'");
     </script>
   </body>
 </html>
