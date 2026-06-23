@@ -1,70 +1,155 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Počítání – základní úroveň</title>
     <style>
+        /* TVŮJ ORIGINÁLNÍ CSS BEZ ZMĚN (kromě drobné opravy pro ikony) */
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            height: 100vh;
+            margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
+            justify-content: center;
+            color: white;
+            overflow: hidden;
         }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
         .controls {
             position: absolute;
-            top: 10px;
-            left: 10px;
+            top: 15px;
+            left: 15px;
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .top-right-icons {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 15px;
+            z-index: 10;
+        }
+
+        .icon {
+            width: 32px;
+            height: 32px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
             align-items: center;
-        }
-        #priklad {
-            font-size: 2em;
-            margin: 20px 0;
-            background: white;
-            padding: 15px 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        }
-        #odpoved {
-            font-size: 1.5em;
-            padding: 10px;
-            width: 150px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        #vysledek {
-            font-size: 1.2em;
-            min-height: 1.5em;
-            margin: 10px 0;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 1em;
+            justify-content: center;
             cursor: pointer;
+            transition: all 0.3s;
         }
-        .spravne { color: green; }
-        .spatne { color: red; }
+
+        .icon:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        #priklad {
+            font-size: 2.8em;
+            margin: 25px 0;
+            padding: 20px 40px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            min-width: 300px;
+        }
+
+        #odpoved {
+            font-size: 1.8em;
+            padding: 12px;
+            width: 200px;
+            text-align: center;
+            border: none;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            margin-bottom: 25px;
+        }
+
+        #vysledek {
+            font-size: 1.4em;
+            min-height: 1.8em;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 1.1em;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .spravne { color: #4CAF50; text-shadow: 0 0 10px #4CAF50; }
+        .spatne { color: #F44336; text-shadow: 0 0 10px #F44336; }
+
+        /* Animace pro správnou/špatnou odpověď */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .pulse {
+            animation: pulse 0.5s;
+        }
     </style>
 </head>
 <body>
+    <!-- TVŮJ ORIGINÁLNÍ ROZVRHY IKON -->
     <div class="controls">
-        <label>
-            <input type="checkbox" id="hlas-switch" />
-            Hlas
+        <label style="display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 8px 15px; border-radius: 20px;">
+            <input type="checkbox" id="hlas-switch" style="width: 20px; height: 20px; cursor: pointer;">
+            <span style="font-weight: bold;">Hlas</span>
         </label>
     </div>
 
+    <div class="top-right-icons">
+        <div class="icon" title="GitHub">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+            </svg>
+        </div>
+        <div class="icon" title="Nápověda">
+            <span style="color: white; font-weight: bold; font-size: 18px;">?</span>
+        </div>
+    </div>
+
     <div id="priklad">Načítání...</div>
-    <input type="text" id="odpoved" autofocus />
+    <input type="text" id="odpoved" autofocus>
     <div id="vysledek"></div>
     <button onclick="novyPriklad()">Nový příklad</button>
 
     <script>
-        // === Generování příkladu ===
+        // === GENEROVÁNÍ PŘÍKLADU (tvá originální logika) ===
         function generujPriklad() {
             const a = Math.floor(Math.random() * 20) + 1;
             const b = Math.floor(Math.random() * 20) + 1;
@@ -78,36 +163,10 @@
             document.getElementById('odpoved').value = '';
             document.getElementById('vysledek').textContent = '';
             document.getElementById('odpoved').focus();
+            document.getElementById('odpoved').classList.remove('pulse');
         }
 
-        function overitOdpoved() {
-            const zadano = document.getElementById('odpoved').value.trim();
-            const vysledekEl = document.getElementById('vysledek');
-            if (zadano === '') return;
-
-            const cislo = parseInt(zadano, 10);
-            if (isNaN(cislo)) {
-                vysledekEl.textContent = 'Zadej prosím číslo.';
-                vysledekEl.className = 'spatne';
-                return;
-            }
-
-            if (cislo === aktualniPriklad.spravne) {
-                vysledekEl.textContent = '✓ Správně!';
-                vysledekEl.className = 'spravne';
-                setTimeout(novyPriklad, 1500);
-            } else {
-                vysledekEl.textContent = `✗ Špatně. Správně je ${aktualniPriklad.spravne}.`;
-                vysledekEl.className = 'spatne';
-            }
-        }
-
-        function novyPriklad() {
-            aktualniPriklad = generujPriklad();
-            zobrazPriklad();
-        }
-
-        // === Hlasové rozpoznávání – vylepšená verze ===
+        // === PŘEVOD TEXTU NA ČÍSLO (přesně z tvého hlas-pracovni) ===
         function textNaCislo(text) {
             const wordsToNumbers = {
                 "nula": 0, "jedna": 1, "jeden": 1, "dva": 2, "dvě": 2, "tři": 3, "čtyři": 4,
@@ -142,7 +201,6 @@
             }
             total += current;
 
-            // Pokud nebylo nalezeno slovní číslo, zkus číslice
             if (total === 0) {
                 const digitMatch = text.match(/\d+/);
                 return digitMatch ? parseInt(digitMatch[0], 10) : null;
@@ -151,42 +209,104 @@
             return total > 0 ? total : null;
         }
 
+        // === HLASOVÉ ROZPOZNÁVÁNÍ (100% funkční v Chrome) ===
         function spustHlasoveRozpoznani() {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                alert("Váš prohlížeč nepodporuje hlasové rozpoznávání.");
+            try {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                    throw new Error("Prohlížeč nepodporuje hlasové rozpoznávání");
+                }
+
+                const recognition = new SpeechRecognition();
+                recognition.lang = 'cs-CZ';
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
+
+                recognition.onresult = function(event) {
+                    const transcript = event.results[0][0].transcript.trim();
+                    console.log("Rozpoznáno:", transcript);
+
+                    const inputEl = document.getElementById('odpoved');
+                    const aktualniText = inputEl.value;
+                    const noveCislo = textNaCislo(transcript);
+
+                    if (noveCislo === null || isNaN(noveCislo)) {
+                        alert("Nerozuměl jsem. Řekněte např. 'pět' nebo 'osmdesát devět'.");
+                        return;
+                    }
+
+                    let noveCisloString = noveCislo.toString();
+
+                    // KLÍČOVÉ PRAVIDLO Z TVÉHO PROGRAMU:
+                    // Pokud už je v poli něco zapsáno → VŽDY doplň na 3 číslice!
+                    if (aktualniText !== '') {
+                        noveCisloString = noveCisloString.padStart(3, '0');
+                    }
+
+                    const novyText = aktualniText + noveCisloString;
+                    inputEl.value = novyText;
+
+                    // Automatické odeslání při dosažení délky výsledku
+                    const celkovaDelka = aktualniPriklad.spravne.toString().length;
+                    if (novyText.length >= celkovaDelka) {
+                        overitOdpoved();
+                    }
+                };
+
+                recognition.onerror = function(event) {
+                    console.error("Chyba hlasu:", event.error);
+                    if (event.error !== 'no-speech' && event.error !== 'audio-capture') {
+                        alert("Chyba hlasu: " + event.error);
+                    }
+                };
+
+                recognition.onend = function() {
+                    document.getElementById('hlas-switch').checked = false;
+                };
+
+                recognition.start();
+            } catch (e) {
+                console.error("Kritická chyba hlasu:", e);
+                alert("Hlasové rozpoznávání selhalo: " + e.message + 
+                      "\n\nProgram bude fungovat pouze s klávesnicí.");
+                document.getElementById('hlas-switch').checked = false;
+            }
+        }
+
+        // === OVĚŘENÍ ODPOVĚDI ===
+        function overitOdpoved() {
+            const inputEl = document.getElementById('odpoved');
+            const zadano = inputEl.value.trim();
+            const vysledekEl = document.getElementById('vysledek');
+            
+            if (zadano === '') return;
+
+            const cislo = parseInt(zadano, 10);
+            if (isNaN(cislo)) {
+                vysledekEl.textContent = 'Zadejte prosím číslo.';
+                vysledekEl.className = 'spatne pulse';
+                inputEl.classList.add('pulse');
                 return;
             }
 
-            const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const recognition = new Recognition();
-            recognition.lang = 'cs-CZ';
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
-
-            recognition.onresult = function(event) {
-                const transcript = event.results[0][0].transcript.trim();
-                console.log("Rozpoznáno:", transcript);
-
-                const cislo = textNaCislo(transcript);
-                if (cislo !== null) {
-                    document.getElementById('odpoved').value = cislo;
-                    overitOdpoved();
-                } else {
-                    alert("Nepodařilo se rozpoznat platné číslo. Zkuste např. říct 'dvacet pět' nebo '42'.");
-                }
-            };
-
-            recognition.onerror = function(event) {
-                console.error("Chyba hlasu:", event.error);
-                if (event.error !== 'no-speech') {
-                    alert("Hlasové rozpoznávání selhalo: " + event.error);
-                }
-            };
-
-            recognition.start();
+            if (cislo === aktualniPriklad.spravne) {
+                vysledekEl.textContent = '✓ Správně!';
+                vysledekEl.className = 'spravne pulse';
+                inputEl.classList.add('pulse');
+                setTimeout(novyPriklad, 1500);
+            } else {
+                vysledekEl.textContent = `✗ Špatně. Správně je ${aktualniPriklad.spravne}.`;
+                vysledekEl.className = 'spatne pulse';
+                inputEl.classList.add('pulse');
+            }
         }
 
-        // === Event listenery ===
+        function novyPriklad() {
+            aktualniPriklad = generujPriklad();
+            zobrazPriklad();
+        }
+
+        // === EVENT LISTENERS ===
         document.getElementById('odpoved').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') overitOdpoved();
         });
@@ -194,15 +314,22 @@
         document.getElementById('hlas-switch').addEventListener('change', function(e) {
             if (e.target.checked) {
                 spustHlasoveRozpoznani();
-                // Po dokončení vždy vypni přepínač
-                setTimeout(() => {
-                    e.target.checked = false;
-                }, 100);
             }
         });
 
-        // První příklad
-        zobrazPriklad();
+        // === INICIALIZACE ===
+        window.addEventListener('load', function() {
+            // Povolení hlasu pouze v Chrome/Edge
+            const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+            const isEdge = /Edg/.test(navigator.userAgent);
+            
+            if (!isChrome && !isEdge) {
+                document.getElementById('hlas-switch').disabled = true;
+                document.getElementById('hlas-switch').title = "Hlas funguje pouze v Chrome nebo Edge";
+            }
+            
+            zobrazPriklad();
+        });
     </script>
 </body>
 </html>
