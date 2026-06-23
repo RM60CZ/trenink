@@ -3,80 +3,36 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Hlas → čísla 0–999 (slova i číslice + mluvená čeština)</title>
+    <title>Hlas → čísla (opraveno: čísla + čárka)</title>
     <style>
-      body {
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-        padding: 20px;
-        max-width: 900px;
-      }
-      .row {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        align-items: center;
-        margin-bottom: 12px;
-      }
-      input[type="text"] {
-        flex: 1;
-        min-width: 320px;
-        padding: 10px 12px;
-        font-size: 16px;
-      }
-      button {
-        padding: 10px 14px;
-        font-size: 15px;
-        cursor: pointer;
-      }
-      .status { margin-top: 10px; font-size: 14px; }
-      textarea {
-        width: 100%;
-        min-height: 110px;
-        padding: 10px 12px;
-        font-size: 14px;
-      }
-      .muted { color: #666; font-size: 14px; margin-top: 8px; }
-
-      #listenBtn.active {
-        color: #fff;
-        background: #e53935;
-        border: 1px solid #c62828;
-      }
-      #listenBtn:not(.active) {
-        color: #111;
-        background: #f3f3f3;
-        border: 1px solid #d6d6d6;
-      }
+      body { font-family: system-ui, sans-serif; padding: 20px; max-width: 800px; background: #fafafa; }
+      .row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+      input[type="text"] { flex: 1; min-width: 300px; padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; }
+      button { padding: 10px 16px; font-size: 15px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; }
+      textarea { width: 100%; height: 120px; font-family: monospace; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; }
+      .hint { color: #555; font-size: 14px; margin-top: 8px; line-height: 1.5; background: #f0f8ff; padding: 12px; border-radius: 4px; }
     </style>
   </head>
   <body>
-    <h1>Hlas → čísla 0–999</h1>
-
+    <h1>🎙️ Hlas → čísla</h1>
     <div class="row">
-      <input id="textInput" type="text" placeholder="Řekni číslo (i mluvenou češtinou)" />
-      <button id="clearBtn" type="button">Vymazat</button>
-      <button id="listenBtn" type="button">Pauza</button>
+      <input id="textInput" type="text" placeholder="Řekni 'dvacet pět', pak 'čárka', pak '7'" readonly />
+      <button id="clearBtn">Vymazat</button>
+      <button id="listenBtn">Start</button>
     </div>
-
-    <div class="muted">
-      Funguje i s mluvenou výslovností:  
-      <b>„sedum“</b> → 7, <b>„šest“ / „šes“</b> → 6, <b>„pět“ / „pět“</b> → 5, atd.  
-      Nebo přímo <b>„7“</b>, <b>„123“</b>.
+    <div class="hint">
+      ✅ Čísla: <code>tři</code>, <code>tri</code>, <code>dvacet pět</code>, <code>123</code><br>
+      ✅ Čárka: <code>celá</code>, <code>čárka</code>, <code>carka</code> → jen <code>,</code><br>
+      ✅ První číslo beze změny, další jako <code>XXX</code>
     </div>
-
-    <div class="status" id="status">Stav: připraveno.</div>
-
-    <h2>Log</h2>
     <textarea id="log" readonly></textarea>
 
     <script>
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-      const statusEl = document.getElementById("status");
-      const logEl = document.getElementById("log");
       const inputEl = document.getElementById("textInput");
-      const listenBtn = document.getElementById("listenBtn");
+      const logEl = document.getElementById("log");
       const clearBtn = document.getElementById("clearBtn");
+      const listenBtn = document.getElementById("listenBtn");
 
       let recognition = null;
       let isListening = false;
@@ -86,120 +42,92 @@
         logEl.scrollTop = logEl.scrollHeight;
       }
 
-      function setStatus(msg) {
-        statusEl.textContent = "Stav: " + msg;
-      }
-
-      function updateListenButton() {
-        if (isListening) {
-          listenBtn.classList.add("active");
-          listenBtn.textContent = "Spuštěno";
-          setStatus("poslouchám… (řekni číslo 0–999)");
-        } else {
-          listenBtn.classList.remove("active");
-          listenBtn.textContent = "Pauza";
-          setStatus("pauza (mikrofon vypnutý)");
-        }
-      }
-
       function extractNumber(text) {
         if (!text) return null;
-
-        // 1. Pokus: je to už číslo?
-        const asDigit = text.trim();
-        if (/^\d+$/.test(asDigit)) {
-          const num = parseInt(asDigit, 10);
-          if (num >= 0 && num <= 999) return num;
-          return null;
+        const trimmed = text.trim();
+        if (/^\d+$/.test(trimmed)) {
+          const num = parseInt(trimmed, 10);
+          return (num >= 0 && num <= 999) ? num : null;
         }
 
-        // 2. Normalizace textu
-        const lower = text.toLowerCase().replace(/[.,!?;:"']/g, " ");
-        const words = lower.split(/\s+/).filter(w => w && w !== "a");
+        let norm = text.toLowerCase()
+          .replace(/[^a-z0-9áčďéěíňóřšťúůýž\s]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+        norm = norm.replace(/\ba\b/g, '');
+        const words = norm.split(' ').filter(w => w);
 
-        // Speciální: "nula"
-        if (words.length === 1 && (words[0] === "nula" || words[0] === "nůla" || words[0] === "nula")) {
+        if (words.length === 1 && (words[0] === 'nula' || words[0] === 'nůla')) {
           return 0;
         }
 
-        // Rozšířený slovník s mluvenými formami
         const jednotky = {
-          // 1
-          "jedna": 1, "jeden": 1, "jedna": 1,
-          // 2
-          "dva": 2, "dvě": 2, "dve": 2,
-          // 3
-          "tři": 3, "tri": 3,
-          // 4
-          "čtyři": 4, "ctyri": 4, "čtyř": 4, "ctyr": 4,
-          // 5
-          "pět": 5, "pet": 5,
-          // 6
-          "šest": 6, "sest": 6, "šes": 6, "ses": 6,
-          // 7 ← HLAVNÍ ÚPRAVA
-          "sedm": 7, "sedum": 7, "sedm": 7, "sedum": 7,
-          // 8
-          "osm": 8,
-          // 9
-          "devět": 9, "devet": 9, "devět": 9, "devet": 9
+          'jedna': 1, 'jeden': 1,
+          'dva': 2, 'dvě': 2,
+          'tri': 3, 'tři': 3,
+          'ctyri': 4, 'čtyři': 4,
+          'pet': 5, 'pět': 5,
+          'sest': 6, 'šest': 6,
+          'sedm': 7,
+          'osm': 8,
+          'devet': 9, 'devět': 9
         };
 
         const teens = {
-          "deset": 10,
-          "jedenáct": 11, "jedenact": 11,
-          "dvanáct": 12, "dvanact": 12,
-          "třináct": 13, "trinact": 13,
-          "čtrnáct": 14, "ctrnact": 14,
-          "patnáct": 15, "patnact": 15,
-          "šestnáct": 16, "sestnact": 16,
-          "sedmnáct": 17, "sedmnact": 17, "sedumnáct": 17, "sedumnact": 17,
-          "osmnáct": 18, "osmnact": 18,
-          "devatenáct": 19, "devatenact": 19
+          'deset': 10,
+          'jedenact': 11, 'jedenáct': 11,
+          'dvanact': 12, 'dvanáct': 12,
+          'trinact': 13, 'třináct': 13,
+          'ctrnact': 14, 'čtrnáct': 14,
+          'patnact': 15, 'patnáct': 15,
+          'sestnact': 16, 'šestnáct': 16,
+          'sedmnact': 17, 'sedmnáct': 17,
+          'osmnact': 18, 'osmnáct': 18,
+          'devatenact': 19, 'devatenáct': 19
         };
 
         const desitky = {
-          "dvacet": 20, "dvacit": 20,
-          "třicet": 30, "tricet": 30, "třicet": 30,
-          "čtyřicet": 40, "ctyricet": 40, "čtyřicet": 40,
-          "padesát": 50, "padesat": 50,
-          "šedesát": 60, "sedesat": 60, "šedesát": 60,
-          "sedmdesát": 70, "sedmdesat": 70, "sedumdesát": 70, "sedumdesat": 70,
-          "osmdesát": 80, "osmdesat": 80,
-          "devadesát": 90, "devadesat": 90
+          'dvacet': 20,
+          'tricet': 30, 'třicet': 30,
+          'ctyricet': 40, 'čtyřicet': 40,
+          'padesat': 50, 'padesát': 50,
+          'šedesát': 60,
+          'sedmdesat': 70, 'sedmdesát': 70,
+          'osmdesat': 80, 'osmdesát': 80,
+          'devadesat': 90, 'devadesát': 90
         };
 
         const stovky = {
-          "sto": 100,
-          "dvě stě": 200, "dve ste": 200, "dvěste": 200, "dveste": 200,
-          "tři sta": 300, "tri sta": 300, "trista": 300,
-          "čtyři sta": 400, "ctyri sta": 400, "ctyrista": 400,
-          "pět set": 500, "pet set": 500, "petset": 500,
-          "šest set": 600, "sest set": 600, "sestset": 600,
-          "sedm set": 700, "sedmset": 700, "sedum set": 700, "sedumset": 700,
-          "osm set": 800, "osmset": 800,
-          "devět set": 900, "devet set": 900, "devetset": 900
+          'sto': 100,
+          'dveste': 200, 'dvě stě': 200, 'dvěste': 200,
+          'trista': 300, 'tři sta': 300,
+          'ctyrista': 400, 'čtyři sta': 400,
+          'petset': 500, 'pět set': 500,
+          'sestset': 600, 'šest set': 600,
+          'sedmset': 700, 'sedm set': 700,
+          'osmset': 800, 'osm set': 800,
+          'devetset': 900, 'devět set': 900
         };
 
         let total = 0;
-        let remaining = words.join(" ");
+        let remaining = words.join(' ');
 
-        // Stovky
-        for (const [phrase, val] of Object.entries(stovky)) {
+        for (const [phrase, value] of Object.entries(stovky)) {
           if (remaining.includes(phrase)) {
-            total += val;
-            remaining = remaining.replace(phrase, "").replace(/\s+/g, " ").trim();
+            total += value;
+            remaining = remaining.replace(phrase, '').replace(/\s+/g, ' ').trim();
             break;
           }
         }
 
-        const restWords = remaining.split(/\s+/).filter(w => w);
+        const restWords = remaining.split(' ').filter(w => w);
         let restValue = 0;
 
         if (restWords.length === 1) {
           const w = restWords[0];
-          if (teens.hasOwnProperty(w)) restValue = teens[w];
-          else if (desitky.hasOwnProperty(w)) restValue = desitky[w];
-          else if (jednotky.hasOwnProperty(w)) restValue = jednotky[w];
+          if (teens[w] !== undefined) restValue = teens[w];
+          else if (desitky[w] !== undefined) restValue = desitky[w];
+          else if (jednotky[w] !== undefined) restValue = jednotky[w];
         } else if (restWords.length === 2) {
           const d = desitky[restWords[0]] || 0;
           const j = jednotky[restWords[1]] || 0;
@@ -214,8 +142,7 @@
 
       function setupRecognition() {
         if (!SpeechRecognition) {
-          setStatus("SpeechRecognition není podporován (zkus Chrome/Edge).");
-          listenBtn.disabled = true;
+          alert("Použij Chrome nebo Edge.");
           return;
         }
 
@@ -224,68 +151,69 @@
         recognition.continuous = true;
         recognition.interimResults = false;
 
-        recognition.onstart = () => {
-          isListening = true;
-          updateListenButton();
-          log(">> mikrofon zapnut");
-        };
-
-        recognition.onerror = (event) => {
-          log("!! chyba: " + event.error);
-        };
-
-        recognition.onend = () => {
-          if (isListening) {
-            setTimeout(() => {
-              try { recognition.start(); } catch (e) {
-                log("!! nelze restartovat: " + e.message);
-                isListening = false;
-                updateListenButton();
-              }
-            }, 300);
-          } else {
-            updateListenButton();
-          }
-          log("<< mikrofon ukončen nebo restart");
-        };
-
         recognition.onresult = (event) => {
           const transcript = event.results[event.resultIndex][0].transcript.trim();
-          log("[rozpoznáno] " + transcript);
+          log("🗣️ '" + transcript + "'");
+
+          let currentRaw = inputEl.value.replace(/ /g, '');
+
+          // 🔑 ČÁRKA: celá/celé/celých/čárka/carka
+          if (/\b(cel[áaé]|celych|cely|cel[ýy]|čárka|carka)\b/i.test(transcript)) {
+            if (currentRaw === "") {
+              inputEl.value = "0,";
+            } else if (!currentRaw.endsWith(',')) {
+              inputEl.value = currentRaw + ',';
+            }
+            log("→ ČÁRKA");
+            return;
+          }
 
           const number = extractNumber(transcript);
-          if (number !== null) {
-            inputEl.value += number.toString();
-            log("[vloženo] " + number);
-          } else {
-            log("[ignorováno] – mimo 0–999 nebo neznámý tvar");
+          if (number === null) {
+            log("→ Ignorováno");
+            return;
           }
+
+          if (currentRaw === "") {
+            inputEl.value = number.toString();
+            log("→ první: " + number);
+          } else {
+            const padded = String(number).padStart(3, '0');
+            if (currentRaw.endsWith(',')) {
+              inputEl.value = currentRaw + padded;
+            } else {
+              const newRaw = currentRaw + padded;
+              inputEl.value = newRaw.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+            }
+            log("→ blok: " + padded);
+          }
+        };
+
+        recognition.onerror = (e) => log("❌ " + e.error);
+        recognition.onend = () => {
+          if (isListening) setTimeout(() => recognition.start(), 500);
         };
       }
 
-      listenBtn.addEventListener("click", () => {
-        if (!recognition) return;
+      listenBtn.onclick = () => {
+        if (!recognition) setupRecognition();
         if (isListening) {
-          isListening = false;
           recognition.stop();
+          isListening = false;
+          listenBtn.textContent = "Start";
         } else {
+          recognition.start();
           isListening = true;
-          try { recognition.start(); } catch (e) {
-            log("!! nelze spustit: " + e.message);
-            isListening = false;
-            updateListenButton();
-          }
+          listenBtn.textContent = "Stop";
         }
-      });
+      };
 
-      clearBtn.addEventListener("click", () => {
+      clearBtn.onclick = () => {
         inputEl.value = "";
-        log("[vymazáno]");
-      });
+        log("🧹 Vymazáno");
+      };
 
-      setupRecognition();
-      updateListenButton();
-      log("------------------------------------------------");
+      log("🚀 Připraveno. Zkuste: 'dvacet pět', 'čárka', '7'");
     </script>
   </body>
 </html>
