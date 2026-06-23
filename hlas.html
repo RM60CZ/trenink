@@ -1,1 +1,102 @@
+// index.js
+// Jednoduchý "speech-to-number" přes textové tokeny ze stdin.
+// - číselná slova vkládá do bufferu
+// - vypisuje průběžně
+// - "ano" potvrdí finální výpis a resetuje buffer
+// - "vymaz" vymaže buffer
+//
+// Spouštění: node index.js
+const readline = require("node:readline");
 
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  terminal: false,
+});
+
+// Předběžné mapování základních čísel pro začátek
+const wordToNumber = {
+  nula: "0",
+  jedna: "1",
+  jeden: "1",
+  dvě: "2",
+  dva: "2",
+  tři: "3",
+  třička: "3",
+  tři: "3",
+  čtyři: "4",
+  čtyry: "4",
+  pět: "5",
+  šest: "6",
+  sedm: "7",
+  osm: "8",
+  devět: "9",
+  deset: "10",
+};
+
+let buffer = [];
+
+// Pomocná funkce: vypiš průběžně
+function showBuffer() {
+  const joined = buffer.join("");
+  console.log(`[buffer] ${joined}`);
+}
+
+// Pokud chceš, můžeš později buffer interpretovat jako celé číslo/drobné atd.
+// Zatím děláme jednoduché spojování číslic.
+function bufferToNumberString() {
+  return buffer.join("");
+}
+
+function onToken(raw) {
+  const tok = raw.trim().toLowerCase();
+  if (!tok) return;
+
+  if (tok === "ano" || tok === "potvrď" || tok === "enter") {
+    if (buffer.length === 0) {
+      console.log("[výstup] (nic k potvrzení)");
+    } else {
+      const out = bufferToNumberString();
+      console.log(`[výstup] ${out}`);
+    }
+    buffer = [];
+    console.log("[buffer vyprázdněn]");
+    return;
+  }
+
+  if (tok === "vymaz" || tok === "clear") {
+    buffer = [];
+    console.log("[buffer vyprázdněn]");
+    return;
+  }
+
+  // Tvoje "mluvení" čísel: přidáme do bufferu, když to známe
+  if (tok in wordToNumber) {
+    const digit = wordToNumber[tok];
+    buffer.push(digit);
+    showBuffer();
+    return;
+  }
+
+  // tečka zatím jen jako surový token; později doplníme dekadiku
+  if (tok === "tečka" || tok === "čárka") {
+    // Prozatím přidáme tečku do bufferu
+    buffer.push(tok === "tečka" ? "." : ",");
+    showBuffer();
+    return;
+  }
+
+  // Neznámé tokeny ignorujeme (nebo můžeme logovat)
+  console.log(`[info] neznámý token: "${tok}" (ignorováno)`);
+}
+
+console.log("Zadej slova. Např.:");
+console.log("  nula jedna dvě");
+console.log("  tečka pět devět");
+console.log("Ukončení/odeslání: 'ano'  |  smazání: 'vymaz'");
+console.log("------------------------------------------------");
+
+rl.on("line", (line) => {
+  const parts = line.split(/\s+/).filter(Boolean);
+  for (const p of parts) onToken(p);
+});
