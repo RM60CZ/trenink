@@ -75,7 +75,7 @@
 
         function zobrazPriklad() {
             document.getElementById('priklad').textContent = `${aktualniPriklad.a} + ${aktualniPriklad.b} = ?`;
-            document.getElementById('odpoved').value = ''; // vždy prázdné na začátku
+            document.getElementById('odpoved').value = '';
             document.getElementById('vysledek').textContent = '';
             document.getElementById('odpoved').focus();
         }
@@ -151,7 +151,7 @@
             return total > 0 ? total : null;
         }
 
-        // === Hlasové rozpoznávání – přesně podle logiky hlas-pracovni ===
+        // === Hlasové rozpoznávání – PŘESNĚ podle logiky hlas-pracovni ===
         function spustHlasoveRozpoznani() {
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
                 alert("Váš prohlížeč nepodporuje hlasové rozpoznávání.");
@@ -162,36 +162,34 @@
             const recognition = new Recognition();
             recognition.lang = 'cs-CZ';
             recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
 
             recognition.onresult = function(event) {
                 const transcript = event.results[0][0].transcript.trim();
                 console.log("Rozpoznáno:", transcript);
 
                 const inputEl = document.getElementById('odpoved');
-                const aktualniText = inputEl.value; // může být "" nebo "5" atd.
-                const celkovaDelka = aktualniPriklad.spravne.toString().length;
-
-                // Pokud už máme plný výsledek, nic nedělej
-                if (aktualniText.length >= celkovaDelka) {
-                    overitOdpoved();
-                    return;
-                }
-
+                const aktualniText = inputEl.value;
                 const noveCislo = textNaCislo(transcript);
+
                 if (noveCislo === null || isNaN(noveCislo)) {
-                    alert("Nerozuměl jsem. Zkuste např. 'pět' nebo 'šedesát sedm'.");
+                    alert("Nerozuměl jsem. Zkuste např. 'pět' nebo 'osmdesát devět'.");
                     return;
                 }
 
-                // Kolik číslic potřebujeme pro tento krok?
-                const potrebnaDelka = celkovaDelka - aktualniText.length;
-                const noveCisloString = noveCislo.toString().padStart(potrebnaDelka, '0');
+                let noveCisloString = noveCislo.toString();
+
+                // Pokud už je v poli něco zapsáno → vždy doplň na 3 číslice!
+                if (aktualniText !== '') {
+                    noveCisloString = noveCisloString.padStart(3, '0');
+                }
+
+                // Ořízni, pokud přesáhne celkovou délku
+                const celkovaDelka = aktualniPriklad.spravne.toString().length;
                 const novyText = (aktualniText + noveCisloString).substring(0, celkovaDelka);
 
                 inputEl.value = novyText;
 
-                // Pokud je výsledek kompletní, automaticky ověř
+                // Automatické odeslání, pokud je výsledek kompletní
                 if (novyText.length === celkovaDelka) {
                     setTimeout(overitOdpoved, 300);
                 }
@@ -215,7 +213,7 @@
         document.getElementById('hlas-switch').addEventListener('change', function(e) {
             if (e.target.checked) {
                 spustHlasoveRozpoznani();
-                // Vypnout přepínač po spuštění (jako v původním chování)
+                // Automaticky vypnout přepínač po spuštění
                 setTimeout(() => {
                     e.target.checked = false;
                 }, 100);
