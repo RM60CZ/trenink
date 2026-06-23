@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Hlas → čísla 0–999 (slova i číslice + mluvená čeština)</title>
+    <title>Hlas → čísla s desetinnou čárkou (česky)</title>
     <style>
       body {
         font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -50,20 +50,20 @@
     </style>
   </head>
   <body>
-    <h1>Hlas → čísla 0–999</h1>
+    <h1>Hlas → čísla (česky, s desetinnou čárkou)</h1>
 
     <div class="row">
-      <input id="textInput" type="text" placeholder="Řekni číslo (i mluvenou češtinou)" />
+      <input id="textInput" type="text" placeholder="Řekni např. 'nulacelápět' nebo 'pět celých sto'" />
       <button id="clearBtn" type="button">Vymazat</button>
       <button id="listenBtn" type="button">Pauza</button>
     </div>
 
     <div class="muted">
-      Funguje i s mluvenou výslovností:  
-      <b>„sedum“</b> → 7, <b>„šest“ / „šes“</b> → 6, <b>„pět“</b> → 5, atd.  
-      Nebo přímo <b>„7“</b>, <b>„123“</b>.<br>
-      Řekni <b>„nula“</b> → automaticky vloží <code>0,</code>.<br>
-      Řekni <b>„pět celá“</b> → vloží <code>5,</code>.
+      Příklady:<br>
+      <b>„nulacelápět“</b> → <code>0,005</code><br>
+      <b>„nulacelápětset“</b> → <code>0,500</code><br>
+      <b>„pětcelýchtři“</b> → <code>5,003</code><br>
+      <b>„dvě stě padesát sedm celých třista osmdesát čtyři“</b> → <code>257,384</code>
     </div>
 
     <div class="status" id="status">Stav: připraveno.</div>
@@ -96,7 +96,7 @@
         if (isListening) {
           listenBtn.classList.add("active");
           listenBtn.textContent = "Spuštěno";
-          setStatus("poslouchám… (řekni číslo 0–999 nebo 'celá')");
+          setStatus("poslouchám… (např. 'nulacelápět')");
         } else {
           listenBtn.classList.remove("active");
           listenBtn.textContent = "Pauza";
@@ -104,73 +104,140 @@
         }
       }
 
+      // Normalizační mapa – nejdelší řetězce první!
+      const normalizationMap = [
+        // Oddělení klíčových slov pro desetinnou čárku
+        ["celých", " celých "],
+        ["celych", " celych "],
+        ["celý", " celý "],
+        ["cely", " cely "],
+        ["celá", " celá "],
+        ["cela", " cela "],
+
+        // Čísla – od nejdelších
+        ["devětset", " devět set "],
+        ["devetset", " devet set "],
+        ["osmset", " osm set "],
+        ["sedumset", " sedum set "],
+        ["sedmset", " sedm set "],
+        ["sestset", " sest set "],
+        ["petset", " pet set "],
+        ["ctyrista", " ctyri sta "],
+        ["trista", " tri sta "],
+        ["dveste", " dve ste "],
+        ["dvěste", " dvě stě "],
+
+        ["devatenact", " devatenáct "],
+        ["osmnact", " osmnáct "],
+        ["sedumnact", " sedumnáct "],
+        ["sedmnact", " sedmnáct "],
+        ["sestnact", " šestnáct "],
+        ["patnact", " patnáct "],
+        ["ctrnact", " čtrnáct "],
+        ["trinact", " třináct "],
+        ["dvanact", " dvanáct "],
+        ["jedenact", " jedenáct "],
+
+        ["devadesat", " devadesát "],
+        ["osmdesat", " osmdesát "],
+        ["sedumdesat", " sedumdesát "],
+        ["sedmdesat", " sedmdesát "],
+        ["šedesát", " šedesát "],
+        ["padesat", " padesát "],
+        ["ctyricet", " čtyřicet "],
+        ["tricet", " třicet "],
+        ["dvacit", " dvacet "],
+
+        ["devet", " devět "],
+        ["sedum", " sedm "],
+        ["ses", " šes "],
+        ["sest", " šest "],
+        ["pet", " pět "],
+        ["ctyr", " čtyř "],
+        ["ctyri", " čtyři "],
+        ["tri", " tři "],
+        ["dve", " dvě "],
+        ["nula", " nula "]
+      ];
+
+      function normalizeText(text) {
+        if (!text) return "";
+        let normalized = text.toLowerCase().replace(/[.,!?;:"']/g, "");
+        normalized = " " + normalized + " "; // ochranné mezery
+
+        for (const [from, to] of normalizationMap) {
+          const escaped = from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(escaped, 'g');
+          normalized = normalized.replace(regex, to);
+        }
+
+        return normalized.replace(/\s+/g, " ").trim();
+      }
+
       function extractNumber(text) {
         if (!text) return null;
 
-        // 1. Pokus: je to už číslo?
+        // Pokud je to číslice
         const asDigit = text.trim();
         if (/^\d+$/.test(asDigit)) {
           const num = parseInt(asDigit, 10);
-          if (num >= 0 && num <= 999) return num;
-          return null;
+          return (num >= 0 && num <= 999) ? num : null;
         }
 
-        // 2. Normalizace textu
-        const lower = text.toLowerCase().replace(/[.,!?;:"']/g, " ");
-        const words = lower.split(/\s+/).filter(w => w && w !== "a");
+        // Normalizace a rozdělení
+        const normalized = normalizeText(text);
+        const words = normalized.split(/\s+/).filter(w => w && w !== "a");
 
-        // Speciální: "nula"
         if (words.length === 1 && ["nula", "nůla"].includes(words[0])) {
           return 0;
         }
 
-        // Slovníky
         const jednotky = {
           "jedna": 1, "jeden": 1,
-          "dva": 2, "dvě": 2, "dve": 2,
-          "tři": 3, "tri": 3,
-          "čtyři": 4, "ctyri": 4, "čtyř": 4, "ctyr": 4,
-          "pět": 5, "pet": 5,
-          "šest": 6, "sest": 6, "šes": 6, "ses": 6,
-          "sedm": 7, "sedum": 7,
+          "dva": 2, "dvě": 2,
+          "tři": 3,
+          "čtyři": 4,
+          "pět": 5,
+          "šest": 6,
+          "sedm": 7,
           "osm": 8,
-          "devět": 9, "devet": 9
+          "devět": 9
         };
 
         const teens = {
           "deset": 10,
-          "jedenáct": 11, "jedenact": 11,
-          "dvanáct": 12, "dvanact": 12,
-          "třináct": 13, "trinact": 13,
-          "čtrnáct": 14, "ctrnact": 14,
-          "patnáct": 15, "patnact": 15,
-          "šestnáct": 16, "sestnact": 16,
-          "sedmnáct": 17, "sedmnact": 17, "sedumnáct": 17, "sedumnact": 17,
-          "osmnáct": 18, "osmnact": 18,
-          "devatenáct": 19, "devatenact": 19
+          "jedenáct": 11,
+          "dvanáct": 12,
+          "třináct": 13,
+          "čtrnáct": 14,
+          "patnáct": 15,
+          "šestnáct": 16,
+          "sedmnáct": 17, "sedumnáct": 17,
+          "osmnáct": 18,
+          "devatenáct": 19
         };
 
         const desitky = {
-          "dvacet": 20, "dvacit": 20,
-          "třicet": 30, "tricet": 30,
-          "čtyřicet": 40, "ctyricet": 40,
-          "padesát": 50, "padesat": 50,
-          "šedesát": 60, "sedesat": 60,
-          "sedmdesát": 70, "sedmdesat": 70, "sedumdesát": 70, "sedumdesat": 70,
-          "osmdesát": 80, "osmdesat": 80,
-          "devadesát": 90, "devadesat": 90
+          "dvacet": 20,
+          "třicet": 30,
+          "čtyřicet": 40,
+          "padesát": 50,
+          "šedesát": 60,
+          "sedmdesát": 70, "sedumdesát": 70,
+          "osmdesát": 80,
+          "devadesát": 90
         };
 
         const stovky = {
           "sto": 100,
-          "dvě stě": 200, "dve ste": 200, "dvěste": 200, "dveste": 200,
-          "tři sta": 300, "tri sta": 300, "trista": 300,
-          "čtyři sta": 400, "ctyri sta": 400, "ctyrista": 400,
-          "pět set": 500, "pet set": 500, "petset": 500,
-          "šest set": 600, "sest set": 600, "sestset": 600,
-          "sedm set": 700, "sedmset": 700, "sedum set": 700, "sedumset": 700,
-          "osm set": 800, "osmset": 800,
-          "devět set": 900, "devet set": 900, "devetset": 900
+          "dvě stě": 200,
+          "tři sta": 300,
+          "čtyři sta": 400,
+          "pět set": 500,
+          "šest set": 600,
+          "sedm set": 700, "sedum set": 700,
+          "osm set": 800,
+          "devět set": 900
         };
 
         let total = 0;
@@ -185,14 +252,15 @@
           }
         }
 
+        // Zbytek
         const restWords = remaining.split(/\s+/).filter(w => w);
         let restValue = 0;
 
         if (restWords.length === 1) {
           const w = restWords[0];
-          if (teens.hasOwnProperty(w)) restValue = teens[w];
-          else if (desitky.hasOwnProperty(w)) restValue = desitky[w];
-          else if (jednotky.hasOwnProperty(w)) restValue = jednotky[w];
+          if (teens[w] !== undefined) restValue = teens[w];
+          else if (desitky[w] !== undefined) restValue = desitky[w];
+          else if (jednotky[w] !== undefined) restValue = jednotky[w];
         } else if (restWords.length === 2) {
           const d = desitky[restWords[0]] || 0;
           const j = jednotky[restWords[1]] || 0;
@@ -205,10 +273,25 @@
         return (total >= 0 && total <= 999) ? total : null;
       }
 
-      // Funkce pro kontrolu, zda bylo řečeno "celá" nebo "celých"
-      function containsDecimalKeyword(text) {
+      function parseDecimalPhrase(text) {
+        if (!text) return null;
         const lower = text.toLowerCase();
-        return /\b(cel[áa]|celých|celych)\b/.test(lower);
+
+        // Hledáme jakékoli výskyty "celá", "celých" atd.
+        const match = lower.match(/(cel[áaýýy]|celých|celych)/);
+        if (!match) return null;
+
+        const before = text.substring(0, match.index).trim();
+        const after = text.substring(match.index + match[0].length).trim();
+
+        const whole = extractNumber(before);
+        const decimal = extractNumber(after);
+
+        if (whole !== null && decimal !== null) {
+          const decimalStr = String(decimal).padStart(3, '0');
+          return `${whole},${decimalStr}`;
+        }
+        return null;
       }
 
       function setupRecognition() {
@@ -252,47 +335,23 @@
           const transcript = event.results[event.resultIndex][0].transcript.trim();
           log("[rozpoznáno] " + transcript);
 
-          // Nejprve zkontrolujeme, zda obsahuje "celá/celých"
-          const hasDecimalKeyword = containsDecimalKeyword(transcript);
+          // Nejprve zkusíme desetinnou frázi (i spojenou)
+          const decimalResult = parseDecimalPhrase(transcript);
+          if (decimalResult) {
+            inputEl.value += decimalResult;
+            log(`[vloženo] ${decimalResult}`);
+            return;
+          }
 
-          // Extrahujeme číslo (ignorujeme "celá" při extrakci)
-          const cleanTranscript = transcript.replace(/\b(cel[áa]|celých|celych)\b/gi, "").trim();
-          const number = extractNumber(cleanTranscript);
-
-          const currentValue = inputEl.value;
-
+          // Jinak normální číslo
+          const number = extractNumber(transcript);
           if (number !== null) {
-            // Bylo rozpoznáno platné číslo
-            if (number === 0 && currentValue === "") {
-              // První číslo je nula → automaticky vložíme "0,"
-              inputEl.value = "0,";
-              log("[vloženo] 0,");
-            } else {
-              // Jiné číslo – vložíme jako text
-              inputEl.value += number.toString();
-              log("[vloženo] " + number);
-            }
+            inputEl.value += number.toString();
+            log(`[vloženo číslo] ${number}`);
+            return;
           }
 
-          // Nyní řešíme "celá/celých"
-          if (hasDecimalKeyword) {
-            const current = inputEl.value;
-            // Pokud už končí čárkou, ignorujeme
-            if (current.endsWith(",")) {
-              log("[ignorováno] 'celá' – čárka už je přítomna");
-            } else if (current === "" || /^\d+$/.test(current)) {
-              // Pokud je aktuální hodnota prázdná nebo jen celé číslo, přidáme čárku
-              inputEl.value += ",";
-              log("[vložena desetinná čárka]");
-            } else {
-              log("[ignorováno] 'celá' – nelze přidat čárku do tohoto kontextu");
-            }
-          }
-
-          // Pokud nebylo ani číslo, ani klíčové slovo
-          if (number === null && !hasDecimalKeyword) {
-            log("[ignorováno] – mimo 0–999 nebo neznámý tvar");
-          }
+          log("[ignorováno] – neznámý tvar");
         };
       }
 
