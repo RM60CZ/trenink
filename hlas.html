@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Hlas → přepis + převod 2</title>
+    <title>Hlas → jen 1 a 2 (continuous)</title>
     <style>
       body {
         font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -36,20 +36,28 @@
         font-size: 14px;
       }
       .muted { color: #666; font-size: 14px; margin-top: 8px; }
+      .pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #f1f1f1;
+        font-size: 12px;
+        margin-left: 8px;
+      }
     </style>
   </head>
   <body>
-    <h1>Hlas → input + převod jen na 2</h1>
+    <h1>Hlas → jen 1 a 2 (jeden/jedna, dva/dvě)</h1>
 
     <div class="row">
-      <input id="textInput" type="text" placeholder="Diktuj… (např. 'dva' nebo 'dvě')" />
+      <input id="textInput" type="text" placeholder="Sem se bude dávat jen: jeden/jedna nebo dva/dvě…" />
       <button id="clearBtn" type="button">Vymazat</button>
       <button id="listenBtn" type="button">Spustit hlas</button>
       <button id="numbersBtn" type="button">Zobrazit jako čísla</button>
     </div>
 
     <div class="muted">
-      Používá Web Speech API (typicky Chrome/Edge).
+      Mikrofon běží v režimu continuous, dokud ho tlačítkem nevypneš.
     </div>
 
     <div class="status" id="status">Stav: připraveno.</div>
@@ -71,6 +79,15 @@
       let recognition = null;
       let listening = false;
 
+      // Povolená slova -> číslice
+      const allowedToDigit = {
+        "jeden": "1",
+        "jedna": "1",
+        "dva": "2",
+        "dvě": "2",
+        "dve": "2" // někdy bez diakritiky
+      };
+
       function log(msg) {
         logEl.value += msg + "\n";
         logEl.scrollTop = logEl.scrollHeight;
@@ -80,13 +97,26 @@
         statusEl.textContent = "Stav: " + msg;
       }
 
-      // Jen: dva/dvě -> 2 (zatím nic víc)
-      function getNumberFromCzechWords(text) {
-        const map = {
-          "dva": "2",
-          "dvě": "2"
-        };
+      // Necháme si z recognizovaného textu vytáhnout jen povolená slova,
+      // a zbytek ignorujeme.
+      function extractAllowedWords(text) {
+        const tokens = text
+          .toLowerCase()
+          .replace(/[.,!?]/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+          .split(" ")
+          .filter(Boolean);
 
+        const outTokens = [];
+        for (const t of tokens) {
+          if (allowedToDigit[t]) outTokens.push(t);
+        }
+        return outTokens;
+      }
+
+      // Z inputu vyrobí jen číslice 1 a 2
+      function getNumberFromAllowedWords(text) {
         const tokens = text
           .toLowerCase()
           .replace(/[.,!?]/g, " ")
@@ -97,61 +127,85 @@
 
         let out = "";
         for (const t of tokens) {
-          if (map[t] != null) out += map[t];
+          if (allowedToDigit[t] != null) out += allowedToDigit[t];
         }
         return out;
       }
 
-      if (!SpeechRecognition) {
-        setStatus("SpeechRecognition nepodporuje tento prohlížeč.");
-      } else {
+      function setupRecognition() {
+        if (!SpeechRecognition) {
+          setStatus("SpeechRecognition nepodporuje tento prohlížeč (zkus Chrome/Edge).");
+          listenBtn.disabled = true;
+          return;
+        }
+
         recognition = new SpeechRecognition();
         recognition.lang = "cs-CZ";
-        recognition.interimResults = true;
-        recognition.continuous = false;
+        recognition.interimResults = true;   // průběžně
+        recognition.continuous = true;      // běží, dokud ho nevypneš (pokud prohlížeč dovolí)
 
         recognition.onstart = () => {
           listening = true;
-          setStatus("poslouchám…");
-          listenBtn.textContent = "Stop hlas";
+          listenBtn.textContent = "Vypnout hlas";
+          setStatus("poslouchám… (microfon zapnutý)");
           log(">> start");
         };
 
         recognition.onerror = (e) => {
-          listening = false;
           setStatus("chyba: " + (e.error || "neznámá"));
-          listenBtn.textContent = "Spustit hlas";
           log("!! error: " + (e.error || ""));
         };
 
         recognition.onend = () => {
           listening = false;
-          setStatus("hotovo (můžeš znovu spustit).");
           listenBtn.textContent = "Spustit hlas";
+          setStatus("hotovo (můžeš znovu spustit).");
           log("<< end");
         };
 
         recognition.onresult = (event) => {
-          let interim = "";
+          // Skládáme si finální text jen z povolených slov.
+          let interimText = "";
           let finalText = "";
 
           for (let i = event.resultIndex; i < event.results.length; i++) {
             const res = event.results[i];
-            const transcript = res[0].transcript;
-            if (res.isFinal) finalText += transcript;
-            else interim += transcript;
+            const transcript = res[0].transcript || "";
+            if (res.isFinal) finalText += transcript + " ";
+            else interimText += transcript + " ";
           }
 
-          if (interim) inputEl.value = interim;
-          if (finalText) inputEl.value = finalText.trim();
+          // Z filtrujeme jen povolené tokeny; cokoliv jiného ignorujeme.
+          const interimAllowed = interimText ? extractAllowedWords(interimText) : [];
+          const finalAllowed = finalText ? extractAllowedWords(finalText) : [];
+
+          if (interimAllowed.length > 0) {
+            // Může být lepší průběžně ukazovat jen povolená slova,
+            // ale nepřepisovat finál, jen zobrazit interim (tohle je volitelné).
+            inputEl.value = interimAllowed.join(" ");
+          }
+
+          if (finalAllowed.length > 0) {
+            // Přidáme do inputu povolená slova z finální části.
+            // (Tím pádem se postupně skládá tvoje "věta" jen z 1 a 2 slov.)
+            const current = inputEl.value.trim();
+            const add = finalAllowed.join(" ");
+            inputEl.value = current ? (current + " " + add).trim() : add;
+            log("[final allowed] " + finalAllowed.join(" "));
+          }
         };
       }
 
       listenBtn.addEventListener("click", () => {
         if (!recognition) return;
+
         if (!listening) {
-          inputEl.focus();
-          try { recognition.start(); } catch (err) {}
+          try {
+            recognition.start();
+          } catch (err) {
+            // Některé prohlížeče hodí chybu, když start přijde ve špatný okamžik.
+            setStatus("Nelze spustit: " + (err && err.message ? err.message : "chyba"));
+          }
         } else {
           recognition.stop();
         }
@@ -170,13 +224,15 @@
           setStatus("input je prázdný");
           return;
         }
-        const converted = getNumberFromCzechWords(raw);
+        const converted = getNumberFromAllowedWords(raw);
+        // Zobrazíme číslice přímo do inputu
         inputEl.value = converted;
         setStatus("převod hotov");
         log("[converted] " + raw + " => " + converted);
         inputEl.focus();
       });
 
+      setupRecognition();
       setStatus("připraveno");
       log("------------------------------------------------");
     </script>
