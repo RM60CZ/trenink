@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Hlas → jen 1 a 2</title>
+    <title>Hlas → číslo po „tečce“ (0–9)</title>
     <style>
       body {
         font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -47,22 +47,34 @@
         background: #f3f3f3;
         border: 1px solid #d6d6d6;
       }
+
+      .buffer-display {
+        background: #f8f9fa;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-family: monospace;
+        margin-top: 4px;
+        font-size: 14px;
+        color: #495057;
+      }
     </style>
   </head>
   <body>
-    <h1>Hlas → čísla (jen 1 a 2)</h1>
+    <h1>Hlas → číslo (0–9, potvrzeno „tečkou“)</h1>
 
     <div class="row">
-      <input id="textInput" type="text" placeholder="Řekni: jeden/jedna → 1, dva/dvě → 2" />
+      <input id="textInput" type="text" placeholder="Řekni číslice 0–9, zakonči slovem „tečka“" />
       <button id="clearBtn" type="button">Vymazat</button>
       <button id="listenBtn" type="button">Pauza</button>
     </div>
 
     <div class="muted">
-      Pouze slova <b>„jeden“, „jedna“, „dva“, „dvě“</b> se převedou na číslice. Vše ostatní se ignoruje.
+      Povolená slova: <b>nula, jedna/jeden, dva/dvě, tři, čtyři, pět, šest, sedm, osm, devět</b>.  
+      Zakonči větu slovem <b>„tečka“</b> → číslo se vloží a buffer se vymaže.
     </div>
 
     <div class="status" id="status">Stav: připraveno.</div>
+    <div><small>Buffer:</small> <span class="buffer-display" id="bufferDisplay"></span></div>
 
     <h2>Log</h2>
     <textarea id="log" readonly></textarea>
@@ -75,17 +87,45 @@
       const inputEl = document.getElementById("textInput");
       const listenBtn = document.getElementById("listenBtn");
       const clearBtn = document.getElementById("clearBtn");
+      const bufferDisplay = document.getElementById("bufferDisplay");
 
       let recognition = null;
       let isListening = false;
+      let currentBuffer = "";
 
-      // Povolená slova → číslice
-      const allowedWords = {
+      // Mapování číslovek na číslice 0–9
+      const wordToDigit = {
+        // 0
+        "nula": "0",
+
+        // 1
         "jeden": "1",
         "jedna": "1",
+
+        // 2
         "dva": "2",
         "dvě": "2",
-        "dve": "2" // pro případ bez diakritiky
+        "dve": "2",
+
+        // 3–9
+        "tři": "3",
+        "tri": "3",       // bez diakritiky
+
+        "čtyři": "4",
+        "ctyri": "4",     // bez diakritiky
+
+        "pět": "5",
+        "pet": "5",
+
+        "šest": "6",
+        "sest": "6",
+
+        "sedm": "7",
+
+        "osm": "8",
+
+        "devět": "9",
+        "devet": "9"
       };
 
       function log(msg) {
@@ -97,11 +137,15 @@
         statusEl.textContent = "Stav: " + msg;
       }
 
+      function updateBufferDisplay() {
+        bufferDisplay.textContent = currentBuffer || "(prázdný)";
+      }
+
       function updateListenButton() {
         if (isListening) {
           listenBtn.classList.add("active");
           listenBtn.textContent = "Spuštěno";
-          setStatus("poslouchám… (mikrofon zapnutý)");
+          setStatus("poslouchám… (řekni číslice 0–9 a zakonči „tečkou“)");
         } else {
           listenBtn.classList.remove("active");
           listenBtn.textContent = "Pauza";
@@ -112,17 +156,30 @@
       function processTranscript(text) {
         const words = text
           .toLowerCase()
-          .replace(/[.,!?;:"]/g, " ")
+          .replace(/[.,!?;:"']/g, " ")
           .split(/\s+/)
           .filter(w => w);
 
-        let result = "";
         for (const word of words) {
-          if (allowedWords.hasOwnProperty(word)) {
-            result += allowedWords[word];
+          if (word === "tečka" || word === "tecka") {
+            if (currentBuffer) {
+              inputEl.value += currentBuffer;
+              log("[vloženo číslo] " + currentBuffer);
+              currentBuffer = "";
+              updateBufferDisplay();
+            } else {
+              log("[tečka] buffer byl prázdný");
+            }
+            return; // konec zpracování této věty
           }
+
+          if (wordToDigit.hasOwnProperty(word)) {
+            currentBuffer += wordToDigit[word];
+            updateBufferDisplay();
+            log("[do bufferu] " + word + " → " + wordToDigit[word]);
+          }
+          // Ostatní slova ignorujeme
         }
-        return result;
       }
 
       function setupRecognition() {
@@ -134,8 +191,8 @@
 
         recognition = new SpeechRecognition();
         recognition.lang = "cs-CZ";
-        recognition.continuous = true;     // běží pořád
-        recognition.interimResults = false; // NEUKAZUJEME interim → žádný text mezitím!
+        recognition.continuous = true;
+        recognition.interimResults = false;
 
         recognition.onstart = () => {
           isListening = true;
@@ -145,37 +202,29 @@
 
         recognition.onerror = (event) => {
           log("!! chyba: " + event.error);
-          if (event.error === "no-speech" || event.error === "audio-capture") {
-            // Pokud nic nerozpoznal, nevypínáme – necháme běžet
-          }
         };
 
         recognition.onend = () => {
-          // Automaticky restartujeme, pokud jsme stále chtěli poslouchat
           if (isListening) {
-            try {
-              recognition.start();
-            } catch (e) {
-              log("!! restart failed: " + e.message);
-              isListening = false;
-              updateListenButton();
-            }
+            setTimeout(() => {
+              try {
+                recognition.start();
+              } catch (e) {
+                log("!! nelze restartovat: " + e.message);
+                isListening = false;
+                updateListenButton();
+              }
+            }, 300);
           } else {
             updateListenButton();
           }
-          log("<< mikrofon vypnut nebo restart");
+          log("<< mikrofon ukončen nebo restart");
         };
 
         recognition.onresult = (event) => {
           const transcript = event.results[event.resultIndex][0].transcript.trim();
           log("[rozpoznáno] " + transcript);
-
-          const digits = processTranscript(transcript);
-          if (digits) {
-            inputEl.value += digits;
-            log("[vloženo] " + digits);
-          }
-          // Pokud žádné povolené slovo → nic se nevloží
+          processTranscript(transcript);
         };
       }
 
@@ -199,11 +248,14 @@
 
       clearBtn.addEventListener("click", () => {
         inputEl.value = "";
+        currentBuffer = "";
+        updateBufferDisplay();
         log("[vymazáno]");
       });
 
       setupRecognition();
       updateListenButton();
+      updateBufferDisplay();
       log("------------------------------------------------");
     </script>
   </body>
