@@ -60,8 +60,10 @@
 
     <div class="muted">
       Funguje i s mluvenou výslovností:  
-      <b>„sedum“</b> → 7, <b>„šest“ / „šes“</b> → 6, <b>„pět“ / „pět“</b> → 5, atd.  
-      Nebo přímo <b>„7“</b>, <b>„123“</b>.
+      <b>„sedum“</b> → 7, <b>„šest“ / „šes“</b> → 6, <b>„pět“</b> → 5, atd.  
+      Nebo přímo <b>„7“</b>, <b>„123“</b>.<br>
+      Řekni <b>„nula“</b> → automaticky vloží <code>0,</code>.<br>
+      Řekni <b>„pět celá“</b> → vloží <code>5,</code>.
     </div>
 
     <div class="status" id="status">Stav: připraveno.</div>
@@ -94,7 +96,7 @@
         if (isListening) {
           listenBtn.classList.add("active");
           listenBtn.textContent = "Spuštěno";
-          setStatus("poslouchám… (řekni číslo 0–999)");
+          setStatus("poslouchám… (řekni číslo 0–999 nebo 'celá')");
         } else {
           listenBtn.classList.remove("active");
           listenBtn.textContent = "Pauza";
@@ -118,30 +120,21 @@
         const words = lower.split(/\s+/).filter(w => w && w !== "a");
 
         // Speciální: "nula"
-        if (words.length === 1 && (words[0] === "nula" || words[0] === "nůla" || words[0] === "nula")) {
+        if (words.length === 1 && ["nula", "nůla"].includes(words[0])) {
           return 0;
         }
 
-        // Rozšířený slovník s mluvenými formami
+        // Slovníky
         const jednotky = {
-          // 1
-          "jedna": 1, "jeden": 1, "jedna": 1,
-          // 2
+          "jedna": 1, "jeden": 1,
           "dva": 2, "dvě": 2, "dve": 2,
-          // 3
           "tři": 3, "tri": 3,
-          // 4
           "čtyři": 4, "ctyri": 4, "čtyř": 4, "ctyr": 4,
-          // 5
           "pět": 5, "pet": 5,
-          // 6
           "šest": 6, "sest": 6, "šes": 6, "ses": 6,
-          // 7 ← HLAVNÍ ÚPRAVA
-          "sedm": 7, "sedum": 7, "sedm": 7, "sedum": 7,
-          // 8
+          "sedm": 7, "sedum": 7,
           "osm": 8,
-          // 9
-          "devět": 9, "devet": 9, "devět": 9, "devet": 9
+          "devět": 9, "devet": 9
         };
 
         const teens = {
@@ -159,10 +152,10 @@
 
         const desitky = {
           "dvacet": 20, "dvacit": 20,
-          "třicet": 30, "tricet": 30, "třicet": 30,
-          "čtyřicet": 40, "ctyricet": 40, "čtyřicet": 40,
+          "třicet": 30, "tricet": 30,
+          "čtyřicet": 40, "ctyricet": 40,
           "padesát": 50, "padesat": 50,
-          "šedesát": 60, "sedesat": 60, "šedesát": 60,
+          "šedesát": 60, "sedesat": 60,
           "sedmdesát": 70, "sedmdesat": 70, "sedumdesát": 70, "sedumdesat": 70,
           "osmdesát": 80, "osmdesat": 80,
           "devadesát": 90, "devadesat": 90
@@ -212,6 +205,12 @@
         return (total >= 0 && total <= 999) ? total : null;
       }
 
+      // Funkce pro kontrolu, zda bylo řečeno "celá" nebo "celých"
+      function containsDecimalKeyword(text) {
+        const lower = text.toLowerCase();
+        return /\b(cel[áa]|celých|celych)\b/.test(lower);
+      }
+
       function setupRecognition() {
         if (!SpeechRecognition) {
           setStatus("SpeechRecognition není podporován (zkus Chrome/Edge).");
@@ -253,11 +252,45 @@
           const transcript = event.results[event.resultIndex][0].transcript.trim();
           log("[rozpoznáno] " + transcript);
 
-          const number = extractNumber(transcript);
+          // Nejprve zkontrolujeme, zda obsahuje "celá/celých"
+          const hasDecimalKeyword = containsDecimalKeyword(transcript);
+
+          // Extrahujeme číslo (ignorujeme "celá" při extrakci)
+          const cleanTranscript = transcript.replace(/\b(cel[áa]|celých|celych)\b/gi, "").trim();
+          const number = extractNumber(cleanTranscript);
+
+          const currentValue = inputEl.value;
+
           if (number !== null) {
-            inputEl.value += number.toString();
-            log("[vloženo] " + number);
-          } else {
+            // Bylo rozpoznáno platné číslo
+            if (number === 0 && currentValue === "") {
+              // První číslo je nula → automaticky vložíme "0,"
+              inputEl.value = "0,";
+              log("[vloženo] 0,");
+            } else {
+              // Jiné číslo – vložíme jako text
+              inputEl.value += number.toString();
+              log("[vloženo] " + number);
+            }
+          }
+
+          // Nyní řešíme "celá/celých"
+          if (hasDecimalKeyword) {
+            const current = inputEl.value;
+            // Pokud už končí čárkou, ignorujeme
+            if (current.endsWith(",")) {
+              log("[ignorováno] 'celá' – čárka už je přítomna");
+            } else if (current === "" || /^\d+$/.test(current)) {
+              // Pokud je aktuální hodnota prázdná nebo jen celé číslo, přidáme čárku
+              inputEl.value += ",";
+              log("[vložena desetinná čárka]");
+            } else {
+              log("[ignorováno] 'celá' – nelze přidat čárku do tohoto kontextu");
+            }
+          }
+
+          // Pokud nebylo ani číslo, ani klíčové slovo
+          if (number === null && !hasDecimalKeyword) {
             log("[ignorováno] – mimo 0–999 nebo neznámý tvar");
           }
         };
@@ -289,4 +322,3 @@
     </script>
   </body>
 </html>
-
