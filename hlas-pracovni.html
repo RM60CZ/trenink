@@ -1,1 +1,292 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hlas → čísla 0–999 (slova i číslice + mluvená čeština)</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        padding: 20px;
+        max-width: 900px;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      input[type="text"] {
+        flex: 1;
+        min-width: 320px;
+        padding: 10px 12px;
+        font-size: 16px;
+      }
+      button {
+        padding: 10px 14px;
+        font-size: 15px;
+        cursor: pointer;
+      }
+      .status { margin-top: 10px; font-size: 14px; }
+      textarea {
+        width: 100%;
+        min-height: 110px;
+        padding: 10px 12px;
+        font-size: 14px;
+      }
+      .muted { color: #666; font-size: 14px; margin-top: 8px; }
+
+      #listenBtn.active {
+        color: #fff;
+        background: #e53935;
+        border: 1px solid #c62828;
+      }
+      #listenBtn:not(.active) {
+        color: #111;
+        background: #f3f3f3;
+        border: 1px solid #d6d6d6;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Hlas → čísla 0–999</h1>
+
+    <div class="row">
+      <input id="textInput" type="text" placeholder="Řekni číslo (i mluvenou češtinou)" />
+      <button id="clearBtn" type="button">Vymazat</button>
+      <button id="listenBtn" type="button">Pauza</button>
+    </div>
+
+    <div class="muted">
+      Funguje i s mluvenou výslovností:  
+      <b>„sedum“</b> → 7, <b>„šest“ / „šes“</b> → 6, <b>„pět“ / „pět“</b> → 5, atd.  
+      Nebo přímo <b>„7“</b>, <b>„123“</b>.
+    </div>
+
+    <div class="status" id="status">Stav: připraveno.</div>
+
+    <h2>Log</h2>
+    <textarea id="log" readonly></textarea>
+
+    <script>
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      const statusEl = document.getElementById("status");
+      const logEl = document.getElementById("log");
+      const inputEl = document.getElementById("textInput");
+      const listenBtn = document.getElementById("listenBtn");
+      const clearBtn = document.getElementById("clearBtn");
+
+      let recognition = null;
+      let isListening = false;
+
+      function log(msg) {
+        logEl.value += msg + "\n";
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      function setStatus(msg) {
+        statusEl.textContent = "Stav: " + msg;
+      }
+
+      function updateListenButton() {
+        if (isListening) {
+          listenBtn.classList.add("active");
+          listenBtn.textContent = "Spuštěno";
+          setStatus("poslouchám… (řekni číslo 0–999)");
+        } else {
+          listenBtn.classList.remove("active");
+          listenBtn.textContent = "Pauza";
+          setStatus("pauza (mikrofon vypnutý)");
+        }
+      }
+
+      function extractNumber(text) {
+        if (!text) return null;
+
+        // 1. Pokus: je to už číslo?
+        const asDigit = text.trim();
+        if (/^\d+$/.test(asDigit)) {
+          const num = parseInt(asDigit, 10);
+          if (num >= 0 && num <= 999) return num;
+          return null;
+        }
+
+        // 2. Normalizace textu
+        const lower = text.toLowerCase().replace(/[.,!?;:"']/g, " ");
+        const words = lower.split(/\s+/).filter(w => w && w !== "a");
+
+        // Speciální: "nula"
+        if (words.length === 1 && (words[0] === "nula" || words[0] === "nůla" || words[0] === "nula")) {
+          return 0;
+        }
+
+        // Rozšířený slovník s mluvenými formami
+        const jednotky = {
+          // 1
+          "jedna": 1, "jeden": 1, "jedna": 1,
+          // 2
+          "dva": 2, "dvě": 2, "dve": 2,
+          // 3
+          "tři": 3, "tri": 3,
+          // 4
+          "čtyři": 4, "ctyri": 4, "čtyř": 4, "ctyr": 4,
+          // 5
+          "pět": 5, "pet": 5,
+          // 6
+          "šest": 6, "sest": 6, "šes": 6, "ses": 6,
+          // 7 ← HLAVNÍ ÚPRAVA
+          "sedm": 7, "sedum": 7, "sedm": 7, "sedum": 7,
+          // 8
+          "osm": 8,
+          // 9
+          "devět": 9, "devet": 9, "devět": 9, "devet": 9
+        };
+
+        const teens = {
+          "deset": 10,
+          "jedenáct": 11, "jedenact": 11,
+          "dvanáct": 12, "dvanact": 12,
+          "třináct": 13, "trinact": 13,
+          "čtrnáct": 14, "ctrnact": 14,
+          "patnáct": 15, "patnact": 15,
+          "šestnáct": 16, "sestnact": 16,
+          "sedmnáct": 17, "sedmnact": 17, "sedumnáct": 17, "sedumnact": 17,
+          "osmnáct": 18, "osmnact": 18,
+          "devatenáct": 19, "devatenact": 19
+        };
+
+        const desitky = {
+          "dvacet": 20, "dvacit": 20,
+          "třicet": 30, "tricet": 30, "třicet": 30,
+          "čtyřicet": 40, "ctyricet": 40, "čtyřicet": 40,
+          "padesát": 50, "padesat": 50,
+          "šedesát": 60, "sedesat": 60, "šedesát": 60,
+          "sedmdesát": 70, "sedmdesat": 70, "sedumdesát": 70, "sedumdesat": 70,
+          "osmdesát": 80, "osmdesat": 80,
+          "devadesát": 90, "devadesat": 90
+        };
+
+        const stovky = {
+          "sto": 100,
+          "dvě stě": 200, "dve ste": 200, "dvěste": 200, "dveste": 200,
+          "tři sta": 300, "tri sta": 300, "trista": 300,
+          "čtyři sta": 400, "ctyri sta": 400, "ctyrista": 400,
+          "pět set": 500, "pet set": 500, "petset": 500,
+          "šest set": 600, "sest set": 600, "sestset": 600,
+          "sedm set": 700, "sedmset": 700, "sedum set": 700, "sedumset": 700,
+          "osm set": 800, "osmset": 800,
+          "devět set": 900, "devet set": 900, "devetset": 900
+        };
+
+        let total = 0;
+        let remaining = words.join(" ");
+
+        // Stovky
+        for (const [phrase, val] of Object.entries(stovky)) {
+          if (remaining.includes(phrase)) {
+            total += val;
+            remaining = remaining.replace(phrase, "").replace(/\s+/g, " ").trim();
+            break;
+          }
+        }
+
+        const restWords = remaining.split(/\s+/).filter(w => w);
+        let restValue = 0;
+
+        if (restWords.length === 1) {
+          const w = restWords[0];
+          if (teens.hasOwnProperty(w)) restValue = teens[w];
+          else if (desitky.hasOwnProperty(w)) restValue = desitky[w];
+          else if (jednotky.hasOwnProperty(w)) restValue = jednotky[w];
+        } else if (restWords.length === 2) {
+          const d = desitky[restWords[0]] || 0;
+          const j = jednotky[restWords[1]] || 0;
+          if (d >= 20 && d <= 90 && j >= 1 && j <= 9) {
+            restValue = d + j;
+          }
+        }
+
+        total += restValue;
+        return (total >= 0 && total <= 999) ? total : null;
+      }
+
+      function setupRecognition() {
+        if (!SpeechRecognition) {
+          setStatus("SpeechRecognition není podporován (zkus Chrome/Edge).");
+          listenBtn.disabled = true;
+          return;
+        }
+
+        recognition = new SpeechRecognition();
+        recognition.lang = "cs-CZ";
+        recognition.continuous = true;
+        recognition.interimResults = false;
+
+        recognition.onstart = () => {
+          isListening = true;
+          updateListenButton();
+          log(">> mikrofon zapnut");
+        };
+
+        recognition.onerror = (event) => {
+          log("!! chyba: " + event.error);
+        };
+
+        recognition.onend = () => {
+          if (isListening) {
+            setTimeout(() => {
+              try { recognition.start(); } catch (e) {
+                log("!! nelze restartovat: " + e.message);
+                isListening = false;
+                updateListenButton();
+              }
+            }, 300);
+          } else {
+            updateListenButton();
+          }
+          log("<< mikrofon ukončen nebo restart");
+        };
+
+        recognition.onresult = (event) => {
+          const transcript = event.results[event.resultIndex][0].transcript.trim();
+          log("[rozpoznáno] " + transcript);
+
+          const number = extractNumber(transcript);
+          if (number !== null) {
+            inputEl.value += number.toString();
+            log("[vloženo] " + number);
+          } else {
+            log("[ignorováno] – mimo 0–999 nebo neznámý tvar");
+          }
+        };
+      }
+
+      listenBtn.addEventListener("click", () => {
+        if (!recognition) return;
+        if (isListening) {
+          isListening = false;
+          recognition.stop();
+        } else {
+          isListening = true;
+          try { recognition.start(); } catch (e) {
+            log("!! nelze spustit: " + e.message);
+            isListening = false;
+            updateListenButton();
+          }
+        }
+      });
+
+      clearBtn.addEventListener("click", () => {
+        inputEl.value = "";
+        log("[vymazáno]");
+      });
+
+      setupRecognition();
+      updateListenButton();
+      log("------------------------------------------------");
+    </script>
+  </body>
+</html>
 
