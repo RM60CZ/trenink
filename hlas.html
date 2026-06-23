@@ -3,11 +3,21 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Hlas → čísla (jednoduchý demo)</title>
+    <title>Hlas → čísla (jen 1 a 2)</title>
     <style>
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 20px; max-width: 900px; }
-      .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
-      input[type="text"]{
+      body {
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        padding: 20px;
+        max-width: 900px;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      input[type="text"] {
         flex: 1;
         min-width: 320px;
         padding: 10px 12px;
@@ -19,23 +29,27 @@
         cursor: pointer;
       }
       .muted { color: #666; font-size: 14px; margin-top: 8px; }
-      textarea { width: 100%; min-height: 110px; padding: 10px 12px; font-size: 14px; }
+      textarea {
+        width: 100%;
+        min-height: 110px;
+        padding: 10px 12px;
+        font-size: 14px;
+      }
       .status { margin-top: 10px; font-size: 14px; }
-      code { background: #f6f6f6; padding: 2px 6px; border-radius: 6px; }
     </style>
   </head>
   <body>
-    <h1>Hlas → přepis do inputu</h1>
+    <h1>Hlas → přepis do inputu + převod slov (jen 1 a 2)</h1>
 
     <div class="row">
-      <input id="textInput" type="text" placeholder="Diktuj čísla česky… (např. nula jedna dvě tečka pět)"/>
+      <input id="textInput" type="text" placeholder="Diktuj: jeden/dvě (a volitelně tečka/čárka)…" />
       <button id="clearBtn" type="button">Vymazat</button>
       <button id="listenBtn" type="button">Spustit hlas</button>
       <button id="numbersBtn" type="button">Zobrazit jako čísla</button>
     </div>
 
     <div class="muted">
-      Funkční přes <b>Web Speech API</b> (typicky Chrome/Edge). V některých prohlížečích to nemusí fungovat.
+      Funguje přes <b>Web Speech API</b> (typicky Chrome/Edge).
     </div>
 
     <div class="status" id="status">Stav: připraveno.</div>
@@ -44,15 +58,15 @@
     <textarea id="log" readonly></textarea>
 
     <script>
-      // --- Web Speech API (SpeechRecognition) ---
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const statusEl = document.getElementById('status');
-      const logEl = document.getElementById('log');
-      const inputEl = document.getElementById('textInput');
 
-      const listenBtn = document.getElementById('listenBtn');
-      const clearBtn = document.getElementById('clearBtn');
-      const numbersBtn = document.getElementById('numbersBtn');
+      const statusEl = document.getElementById("status");
+      const logEl = document.getElementById("log");
+      const inputEl = document.getElementById("textInput");
+
+      const listenBtn = document.getElementById("listenBtn");
+      const clearBtn = document.getElementById("clearBtn");
+      const numbersBtn = document.getElementById("numbersBtn");
 
       let recognition = null;
       let listening = false;
@@ -66,58 +80,49 @@
         statusEl.textContent = "Stav: " + msg;
       }
 
+      // Převod: jen 1 a 2 (jeden/jedna, dva/dvě)
       function getNumberFromCzechWords(text) {
-        // Minimalistický převod (jen demo):
-        // - mapuje základní číslice (nula-jeden-dva-tři-...-devět)
-        // - mapuje "tečka"->'.' a "čárka"->'.'
-        // Později to můžeme rozšířit dle tvých pravidel.
         const map = {
-          "nula": "0",
-          "jedna": "1",
           "jeden": "1",
+          "jedna": "1",
+
           "dva": "2",
           "dvě": "2",
-          "tři": "3",
-          "čtyři": "4",
-          "pět": "5",
-          "šest": "6",
-          "sedm": "7",
-          "sedmý": "7",
-          "osm": "8",
-          "devět": "9",
-
-          "tečka": ".",
-          "tecku": ".",
-          "čárka": ".",
-          "carka": ".",
-          "desetinná": "."
+          "dve": "2", // někdy rozpoznávač vyplivne bez diakritiky
         };
 
-        // normalizace: mezery, diakritika necháme (většinou stačí)
+        // Volitelné desetinné znaky (pokud nechceš, smaž i tyto 2 řádky + mapování)
+        // map["tečka"] = ".";
+        // map["tecku"] = ".";
+        // map["čárka"] = ",";
+        // map["carka"] = ",";
+
         const tokens = text
           .toLowerCase()
           .replace(/[.,!?]/g, " ")
-          .split(/\s+/)
+          .replace(/\s+/g, " ")
+          .trim()
+          .split(" ")
           .filter(Boolean);
 
         let out = "";
         for (const t of tokens) {
-          if (map[t] != null) out += map[t];
-          else {
-            // ignoruj neznámé tokeny
-            // (alternativně bychom mohli logovat)
-          }
+          const v = map[t];
+          if (v != null) out += v;
         }
         return out;
       }
 
-      if (!SpeechRecognition) {
-        setStatus("Tento prohlížeč nepodporuje SpeechRecognition (zkus Chrome/Edge).");
-      } else {
+      function setupRecognition() {
+        if (!SpeechRecognition) {
+          setStatus("Tento prohlížeč nepodporuje SpeechRecognition (zkus Chrome/Edge).");
+          return;
+        }
+
         recognition = new SpeechRecognition();
         recognition.lang = "cs-CZ";
-        recognition.interimResults = true; // ukazuje průběžný text
-        recognition.continuous = false;  // typicky "jedno spuštění" = jedno převyprávění
+        recognition.interimResults = true;
+        recognition.continuous = false;
 
         recognition.onstart = () => {
           listening = true;
@@ -127,10 +132,10 @@
         };
 
         recognition.onerror = (e) => {
-          setStatus("chyba: " + (e.error || "neznámá"));
-          log("!! error: " + (e.error || ""));
           listening = false;
+          setStatus("chyba: " + (e.error || "neznámá"));
           listenBtn.textContent = "Spustit hlas";
+          log("!! error: " + (e.error || ""));
         };
 
         recognition.onend = () => {
@@ -151,7 +156,6 @@
             else interim += transcript;
           }
 
-          // Zobrazíme průběžně do inputu, ale finální dodáme “na jistotu”
           if (interim) {
             inputEl.value = interim;
             log("[interim] " + interim);
@@ -163,41 +167,39 @@
         };
       }
 
-      listenBtn.addEventListener('click', () => {
+      listenBtn.addEventListener("click", () => {
         if (!recognition) return;
         if (!listening) {
-          try {
-            inputEl.focus();
-            recognition.start();
-          } catch (err) {
-            // Některé prohlížeče vyhodí chybu když se start volá dvakrát
-            setStatus("Nelze spustit znovu: " + err.message);
-          }
+          inputEl.focus();
+          try { recognition.start(); } catch (err) {}
         } else {
           recognition.stop();
         }
       });
 
-      clearBtn.addEventListener('click', () => {
+      clearBtn.addEventListener("click", () => {
         inputEl.value = "";
         log("[clear]");
         setStatus("vymazáno");
         inputEl.focus();
       });
 
-      numbersBtn.addEventListener('click', () => {
+      numbersBtn.addEventListener("click", () => {
         const raw = inputEl.value.trim();
         if (!raw) {
           setStatus("input je prázdný");
           return;
         }
         const converted = getNumberFromCzechWords(raw);
-        // zobrazíme výsledek přímo do inputu (jednoduše)
         inputEl.value = converted;
         log("[converted] " + raw + " => " + converted);
         setStatus("převod hotov");
         inputEl.focus();
       });
+
+      setupRecognition();
+      setStatus("připraveno");
+      log("------------------------------------------------");
     </script>
   </body>
 </html>
