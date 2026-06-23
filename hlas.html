@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Hlas → číslo po „tečce“ (0–9)</title>
+    <title>Hlas → čísla 0–999</title>
     <style>
       body {
         font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -47,34 +47,23 @@
         background: #f3f3f3;
         border: 1px solid #d6d6d6;
       }
-
-      .buffer-display {
-        background: #f8f9fa;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-family: monospace;
-        margin-top: 4px;
-        font-size: 14px;
-        color: #495057;
-      }
     </style>
   </head>
   <body>
-    <h1>Hlas → číslo (0–9, potvrzeno „tečkou“)</h1>
+    <h1>Hlas → čísla 0–999</h1>
 
     <div class="row">
-      <input id="textInput" type="text" placeholder="Řekni číslice 0–9, zakonči slovem „tečka“" />
+      <input id="textInput" type="text" placeholder="Řekni číslo mezi 0 a 999" />
       <button id="clearBtn" type="button">Vymazat</button>
       <button id="listenBtn" type="button">Pauza</button>
     </div>
 
     <div class="muted">
-      Povolená slova: <b>nula, jedna/jeden, dva/dvě, tři, čtyři, pět, šest, sedm, osm, devět</b>.  
-      Zakonči větu slovem <b>„tečka“</b> → číslo se vloží a buffer se vymaže.
+      Příklady: <b>„nula“</b>, <b>„sedmnáct“</b>, <b>„sto dvacet tři“</b>, <b>„devět set devadesát devět“</b>.  
+      Čísla mimo 0–999 se ignorují.
     </div>
 
     <div class="status" id="status">Stav: připraveno.</div>
-    <div><small>Buffer:</small> <span class="buffer-display" id="bufferDisplay"></span></div>
 
     <h2>Log</h2>
     <textarea id="log" readonly></textarea>
@@ -87,46 +76,9 @@
       const inputEl = document.getElementById("textInput");
       const listenBtn = document.getElementById("listenBtn");
       const clearBtn = document.getElementById("clearBtn");
-      const bufferDisplay = document.getElementById("bufferDisplay");
 
       let recognition = null;
       let isListening = false;
-      let currentBuffer = "";
-
-      // Mapování číslovek na číslice 0–9
-      const wordToDigit = {
-        // 0
-        "nula": "0",
-
-        // 1
-        "jeden": "1",
-        "jedna": "1",
-
-        // 2
-        "dva": "2",
-        "dvě": "2",
-        "dve": "2",
-
-        // 3–9
-        "tři": "3",
-        "tri": "3",       // bez diakritiky
-
-        "čtyři": "4",
-        "ctyri": "4",     // bez diakritiky
-
-        "pět": "5",
-        "pet": "5",
-
-        "šest": "6",
-        "sest": "6",
-
-        "sedm": "7",
-
-        "osm": "8",
-
-        "devět": "9",
-        "devet": "9"
-      };
 
       function log(msg) {
         logEl.value += msg + "\n";
@@ -137,15 +89,11 @@
         statusEl.textContent = "Stav: " + msg;
       }
 
-      function updateBufferDisplay() {
-        bufferDisplay.textContent = currentBuffer || "(prázdný)";
-      }
-
       function updateListenButton() {
         if (isListening) {
           listenBtn.classList.add("active");
           listenBtn.textContent = "Spuštěno";
-          setStatus("poslouchám… (řekni číslice 0–9 a zakonči „tečkou“)");
+          setStatus("poslouchám… (řekni číslo 0–999)");
         } else {
           listenBtn.classList.remove("active");
           listenBtn.textContent = "Pauza";
@@ -153,35 +101,132 @@
         }
       }
 
-      function processTranscript(text) {
-        const words = text
-          .toLowerCase()
-          .replace(/[.,!?;:"']/g, " ")
-          .split(/\s+/)
-          .filter(w => w);
+      // ========== PŘEVOD ČESKÉHO TEXTU NA ČÍSLO (0–999) ==========
+      function parseCzechNumber(text) {
+        if (!text) return null;
 
-        for (const word of words) {
-          if (word === "tečka" || word === "tecka") {
-            if (currentBuffer) {
-              inputEl.value += currentBuffer;
-              log("[vloženo číslo] " + currentBuffer);
-              currentBuffer = "";
-              updateBufferDisplay();
-            } else {
-              log("[tečka] buffer byl prázdný");
-            }
-            return; // konec zpracování této věty
-          }
+        // Normalizace: malá písmena, odstranění interpunkce
+        let s = text.toLowerCase().replace(/[.,!?;:"']/g, " ").trim();
+        // Rozdělení na slova (ignorujeme "a", které se někdy vyskytuje: "sto a dvacet")
+        const words = s.split(/\s+/).filter(w => w && w !== "a");
 
-          if (wordToDigit.hasOwnProperty(word)) {
-            currentBuffer += wordToDigit[word];
-            updateBufferDisplay();
-            log("[do bufferu] " + word + " → " + wordToDigit[word]);
-          }
-          // Ostatní slova ignorujeme
+        if (words.length === 0) return null;
+
+        // Speciální případ: "nula"
+        if (words.length === 1 && words[0] === "nula") {
+          return 0;
         }
+
+        // Slovníky
+        const jednotky = {
+          "jedna": 1, "jeden": 1,
+          "dva": 2, "dvě": 2,
+          "tři": 3, "tri": 3,
+          "čtyři": 4, "ctyri": 4,
+          "pět": 5, "pet": 5,
+          "šest": 6, "sest": 6,
+          "sedm": 7,
+          "osm": 8,
+          "devět": 9, "devet": 9
+        };
+
+        const desitky = {
+          "deset": 10,
+          "jedenáct": 11, "jedenact": 11,
+          "dvanáct": 12, "dvanact": 12,
+          "třináct": 13, "trinact": 13,
+          "čtrnáct": 14, "ctrnact": 14,
+          "patnáct": 15, "patnact": 15,
+          "šestnáct": 16, "sestnact": 16,
+          "sedmnáct": 17, "sedmnact": 17,
+          "osmnáct": 18, "osmnact": 18,
+          "devatenáct": 19, "devatenact": 19,
+          "dvacet": 20,
+          "třicet": 30, "tricet": 30,
+          "čtyřicet": 40, "ctyricet": 40,
+          "padesát": 50, "padesat": 50,
+          "šedesát": 60, "sedesat": 60,
+          "sedmdesát": 70, "sedmdesat": 70,
+          "osmdesát": 80, "osmdesat": 80,
+          "devadesát": 90, "devadesat": 90
+        };
+
+        const stovky = {
+          "sto": 100,
+          "dvě stě": 200, "dve ste": 200, "dvěste": 200, "dveste": 200,
+          "tři sta": 300, "tri sta": 300, "trista": 300,
+          "čtyři sta": 400, "ctyri sta": 400, "ctyrista": 400,
+          "pět set": 500, "pet set": 500, "petset": 500,
+          "šest set": 600, "sest set": 600, "sestset": 600,
+          "sedm set": 700, "sedmset": 700,
+          "osm set": 800, "osmset": 800,
+          "devět set": 900, "devet set": 900, "devetset": 900
+        };
+
+        // Pomocné: spojit sousední slova pro detekci stovek
+        const fullText = words.join(" ");
+
+        let total = 0;
+
+        // 1. Zkontroluj celé číslo jako speciální tvar (např. "sto dvacet pět")
+        // Nejprve zkusíme najít stovky
+        let remaining = fullText;
+        for (const [phrase, value] of Object.entries(stovky)) {
+          if (fullText.includes(phrase)) {
+            total += value;
+            remaining = remaining.replace(phrase, "").replace(/\s+/g, " ").trim();
+            break; // jen jedny stovky
+          }
+        }
+
+        // Zbytek rozdělíme na slova
+        const restWords = remaining.split(/\s+/).filter(w => w);
+
+        // 2. Pokud už máme stovky, zpracujeme zbytek jako desítky + jednotky
+        if (total >= 100) {
+          // Zbytek by měl být < 100
+          let restValue = 0;
+          // Nejprve hledáme složená čísla 10–19
+          if (restWords.length === 1) {
+            const w = restWords[0];
+            if (desitky.hasOwnProperty(w)) {
+              restValue = desitky[w];
+            } else if (jednotky.hasOwnProperty(w)) {
+              restValue = jednotky[w];
+            }
+          } else if (restWords.length === 2) {
+            // např. "dvacet pět"
+            const d = desitky[restWords[0]] || 0;
+            const j = jednotky[restWords[1]] || 0;
+            if (d >= 20 && d <= 90 && j >= 1 && j <= 9) {
+              restValue = d + j;
+            }
+          }
+          total += restValue;
+        } else {
+          // Nemáme stovky – zpracujeme jako číslo 0–99
+          if (words.length === 1) {
+            const w = words[0];
+            if (w === "nula") total = 0;
+            else if (desitky.hasOwnProperty(w)) total = desitky[w];
+            else if (jednotky.hasOwnProperty(w)) total = jednotky[w];
+          } else if (words.length === 2) {
+            const d = desitky[words[0]] || 0;
+            const j = jednotky[words[1]] || 0;
+            if (d >= 20 && d <= 90 && j >= 1 && j <= 9) {
+              total = d + j;
+            }
+          }
+        }
+
+        // Validace rozsahu
+        if (total >= 0 && total <= 999 && Number.isInteger(total)) {
+          return total;
+        }
+        return null;
       }
 
+      // ========== HLAVNÍ LOGIKA ROZPOZNÁVÁNÍ ==========
       function setupRecognition() {
         if (!SpeechRecognition) {
           setStatus("SpeechRecognition není podporován (zkus Chrome/Edge).");
@@ -224,7 +269,14 @@
         recognition.onresult = (event) => {
           const transcript = event.results[event.resultIndex][0].transcript.trim();
           log("[rozpoznáno] " + transcript);
-          processTranscript(transcript);
+
+          const number = parseCzechNumber(transcript);
+          if (number !== null) {
+            inputEl.value += number.toString();
+            log("[vloženo] " + number);
+          } else {
+            log("[ignorováno] – mimo rozsah nebo neznámý tvar");
+          }
         };
       }
 
@@ -248,14 +300,11 @@
 
       clearBtn.addEventListener("click", () => {
         inputEl.value = "";
-        currentBuffer = "";
-        updateBufferDisplay();
         log("[vymazáno]");
       });
 
       setupRecognition();
       updateListenButton();
-      updateBufferDisplay();
       log("------------------------------------------------");
     </script>
   </body>
