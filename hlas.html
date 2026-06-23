@@ -51,21 +51,21 @@
     </style>
   </head>
   <body>
-    <h1>Hlas → jen čísla 1 a 2</h1>
+    <h1>Hlas → čísla (jen 1 a 2)</h1>
 
     <div class="row">
-      <input id="textInput" type="text" placeholder="Sem se budou dávat jen 'jeden/jedna' a 'dva/dvě' → pak až klikem 'Zobrazit jako čísla'." />
+      <input id="textInput" type="text" placeholder="Zde se budou objevovat jen: 1 nebo 2" />
 
       <button id="clearBtn" type="button">Vymazat</button>
 
       <button id="listenBtn" type="button" class="inactive">Pauza</button>
 
-      <button id="numbersBtn" type="button">Zobrazit jako čísla</button>
+      <button id="numbersBtn" type="button" style="display:none;">Zobrazit jako čísla</button>
     </div>
 
     <div class="muted">
-      Důležité: do výstupu se promítnou jen rozpoznaná slova <b>jeden/jedna</b> a <b>dva/dvě</b>.
-      Ostatní ignorujeme (nevloží se vůbec).
+      Do inputu se vkládají <b>jen</b> číslice: <b>1</b> při „jeden/jedna“ a <b>2</b> při „dva/dvě“.
+      Ostatní slova se ignorují.
     </div>
 
     <div class="status" id="status">Stav: připraveno.</div>
@@ -82,18 +82,17 @@
 
       const listenBtn = document.getElementById("listenBtn");
       const clearBtn = document.getElementById("clearBtn");
-      const numbersBtn = document.getElementById("numbersBtn");
 
       let recognition = null;
       let listening = false;
 
-      // Povolená slova -> číslice
-      const allowedToDigit = {
+      // Povolené mapování: jen 1 a 2
+      const wordToDigit = {
         "jeden": "1",
         "jedna": "1",
         "dva": "2",
         "dvě": "2",
-        "dve": "2" // někdy to SR vynechá diakritiku
+        "dve": "2" // případně bez diakritiky
       };
 
       function log(msg) {
@@ -110,18 +109,16 @@
         if (isActive) {
           listenBtn.classList.add("active");
           listenBtn.textContent = "Spuštěno";
-          listenBtn.setAttribute("aria-pressed", "true");
           setStatus("poslouchám… (mikrofon zapnutý)");
         } else {
           listenBtn.classList.remove("active");
           listenBtn.textContent = "Pauza";
-          listenBtn.setAttribute("aria-pressed", "false");
           setStatus("pauza (mikrofon vypnutý)");
         }
       }
 
-      // Vezmi text a vytáhni jen povolená slova (ignoruj všechno ostatní)
-      function extractAllowedTokens(text) {
+      // Z textu vyrobíme jen číslice 1/2 a vše ostatní ignorujeme
+      function extractDigits(text) {
         const tokens = (text || "")
           .toLowerCase()
           .replace(/[.,!?]/g, " ")
@@ -130,30 +127,12 @@
           .split(" ")
           .filter(Boolean);
 
-        const out = [];
+        let digits = "";
         for (const t of tokens) {
-          // přísně jen allowedToDigit klíče
-          if (Object.prototype.hasOwnProperty.call(allowedToDigit, t)) out.push(t);
+          const d = wordToDigit[t];
+          if (d) digits += d;
         }
-        return out;
-      }
-
-      // Z textu vyrob jen číslice 1 a 2 (ignoruje ostatní)
-      function toDigitsOnly(text) {
-        const tokens = (text || "")
-          .toLowerCase()
-          .replace(/[.,!?]/g, " ")
-          .replace(/\s+/g, " ")
-          .trim()
-          .split(" ")
-          .filter(Boolean);
-
-        let out = "";
-        for (const t of tokens) {
-          const d = allowedToDigit[t];
-          if (d) out += d;
-        }
-        return out;
+        return digits;
       }
 
       function setupRecognition() {
@@ -165,8 +144,8 @@
 
         recognition = new SpeechRecognition();
         recognition.lang = "cs-CZ";
-        recognition.interimResults = true; // průběžně
-        recognition.continuous = true;    // dokud ho nevypneš (dle prohlížeče)
+        recognition.interimResults = true; // průběžné výsledky
+        recognition.continuous = true;    // dokud nevypneš
 
         recognition.onstart = () => {
           setListenUIActive(true);
@@ -175,7 +154,6 @@
 
         recognition.onerror = (e) => {
           log("!! error: " + (e.error || "neznámá"));
-          // nechat uživateli možnost znovu zapnout
         };
 
         recognition.onend = () => {
@@ -184,32 +162,27 @@
         };
 
         recognition.onresult = (event) => {
-          // Skládáme text z výsledků, ale do inputu vkládáme jen povolená slova.
-          let interim = "";
-          let finalText = "";
+          // DŮLEŽITÉ:
+          // - chceme vkládat do inputu rovnou číslice
+          // - ignorujeme všechna ostatní slova
+          //
+          // Doporučení:
+          // v průběhu continuous se mohou výsledky objevovat opakovaně.
+          // Tady je jednoduchá varianta: bereme jen finální výsledky.
+          let finalDigits = "";
 
           for (let i = event.resultIndex; i < event.results.length; i++) {
             const res = event.results[i];
             const transcript = (res[0] && res[0].transcript) ? res[0].transcript : "";
-            if (res.isFinal) finalText += transcript + " ";
-            else interim += transcript + " ";
+            if (res.isFinal) {
+              finalDigits += extractDigits(transcript);
+            }
           }
 
-          // Zobrazujeme jen povolené tokeny (přísně žádná jiná slova)
-          const interimAllowed = interim ? extractAllowedTokens(interim) : [];
-          const finalAllowed = finalText ? extractAllowedTokens(finalText) : [];
-
-          // Pro průběžný displej: ukazujeme jen povolená slova, aby se tam nikdy neobjevilo "něco jiného".
-          if (interimAllowed.length > 0 && !finalAllowed.length) {
-            inputEl.value = interimAllowed.join(" ");
-          }
-
-          // Pro finál: přidáme povolená slova do inputu (ostatní ignorujeme úplně).
-          if (finalAllowed.length > 0) {
-            const current = inputEl.value.trim();
-            const add = finalAllowed.join(" ");
-            inputEl.value = current ? (current + " " + add).trim() : add;
-            log("[final allowed] " + finalAllowed.join(" "));
+          if (finalDigits) {
+            // Přidáme číslice do existujícího obsahu (nepřepisujeme slovy)
+            inputEl.value = (inputEl.value + finalDigits);
+            log("[digits] " + finalDigits);
           }
         };
       }
@@ -219,10 +192,8 @@
 
         if (!listening) {
           try {
-            inputEl.focus();
             recognition.start();
           } catch (err) {
-            // Některé prohlížeče vrátí chybu, když start voláš ve špatný čas
             log("!! start error: " + (err && err.message ? err.message : String(err)));
           }
         } else {
@@ -234,19 +205,6 @@
         inputEl.value = "";
         log("[clear]");
         inputEl.focus();
-      });
-
-      numbersBtn.addEventListener("click", () => {
-        const raw = inputEl.value.trim();
-        if (!raw) {
-          setStatus("input je prázdný");
-          return;
-        }
-        const converted = toDigitsOnly(raw);
-        // Přepíšeme input pouze číslicemi (1 a 2), nic jiného
-        inputEl.value = converted;
-        log("[converted] " + raw + " => " + converted);
-        setStatus("převod hotov");
       });
 
       setupRecognition();
