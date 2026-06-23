@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Hlas → čísla 0–999 (slova i číslice)</title>
+    <title>Hlas → čísla 0–999 (slova i číslice + mluvená čeština)</title>
     <style>
       body {
         font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -53,14 +53,15 @@
     <h1>Hlas → čísla 0–999</h1>
 
     <div class="row">
-      <input id="textInput" type="text" placeholder="Řekni číslo (slovem nebo číslicí)" />
+      <input id="textInput" type="text" placeholder="Řekni číslo (i mluvenou češtinou)" />
       <button id="clearBtn" type="button">Vymazat</button>
       <button id="listenBtn" type="button">Pauza</button>
     </div>
 
     <div class="muted">
-      Můžeš říkat: <b>„sedm“</b> nebo jen <b>„7“</b>, <b>„sto dvacet tři“</b> nebo <b>„123“</b>.  
-      Akceptováno: **0–999**.
+      Funguje i s mluvenou výslovností:  
+      <b>„sedum“</b> → 7, <b>„šest“ / „šes“</b> → 6, <b>„pět“ / „pět“</b> → 5, atd.  
+      Nebo přímo <b>„7“</b>, <b>„123“</b>.
     </div>
 
     <div class="status" id="status">Stav: připraveno.</div>
@@ -101,7 +102,6 @@
         }
       }
 
-      // Zkusíme interpretovat vstup jako číslo – buď přímo, nebo přes slovník
       function extractNumber(text) {
         if (!text) return null;
 
@@ -113,18 +113,72 @@
           return null;
         }
 
-        // 2. Pokus: je to slovo? – použijeme jednoduchý slovník pro 0–19 a desítky/stovky
+        // 2. Normalizace textu
         const lower = text.toLowerCase().replace(/[.,!?;:"']/g, " ");
         const words = lower.split(/\s+/).filter(w => w && w !== "a");
 
-        // Speciální případ: "nula"
-        if (words.length === 1 && words[0] === "nula") return 0;
+        // Speciální: "nula"
+        if (words.length === 1 && (words[0] === "nula" || words[0] === "nůla" || words[0] === "nula")) {
+          return 0;
+        }
 
-        // Slovníky
-        const jednotky = { "jedna":1,"jeden":1,"dva":2,"dvě":2,"dve":2,"tři":3,"tri":3,"čtyři":4,"ctyri":4,"pět":5,"pet":5,"šest":6,"sest":6,"sedm":7,"osm":8,"devět":9,"devet":9 };
-        const teens = { "deset":10,"jedenáct":11,"jedenact":11,"dvanáct":12,"dvanact":12,"třináct":13,"trinact":13,"čtrnáct":14,"ctrnact":14,"patnáct":15,"patnact":15,"šestnáct":16,"sestnact":16,"sedmnáct":17,"sedmnact":17,"osmnáct":18,"osmnact":18,"devatenáct":19,"devatenact":19 };
-        const desitky = { "dvacet":20,"třicet":30,"tricet":30,"čtyřicet":40,"ctyricet":40,"padesát":50,"padesat":50,"šedesát":60,"sedesat":60,"sedmdesát":70,"sedmdesat":70,"osmdesát":80,"osmdesat":80,"devadesát":90,"devadesat":90 };
-        const stovky = { "sto":100,"dvě stě":200,"dve ste":200,"dvěste":200,"dveste":200,"tři sta":300,"tri sta":300,"trista":300,"čtyři sta":400,"ctyri sta":400,"ctyrista":400,"pět set":500,"pet set":500,"petset":500,"šest set":600,"sest set":600,"sestset":600,"sedm set":700,"sedmset":700,"osm set":800,"osmset":800,"devět set":900,"devet set":900,"devetset":900 };
+        // Rozšířený slovník s mluvenými formami
+        const jednotky = {
+          // 1
+          "jedna": 1, "jeden": 1, "jedna": 1,
+          // 2
+          "dva": 2, "dvě": 2, "dve": 2,
+          // 3
+          "tři": 3, "tri": 3,
+          // 4
+          "čtyři": 4, "ctyri": 4, "čtyř": 4, "ctyr": 4,
+          // 5
+          "pět": 5, "pet": 5,
+          // 6
+          "šest": 6, "sest": 6, "šes": 6, "ses": 6,
+          // 7 ← HLAVNÍ ÚPRAVA
+          "sedm": 7, "sedum": 7, "sedm": 7, "sedum": 7,
+          // 8
+          "osm": 8,
+          // 9
+          "devět": 9, "devet": 9, "devět": 9, "devet": 9
+        };
+
+        const teens = {
+          "deset": 10,
+          "jedenáct": 11, "jedenact": 11,
+          "dvanáct": 12, "dvanact": 12,
+          "třináct": 13, "trinact": 13,
+          "čtrnáct": 14, "ctrnact": 14,
+          "patnáct": 15, "patnact": 15,
+          "šestnáct": 16, "sestnact": 16,
+          "sedmnáct": 17, "sedmnact": 17, "sedumnáct": 17, "sedumnact": 17,
+          "osmnáct": 18, "osmnact": 18,
+          "devatenáct": 19, "devatenact": 19
+        };
+
+        const desitky = {
+          "dvacet": 20, "dvacit": 20,
+          "třicet": 30, "tricet": 30, "třicet": 30,
+          "čtyřicet": 40, "ctyricet": 40, "čtyřicet": 40,
+          "padesát": 50, "padesat": 50,
+          "šedesát": 60, "sedesat": 60, "šedesát": 60,
+          "sedmdesát": 70, "sedmdesat": 70, "sedumdesát": 70, "sedumdesat": 70,
+          "osmdesát": 80, "osmdesat": 80,
+          "devadesát": 90, "devadesat": 90
+        };
+
+        const stovky = {
+          "sto": 100,
+          "dvě stě": 200, "dve ste": 200, "dvěste": 200, "dveste": 200,
+          "tři sta": 300, "tri sta": 300, "trista": 300,
+          "čtyři sta": 400, "ctyri sta": 400, "ctyrista": 400,
+          "pět set": 500, "pet set": 500, "petset": 500,
+          "šest set": 600, "sest set": 600, "sestset": 600,
+          "sedm set": 700, "sedmset": 700, "sedum set": 700, "sedumset": 700,
+          "osm set": 800, "osmset": 800,
+          "devět set": 900, "devet set": 900, "devetset": 900
+        };
 
         let total = 0;
         let remaining = words.join(" ");
@@ -143,13 +197,15 @@
 
         if (restWords.length === 1) {
           const w = restWords[0];
-          if (teens[w]) restValue = teens[w];
-          else if (desitky[w]) restValue = desitky[w];
-          else if (jednotky[w]) restValue = jednotky[w];
+          if (teens.hasOwnProperty(w)) restValue = teens[w];
+          else if (desitky.hasOwnProperty(w)) restValue = desitky[w];
+          else if (jednotky.hasOwnProperty(w)) restValue = jednotky[w];
         } else if (restWords.length === 2) {
           const d = desitky[restWords[0]] || 0;
           const j = jednotky[restWords[1]] || 0;
-          if (d >= 20 && j >= 1) restValue = d + j;
+          if (d >= 20 && d <= 90 && j >= 1 && j <= 9) {
+            restValue = d + j;
+          }
         }
 
         total += restValue;
