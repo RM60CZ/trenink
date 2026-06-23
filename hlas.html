@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Hlas → čísla (jen 1 a 2)</title>
+    <title>Hlas → přepis + převod 2</title>
     <style>
       body {
         font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -28,33 +28,33 @@
         font-size: 15px;
         cursor: pointer;
       }
-      .muted { color: #666; font-size: 14px; margin-top: 8px; }
+      .status { margin-top: 10px; font-size: 14px; }
       textarea {
         width: 100%;
         min-height: 110px;
         padding: 10px 12px;
         font-size: 14px;
       }
-      .status { margin-top: 10px; font-size: 14px; }
+      .muted { color: #666; font-size: 14px; margin-top: 8px; }
     </style>
   </head>
   <body>
-    <h1>Hlas → přepis do inputu + převod slov (jen 1 a 2)</h1>
+    <h1>Hlas → input + převod jen na 2</h1>
 
     <div class="row">
-      <input id="textInput" type="text" placeholder="Diktuj: jeden/dvě (a volitelně tečka/čárka)…" />
+      <input id="textInput" type="text" placeholder="Diktuj… (např. 'dva' nebo 'dvě')" />
       <button id="clearBtn" type="button">Vymazat</button>
       <button id="listenBtn" type="button">Spustit hlas</button>
       <button id="numbersBtn" type="button">Zobrazit jako čísla</button>
     </div>
 
     <div class="muted">
-      Funguje přes <b>Web Speech API</b> (typicky Chrome/Edge).
+      Používá Web Speech API (typicky Chrome/Edge).
     </div>
 
     <div class="status" id="status">Stav: připraveno.</div>
 
-    <h2>Log rozpoznání</h2>
+    <h2>Log</h2>
     <textarea id="log" readonly></textarea>
 
     <script>
@@ -80,22 +80,12 @@
         statusEl.textContent = "Stav: " + msg;
       }
 
-      // Převod: jen 1 a 2 (jeden/jedna, dva/dvě)
+      // Jen: dva/dvě -> 2 (zatím nic víc)
       function getNumberFromCzechWords(text) {
         const map = {
-          "jeden": "1",
-          "jedna": "1",
-
           "dva": "2",
-          "dvě": "2",
-          "dve": "2", // někdy rozpoznávač vyplivne bez diakritiky
+          "dvě": "2"
         };
-
-        // Volitelné desetinné znaky (pokud nechceš, smaž i tyto 2 řádky + mapování)
-        // map["tečka"] = ".";
-        // map["tecku"] = ".";
-        // map["čárka"] = ",";
-        // map["carka"] = ",";
 
         const tokens = text
           .toLowerCase()
@@ -107,18 +97,14 @@
 
         let out = "";
         for (const t of tokens) {
-          const v = map[t];
-          if (v != null) out += v;
+          if (map[t] != null) out += map[t];
         }
         return out;
       }
 
-      function setupRecognition() {
-        if (!SpeechRecognition) {
-          setStatus("Tento prohlížeč nepodporuje SpeechRecognition (zkus Chrome/Edge).");
-          return;
-        }
-
+      if (!SpeechRecognition) {
+        setStatus("SpeechRecognition nepodporuje tento prohlížeč.");
+      } else {
         recognition = new SpeechRecognition();
         recognition.lang = "cs-CZ";
         recognition.interimResults = true;
@@ -156,14 +142,8 @@
             else interim += transcript;
           }
 
-          if (interim) {
-            inputEl.value = interim;
-            log("[interim] " + interim);
-          }
-          if (finalText) {
-            inputEl.value = finalText.trim();
-            log("[final] " + finalText.trim());
-          }
+          if (interim) inputEl.value = interim;
+          if (finalText) inputEl.value = finalText.trim();
         };
       }
 
@@ -179,8 +159,8 @@
 
       clearBtn.addEventListener("click", () => {
         inputEl.value = "";
-        log("[clear]");
         setStatus("vymazáno");
+        log("[clear]");
         inputEl.focus();
       });
 
@@ -192,12 +172,11 @@
         }
         const converted = getNumberFromCzechWords(raw);
         inputEl.value = converted;
-        log("[converted] " + raw + " => " + converted);
         setStatus("převod hotov");
+        log("[converted] " + raw + " => " + converted);
         inputEl.focus();
       });
 
-      setupRecognition();
       setStatus("připraveno");
       log("------------------------------------------------");
     </script>
