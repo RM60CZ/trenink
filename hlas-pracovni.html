@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Hlas → čísla (s mezerami)</title>
+    <title>Hlas → čísla (čárka = samostatný příkaz)</title>
     <style>
       body { font-family: system-ui, sans-serif; padding: 20px; max-width: 800px; }
       .row { display: flex; gap: 10px; margin-bottom: 15px; }
@@ -14,16 +14,16 @@
     </style>
   </head>
   <body>
-    <h1>Hlas → čísla (s mezerami)</h1>
+    <h1>Hlas → čísla („celá“ = jen čárka)</h1>
     <div class="row">
-      <input id="textInput" type="text" placeholder="Řekni '25', pak '0' → 25 000" />
+      <input id="textInput" type="text" placeholder="Řekni '25', pak 'celá', pak '5' → 25,005" />
       <button id="clearBtn">Vymazat</button>
       <button id="listenBtn">Start</button>
     </div>
     <div class="hint">
-      • „25“ → „0“ → <code>25 000</code><br>
-      • „nula celá pět“ → „0“ → <code>0,005000</code><br>
-      • Mezery jen v celé části.
+      • „celá“ nebo „celých“ → přidá jen <code>,</code><br>
+      • Pak „5“ → přidá <code>005</code> za čárku<br>
+      • Mezery jen v celé části (před čárkou)
     </div>
     <textarea id="log" readonly></textarea>
 
@@ -43,9 +43,6 @@
       }
 
       const normalizationMap = [
-        ["celých", " celých "], ["celych", " celych "],
-        ["celý", " celý "], ["cely", " cely "],
-        ["celá", " celá "], ["cela", " cela "],
         ["devětset", " devět set "], ["devetset", " devet set "],
         ["osmset", " osm set "],
         ["sedumset", " sedum set "], ["sedmset", " sedm set "],
@@ -130,23 +127,6 @@
         return (total >= 0 && total <= 999) ? total : null;
       }
 
-      function parseFirstDecimal(text) {
-        const lower = text.toLowerCase();
-        const match = lower.match(/(cel[áaýýy]|celých|celych)/);
-        if (!match) return null;
-
-        const before = text.substring(0, match.index).trim();
-        const after = text.substring(match.index + match[0].length).trim();
-
-        const whole = extractNumber(before);
-        const decimal = extractNumber(after);
-
-        if (whole !== null && decimal !== null) {
-          return `${whole},${String(decimal).padStart(3, '0')}`;
-        }
-        return null;
-      }
-
       function setupRecognition() {
         if (!SpeechRecognition) {
           alert("Hlas není podporován (zkus Chrome/Edge).");
@@ -162,25 +142,23 @@
           const transcript = event.results[event.resultIndex][0].transcript.trim();
           log("🎙️ " + transcript);
 
-          // Odstraníme mezery pro interní práci
-          let currentRaw = inputEl.value.replace(/ /g, '');
-          const number = extractNumber(transcript);
+          let currentRaw = inputEl.value.replace(/ /g, ''); // odstraníme mezery
 
-          // První vstup
-          if (currentRaw === "") {
-            const dec = parseFirstDecimal(transcript);
-            if (dec !== null) {
-              inputEl.value = dec;
-              log("→ " + dec);
+          // 🔑 Hlavní změna: "celá" = jen čárka
+          if (/cel[áaýýy]|celých|celych/i.test(transcript)) {
+            if (currentRaw === "") {
+              inputEl.value = "0,";
+            } else if (!currentRaw.endsWith(',')) {
+              inputEl.value = currentRaw + ',';
+            } else {
+              log("→ čárka už je");
               return;
             }
-            if (number !== null) {
-              inputEl.value = number.toString();
-              log("→ " + inputEl.value);
-              return;
-            }
+            log("→ přidána čárka");
+            return;
           }
 
+          const number = extractNumber(transcript);
           if (number === null) {
             log("→ ignorováno");
             return;
@@ -188,22 +166,16 @@
 
           const padded = String(number).padStart(3, '0');
 
-          if (currentRaw.includes(',')) {
-            // Desetinný režim – max 6 míst
-            const [whole, decPart] = currentRaw.split(',');
-            if (decPart.length < 6) {
-              const newDec = (decPart + padded).substring(0, 6).padEnd(6, '0');
-              inputEl.value = `${whole},${newDec}`;
-            } else {
-              log("→ desetinná část plná (6 míst)");
-            }
+          if (currentRaw.endsWith(',')) {
+            // Desetinná část – přidáme blok za čárku (bez mezer)
+            inputEl.value = currentRaw + padded;
+            log("→ desetinný blok: " + inputEl.value);
           } else {
-            // Celý režim – přidat blok a naformátovat s mezerami
+            // Celá část – přidáme blok a naformátujeme s mezerami
             const newRaw = currentRaw + padded;
             inputEl.value = newRaw.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+            log("→ blok: " + inputEl.value);
           }
-
-          log("→ " + inputEl.value);
         };
 
         recognition.onerror = (e) => log("❌ " + e.error);
@@ -230,7 +202,7 @@
         log("🧹 vymazáno");
       };
 
-      log("🚀 Připraveno.");
+      log("🚀 Připraveno. Řekni např. '25', pak 'celá', pak '5'.");
     </script>
   </body>
 </html>
