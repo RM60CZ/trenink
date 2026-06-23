@@ -3,34 +3,99 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Hlas → čísla (čárka = samostatný příkaz)</title>
+    <title>Hlas → čísla (postupné, bez nul)</title>
     <style>
-      body { font-family: system-ui, sans-serif; padding: 20px; max-width: 800px; }
-      .row { display: flex; gap: 10px; margin-bottom: 15px; }
-      input[type="text"] { flex: 1; min-width: 300px; padding: 10px; font-size: 16px; }
-      button { padding: 10px 16px; font-size: 15px; cursor: pointer; }
-      textarea { width: 100%; height: 120px; font-family: monospace; font-size: 14px; }
-      .hint { color: #555; font-size: 14px; margin-top: 8px; }
+      body {
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        padding: 20px;
+        max-width: 900px;
+        background: #fafafa;
+        color: #222;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+      input[type="text"] {
+        flex: 1;
+        min-width: 340px;
+        padding: 10px 14px;
+        font-size: 17px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      button {
+        padding: 10px 16px;
+        font-size: 16px;
+        cursor: pointer;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background: #fff;
+      }
+      button:hover { background: #f5f5f5; }
+      button.active {
+        background: #e53935;
+        color: white;
+        border-color: #c62828;
+      }
+      textarea {
+        width: 100%;
+        min-height: 130px;
+        padding: 12px;
+        font-family: monospace;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      .hint {
+        color: #555;
+        font-size: 14px;
+        line-height: 1.5;
+        margin-top: 8px;
+        background: #f9f9f9;
+        padding: 12px;
+        border-radius: 4px;
+      }
+      .status {
+        margin-top: 10px;
+        font-size: 14px;
+        color: #444;
+      }
     </style>
   </head>
   <body>
-    <h1>Hlas → čísla („celá“ = jen čárka)</h1>
+    <h1>🎙️ Hlas → čísla (postupné diktování)</h1>
+
     <div class="row">
-      <input id="textInput" type="text" placeholder="Řekni '25', pak 'celá', pak '5' → 25,005" />
+      <input id="textInput" type="text" placeholder="Řekni '25', pak 'celé', pak '5' → 25,005" readonly />
       <button id="clearBtn">Vymazat</button>
       <button id="listenBtn">Start</button>
     </div>
+
     <div class="hint">
-      • „celá“ nebo „celých“ → přidá jen <code>,</code><br>
-      • Pak „5“ → přidá <code>005</code> za čárku<br>
-      • Mezery jen v celé části (před čárkou)
+      <strong>👉 Jak to funguje:</strong><br>
+      • Řekni číslo (např. <code>25</code>) → zobrazí se <code>25</code><br>
+      • Řekni <code>celá</code>, <code>celé</code> nebo <code>celých</code> → přidá se jen <code>,</code><br>
+      • Řekni další číslo (např. <code>5</code>) → přidá se <code>005</code> → <code>25,005</code><br>
+      • Další číslo (např. <code>0</code>) → <code>25,005000</code><br>
+      • Mezery se zobrazují jen v celé části (před čárkou)<br>
+      • <strong>Nikdy se nevkládají automatické nuly!</strong>
     </div>
+
+    <div class="status" id="status">Stav: připraveno.</div>
+
+    <h2>Log</h2>
     <textarea id="log" readonly></textarea>
 
     <script>
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
       const inputEl = document.getElementById("textInput");
       const logEl = document.getElementById("log");
+      const statusEl = document.getElementById("status");
       const clearBtn = document.getElementById("clearBtn");
       const listenBtn = document.getElementById("listenBtn");
 
@@ -38,11 +103,17 @@
       let isListening = false;
 
       function log(msg) {
-        logEl.value += msg + "\n";
+        const now = new Date().toLocaleTimeString();
+        logEl.value += `[${now}] ${msg}\n`;
         logEl.scrollTop = logEl.scrollHeight;
       }
 
-      const normalizationMap = [
+      function setStatus(msg) {
+        statusEl.textContent = "Stav: " + msg;
+      }
+
+      // Normalizační mapa pro čísla (bez ovlivnění "cel-")
+      const numberNormalizationMap = [
         ["devětset", " devět set "], ["devetset", " devet set "],
         ["osmset", " osm set "],
         ["sedumset", " sedum set "], ["sedmset", " sedm set "],
@@ -64,11 +135,11 @@
         ["ctyri", " čtyři "], ["tri", " tři "], ["dve", " dvě "], ["nula", " nula "]
       ];
 
-      function normalizeText(text) {
+      function normalizeNumberText(text) {
         if (!text) return "";
-        let t = text.toLowerCase().replace(/[.,!?;:"']/g, "");
+        let t = text.toLowerCase().replace(/[^a-z0-9áčďéěíňóřšťúůýž\s]/g, "");
         t = " " + t + " ";
-        for (const [from, to] of normalizationMap) {
+        for (const [from, to] of numberNormalizationMap) {
           const re = new RegExp(from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
           t = t.replace(re, to);
         }
@@ -77,27 +148,64 @@
 
       function extractNumber(text) {
         if (!text) return null;
-        const asDigit = text.trim();
-        if (/^\d+$/.test(asDigit)) {
-          const num = parseInt(asDigit, 10);
+        const trimmed = text.trim();
+        if (/^\d+$/.test(trimmed)) {
+          const num = parseInt(trimmed, 10);
           return (num >= 0 && num <= 999) ? num : null;
         }
 
-        const normalized = normalizeText(text);
-        const words = normalized.split(/\s+/).filter(w => w && w !== "a");
-
+        const words = normalizeNumberText(text).split(/\s+/).filter(w => w && w !== "a");
         if (words.length === 1 && ["nula", "nůla"].includes(words[0])) {
           return 0;
         }
 
-        const jednotky = { "jedna":1,"jeden":1,"dva":2,"dvě":2,"tři":3,"čtyři":4,"pět":5,
-          "šest":6,"sedm":7,"osm":8,"devět":9 };
-        const teens = { "deset":10,"jedenáct":11,"dvanáct":12,"třináct":13,"čtrnáct":14,
-          "patnáct":15,"šestnáct":16,"sedmnáct":17,"osmnáct":18,"devatenáct":19 };
-        const desitky = { "dvacet":20,"třicet":30,"čtyřicet":40,"padesát":50,
-          "šedesát":60,"sedmdesát":70,"osmdesát":80,"devadesát":90 };
-        const stovky = { "sto":100,"dvě stě":200,"tři sta":300,"čtyři sta":400,
-          "pět set":500,"šest set":600,"sedm set":700,"osm set":800,"devět set":900 };
+        const jednotky = {
+          "jedna": 1, "jeden": 1,
+          "dva": 2, "dvě": 2,
+          "tři": 3,
+          "čtyři": 4,
+          "pět": 5,
+          "šest": 6,
+          "sedm": 7,
+          "osm": 8,
+          "devět": 9
+        };
+
+        const teens = {
+          "deset": 10,
+          "jedenáct": 11,
+          "dvanáct": 12,
+          "třináct": 13,
+          "čtrnáct": 14,
+          "patnáct": 15,
+          "šestnáct": 16,
+          "sedmnáct": 17, "sedumnáct": 17,
+          "osmnáct": 18,
+          "devatenáct": 19
+        };
+
+        const desitky = {
+          "dvacet": 20,
+          "třicet": 30,
+          "čtyřicet": 40,
+          "padesát": 50,
+          "šedesát": 60,
+          "sedmdesát": 70, "sedumdesát": 70,
+          "osmdesát": 80,
+          "devadesát": 90
+        };
+
+        const stovky = {
+          "sto": 100,
+          "dvě stě": 200,
+          "tři sta": 300,
+          "čtyři sta": 400,
+          "pět set": 500,
+          "šest set": 600,
+          "sedm set": 700, "sedum set": 700,
+          "osm set": 800,
+          "devět set": 900
+        };
 
         let total = 0;
         let remaining = words.join(" ");
@@ -120,7 +228,9 @@
         } else if (restWords.length === 2) {
           const d = desitky[restWords[0]] || 0;
           const j = jednotky[restWords[1]] || 0;
-          if (d >= 20 && d <= 90 && j >= 1 && j <= 9) restValue = d + j;
+          if (d >= 20 && d <= 90 && j >= 1 && j <= 9) {
+            restValue = d + j;
+          }
         }
 
         total += restValue;
@@ -129,7 +239,8 @@
 
       function setupRecognition() {
         if (!SpeechRecognition) {
-          alert("Hlas není podporován (zkus Chrome/Edge).");
+          setStatus("❌ SpeechRecognition není podporován (použij Chrome nebo Edge).");
+          listenBtn.disabled = true;
           return;
         }
 
@@ -138,71 +249,108 @@
         recognition.continuous = true;
         recognition.interimResults = false;
 
+        recognition.onstart = () => {
+          isListening = true;
+          listenBtn.classList.add("active");
+          listenBtn.textContent = "Poslouchám…";
+          setStatus("słuchám – mluv pomalu a zřetelně");
+          log("🎙️ Mikrofon zapnut");
+        };
+
+        recognition.onerror = (event) => {
+          log("❌ Chyba: " + event.error);
+          if (event.error === "no-speech") {
+            setStatus("Neslyšel jsem nic – zkuste to znovu");
+          }
+        };
+
+        recognition.onend = () => {
+          if (isListening) {
+            setTimeout(() => {
+              try { recognition.start(); } catch (e) {
+                log("⚠️ Nelze restartovat mikrofon: " + e.message);
+                isListening = false;
+                listenBtn.classList.remove("active");
+                listenBtn.textContent = "Start";
+                setStatus("Mikrofon vypnut");
+              }
+            }, 400);
+          } else {
+            listenBtn.classList.remove("active");
+            listenBtn.textContent = "Start";
+            setStatus("Pauza – mikrofon vypnut");
+          }
+        };
+
         recognition.onresult = (event) => {
           const transcript = event.results[event.resultIndex][0].transcript.trim();
-          log("🎙️ " + transcript);
+          log("🗣️ Rozpoznáno: \"" + transcript + "\"");
 
-          let currentRaw = inputEl.value.replace(/ /g, ''); // odstraníme mezery
+          // Odstraníme mezery pro interní práci (ale ponecháme čárku)
+          let currentRaw = inputEl.value.replace(/ /g, '');
 
-          // 🔑 Hlavní změna: "celá" = jen čárka
-          if (/cel[áaýýy]|celých|celych/i.test(transcript)) {
+          // 🔑 Hlavní pravidlo: rozpoznání jakékoli formy "cel-"
+          if (/\b(cel[áaé]|celych|cely|cel[ýy])\b/i.test(transcript)) {
             if (currentRaw === "") {
               inputEl.value = "0,";
+              log("→ Vložena čárka (prázdné pole → 0,)");
             } else if (!currentRaw.endsWith(',')) {
               inputEl.value = currentRaw + ',';
+              log("→ Přidána čárka");
             } else {
-              log("→ čárka už je");
-              return;
+              log("→ Čárka už je – ignorováno");
             }
-            log("→ přidána čárka");
             return;
           }
 
+          // Extrahuj číslo
           const number = extractNumber(transcript);
           if (number === null) {
-            log("→ ignorováno");
+            log("→ Ignorováno (nebylo rozpoznáno jako číslo 0–999)");
             return;
           }
 
           const padded = String(number).padStart(3, '0');
 
           if (currentRaw.endsWith(',')) {
-            // Desetinná část – přidáme blok za čárku (bez mezer)
+            // Desetinná část – přidáme blok za čárku (BEZ mezer!)
             inputEl.value = currentRaw + padded;
-            log("→ desetinný blok: " + inputEl.value);
+            log(`→ Desetinný blok přidán: ${padded}`);
           } else {
             // Celá část – přidáme blok a naformátujeme s mezerami
             const newRaw = currentRaw + padded;
+            // Formátování mezerami každé 3 číslice zprava (jen pokud není čárka)
             inputEl.value = newRaw.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-            log("→ blok: " + inputEl.value);
+            log(`→ Blok přidán: ${padded}`);
           }
-        };
-
-        recognition.onerror = (e) => log("❌ " + e.error);
-        recognition.onend = () => {
-          if (isListening) setTimeout(() => recognition.start(), 500);
         };
       }
 
-      listenBtn.onclick = () => {
+      listenBtn.addEventListener("click", () => {
         if (!recognition) setupRecognition();
         if (isListening) {
-          recognition.stop();
           isListening = false;
-          listenBtn.textContent = "Start";
+          recognition.stop();
         } else {
-          recognition.start();
           isListening = true;
-          listenBtn.textContent = "Stop";
+          try {
+            recognition.start();
+          } catch (e) {
+            log("⚠️ Nelze spustit mikrofon: " + e.message);
+            isListening = false;
+            setStatus("Chyba mikrofonu – povol přístup ve svém prohlížeči");
+          }
         }
-      };
+      });
 
-      clearBtn.onclick = () => {
+      clearBtn.addEventListener("click", () => {
         inputEl.value = "";
-        log("🧹 vymazáno");
-      };
+        log("🧹 Vstup vymazán");
+      });
 
-      log("🚀 Připraveno. Řekni např. '25', pak 'celá', pak '5'.");
+      // Inicializace
+      log("🚀 Aplikace připravena.");
+      setStatus("Připraveno – klikni na 'Start' a řekni např. 'dvacet pět'");
     </script>
   </body>
 </html>
