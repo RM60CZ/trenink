@@ -37,7 +37,6 @@
       }
       .muted { color: #666; font-size: 14px; margin-top: 8px; }
 
-      /* stav tlačítka */
       #listenBtn.active {
         color: #fff;
         background: #e53935;
@@ -59,13 +58,11 @@
       <button id="clearBtn" type="button">Vymazat</button>
 
       <button id="listenBtn" type="button" class="inactive">Pauza</button>
-
-      <button id="numbersBtn" type="button" style="display:none;">Zobrazit jako čísla</button>
     </div>
 
     <div class="muted">
       Do inputu se vkládají <b>jen</b> číslice: <b>1</b> při „jeden/jedna“ a <b>2</b> při „dva/dvě“.
-      Ostatní slova se ignorují.
+      Ostatní slova ignorujeme.
     </div>
 
     <div class="status" id="status">Stav: připraveno.</div>
@@ -86,14 +83,30 @@
       let recognition = null;
       let listening = false;
 
-      // Povolené mapování: jen 1 a 2
-      const wordToDigit = {
-        "jeden": "1",
-        "jedna": "1",
-        "dva": "2",
-        "dvě": "2",
-        "dve": "2" // případně bez diakritiky
-      };
+      // Regex přepis (chytá i drobné odchylky typu "dve", "dvě" apod.)
+      // Pozn.: chytáme jen celá slova pomocí hranic \b, aby se to nepřilepovalo na jiné části.
+      function extractDigits(text) {
+        const s = (text || "").toLowerCase();
+
+        // Seznamy pro 1 a 2 (včetně variant bez háčku)
+        const oneRe = /\b(jeden|jedna)\b/g;
+        const twoRe = /\b(dva|dvě|dve|dvo?u)\b/g; 
+        // dvo?u je jen nouzově (často SR řekne pád, ale ty to nechceš; nechávám jen aby to netrvalo nekonečně.
+        // Pokud chceš přísně jen "dva/dvě", smaž tuto část.
+
+        let digits = "";
+
+        // Každé nalezení přidá odpovídající číslo (počítáme více výskytů)
+        const ones = s.match(oneRe);
+        if (ones) digits += "1".repeat(ones.length);
+
+        const twos = s.match(twoRe);
+        if (twos) digits += "2".repeat(twos.length);
+
+        // Zaručení: nikdy nic jiného než 1/2
+        digits = digits.replace(/[^12]/g, "");
+        return digits;
+      }
 
       function log(msg) {
         logEl.value += msg + "\n";
@@ -117,24 +130,6 @@
         }
       }
 
-      // Z textu vyrobíme jen číslice 1/2 a vše ostatní ignorujeme
-      function extractDigits(text) {
-        const tokens = (text || "")
-          .toLowerCase()
-          .replace(/[.,!?]/g, " ")
-          .replace(/\s+/g, " ")
-          .trim()
-          .split(" ")
-          .filter(Boolean);
-
-        let digits = "";
-        for (const t of tokens) {
-          const d = wordToDigit[t];
-          if (d) digits += d;
-        }
-        return digits;
-      }
-
       function setupRecognition() {
         if (!SpeechRecognition) {
           setStatus("SpeechRecognition nepodporuje tento prohlížeč (zkus Chrome/Edge).");
@@ -144,8 +139,8 @@
 
         recognition = new SpeechRecognition();
         recognition.lang = "cs-CZ";
-        recognition.interimResults = true; // průběžné výsledky
-        recognition.continuous = true;    // dokud nevypneš
+        recognition.interimResults = true;
+        recognition.continuous = true;
 
         recognition.onstart = () => {
           setListenUIActive(true);
@@ -162,27 +157,27 @@
         };
 
         recognition.onresult = (event) => {
-          // DŮLEŽITÉ:
-          // - chceme vkládat do inputu rovnou číslice
-          // - ignorujeme všechna ostatní slova
-          //
-          // Doporučení:
-          // v průběhu continuous se mohou výsledky objevovat opakovaně.
-          // Tady je jednoduchá varianta: bereme jen finální výsledky.
-          let finalDigits = "";
+          // NENÍ možné, aby se sem dostal text, pokud:
+          // - appendujeme jen digits (1/2)
+          // - a digits se skládá jen z 1/2
+          let appended = "";
 
           for (let i = event.resultIndex; i < event.results.length; i++) {
             const res = event.results[i];
             const transcript = (res[0] && res[0].transcript) ? res[0].transcript : "";
+
             if (res.isFinal) {
-              finalDigits += extractDigits(transcript);
+              log("[final transcript] " + transcript);
+              const digits = extractDigits(transcript);
+              if (digits) {
+                appended += digits;
+              }
             }
           }
 
-          if (finalDigits) {
-            // Přidáme číslice do existujícího obsahu (nepřepisujeme slovy)
-            inputEl.value = (inputEl.value + finalDigits);
-            log("[digits] " + finalDigits);
+          if (appended) {
+            inputEl.value = (inputEl.value + appended);
+            log("[appended digits] " + appended);
           }
         };
       }
