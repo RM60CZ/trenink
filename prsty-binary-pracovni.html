@@ -5,26 +5,113 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>TEST prsty</title>
   <style>
-    body { margin:0; background:#0b1020; color:#d7defa; font-family:system-ui, sans-serif; padding:16px; }
-    .grid { display:grid; grid-template-columns: repeat(15, 30px); gap:8px; margin-top:12px; }
-    .sq { width:30px; height:30px; background:#ff4d6d; border-radius:8px; }
-    .sq.on { background:#4dffb2; }
+    :root{
+      --sq-w: 34px;
+      --sq-h: 26px;         /* malá výška */
+      --gap-y: 10px;        /* mezera mezi poli ve skupině */
+      --group-gap: 30px;    /* mezera mezi pěticemi */
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100svh;
+      background: #0b1020;
+      color: #d7defa;
+      font-family: system-ui, sans-serif;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+    }
+
+    .wrap{
+      width: min(100%, 420px);
+      display: grid;
+      justify-items: center;
+      gap: 10px;
+    }
+
+    h1{
+      margin: 0;
+      font-size: clamp(1rem, 2.8vw, 1.3rem);
+      text-align: center;
+    }
+
+    /* 3 sloupce = 3 pětice, v každém 5 řad */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, var(--sq-w));
+      grid-template-rows: repeat(5, var(--sq-h));
+      column-gap: var(--group-gap);
+      row-gap: var(--gap-y);
+      justify-content: center;
+      align-items: end; /* důležité pro "růst nahoru" */
+      touch-action: manipulation;
+      user-select: none;
+    }
+
+    .sq {
+      width: var(--sq-w);
+      height: var(--sq-h);
+      background: #ffb8c2;     /* velmi jemná červená */
+      border-radius: var(--radius);
+      cursor: pointer;
+      transform-origin: bottom center;
+      transition: transform 180ms ease, background-color 180ms ease;
+      will-change: transform;
+    }
+
+    /* aktivní = zelená + 2x vyšší směrem nahoru */
+    .sq.on {
+      background: #4dffb2;
+      transform: scaleY(2);
+    }
+
+    .sq:focus-visible{
+      outline: 2px solid #d7defa;
+      outline-offset: 2px;
+    }
+
+    @media (max-width: 420px){
+      :root{
+        --sq-w: 28px;
+        --sq-h: 22px;
+        --gap-y: 8px;
+        --group-gap: 18px;
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>TEST prsty - viditelnost</h1>
-  <div id="grid" class="grid"></div>
+  <div class="wrap">
+    <h1>TEST prsty - viditelnost</h1>
+    <div id="grid" class="grid"></div>
+  </div>
 
   <script>
     const grid = document.getElementById('grid');
-    const N = 15;
-    for (let i=0; i<N; i++){
-      const el = document.createElement('div');
-      el.className = 'sq';
-      el.textContent = '';
-      el.title = 'i=' + i;
-      el.onclick = () => el.classList.toggle('on');
-      grid.appendChild(el);
+    const rows = 5;
+    const cols = 3; // 3 pětice
+    const N = rows * cols; // 15
+
+    // Plnění po sloupcích: 5 pod sebou v každé pětici
+    for (let c = 0; c < cols; c++) {
+      for (let r = 0; r < rows; r++) {
+        const el = document.createElement('button');
+        el.type = 'button';
+        el.className = 'sq';
+        el.title = `skupina ${c + 1}, pozice ${r + 1}`;
+        el.setAttribute('aria-pressed', 'false');
+
+        el.addEventListener('click', () => {
+          const on = el.classList.toggle('on');
+          el.setAttribute('aria-pressed', String(on));
+        });
+
+        grid.appendChild(el);
+      }
     }
   </script>
 </body>
