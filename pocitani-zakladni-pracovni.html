@@ -298,12 +298,11 @@ const buildRecognition=()=>{
       const decMatch=raw.match(DEC_RE);
       if(decMatch){
         const before=raw.slice(0,decMatch.index).trim();
-        if(before)parseVoiceTokens(before.split(/\s+/).filter(Boolean)).forEach(v=>spBuf.push(v));
-        spBuf.push('.');
+        const bTokens=before?parseVoiceTokens(before.split(/\s+/).filter(Boolean)):[];
         const after=raw.slice(decMatch.index+decMatch[0].length).trim();
-        if(after)parseVoiceTokens(after.split(/\s+/).filter(Boolean)).forEach(v=>spBuf.push(v));
-      }else parseVoiceTokens(raw.split(/\s+/).filter(Boolean)).forEach(v=>spBuf.push(v));
-      spFlush();
+        const aTokens=after?parseVoiceTokens(after.split(/\s+/).filter(Boolean)):[];
+        spApplyTokens([...bTokens,'.',...aTokens]);
+      }else spApplyTokens(parseVoiceTokens(raw.split(/\s+/).filter(Boolean)));
     }
     if(shouldSubmit){micAutoRestart=false;stopMic(false);setTimeout(()=>handle(null,true),100)}
   };
@@ -317,10 +316,11 @@ hlasCheck.addEventListener('change',()=>{updateMicVisibility();if(!hlasCheck.che
 micBtn.addEventListener('click',()=>micListening?stopMic(false):startMic());
 micBtn.addEventListener('touchstart',e=>e.stopPropagation(),{passive:true});
 
-const spReset=()=>{spBuf=[];odpovedEl.value=''};
-const spBackspace=()=>{let current=norm(odpovedEl.value);if(!current)return;current=current.slice(0,-1);spBuf=current?current.split('').map(c=>c==='.'?'.':parseInt(c,10)):[];odpovedEl.value=current?fmtInputStr(current):''};
-const spFlush=()=>{if(!spBuf.length){odpovedEl.value='';return}const dotIndex=spBuf.indexOf('.');const intParts=dotIndex===-1?spBuf:spBuf.slice(0,dotIndex);const decParts=dotIndex===-1?[]:spBuf.slice(dotIndex+1);let intStr=intParts.map(String).join('').replace(/^0+(?=\d)/,'');if(!intStr)intStr='0';odpovedEl.value=fmtInputStr(dotIndex===-1?intStr:intStr+'.'+decParts.map(String).join(''))};
-const spAppendZeros=()=>{const current=norm(odpovedEl.value);if(!current)[0,0,0].forEach(z=>spBuf.push(z));else{spBuf=current.split('').map(c=>c==='.'?'.':parseInt(c,10));[0,0,0].forEach(z=>spBuf.push(z))}spFlush()};
+const spReset=()=>{odpovedEl.value=''};
+const spBackspace=()=>{const cur=norm(odpovedEl.value);if(!cur)return;const nv=cur.slice(0,-1);odpovedEl.value=nv?fmtInputStr(nv):''};
+const spFlush=()=>{};
+const spAppendZeros=()=>{const cur=norm(odpovedEl.value);const di=cur?cur.indexOf('.'):-1;if(di!==-1){odpovedEl.value=fmtInputStr(cur.slice(0,di+1)+cur.slice(di+1)+'000')}else if(!cur){odpovedEl.value='000'}else{odpovedEl.value=fmtInputStr(cur+'000')}};
+const spApplyTokens=tokens=>{let cur=norm(odpovedEl.value)||'';for(const tok of tokens){if(tok==='.'){if(!cur.includes('.'))cur=(cur||'0')+'.';continue}const di=cur.indexOf('.');if(di!==-1){cur=cur.slice(0,di+1)+cur.slice(di+1)+String(tok)}else if(!cur){cur=String(tok)}else if(cur==='0'){cur=String(tok)}else{cur+=String(tok).padStart(3,'0')}}odpovedEl.value=cur?fmtInputStr(cur):''};
 
 const handle=(e,fromVoice)=>{
   if(isProcessing)return;
