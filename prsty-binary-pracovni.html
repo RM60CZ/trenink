@@ -1,17 +1,296 @@
 <!doctype html>
 <html lang="cs">
 <head>
-  <meta charset="utf-8" />
-  <title>TEST JS</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3 ruce – binární prsty</title>
+  <style>
+    :root{
+      --bg:#0f1220;
+      --panel:#171b2e;
+      --palm:#f1b98f;
+      --finger-up:#67e8a5;
+      --finger-down:#6b7280;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --stroke:#2b324f;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+      background:linear-gradient(180deg,#0b1020,#121831 55%,#0f1220);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:20px;
+      padding:24px;
+    }
+
+    h1{
+      margin:0;
+      font-size:clamp(1.2rem,2.4vw,1.8rem);
+      font-weight:700;
+    }
+
+    .hint{
+      color:var(--muted);
+      margin-top:-8px;
+      text-align:center;
+      max-width:900px;
+    }
+
+    .board{
+      width:min(1100px,100%);
+      background:color-mix(in oklab, var(--panel) 88%, black 12%);
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      padding:18px;
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:16px;
+    }
+
+    .hand-card{
+      background:#12172a;
+      border:1px solid var(--stroke);
+      border-radius:14px;
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-height:420px;
+    }
+
+    .hand-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .hand-title{
+      font-weight:700;
+    }
+
+    .binary{
+      font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+      background:#0b1020;
+      border:1px solid var(--stroke);
+      border-radius:10px;
+      padding:6px 10px;
+      color:#c7d2fe;
+      font-size:.95rem;
+    }
+
+    .hand{
+      margin-top:4px;
+      flex:1;
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      gap:10px;
+      position:relative;
+      padding:10px 6px 0;
+    }
+
+    /* dlaň */
+    .palm{
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:0;
+      width:80%;
+      height:120px;
+      border-radius:24px 24px 18px 18px;
+      background:var(--palm);
+      border:2px solid #d79c73;
+      z-index:1;
+      filter:drop-shadow(0 8px 10px rgba(0,0,0,.25));
+    }
+
+    .finger-wrap{
+      position:relative;
+      z-index:2;
+      width:46px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:flex-end;
+      gap:6px;
+    }
+
+    .finger{
+      width:42px;
+      border-radius:16px;
+      border:2px solid #2a2f45;
+      cursor:pointer;
+      transition:height .22s ease, background-color .2s ease, transform .1s ease;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding-top:6px;
+      user-select:none;
+      box-shadow:0 6px 10px rgba(0,0,0,.22);
+    }
+
+    .finger:active{
+      transform:translateY(1px) scale(.98);
+    }
+
+    .finger.up{
+      background:var(--finger-up);
+      color:#073b24;
+    }
+
+    .finger.down{
+      background:var(--finger-down);
+      color:#f3f4f6;
+    }
+
+    .bit{
+      font-weight:800;
+      font-size:.95rem;
+      line-height:1;
+    }
+
+    .fname{
+      font-size:.74rem;
+      color:var(--muted);
+      text-align:center;
+      min-height:1.2em;
+    }
+
+    .legend{
+      width:min(1100px,100%);
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+      color:var(--muted);
+      font-size:.9rem;
+    }
+
+    .pill{
+      border:1px solid var(--stroke);
+      background:#131930;
+      border-radius:999px;
+      padding:6px 10px;
+    }
+
+    @media (max-width: 900px){
+      .board{ grid-template-columns:1fr; }
+      .hand-card{ min-height:360px; }
+    }
+  </style>
 </head>
-<body style="font-family:Arial; padding:24px;">
-  <h1>TEST JS</h1>
-  <div id="out" style="font-size:18px; padding:10px; border:1px solid #ccc; border-radius:8px;">
-    Sem se má vypsat výsledek…
+<body>
+  <h1>3 ruce – binární počítání prsty</h1>
+  <p class="hint">Klikni na libovolný prst. Stav <b>1</b> = prst nahoře, stav <b>0</b> = prst skrčený.</p>
+
+  <div class="board" id="board"></div>
+
+  <div class="legend">
+    <span class="pill">Proporce: prostředníček nejvyšší</span>
+    <span class="pill">Ukazovák = prsteník</span>
+    <span class="pill">Malíček nejmenší</span>
   </div>
 
   <script>
-    document.getElementById('out').textContent = 'JS běží ✅';
+    // Pořadí prstů:
+    // 0 palec, 1 ukazovák, 2 prostředníček, 3 prsteník, 4 malíček
+    const fingerNames = ["Palec", "Ukazovák", "Prostředníček", "Prsteník", "Malíček"];
+
+    // Relativní výšky "zvednutých" prstů (dle tvého zadání)
+    const upHeights = [110, 165, 190, 165, 135]; // px
+    // Skrčený prst bude výrazně nižší:
+    const downFactor = 0.32;
+
+    // 3 ruce, každá má 5 prstů (0=skrčený, 1=zvednutý)
+    const hands = [
+      [0,0,0,0,0],
+      [0,0,0,0,0],
+      [0,0,0,0,0],
+    ];
+
+    const board = document.getElementById("board");
+
+    function handBits(handState){
+      // Vrací např. "01011"
+      return handState.map(v => v ? "1" : "0").join("");
+    }
+
+    function render(){
+      board.innerHTML = "";
+
+      hands.forEach((state, handIndex) => {
+        const card = document.createElement("section");
+        card.className = "hand-card";
+
+        const head = document.createElement("div");
+        head.className = "hand-head";
+
+        const title = document.createElement("div");
+        title.className = "hand-title";
+        title.textContent = `Ruka ${handIndex + 1}`;
+
+        const binary = document.createElement("div");
+        binary.className = "binary";
+        binary.textContent = `Binárně: ${handBits(state)}`;
+
+        head.append(title, binary);
+
+        const hand = document.createElement("div");
+        hand.className = "hand";
+
+        // Prsty vykreslíme v pořadí podobném dlani:
+        // palec trochu vlevo, pak ukazovák, prostředníček, prsteník, malíček
+        state.forEach((bit, fingerIndex) => {
+          const wrap = document.createElement("div");
+          wrap.className = "finger-wrap";
+
+          const finger = document.createElement("button");
+          finger.className = "finger " + (bit ? "up" : "down");
+          finger.setAttribute("aria-label", `Ruka ${handIndex+1}, ${fingerNames[fingerIndex]}`);
+          finger.title = `Ruka ${handIndex+1} – ${fingerNames[fingerIndex]} (${bit ? "1" : "0"})`;
+
+          const hUp = upHeights[fingerIndex];
+          const h = bit ? hUp : Math.round(hUp * downFactor);
+          finger.style.height = `${h}px`;
+
+          const bitLabel = document.createElement("span");
+          bitLabel.className = "bit";
+          bitLabel.textContent = bit ? "1" : "0";
+
+          finger.appendChild(bitLabel);
+
+          finger.addEventListener("click", () => {
+            hands[handIndex][fingerIndex] = hands[handIndex][fingerIndex] ? 0 : 1;
+            render();
+          });
+
+          const fname = document.createElement("div");
+          fname.className = "fname";
+          fname.textContent = fingerNames[fingerIndex];
+
+          wrap.append(finger, fname);
+          hand.appendChild(wrap);
+        });
+
+        const palm = document.createElement("div");
+        palm.className = "palm";
+        hand.appendChild(palm);
+
+        card.append(head, hand);
+        board.appendChild(card);
+      });
+    }
+
+    render();
   </script>
 </body>
 </html>
