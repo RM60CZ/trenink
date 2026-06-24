@@ -6,112 +6,111 @@
   <title>TEST prsty</title>
   <style>
     :root{
-      --sq-w: 34px;
-      --sq-h: 26px;         /* malá výška */
-      --gap-y: 10px;        /* mezera mezi poli ve skupině */
-      --group-gap: 30px;    /* mezera mezi pěticemi */
-      --radius: 8px;
+      --sq-w: 56px;       /* větší kostičky */
+      --sq-h: 40px;
+      --col-gap: 14px;    /* mezera mezi sloupci */
+      --row-gap: 26px;    /* větší mezera mezi řadami */
+      --grow: 2;          /* 2x vyšší po kliknutí */
+      --white: #ffffff;
+      --green: #41d887;
+      --bg: #0b1020;
+      --text: #d7defa;
     }
 
-    * { box-sizing: border-box; }
+    *{ box-sizing:border-box; }
 
-    body {
-      margin: 0;
-      min-height: 100svh;
-      background: #0b1020;
-      color: #d7defa;
-      font-family: system-ui, sans-serif;
-      display: grid;
-      place-items: center;
-      padding: 16px;
-    }
-
-    .wrap{
-      width: min(100%, 420px);
-      display: grid;
-      justify-items: center;
-      gap: 10px;
+    body{
+      margin:0;
+      min-height:100dvh;
+      background:var(--bg);
+      color:var(--text);
+      font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      padding:16px;
     }
 
     h1{
-      margin: 0;
-      font-size: clamp(1rem, 2.8vw, 1.3rem);
-      text-align: center;
+      margin:0 0 18px;
+      font-size:clamp(20px,4.8vw,30px);
+      text-align:center;
     }
 
-    /* 3 sloupce = 3 pětice, v každém 5 řad */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, var(--sq-w));
-      grid-template-rows: repeat(5, var(--sq-h));
-      column-gap: var(--group-gap);
-      row-gap: var(--gap-y);
-      justify-content: center;
-      align-items: end; /* důležité pro "růst nahoru" */
-      touch-action: manipulation;
-      user-select: none;
+    /* 5 sloupců × 3 řady */
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(5, var(--sq-w));
+      /* rezervace na zvětšení nahoru = 2x výška */
+      grid-template-rows:repeat(3, calc(var(--sq-h) * 2));
+      column-gap:var(--col-gap);
+      row-gap:var(--row-gap);
+      justify-content:center;
+      align-content:center;
+      max-width:100%;
+      touch-action:manipulation;
     }
 
-    .sq {
-      width: var(--sq-w);
-      height: var(--sq-h);
-      background: #ffb8c2;     /* velmi jemná červená */
-      border-radius: var(--radius);
-      cursor: pointer;
-      transform-origin: bottom center;
-      transition: transform 180ms ease, background-color 180ms ease;
-      will-change: transform;
+    .sq{
+      width:var(--sq-w);
+      height:var(--sq-h);
+      background:var(--white);
+      border:none;
+      border-radius:12px;
+      cursor:pointer;
+      user-select:none;
+      -webkit-tap-highlight-color:transparent;
+
+      /* důležité: základna drží dole, růst jen nahoru */
+      align-self:end;
+      transform-origin:bottom center;
+      transition:transform .18s ease, background-color .18s ease, box-shadow .18s ease;
+      box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 3px 10px rgba(0,0,0,.28);
     }
 
-    /* aktivní = zelená + 2x vyšší směrem nahoru */
-    .sq.on {
-      background: #4dffb2;
-      transform: scaleY(2);
+    .sq.on{
+      background:var(--green);
+      transform:scaleY(var(--grow));
+      box-shadow:0 1px 0 rgba(255,255,255,.15) inset, 0 8px 18px rgba(0,0,0,.35);
     }
 
-    .sq:focus-visible{
-      outline: 2px solid #d7defa;
-      outline-offset: 2px;
-    }
-
-    @media (max-width: 420px){
+    /* Mobil */
+    @media (max-width: 520px){
       :root{
-        --sq-w: 28px;
-        --sq-h: 22px;
-        --gap-y: 8px;
-        --group-gap: 18px;
+        --sq-w: 48px;
+        --sq-h: 36px;
+        --col-gap: 10px;
+        --row-gap: 22px;
+      }
+    }
+
+    @media (max-width: 390px){
+      :root{
+        --sq-w: 42px;
+        --sq-h: 34px;
+        --col-gap: 8px;
+        --row-gap: 20px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>TEST prsty - viditelnost</h1>
-    <div id="grid" class="grid"></div>
-  </div>
+  <h1>TEST prsty - viditelnost</h1>
+  <div id="grid" class="grid"></div>
 
   <script>
     const grid = document.getElementById('grid');
-    const rows = 5;
-    const cols = 3; // 3 pětice
-    const N = rows * cols; // 15
+    const N = 15; // 5x3
 
-    // Plnění po sloupcích: 5 pod sebou v každé pětici
-    for (let c = 0; c < cols; c++) {
-      for (let r = 0; r < rows; r++) {
-        const el = document.createElement('button');
-        el.type = 'button';
-        el.className = 'sq';
-        el.title = `skupina ${c + 1}, pozice ${r + 1}`;
-        el.setAttribute('aria-pressed', 'false');
-
-        el.addEventListener('click', () => {
-          const on = el.classList.toggle('on');
-          el.setAttribute('aria-pressed', String(on));
-        });
-
-        grid.appendChild(el);
-      }
+    for (let i = 0; i < N; i++){
+      const el = document.createElement('button');
+      el.className = 'sq';
+      el.type = 'button';
+      el.title = 'i=' + i;
+      el.setAttribute('aria-label', 'Prst ' + (i + 1));
+      el.addEventListener('click', () => el.classList.toggle('on'));
+      grid.appendChild(el);
     }
   </script>
 </body>
