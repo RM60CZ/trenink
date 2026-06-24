@@ -3,74 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Test prsty viditelnost</title>
+  <title>TEST</title>
   <style>
-    body { margin:0; background:#0b1020; color:#d7defa; font-family:system-ui; }
-    .wrap { padding:16px; display:flex; gap:16px; flex-wrap:wrap; justify-content:center; }
-    .hand { width:320px; background:#11183a; border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:14px; }
-    .palm { position:relative; height:170px; background:rgba(255,255,255,0.03); border-radius:12px; border:1px dashed rgba(255,255,255,0.1); overflow:hidden; }
-    .finger {
-      position:absolute;
-      bottom:10px;
-      width:40px;
-      height:60px; /* aby byly vidět */
-      border-radius:12px;
-      left:0;
-      cursor:pointer;
-      background:#ff4d6d; /* červená = OFF */
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:#fff;
-      font-weight:700;
-      user-select:none;
-    }
-    .finger.on { background:#4dffb2; } /* zelená = ON */
+    body { font-family: system-ui, sans-serif; padding: 24px; }
+    .box { padding: 16px 20px; background: #ffefef; border: 2px solid #ff6b6b; border-radius: 12px; }
   </style>
 </head>
 <body>
-  <div class="wrap" id="hands"></div>
-
-  <script>
-    const HANDS = 3, FINGERS = 5;
-    const state = Array.from({length:HANDS}, () => Array(FINGERS).fill(0));
-    const positions = [10, 60, 110, 160, 210];
-
-    const container = document.getElementById("hands");
-
-    function render(){
-      container.innerHTML = "";
-      for(let h=0; h<HANDS; h++){
-        const hand = document.createElement("div");
-        hand.className = "hand";
-        hand.innerHTML = `<div style="text-align:center;margin-bottom:8px;opacity:.9;">Ruka ${h+1}</div>
-                          <div class="palm"></div>`;
-        const palm = hand.querySelector(".palm");
-
-        for(let f=0; f<FINGERS; f++){
-          const el = document.createElement("div");
-          el.className = "finger";
-          el.style.left = positions[f] + "px";
-          el.dataset.hand = h;
-          el.dataset.finger = f;
-
-          const v = state[h][f];
-          el.classList.toggle("on", v === 1);
-          el.textContent = v;
-
-          el.addEventListener("click", () => {
-            state[h][f] = 1 - state[h][f];
-            render();
-          });
-
-          palm.appendChild(el);
-        }
-
-        container.appendChild(hand);
-      }
-    }
-
-    render();
-  </script>
+  <div class="box">
+    <b>TEST OK:</b> Pokud tohle vidíš, HTML se načítá správně.
+  </div>
 </body>
 </html>
