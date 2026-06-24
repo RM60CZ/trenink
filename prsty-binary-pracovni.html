@@ -1,139 +1,31 @@
 <!doctype html>
 <html lang="cs">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>3 ruce – jen zobrazení prstů</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TEST prsty</title>
   <style>
-    :root{
-      --bg:#0f1220;
-      --panel:#171b2e;
-      --card:#12172a;
-      --stroke:#2b324f;
-      --text:#e5e7eb;
-      --muted:#9ca3af;
-      --palm:#f1b98f;
-      --finger:#67e8a5;
-    }
-
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      min-height:100vh;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:16px;
-      padding:24px;
-      font-family:system-ui,sans-serif;
-      background:var(--bg);
-      color:var(--text);
-    }
-
-    h1{margin:0}
-    .note{margin:0;color:var(--muted)}
-
-    .board{
-      width:min(1100px,100%);
-      background:var(--panel);
-      border:1px solid var(--stroke);
-      border-radius:16px;
-      padding:16px;
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:14px;
-    }
-
-    .hand-card{
-      background:var(--card);
-      border:1px solid var(--stroke);
-      border-radius:14px;
-      padding:12px;
-      min-height:360px;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-
-    .hand-title{font-weight:700}
-
-    .hand{
-      flex:1;
-      display:flex;
-      align-items:flex-end;
-      justify-content:center;
-      gap:10px;
-      position:relative;
-      padding:10px 6px 0;
-    }
-
-    .palm{
-      position:absolute;
-      left:50%;
-      transform:translateX(-50%);
-      bottom:0;
-      width:80%;
-      height:120px;
-      border-radius:24px 24px 18px 18px;
-      background:var(--palm);
-      border:2px solid #d79c73;
-      z-index:1;
-    }
-
-    .finger-wrap{
-      position:relative;
-      z-index:2;
-      width:46px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:6px;
-    }
-
-    .finger{
-      width:42px;
-      border-radius:16px;
-      border:2px solid #2a2f45;
-      background:var(--finger);
-      box-shadow:0 6px 10px rgba(0,0,0,.22);
-    }
-
-    /* výšky: palec, ukazovák, prostředníček, prsteník, malíček */
-    .h-thumb{height:110px;}
-    .h-index{height:165px;}
-    .h-middle{height:190px;}
-    .h-ring{height:165px;}
-    .h-pinky{height:135px;}
-
-    .fname{
-      font-size:.74rem;
-      color:var(--muted);
-      text-align:center;
-    }
-
-    @media (max-width:900px){
-      .board{grid-template-columns:1fr;}
-    }
+    body { margin:0; background:#0b1020; color:#d7defa; font-family:system-ui, sans-serif; padding:16px; }
+    .grid { display:grid; grid-template-columns: repeat(15, 30px); gap:8px; margin-top:12px; }
+    .sq { width:30px; height:30px; background:#ff4d6d; border-radius:8px; }
+    .sq.on { background:#4dffb2; }
   </style>
 </head>
 <body>
-  <h1>3 ruce – náhled prstů</h1>
-  <p class="note">Jen vizuální návrh (bez klikání).</p>
+  <h1>TEST prsty - viditelnost</h1>
+  <div id="grid" class="grid"></div>
 
-  <div class="board">
-    <!-- Ruka 1 -->
-    <section class="hand-card">
-      <div class="hand-title">Ruka 1</div>
-      <div class="hand">
-        <div class="finger-wrap"><div class="finger h-thumb"></div><div class="fname">Palec</div></div>
-        <div class="finger-wrap"><div class="finger h-index"></div><div class="fname">Ukazovák</div></div>
-        <div class="finger-wrap"><div class="finger h-middle"></div><div class="fname">Prostředníček</div></div>
-        <div class="finger-wrap"><div class="finger h-ring"></div><div class="fname">Prsteník</div></div>
-        <div class="finger-wrap"><div class="finger h-pinky"></div><div class="fname">Malíček</div></div>
-        <div class="palm"></div>
-      </div>
-    </section>
-
-    <!-- Ruka 2 -->
-    <section class="hand-card">
-      <div*
+  <script>
+    const grid = document.getElementById('grid');
+    const N = 15;
+    for (let i=0; i<N; i++){
+      const el = document.createElement('div');
+      el.className = 'sq';
+      el.textContent = '';
+      el.title = 'i=' + i;
+      el.onclick = () => el.classList.toggle('on');
+      grid.appendChild(el);
+    }
+  </script>
+</body>
+</html>
