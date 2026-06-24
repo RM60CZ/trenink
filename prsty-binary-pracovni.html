@@ -1,1 +1,270 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>3 ruce – toggle prsty</title>
+  <style>
+    :root{
+      --bg: #0b1020;
+      --panel: #11183a;
+      --text: #d7defa;
+      --prst: #5aa7ff;
+      --prstOn: #4dffb2;
+      --prstOff: #2b3a66;
 
+      --baseY: 120px;
+      --hOff: 35px;   /* skrčený */
+      --hOn: 90px;    /* zvednutý */
+      --yOff: 80px;   /* skrčený posun dolů */
+      --yOn: 15px;    /* zvednutý posun nahoru */
+    }
+
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display:flex;
+      justify-content:center;
+    }
+    .wrap{
+      width:min(1100px, 96vw);
+      padding: 18px;
+    }
+
+    .row{
+      display:flex;
+      gap: 18px;
+      align-items:flex-start;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+
+    .hand{
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 14px 14px 18px;
+      width: 320px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .handTitle{
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 8px;
+      text-align:center;
+      user-select:none;
+    }
+
+    .palm{
+      position:relative;
+      height: 170px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px dashed rgba(255,255,255,0.08);
+    }
+
+    .finger{
+      position:absolute;
+      bottom: 0;
+      width: 36px;
+      border-radius: 18px 18px 10px 10px;
+      cursor:pointer;
+      transform-origin: bottom center;
+      transition: transform 180ms ease, filter 180ms ease, background-color 180ms ease, left 180ms ease, top 180ms ease, opacity 180ms ease;
+      user-select:none;
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      padding-bottom: 8px;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+    }
+
+    .finger.off{
+      background: var(--prstOff);
+      filter: saturate(0.7);
+      opacity: 0.85;
+      transform: scale(0.9);
+    }
+    .finger.on{
+      background: var(--prstOn);
+      filter: saturate(1.1);
+      opacity: 1;
+      transform: scale(1.0);
+    }
+
+    .finger .bit{
+      position:absolute;
+      top:-18px;
+      font-size: 12px;
+      opacity: 0.9;
+      letter-spacing:0.2px;
+    }
+
+    /* zónování šířek podle “prstu” (prostě dočasně) */
+    /* middle největší, pinky nejmenší – jen pro lepší vizuální dojem */
+    .size-middle { width: 48px; }
+    .size-index,
+    .size-ring   { width: 40px; }
+    .size-pinky  { width: 32px; }
+
+    /* palec (často mimo osu) – tady jen posun v x */
+    .size-thumb  { width: 38px; }
+    .thumb { border-radius: 16px 16px 12px 12px; }
+
+    .controls{
+      margin-top: 14px;
+      display:flex;
+      gap: 10px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    button{
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor:pointer;
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="row" id="hands"></div>
+
+  <div class="controls">
+    <button id="resetBtn">Reset</button>
+  </div>
+</div>
+
+<script>
+  const HANDS = 3;
+  const FINGERS = 5;
+
+  // pořadí prstů v poli: [thumb, index, middle, ring, pinky]
+  // state: 0 skrčený, 1 zvednutý
+  const state = Array.from({length: HANDS}, () => Array(FINGERS).fill(0));
+
+  // nastavení velikostí a pozic (x) v rámci "dlaně"
+  // middle největší, pinky nejmenší (vizuálně)
+  const fingerDefs = [
+    { name: "palec",  classSize: "size-thumb",  x: 5  , mirrorRole: "thumb"  },
+    { name: "ukazovák", classSize: "size-index", x: 55 , mirrorRole: "normal" },
+    { name: "prostředník", classSize: "size-middle", x: 110, mirrorRole: "normal" },
+    { name: "prsteník", classSize: "size-ring",  x: 165, mirrorRole: "normal" },
+    { name: "malíček", classSize: "size-pinky", x: 215, mirrorRole: "normal" },
+  ];
+
+  // palec: na pravé ruce vpravo, na levých vlevo.
+  function mirroredX(handIndex, fingerIndex){
+    const defs = fingerDefs[fingerIndex];
+    const palmWidth = 270; // musí odpovídat šířce area
+    const mirror = (handIndex === 2); // pouze "pravá ruka" (index 2) má palec vpravo
+    if (!mirror) return defs.x; // levé ruce: palec vlevo = definice platí
+
+    // mirror pro celou ruku (jen aby palec vyšel na správnou stranu):
+    // x' = palmWidth - (x + w)
+    // když nejsme schopní znát w přesně z CSS, vezmeme odhad podle classSize
+    const w = estimateWidthByClass(defs.classSize);
+    return palmWidth - (defs.x + w);
+  }
+
+  function estimateWidthByClass(cls){
+    if (cls === "size-middle") return 48;
+    if (cls === "size-index" || cls === "size-ring") return 40;
+    if (cls === "size-pinky") return 32;
+    if (cls === "size-thumb") return 38;
+    return 36;
+  }
+
+  function setFingerVisual(handIndex, fingerIndex){
+    const el = document.querySelector(`[data-hand="${handIndex}"][data-finger="${fingerIndex}"]`);
+    const v = state[handIndex][fingerIndex];
+
+    const defs = fingerDefs[fingerIndex];
+
+    // přepočet výšky a pozice (skrčený dole / zvednutý nahoře)
+    const h = (v === 1) ? parseInt(getComputedStyle(document.documentElement).getPropertyValue('--hOn')) 
+                         : parseInt(getComputedStyle(document.documentElement).getPropertyValue('--hOff'));
+    const y = (v === 1) ? parseInt(getComputedStyle(document.documentElement).getPropertyValue('--yOn')) 
+                         : parseInt(getComputedStyle(document.documentElement).getPropertyValue('--yOff'));
+
+    // y se řeší přes top: spodní referencování je zjednodušené
+    // "palm" má height 170, finger je absolutně.
+    // friend: použijeme top a height
+    el.style.height = h + "px";
+    el.style.top = y + "px";
+
+    // zrcadlení (hlavně palec)
+    el.style.left = mirroredX(handIndex, fingerIndex) + "px";
+
+    // třída on/off
+    el.classList.toggle("on", v === 1);
+    el.classList.toggle("off", v === 0);
+
+    // malý label (0/1)
+    const bitEl = el.querySelector(".bit");
+    if (bitEl) bitEl.textContent = v;
+  }
+
+  function toggleFinger(handIndex, fingerIndex){
+    state[handIndex][fingerIndex] = 1 - state[handIndex][fingerIndex];
+    setFingerVisual(handIndex, fingerIndex);
+  }
+
+  function render(){
+    const container = document.getElementById("hands");
+    container.innerHTML = "";
+
+    for (let h = 0; h < HANDS; h++){
+      const hand = document.createElement("div");
+      hand.className = "hand";
+
+      // popisek: levá / pravá podle indexu
+      const label = (h === 2) ? "Pravá ruka (palec vpravo)" : `Levá ruka ${h+1} (palec vlevo)`;
+      hand.innerHTML = `
+        <div class="handTitle">${label}</div>
+        <div class="palm" id="palm-${h}"></div>
+      `;
+
+      const palm = hand.querySelector(`#palm-${h}`);
+
+      for (let f = 0; f < FINGERS; f++){
+        const defs = fingerDefs[f];
+
+        const finger = document.createElement("div");
+        finger.className = `finger off ${defs.classSize}`;
+        finger.dataset.hand = h;
+        finger.dataset.finger = f;
+
+        finger.innerHTML = `<div class="bit"></div>`;
+
+        // initial
+        setFingerVisual(h, f);
+
+        finger.addEventListener("click", () => toggleFinger(h, f));
+
+        palm.appendChild(finger);
+      }
+
+      container.appendChild(hand);
+    }
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    for (let h = 0; h < HANDS; h++){
+      for (let f = 0; f < FINGERS; f++){
+        state[h][f] = 0;
+        setFingerVisual(h, f);
+      }
+    }
+  });
+
+  render();
+</script>
+</body>
+</html>
