@@ -2,10 +2,16 @@
 <html lang="cs">
 <head>
   <meta charset="utf-8" />
-  <title>TEST HTML</title>
+  <title>TEST JS</title>
 </head>
 <body style="font-family:Arial; padding:24px;">
-  <h1>VIDÍŠ TO?</h1>
-  <p>Pokud toto nevidíš, problém je v tom, že se stránka nenačítá nebo otevíráš jiný soubor.</p>
+  <h1>TEST JS</h1>
+  <div id="out" style="font-size:18px; padding:10px; border:1px solid #ccc; border-radius:8px;">
+    Sem se má vypsat výsledek…
+  </div>
+
+  <script>
+    document.getElementById('out').textContent = 'JS běží ✅';
+  </script>
 </body>
 </html>
