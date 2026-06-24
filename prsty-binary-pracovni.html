@@ -3,115 +3,187 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TEST prsty</title>
+  <title>Prsty jako bináry</title>
   <style>
     :root{
-      --sq-w: 56px;       /* větší kostičky */
-      --sq-h: 40px;
-      --col-gap: 14px;    /* mezera mezi sloupci */
-      --row-gap: 26px;    /* větší mezera mezi řadami */
-      --grow: 2;          /* 2x vyšší po kliknutí */
-      --white: #ffffff;
-      --green: #41d887;
-      --bg: #0b1020;
-      --text: #d7defa;
+      --sq-w: 48px;
+      --sq-h: 24px;
+      --gap-x: 12px;
+      --gap-y: 14px;
+      --radius: 8px;
     }
 
-    *{ box-sizing:border-box; }
+    * { box-sizing: border-box; }
 
-    body{
-      margin:0;
-      min-height:100dvh;
-      background:var(--bg);
-      color:var(--text);
-      font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      align-items:center;
-      padding:16px;
+    body {
+      margin: 0;
+      min-height: 100svh;
+      background: #0b1020;
+      color: #d7defa;
+      font-family: system-ui, sans-serif;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+    }
+
+    .wrap{
+      width: min(100%, 520px);
+      display: grid;
+      gap: 14px;
+      justify-items: center;
+    }
+
+    .top{
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
     h1{
-      margin:0 0 18px;
-      font-size:clamp(20px,4.8vw,30px);
-      text-align:center;
+      margin: 0;
+      font-size: clamp(1.05rem, 3vw, 1.45rem);
+      line-height: 1.2;
     }
 
-    /* 5 sloupců × 3 řady */
+    #valueInput{
+      width: 140px;
+      max-width: 80vw;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid #2a3358;
+      background: #121a33;
+      color: #e7ecff;
+      font-size: 1rem;
+      text-align: right;
+    }
+
     .grid{
-      display:grid;
-      grid-template-columns:repeat(5, var(--sq-w));
-      /* rezervace na zvětšení nahoru = 2x výška */
-      grid-template-rows:repeat(3, calc(var(--sq-h) * 2));
-      column-gap:var(--col-gap);
-      row-gap:var(--row-gap);
-      justify-content:center;
-      align-content:center;
-      max-width:100%;
-      touch-action:manipulation;
+      display: grid;
+      grid-template-columns: repeat(5, var(--sq-w)); /* 5 sloupců */
+      grid-template-rows: repeat(3, var(--sq-h));    /* 3 řady */
+      column-gap: var(--gap-x);
+      row-gap: var(--gap-y);
+      justify-content: center;
+      align-items: end; /* růst nahoru */
+      touch-action: manipulation;
+      user-select: none;
     }
 
     .sq{
-      width:var(--sq-w);
-      height:var(--sq-h);
-      background:var(--white);
-      border:none;
-      border-radius:12px;
-      cursor:pointer;
-      user-select:none;
-      -webkit-tap-highlight-color:transparent;
-
-      /* důležité: základna drží dole, růst jen nahoru */
-      align-self:end;
-      transform-origin:bottom center;
-      transition:transform .18s ease, background-color .18s ease, box-shadow .18s ease;
-      box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 3px 10px rgba(0,0,0,.28);
+      width: var(--sq-w);
+      height: var(--sq-h);
+      border: 0;
+      border-radius: var(--radius);
+      background: #ffc8cf; /* velmi jemná červená */
+      cursor: pointer;
+      transform-origin: bottom center;
+      transition: transform 160ms ease, background-color 160ms ease;
     }
 
     .sq.on{
-      background:var(--green);
-      transform:scaleY(var(--grow));
-      box-shadow:0 1px 0 rgba(255,255,255,.15) inset, 0 8px 18px rgba(0,0,0,.35);
+      background: #4dffb2;
+      transform: scaleY(2); /* 2x vyšší směrem nahoru */
     }
 
-    /* Mobil */
-    @media (max-width: 520px){
-      :root{
-        --sq-w: 48px;
-        --sq-h: 36px;
-        --col-gap: 10px;
-        --row-gap: 22px;
-      }
+    .sq:focus-visible{
+      outline: 2px solid #d7defa;
+      outline-offset: 2px;
     }
 
-    @media (max-width: 390px){
+    @media (max-width: 420px){
       :root{
         --sq-w: 42px;
-        --sq-h: 34px;
-        --col-gap: 8px;
-        --row-gap: 20px;
+        --sq-h: 22px;
+        --gap-x: 8px;
+        --gap-y: 12px;
       }
+
+      #valueInput{ width: 120px; }
     }
   </style>
 </head>
 <body>
-  <h1>TEST prsty - viditelnost</h1>
-  <div id="grid" class="grid"></div>
+  <div class="wrap">
+    <div class="top">
+      <h1>Prsty jako bináry</h1>
+      <input id="valueInput" type="number" value="0" min="0" step="1" inputmode="numeric" />
+    </div>
+
+    <div id="grid" class="grid"></div>
+  </div>
 
   <script>
+    const ROWS = 3;
+    const COLS = 5;
     const grid = document.getElementById('grid');
-    const N = 15; // 5x3
+    const valueInput = document.getElementById('valueInput');
 
-    for (let i = 0; i < N; i++){
-      const el = document.createElement('button');
-      el.className = 'sq';
-      el.type = 'button';
-      el.title = 'i=' + i;
-      el.setAttribute('aria-label', 'Prst ' + (i + 1));
-      el.addEventListener('click', () => el.classList.toggle('on'));
-      grid.appendChild(el);
+    // Mapování indexů tak, aby pravá dolní měla váhu 1,
+    // a pokračovalo se doleva, pak o řádek výš (zprava doleva).
+    // row: 0=horní, 1=prostřední, 2=dolní
+    function bitExponent(row, col) {
+      return (ROWS - 1 - row) * COLS + (COLS - 1 - col);
     }
+
+    function bitValue(row, col) {
+      return 2 ** bitExponent(row, col);
+    }
+
+    function recalc() {
+      let sum = 0;
+      const squares = grid.querySelectorAll('.sq');
+      squares.forEach(el => {
+        if (el.classList.contains('on')) {
+          sum += Number(el.dataset.value);
+        }
+      });
+      valueInput.value = String(sum);
+    }
+
+    // Vytvoření 3x5 kostiček
+    for (let row = 0; row < ROWS; row++) {
+      for (let col = 0; col < COLS; col++) {
+        const val = bitValue(row, col);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'sq';
+        btn.dataset.value = String(val);
+        btn.title = `Hodnota: ${val}`;
+        btn.setAttribute('aria-label', `Bit s hodnotou ${val}`);
+        btn.setAttribute('aria-pressed', 'false');
+
+        btn.addEventListener('click', () => {
+          const on = btn.classList.toggle('on');
+          btn.setAttribute('aria-pressed', String(on));
+          recalc();
+        });
+
+        grid.appendChild(btn);
+      }
+    }
+
+    // Pokud uživatel ručně napíše číslo do inputu, nastavíme podle něj bity.
+    valueInput.addEventListener('input', () => {
+      let n = Number(valueInput.value);
+      if (!Number.isFinite(n) || n < 0) n = 0;
+      n = Math.floor(n);
+
+      const squares = grid.querySelectorAll('.sq');
+      squares.forEach(el => {
+        const v = Number(el.dataset.value);
+        const on = (n & v) === v;
+        el.classList.toggle('on', on);
+        el.setAttribute('aria-pressed', String(on));
+      });
+
+      // Upravíme input na skutečně reprezentovatelnou hodnotu (0..32767)
+      recalc();
+    });
+
+    recalc();
   </script>
 </body>
 </html>
