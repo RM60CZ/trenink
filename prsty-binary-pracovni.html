@@ -6,102 +6,131 @@
   <title>Prsty jako bináry</title>
   <style>
     :root{
-      --sq-w: 48px;
-      --sq-h: 24px;
-      --gap-x: 12px;
-      --gap-y: 14px;
-      --radius: 8px;
+      --sq-w: 56px;
+      --sq-h: 40px;
+      --col-gap: 14px;
+      --row-gap: 26px;
+      --grow: 2;
+      --white: #ffffff;
+      --green: #41d887;
+      --bg: #0b1020;
+      --text: #d7defa;
+      --input-bg: #121a33;
+      --input-border: #2a3358;
+      --input-text: #e7ecff;
     }
 
-    * { box-sizing: border-box; }
+    *{ box-sizing:border-box; }
 
-    body {
-      margin: 0;
-      min-height: 100svh;
-      background: #0b1020;
-      color: #d7defa;
-      font-family: system-ui, sans-serif;
-      display: grid;
-      place-items: center;
-      padding: 16px;
+    body{
+      margin:0;
+      min-height:100dvh;
+      background:var(--bg);
+      color:var(--text);
+      font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      padding:16px;
     }
 
     .wrap{
-      width: min(100%, 520px);
-      display: grid;
-      gap: 14px;
-      justify-items: center;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:18px;
+      max-width:100%;
     }
 
     .top{
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      flex-wrap:wrap;
     }
 
     h1{
-      margin: 0;
-      font-size: clamp(1.05rem, 3vw, 1.45rem);
-      line-height: 1.2;
+      margin:0;
+      font-size:clamp(20px,4.8vw,30px);
+      text-align:center;
     }
 
     #valueInput{
-      width: 140px;
-      max-width: 80vw;
-      padding: 8px 10px;
-      border-radius: 10px;
-      border: 1px solid #2a3358;
-      background: #121a33;
-      color: #e7ecff;
-      font-size: 1rem;
-      text-align: right;
+      width:160px;
+      max-width:80vw;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--input-border);
+      background:var(--input-bg);
+      color:var(--input-text);
+      font-size:1rem;
+      text-align:right;
     }
 
     .grid{
-      display: grid;
-      grid-template-columns: repeat(5, var(--sq-w)); /* 5 sloupců */
-      grid-template-rows: repeat(3, var(--sq-h));    /* 3 řady */
-      column-gap: var(--gap-x);
-      row-gap: var(--gap-y);
-      justify-content: center;
-      align-items: end; /* růst nahoru */
-      touch-action: manipulation;
-      user-select: none;
+      display:grid;
+      grid-template-columns:repeat(5, var(--sq-w));
+      grid-template-rows:repeat(3, calc(var(--sq-h) * 2));
+      column-gap:var(--col-gap);
+      row-gap:var(--row-gap);
+      justify-content:center;
+      align-content:center;
+      max-width:100%;
+      touch-action:manipulation;
     }
 
     .sq{
-      width: var(--sq-w);
-      height: var(--sq-h);
-      border: 0;
-      border-radius: var(--radius);
-      background: #ffc8cf; /* velmi jemná červená */
-      cursor: pointer;
-      transform-origin: bottom center;
-      transition: transform 160ms ease, background-color 160ms ease;
+      width:var(--sq-w);
+      height:var(--sq-h);
+      background:var(--white);
+      border:none;
+      border-radius:12px;
+      cursor:pointer;
+      user-select:none;
+      -webkit-tap-highlight-color:transparent;
+      align-self:end;
+      transform-origin:bottom center;
+      transition:transform .18s ease, background-color .18s ease, box-shadow .18s ease;
+      box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 3px 10px rgba(0,0,0,.28);
     }
 
     .sq.on{
-      background: #4dffb2;
-      transform: scaleY(2); /* 2x vyšší směrem nahoru */
+      background:var(--green);
+      transform:scaleY(var(--grow));
+      box-shadow:0 1px 0 rgba(255,255,255,.15) inset, 0 8px 18px rgba(0,0,0,.35);
     }
 
     .sq:focus-visible{
-      outline: 2px solid #d7defa;
-      outline-offset: 2px;
+      outline:2px solid var(--text);
+      outline-offset:2px;
     }
 
-    @media (max-width: 420px){
+    @media (max-width: 520px){
       :root{
-        --sq-w: 42px;
-        --sq-h: 22px;
-        --gap-x: 8px;
-        --gap-y: 12px;
+        --sq-w: 48px;
+        --sq-h: 36px;
+        --col-gap: 10px;
+        --row-gap: 22px;
       }
 
-      #valueInput{ width: 120px; }
+      #valueInput{
+        width:140px;
+      }
+    }
+
+    @media (max-width: 390px){
+      :root{
+        --sq-w: 42px;
+        --sq-h: 34px;
+        --col-gap: 8px;
+        --row-gap: 20px;
+      }
+
+      #valueInput{
+        width:128px;
+      }
     }
   </style>
 </head>
@@ -109,7 +138,13 @@
   <div class="wrap">
     <div class="top">
       <h1>Prsty jako bináry</h1>
-      <input id="valueInput" type="number" value="0" min="0" step="1" inputmode="numeric" />
+      <input
+        id="valueInput"
+        type="text"
+        value="0"
+        inputmode="numeric"
+        aria-label="Hodnota v desítkové soustavě"
+      />
     </div>
 
     <div id="grid" class="grid"></div>
@@ -118,12 +153,11 @@
   <script>
     const ROWS = 3;
     const COLS = 5;
+    const MAX_VALUE = (2 ** (ROWS * COLS)) - 1;
+
     const grid = document.getElementById('grid');
     const valueInput = document.getElementById('valueInput');
 
-    // Mapování indexů tak, aby pravá dolní měla váhu 1,
-    // a pokračovalo se doleva, pak o řádek výš (zprava doleva).
-    // row: 0=horní, 1=prostřední, 2=dolní
     function bitExponent(row, col) {
       return (ROWS - 1 - row) * COLS + (COLS - 1 - col);
     }
@@ -132,22 +166,38 @@
       return 2 ** bitExponent(row, col);
     }
 
+    function formatNumber(n) {
+      return new Intl.NumberFormat('cs-CZ').format(n);
+    }
+
+    function parseInputValue(text) {
+      const digits = String(text).replace(/[^\d]/g, '');
+      if (!digits) return 0;
+
+      let n = Number(digits);
+      if (!Number.isFinite(n) || n < 0) n = 0;
+
+      return Math.min(Math.floor(n), MAX_VALUE);
+    }
+
     function recalc() {
       let sum = 0;
       const squares = grid.querySelectorAll('.sq');
+
       squares.forEach(el => {
         if (el.classList.contains('on')) {
           sum += Number(el.dataset.value);
         }
       });
-      valueInput.value = String(sum);
+
+      valueInput.value = formatNumber(sum);
     }
 
-    // Vytvoření 3x5 kostiček
     for (let row = 0; row < ROWS; row++) {
       for (let col = 0; col < COLS; col++) {
         const val = bitValue(row, col);
         const btn = document.createElement('button');
+
         btn.type = 'button';
         btn.className = 'sq';
         btn.dataset.value = String(val);
@@ -165,13 +215,10 @@
       }
     }
 
-    // Pokud uživatel ručně napíše číslo do inputu, nastavíme podle něj bity.
     valueInput.addEventListener('input', () => {
-      let n = Number(valueInput.value);
-      if (!Number.isFinite(n) || n < 0) n = 0;
-      n = Math.floor(n);
-
+      const n = parseInputValue(valueInput.value);
       const squares = grid.querySelectorAll('.sq');
+
       squares.forEach(el => {
         const v = Number(el.dataset.value);
         const on = (n & v) === v;
@@ -179,8 +226,7 @@
         el.setAttribute('aria-pressed', String(on));
       });
 
-      // Upravíme input na skutečně reprezentovatelnou hodnotu (0..32767)
-      recalc();
+      valueInput.value = formatNumber(n);
     });
 
     recalc();
