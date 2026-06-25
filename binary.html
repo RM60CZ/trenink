@@ -35,6 +35,17 @@
         .header-icons { display: flex; gap: 12px; align-items: center; }
         .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-color); }
 
+        .finger-toggle-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            font-weight: bold;
+            line-height: 1;
+            cursor: pointer;
+            color: var(--text-color);
+            padding: 0;
+        }
+
         .settings-group { display: none; flex-direction: column; gap: 8px; margin-top: 4px; }
         select {
             width: 100%; padding: 6px; border-radius: 6px;
@@ -47,6 +58,53 @@
             color: #86868b; 
             text-align: center; 
             display: none;
+        }
+
+        .finger-panel {
+            display: none;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .finger-panel.visible {
+            display: flex;
+        }
+
+        /* --- NOVÉ: prsty klikatelné jen když je JS povolí --- */
+        .finger-panel.clickable .finger-sq { pointer-events: auto; }
+        /* --- konec --- */
+
+        .finger-grid{
+            display:grid;
+            grid-template-columns:repeat(5, 56px);
+            grid-template-rows:repeat(3, calc(40px * 2));
+            column-gap:14px;
+            row-gap:26px;
+            justify-content:center;
+            align-content:center;
+            max-width:100%;
+            touch-action:manipulation;
+        }
+
+        .finger-sq{
+            width:56px;
+            height:40px;
+            background:#d6d6db;
+            border:none;
+            border-radius:12px;
+            user-select:none;
+            -webkit-tap-highlight-color:transparent;
+            align-self:end;
+            transform-origin:bottom center;
+            transition:transform .18s ease, background-color .18s ease, box-shadow .18s ease;
+            box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 3px 10px rgba(0,0,0,.28);
+            pointer-events:none;
+        }
+
+        .finger-sq.on{
+            background:#8fa39a;
+            transform:scaleY(2);
+            box-shadow:0 1px 0 rgba(255,255,255,.15) inset, 0 8px 18px rgba(0,0,0,.35);
         }
 
         .game-area { min-height: 160px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
@@ -106,13 +164,11 @@
         }
         .clear-btn:active { background: var(--btn-hover); }
 
-        /* Pro DEC-BIN: šířka až k pravé hraně tlačítka Výsledek (100% kontejneru minus input a mezery) */
         .input-with-back.dec-mode .clear-btn {
             flex: 1;
             max-width: calc(100% - 180px - 8px - 48px - 8px);
         }
 
-        /* Pro BIN-DEC: šířka až k pravé hraně tlačítka Výsledek */
         .input-with-back.bin-mode .clear-btn {
             flex: 1;
             max-width: calc(100% - 180px - 8px - 48px - 8px);
@@ -171,6 +227,34 @@
             color: var(--error);
             border-color: var(--error);
         }
+
+        @media (max-width: 520px){
+            .finger-grid{
+                grid-template-columns:repeat(5, 48px);
+                grid-template-rows:repeat(3, calc(36px * 2));
+                column-gap:10px;
+                row-gap:22px;
+            }
+
+            .finger-sq{
+                width:48px;
+                height:36px;
+            }
+        }
+
+        @media (max-width: 390px){
+            .finger-grid{
+                grid-template-columns:repeat(5, 42px);
+                grid-template-rows:repeat(3, calc(34px * 2));
+                column-gap:8px;
+                row-gap:20px;
+            }
+
+            .finger-sq{
+                width:42px;
+                height:34px;
+            }
+        }
     </style>
 </head>
 <body data-theme="light">
@@ -180,9 +264,14 @@
         <h1 id="app-title">Bináry   </h1>
         <div class="header-icons">
             <button class="icon-btn" id="home-btn" onclick="goHome()" style="display: none;">🏠</button>
+            <button class="finger-toggle-btn" id="finger-toggle-btn" onclick="toggleFingerPanel()">P</button>
             <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
             <button class="icon-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
         </div>
+    </div>
+
+    <div class="finger-panel" id="finger-panel">
+        <div class="finger-grid" id="finger-grid"></div>
     </div>
 
     <div class="settings-group" id="settings-panel">
@@ -247,6 +336,10 @@
     let expectedAnswer = "";
     let expectedLength = 0;
     let currentDisplayBits = 0;
+    let fingerPanelVisible = false;
+
+    // NOVÉ: součet prstů jen pro dec2bin
+    let currentFingerSum = 0;
 
     function formatDecimal(num) {
         return num.toLocaleString('cs-CZ');
@@ -321,6 +414,91 @@
         }
     }
 
+    function initFingerGrid() {
+        const fingerGrid = document.getElementById('finger-grid');
+        fingerGrid.innerHTML = '';
+        const rows = 3;
+        const cols = 5;
+
+        function bitExponent(row, col) {
+            return (rows - 1 - row) * cols + (cols - 1 - col);
+        }
+
+        function bitValue(row, col) {
+            return 2 ** bitExponent(row, col);
+        }
+
+        for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+                const el = document.createElement('div');
+                el.className = 'finger-sq';
+                el.dataset.value = String(bitValue(row, col));
+                fingerGrid.appendChild(el);
+
+                // NOVÉ: klik přidá/odebere bit v součtu, ale jen když jsme v dec2bin + panel vysunutý
+                el.addEventListener('click', () => {
+                    if (state !== 'playing') return;
+
+                    const direction = document.getElementById('direction').value;
+                    if (!(direction === 'dec2bin' && fingerPanelVisible)) return;
+
+                    const v = Number(el.dataset.value);
+
+                    if ((currentFingerSum & v) === v) currentFingerSum &= ~v;
+                    else currentFingerSum |= v;
+
+                    // přepni vizuál
+                    const fingers = document.querySelectorAll('#finger-grid .finger-sq');
+                    fingers.forEach(sq => {
+                        const vv = Number(sq.dataset.value);
+                        sq.classList.toggle('on', (currentFingerSum & vv) === vv);
+                    });
+                });
+            }
+        }
+    }
+
+    function updateFingerDisplay() {
+        const direction = document.getElementById('direction').value;
+        const fingers = document.querySelectorAll('#finger-grid .finger-sq');
+
+        fingers.forEach(el => {
+            el.classList.remove('on');
+        });
+
+        if (direction !== 'bin2dec') return;
+
+        fingers.forEach(el => {
+            const v = Number(el.dataset.value);
+            const on = (currentDecValue & v) === v;
+            el.classList.toggle('on', on);
+        });
+    }
+
+    function toggleFingerPanel() {
+        fingerPanelVisible = !fingerPanelVisible;
+        const panel = document.getElementById('finger-panel');
+        panel.classList.toggle('visible', fingerPanelVisible);
+
+        // NOVÉ: klikatelnost prstů jen v dec2bin
+        const direction = document.getElementById('direction').value;
+        panel.classList.toggle('clickable', fingerPanelVisible && direction === 'dec2bin');
+
+        if (fingerPanelVisible) {
+            updateFingerDisplay();
+            // v dec2bin prsty ukazují currentFingerSum (v startu resetneme na 0)
+            if (direction === 'dec2bin') {
+                const fingers = document.querySelectorAll('#finger-grid .finger-sq');
+                fingers.forEach(sq => {
+                    const vv = Number(sq.dataset.value);
+                    sq.classList.toggle('on', (currentFingerSum & vv) === vv);
+                });
+            }
+        } else {
+            panel.classList.remove('clickable');
+        }
+    }
+
     function initApp() {
         const savedTheme = localStorage.getItem('binTrainTheme') || 'light';
         document.body.dataset.theme = savedTheme;
@@ -344,6 +522,7 @@
         document.getElementById('settings-panel').style.display = 'none';
         document.getElementById('info').style.display = 'none';
 
+        initFingerGrid();
         updateTitle();
         checkHistoryDate();
         updateInfo();
@@ -364,6 +543,19 @@
         document.getElementById('keypad-bin').style.display = 'none';
         document.getElementById('keypad-dec').style.display = 'none';
         document.getElementById('main-btn').innerText = "START";
+        updateFingerDisplay();
+
+        // NOVÉ: reset součtu
+        currentFingerSum = 0;
+
+        fingerPanelVisible = false;
+        const panel = document.getElementById('finger-panel');
+        panel.classList.remove('visible');
+        panel.classList.remove('clickable');
+
+        const fingers = document.querySelectorAll('#finger-grid .finger-sq');
+        fingers.forEach(el => el.classList.remove('on'));
+
         document.getElementById('secret-input').focus();
     }
 
@@ -399,6 +591,7 @@
         document.getElementById('info').innerText = `Rozsah: 0 až ${formatDecimal(maxNum)}`;
         
         updateTitle();
+        updateFingerDisplay();
         
         if (state === 'playing') startGame();
     }
@@ -551,6 +744,11 @@
             document.getElementById('keypad-bin').style.display = 'grid';
             document.getElementById('keypad-dec').style.display = 'none';
             inputContainer.className = 'input-with-back bin-mode';
+
+            // NOVÉ: reset součtu prstů při nové úloze (dec2bin)
+            currentFingerSum = 0;
+            const fingers = document.querySelectorAll('#finger-grid .finger-sq');
+            fingers.forEach(el => el.classList.remove('on'));
         } else {
             if (bits === 5) {
                 currentDisplayBits = 5;
@@ -567,9 +765,14 @@
             document.getElementById('keypad-dec').style.display = 'grid';
             inputContainer.className = 'input-with-back dec-mode';
         }
+
+        updateFingerDisplay();
+
+        // NOVÉ: aktualizuj klikatelnost panelu podle režimu a viditelnosti
+        const panel = document.getElementById('finger-panel');
+        panel.classList.toggle('clickable', fingerPanelVisible && direction === 'dec2bin');
     }
 
-    // Funkce Zpět - maže 1 číslici vlevo od kurzoru
     function deleteLeft() {
         if (state !== 'playing') return;
         const input = document.getElementById('single-input');
@@ -578,9 +781,8 @@
         const cursorPos = input.selectionStart;
         const value = input.value;
         
-        if (cursorPos === 0) return; // Nic není vlevo
+        if (cursorPos === 0) return;
         
-        // Najdeme pozici první číslice vlevo od kurzoru
         let deletePos = -1;
         for (let i = cursorPos - 1; i >= 0; i--) {
             if (direction === 'dec2bin') {
@@ -596,12 +798,10 @@
             }
         }
         
-        if (deletePos === -1) return; // Žádná číslice k smazání
+        if (deletePos === -1) return;
         
-        // Smažeme znak na nalezené pozici
         let newValue = value.substring(0, deletePos) + value.substring(deletePos + 1);
         
-        // Zformátujeme podle režimu
         if (direction === 'dec2bin') {
             let clean = newValue.replace(/\s/g, '');
             
@@ -617,7 +817,6 @@
             
             input.value = formatted;
             
-            // Nastavíme kurzor na pozici smazané číslice
             let newCursorPos = 0;
             let digitCount = 0;
             const targetDigits = value.substring(0, deletePos).replace(/\s/g, '').length;
@@ -638,7 +837,6 @@
             const formatted = formatDecimalInput(newValue);
             input.value = formatted;
             
-            // Nastavíme kurzor na pozici smazané číslice
             let newCursorPos = 0;
             let digitCount = 0;
             const targetDigits = value.substring(0, deletePos).replace(/\s/g, '').length;
@@ -659,7 +857,6 @@
         input.focus();
     }
 
-    // NOVÁ FUNKCE: Smazat celý obsah inputu
     function clearAll() {
         if (state !== 'playing') return;
         const input = document.getElementById('single-input');
@@ -763,10 +960,28 @@
         const inputEl = document.getElementById('single-input');
         const rawValue = inputEl.value.trim();
         
-        // Skryjeme tlačítka Zpět a Smazat při zobrazení výsledku
         document.getElementById('back-btn').style.display = 'none';
         document.getElementById('clear-btn').style.display = 'none';
-        
+
+        // NOVÉ: pokud jsme v dec2bin a panel je vysunutý, hodnoť podle součtu prstů
+        // (START pak funguje stejně jako dřív – nastaví state a zobrazí výsledek.)
+        if (direction === 'dec2bin' && fingerPanelVisible) {
+            const sum = currentFingerSum;
+            const isCorrect = (sum === 0) || (sum === currentDecValue);
+
+            state = 'evaluated';
+            document.getElementById('main-btn').innerText = "START";
+            inputEl.disabled = true;
+
+            const formattedCorrect = formatBinary(expectedAnswer);
+            inputEl.className = isCorrect ? 'success' : 'error';
+            inputEl.value = formattedCorrect;
+
+            saveToHistory(`${formatDecimal(currentDecValue)} = ${formatBinary(removeLeadingZeros(expectedAnswer))}`, isCorrect);
+            updateFingerDisplay();
+            return;
+        }
+
         if (direction === 'bin2dec') {
             if (rawValue === '') {
                 state = 'evaluated';
@@ -774,6 +989,7 @@
                 inputEl.disabled = true;
                 inputEl.value = formatDecimal(parseInt(expectedAnswer));
                 inputEl.className = '';
+                updateFingerDisplay();
                 return;
             }
             
@@ -803,6 +1019,7 @@
                 inputEl.disabled = true;
                 inputEl.value = formatBinary(expectedAnswer);
                 inputEl.className = '';
+                updateFingerDisplay();
                 return;
             }
 
@@ -826,6 +1043,8 @@
             const decFormatted = formatDecimal(currentDecValue);
             saveToHistory(`${decFormatted} = ${formattedCorrect}`, isCorrect);
         }
+
+        updateFingerDisplay();
     }
 
     function checkHistoryDate() {
