@@ -70,9 +70,9 @@
             display: flex;
         }
 
-        .finger-panel.dec2bin-clickable .finger-sq{
-            pointer-events: auto; /* JEN když jsme v dec2bin a prsty vysunuté */
-        }
+        /* --- NOVÉ: prsty klikatelné jen když je JS povolí --- */
+        .finger-panel.clickable .finger-sq { pointer-events: auto; }
+        /* --- konec --- */
 
         .finger-grid{
             display:grid;
@@ -338,7 +338,7 @@
     let currentDisplayBits = 0;
     let fingerPanelVisible = false;
 
-    // NOVÉ: součet prstů pro dec2bin (DEC → BIN)
+    // NOVÉ: součet prstů jen pro dec2bin
     let currentFingerSum = 0;
 
     function formatDecimal(num) {
@@ -435,7 +435,7 @@
                 el.dataset.value = String(bitValue(row, col));
                 fingerGrid.appendChild(el);
 
-                // NOVÉ: klikatelnost prstů jen pro dec2bin (součet prstů ON/OFF)
+                // NOVÉ: klik přidá/odebere bit v součtu, ale jen když jsme v dec2bin + panel vysunutý
                 el.addEventListener('click', () => {
                     if (state !== 'playing') return;
 
@@ -447,7 +447,7 @@
                     if ((currentFingerSum & v) === v) currentFingerSum &= ~v;
                     else currentFingerSum |= v;
 
-                    // vizuální ON/OFF podle součtu
+                    // přepni vizuál
                     const fingers = document.querySelectorAll('#finger-grid .finger-sq');
                     fingers.forEach(sq => {
                         const vv = Number(sq.dataset.value);
@@ -480,14 +480,13 @@
         const panel = document.getElementById('finger-panel');
         panel.classList.toggle('visible', fingerPanelVisible);
 
-        // NOVÉ: přístupné uživateli jen v dec2bin
+        // NOVÉ: klikatelnost prstů jen v dec2bin
         const direction = document.getElementById('direction').value;
-        panel.classList.toggle('dec2bin-clickable', fingerPanelVisible && direction === 'dec2bin');
+        panel.classList.toggle('clickable', fingerPanelVisible && direction === 'dec2bin');
 
         if (fingerPanelVisible) {
             updateFingerDisplay();
-
-            // NOVÉ: v dec2bin prsty zobrazují součet (start je 0, během úlohy se mění klikem)
+            // v dec2bin prsty ukazují currentFingerSum (v startu resetneme na 0)
             if (direction === 'dec2bin') {
                 const fingers = document.querySelectorAll('#finger-grid .finger-sq');
                 fingers.forEach(sq => {
@@ -495,6 +494,8 @@
                     sq.classList.toggle('on', (currentFingerSum & vv) === vv);
                 });
             }
+        } else {
+            panel.classList.remove('clickable');
         }
     }
 
@@ -544,15 +545,16 @@
         document.getElementById('main-btn').innerText = "START";
         updateFingerDisplay();
 
-        // NOVÉ: reset součtu prstů
+        // NOVÉ: reset součtu
         currentFingerSum = 0;
-        const fingers = document.querySelectorAll('#finger-grid .finger-sq');
-        fingers.forEach(el => el.classList.remove('on'));
 
         fingerPanelVisible = false;
         const panel = document.getElementById('finger-panel');
         panel.classList.remove('visible');
-        panel.classList.remove('dec2bin-clickable');
+        panel.classList.remove('clickable');
+
+        const fingers = document.querySelectorAll('#finger-grid .finger-sq');
+        fingers.forEach(el => el.classList.remove('on'));
 
         document.getElementById('secret-input').focus();
     }
@@ -743,7 +745,7 @@
             document.getElementById('keypad-dec').style.display = 'none';
             inputContainer.className = 'input-with-back bin-mode';
 
-            // NOVÉ: reset součtu prstů pro každou novou úlohu (dec2bin)
+            // NOVÉ: reset součtu prstů při nové úloze (dec2bin)
             currentFingerSum = 0;
             const fingers = document.querySelectorAll('#finger-grid .finger-sq');
             fingers.forEach(el => el.classList.remove('on'));
@@ -765,6 +767,10 @@
         }
 
         updateFingerDisplay();
+
+        // NOVÉ: aktualizuj klikatelnost panelu podle režimu a viditelnosti
+        const panel = document.getElementById('finger-panel');
+        panel.classList.toggle('clickable', fingerPanelVisible && direction === 'dec2bin');
     }
 
     function deleteLeft() {
@@ -956,7 +962,26 @@
         
         document.getElementById('back-btn').style.display = 'none';
         document.getElementById('clear-btn').style.display = 'none';
-        
+
+        // NOVÉ: pokud jsme v dec2bin a panel je vysunutý, hodnoť podle součtu prstů
+        // (START pak funguje stejně jako dřív – nastaví state a zobrazí výsledek.)
+        if (direction === 'dec2bin' && fingerPanelVisible) {
+            const sum = currentFingerSum;
+            const isCorrect = (sum === 0) || (sum === currentDecValue);
+
+            state = 'evaluated';
+            document.getElementById('main-btn').innerText = "START";
+            inputEl.disabled = true;
+
+            const formattedCorrect = formatBinary(expectedAnswer);
+            inputEl.className = isCorrect ? 'success' : 'error';
+            inputEl.value = formattedCorrect;
+
+            saveToHistory(`${formatDecimal(currentDecValue)} = ${formatBinary(removeLeadingZeros(expectedAnswer))}`, isCorrect);
+            updateFingerDisplay();
+            return;
+        }
+
         if (direction === 'bin2dec') {
             if (rawValue === '') {
                 state = 'evaluated';
@@ -988,32 +1013,6 @@
             saveToHistory(`${binForHistory} = ${formattedCorrect}`, isCorrect);
             
         } else {
-            // NOVÉ: dec2bin prstový režim (součet prstů)
-            // Pokud je panel vysunutý a v dec2bin, hodnotu zadává prstový součet.
-            const prstyAktivni = (fingerPanelVisible && direction === 'dec2bin');
-
-            if (prstyAktivni) {
-                const sum = currentFingerSum;
-
-                // součet prstů -> odpověď je currentDecValue, protože prsty sečítají hodnotu DEC
-                // podle zadání: sum=0 => zobrazit správný výsledek
-                // sum=správný => také správný, jen se nezmění ohňostroj (ten tu ani nemáš)
-                // sum=špatný => nic
-                if (sum === 0 || sum === currentDecValue) {
-                    state = 'evaluated';
-                    document.getElementById('main-btn').innerText = "START";
-                    inputEl.disabled = true;
-
-                    inputEl.className = (sum === currentDecValue) ? 'success' : '';
-                    inputEl.value = formatBinary(expectedAnswer);
-
-                    const formattedCorrect = formatBinary(removeLeadingZeros(expectedAnswer));
-                    saveToHistory(`${formatDecimal(currentDecValue)} = ${formattedCorrect}`, sum === currentDecValue);
-                }
-                return; // čeká / případně hotovo
-            }
-
-            // původní chování dec2bin přes input
             if (rawValue === '') {
                 state = 'evaluated';
                 document.getElementById('main-btn').innerText = "START";
