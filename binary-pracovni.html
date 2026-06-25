@@ -70,6 +70,10 @@
             display: flex;
         }
 
+        /* klikatelnost prstů (ON/OFF podle módu) */
+        .finger-panel.clickable { pointer-events: auto; }
+        .finger-panel:not(.clickable) { pointer-events: none; }
+
         .finger-grid{
             display:grid;
             grid-template-columns:repeat(5, 56px);
@@ -93,8 +97,13 @@
             align-self:end;
             transform-origin:bottom center;
             transition:transform .18s ease, background-color .18s ease, box-shadow .18s ease;
-            box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 3px 10px rgba(0,0,0,.28);
-            pointer-events:none;
+            /* PŮVODNĚ bylo pointer-events:none; kvůli klikům se to řídí panelem */
+            pointer-events: auto;
+            pointer-events: none; /* zůstává neklikatelné, když panel není clickable */
+        }
+
+        .finger-panel.clickable .finger-sq{
+            pointer-events: auto;
         }
 
         .finger-sq.on{
@@ -135,6 +144,21 @@
         #single-input.error {
             color: var(--error);
             border-color: var(--error);
+        }
+
+        /* Ohňostroj animace (krátký vs dlouhý) */
+        @keyframes fireworkPulse {
+            0% { transform: scale(1); box-shadow: none; }
+            30% { transform: scale(1.03); box-shadow: 0 0 0 6px rgba(52,199,89,0.18); }
+            60% { transform: scale(1); box-shadow: 0 0 0 0 rgba(52,199,89,0); }
+            100% { transform: scale(1); box-shadow: none; }
+        }
+
+        #single-input.firework-short {
+            animation: fireworkPulse 0.55s ease-in-out 1;
+        }
+        #single-input.firework-long {
+            animation: fireworkPulse 1.10s ease-in-out 1; /* 2× delší */
         }
 
         .back-btn {
@@ -334,6 +358,10 @@
     let currentDisplayBits = 0;
     let fingerPanelVisible = false;
 
+    // ---- PRSTOVÝ REŽIM (NOVÉ) ----
+    let currentFingerSum = 0; // součet bitů z prstů (ON/OFF)
+    let fingerModeOn = false;  // prstový režim = dec2bin + prsty vysunuté (klikatelné)
+
     function formatDecimal(num) {
         return num.toLocaleString('cs-CZ');
     }
@@ -427,6 +455,28 @@
                 el.className = 'finger-sq';
                 el.dataset.value = String(bitValue(row, col));
                 fingerGrid.appendChild(el);
+
+                // ---- klikatelné prsty jen v dec2bin prstovém režimu (NOVÉ) ----
+                el.addEventListener('click', () => {
+                    if (state !== 'playing') return;
+
+                    const direction = document.getElementById('direction').value;
+                    if (direction !== 'dec2bin') return;
+
+                    // prsty jen když jsou vysunuté (clickable)
+                    if (!fingerModeOn) return;
+
+                    const v = Number(el.dataset.value);
+
+                    // přepni ON/OFF bit v součtu
+                    if ((currentFingerSum & v) === v) {
+                        currentFingerSum &= ~v;
+                    } else {
+                        currentFingerSum |= v;
+                    }
+
+                    updateFingerForDec2Bin();
+                });
             }
         }
     }
@@ -448,12 +498,43 @@
         });
     }
 
+    // ---- zobrazení prstů jako součet v dec2bin (NOVÉ) ----
+    function updateFingerForDec2Bin() {
+        const fingers = document.querySelectorAll('#finger-grid .finger-sq');
+
+        fingers.forEach(el => {
+            const v = Number(el.dataset.value);
+            const on = (currentFingerSum & v) === v;
+            el.classList.toggle('on', on);
+        });
+    }
+
     function toggleFingerPanel() {
         fingerPanelVisible = !fingerPanelVisible;
+
         const panel = document.getElementById('finger-panel');
         panel.classList.toggle('visible', fingerPanelVisible);
+
+        const direction = document.getElementById('direction').value;
+
+        // prstový režim = dec2bin + prsty vysunuté
+        fingerModeOn = (fingerPanelVisible && direction === 'dec2bin');
+
+        panel.classList.toggle('clickable', fingerModeOn);
+
         if (fingerPanelVisible) {
-            updateFingerDisplay();
+            if (direction === 'bin2dec') {
+                updateFingerDisplay();
+            } else {
+                // dec2bin: svítí podle aktuálního součtu prstů
+                updateFingerForDec2Bin();
+            }
+        }
+
+        // V dec2bin, když prsty vysunuté, schovat klávesnici 0/1
+        const keypadBin = document.getElementById('keypad-bin');
+        if (direction === 'dec2bin') {
+            keypadBin.style.display = fingerPanelVisible ? 'none' : 'grid';
         }
     }
 
@@ -472,9 +553,12 @@
             bitSelect.appendChild(opt);
         }
 
-        const savedDir = localStorage.getItem('binTrainDir');
-        if (savedDir) document.getElementById('direction').value = savedDir;
+        const savedDir = localStorage.getElementById('direction').value;
         const savedBits = localStorage.getItem('binTrainBits');
+
+        const savedDirStorage = localStorage.getItem('binTrainDir');
+        if (savedDirStorage) document.getElementById('direction').value = savedDirStorage;
+
         if (savedBits) document.getElementById('bits').value = savedBits;
 
         document.getElementById('settings-panel').style.display = 'none';
@@ -501,6 +585,15 @@
         document.getElementById('keypad-bin').style.display = 'none';
         document.getElementById('keypad-dec').style.display = 'none';
         document.getElementById('main-btn').innerText = "START";
+
+        // reset prstů
+        currentFingerSum = 0;
+        fingerModeOn = false;
+        fingerPanelVisible = false;
+        const panel = document.getElementById('finger-panel');
+        panel.classList.remove('visible');
+        panel.classList.remove('clickable');
+
         updateFingerDisplay();
         document.getElementById('secret-input').focus();
     }
@@ -664,7 +757,10 @@
         state = 'playing';
         document.getElementById('home-btn').style.display = 'block';
         document.getElementById('main-btn').innerText = "VÝSLEDEK (KONTROLA)";
-        
+
+        // reset prstový součet pro každou novou úlohu
+        currentFingerSum = 0;
+
         const bits = parseInt(document.getElementById('bits').value);
         const direction = document.getElementById('direction').value;
         const maxNum = Math.pow(2, bits) - 1;
@@ -687,8 +783,15 @@
             document.getElementById('question-display').innerText = formatDecimal(currentDecValue);
             expectedAnswer = binString;
             expectedLength = bits;
-            document.getElementById('keypad-bin').style.display = 'grid';
+
             document.getElementById('keypad-dec').style.display = 'none';
+
+            // prsty vysunuté => schovat klávesnici 0/1
+            const keypadBin = document.getElementById('keypad-bin');
+            keypadBin.style.display = fingerPanelVisible ? 'none' : 'grid';
+
+            document.getElementById('keypad-bin').style.display = fingerPanelVisible ? 'none' : 'grid';
+
             inputContainer.className = 'input-with-back bin-mode';
         } else {
             if (bits === 5) {
@@ -707,10 +810,17 @@
             inputContainer.className = 'input-with-back dec-mode';
         }
 
+        // aktualizace prstů dle režimu
+        if (direction === 'bin2dec') {
+            updateFingerDisplay();
+        } else {
+            updateFingerForDec2Bin();
+        }
+
         updateFingerDisplay();
     }
 
-    function deleteLeft() {
+        function deleteLeft() {
         if (state !== 'playing') return;
         const input = document.getElementById('single-input');
         const direction = document.getElementById('direction').value;
@@ -896,7 +1006,7 @@
         const direction = document.getElementById('direction').value;
         const inputEl = document.getElementById('single-input');
         const rawValue = inputEl.value.trim();
-        
+
         document.getElementById('back-btn').style.display = 'none';
         document.getElementById('clear-btn').style.display = 'none';
         
@@ -931,6 +1041,56 @@
             saveToHistory(`${binForHistory} = ${formattedCorrect}`, isCorrect);
             
         } else {
+            // ---- DEC → BIN ----
+
+            const isFingerSumMode = fingerModeOn && fingerPanelVisible;
+
+            // prstový režim: součet=0 => zobrazí správný výsledek
+            if (isFingerSumMode) {
+                // očekávaný výsledek je právě currentDecValue (DEC otázka)
+                const sum = currentFingerSum;
+                const expectedDec = currentDecValue;
+
+                if (sum === 0) {
+                    state = 'evaluated';
+                    document.getElementById('main-btn').innerText = "START";
+                    inputEl.disabled = true;
+
+                    inputEl.className = '';
+                    inputEl.value = formatBinary(expectedAnswer);
+
+                    // history jako correct (zadané "zobrazí správný výsledek")
+                    const binForHistory = formatBinary(currentDecValue.toString(2));
+                    const formattedCorrect = formatBinary(removeLeadingZeros(expectedAnswer));
+                    saveToHistory(`${formatDecimal(currentDecValue)} = ${formattedCorrect}`, true);
+
+                    updateFingerForDec2Bin();
+                    updateFingerDisplay();
+                    return;
+                }
+
+                // součet=správný => ohňostroj 2× delší
+                if (sum === expectedDec) {
+                    state = 'evaluated';
+                    document.getElementById('main-btn').innerText = "START";
+                    inputEl.disabled = true;
+
+                    inputEl.className = 'success firework-long';
+                    inputEl.value = formatBinary(removeLeadingZeros(expectedAnswer));
+
+                    const formattedCorrect = formatBinary(removeLeadingZeros(expectedAnswer));
+                    saveToHistory(`${formatDecimal(currentDecValue)} = ${formattedCorrect}`, true);
+
+                    updateFingerForDec2Bin();
+                    updateFingerDisplay();
+                    return;
+                }
+
+                // součet=špatný => nic, čeká
+                return;
+            }
+
+            // ---- normální režim zadávání do inputu (původní chování) ----
             if (rawValue === '') {
                 state = 'evaluated';
                 document.getElementById('main-btn').innerText = "START";
@@ -950,9 +1110,9 @@
             inputEl.disabled = true;
             
             const formattedCorrect = formatBinary(cleanExpected);
-            
+
             if (isCorrect) {
-                inputEl.className = 'success';
+                inputEl.className = 'success firework-short';
                 inputEl.value = formattedCorrect;
             } else {
                 inputEl.className = 'error';
