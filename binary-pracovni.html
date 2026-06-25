@@ -70,9 +70,10 @@
             display: flex;
         }
 
-        /* --- NOVÉ: prsty klikatelné jen když je JS povolí --- */
-        .finger-panel.clickable .finger-sq { pointer-events: auto; }
-        /* --- konec --- */
+        /* ✅ NOVÉ: prsty klikatelné jen v dec2bin + vysunuté */
+        .finger-panel.dec-mode .finger-sq{
+            pointer-events: auto;
+        }
 
         .finger-grid{
             display:grid;
@@ -98,7 +99,7 @@
             transform-origin:bottom center;
             transition:transform .18s ease, background-color .18s ease, box-shadow .18s ease;
             box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 3px 10px rgba(0,0,0,.28);
-            pointer-events:none;
+            pointer-events:none; /* zůstává */
         }
 
         .finger-sq.on{
@@ -164,11 +165,7 @@
         }
         .clear-btn:active { background: var(--btn-hover); }
 
-        .input-with-back.dec-mode .clear-btn {
-            flex: 1;
-            max-width: calc(100% - 180px - 8px - 48px - 8px);
-        }
-
+        .input-with-back.dec-mode .clear-btn,
         .input-with-back.bin-mode .clear-btn {
             flex: 1;
             max-width: calc(100% - 180px - 8px - 48px - 8px);
@@ -191,9 +188,7 @@
         }
         .key-btn:active { background: var(--btn-hover); }
 
-        .key-0 {
-            grid-column: span 2;
-        }
+        .key-0 { grid-column: span 2; }
 
         .main-action {
             width: 100%; padding: 12px; border-radius: 8px;
@@ -338,12 +333,10 @@
     let currentDisplayBits = 0;
     let fingerPanelVisible = false;
 
-    // NOVÉ: součet prstů jen pro dec2bin
+    // Součet prstů pro dec2bin (DEC → BIN)
     let currentFingerSum = 0;
 
-    function formatDecimal(num) {
-        return num.toLocaleString('cs-CZ');
-    }
+    function formatDecimal(num) { return num.toLocaleString('cs-CZ'); }
 
     function removeLeadingZeros(str) {
         let clean = str.replace(/\s/g, '');
@@ -359,9 +352,7 @@
         for (let i = clean.length - 1; i >= 0; i--) {
             result = clean[i] + result;
             count++;
-            if (count % 5 === 0 && i > 0) {
-                result = " " + result;
-            }
+            if (count % 5 === 0 && i > 0) result = " " + result;
         }
         return result;
     }
@@ -370,21 +361,15 @@
         let clean = binStr.replace(/\s/g, '');
         clean = clean.replace(/^0+/, '');
         if (clean === "") clean = "0";
-        
-        while (clean.length < displayBits) {
-            clean = "0" + clean;
-        }
-        
+        while (clean.length < displayBits) clean = "0" + clean;
         clean = clean.substring(clean.length - displayBits);
-        
+
         let result = "";
         let count = 0;
         for (let i = clean.length - 1; i >= 0; i--) {
             result = clean[i] + result;
             count++;
-            if (count % 5 === 0 && i > 0) {
-                result = " " + result;
-            }
+            if (count % 5 === 0 && i > 0) result = " " + result;
         }
         return result;
     }
@@ -393,25 +378,15 @@
         let clean = value.replace(/\s/g, '');
         clean = clean.replace(/\D/g, '');
         if (clean === "") return "";
-        
         let num = parseInt(clean, 10);
         if (isNaN(num)) return "";
-        
         return num.toLocaleString('cs-CZ').replace(/\./g, ' ');
-    }
-
-    function extractDigits(input) {
-        return input.replace(/\D/g, '');
     }
 
     function updateTitle() {
         const direction = document.getElementById('direction').value;
         const titleEl = document.getElementById('app-title');
-        if (direction === 'dec2bin') {
-            titleEl.innerText = 'Bináry   DEC → BIN';
-        } else {
-            titleEl.innerText = 'Bináry   BIN → DEC';
-        }
+        titleEl.innerText = (direction === 'dec2bin') ? 'Bináry   DEC → BIN' : 'Bináry   BIN → DEC';
     }
 
     function initFingerGrid() {
@@ -423,10 +398,7 @@
         function bitExponent(row, col) {
             return (rows - 1 - row) * cols + (cols - 1 - col);
         }
-
-        function bitValue(row, col) {
-            return 2 ** bitExponent(row, col);
-        }
+        function bitValue(row, col) { return 2 ** bitExponent(row, col); }
 
         for (let row = 0; row < rows; row++) {
             for (let col = 0; col < cols; col++) {
@@ -435,19 +407,18 @@
                 el.dataset.value = String(bitValue(row, col));
                 fingerGrid.appendChild(el);
 
-                // NOVÉ: klik přidá/odebere bit v součtu, ale jen když jsme v dec2bin + panel vysunutý
                 el.addEventListener('click', () => {
                     if (state !== 'playing') return;
 
                     const direction = document.getElementById('direction').value;
+                    // klik jen pokud jsme v dec2bin a panel je vysunutý
                     if (!(direction === 'dec2bin' && fingerPanelVisible)) return;
 
                     const v = Number(el.dataset.value);
-
                     if ((currentFingerSum & v) === v) currentFingerSum &= ~v;
                     else currentFingerSum |= v;
 
-                    // přepni vizuál
+                    // vizuál ON/OFF podle součtu
                     const fingers = document.querySelectorAll('#finger-grid .finger-sq');
                     fingers.forEach(sq => {
                         const vv = Number(sq.dataset.value);
@@ -462,17 +433,20 @@
         const direction = document.getElementById('direction').value;
         const fingers = document.querySelectorAll('#finger-grid .finger-sq');
 
-        fingers.forEach(el => {
-            el.classList.remove('on');
-        });
+        fingers.forEach(el => el.classList.remove('on'));
 
         if (direction !== 'bin2dec') return;
 
         fingers.forEach(el => {
             const v = Number(el.dataset.value);
-            const on = (currentDecValue & v) === v;
-            el.classList.toggle('on', on);
+            el.classList.toggle('on', (currentDecValue & v) === v);
         });
+    }
+
+    function syncFingerPanelClass() {
+        const panel = document.getElementById('finger-panel');
+        const direction = document.getElementById('direction').value;
+        panel.classList.toggle('dec-mode', fingerPanelVisible && direction === 'dec2bin');
     }
 
     function toggleFingerPanel() {
@@ -480,22 +454,18 @@
         const panel = document.getElementById('finger-panel');
         panel.classList.toggle('visible', fingerPanelVisible);
 
-        // NOVÉ: klikatelnost prstů jen v dec2bin
-        const direction = document.getElementById('direction').value;
-        panel.classList.toggle('clickable', fingerPanelVisible && direction === 'dec2bin');
+        syncFingerPanelClass();
 
         if (fingerPanelVisible) {
             updateFingerDisplay();
-            // v dec2bin prsty ukazují currentFingerSum (v startu resetneme na 0)
-            if (direction === 'dec2bin') {
+            if (document.getElementById('direction').value === 'dec2bin') {
+                // dec2bin prsty ukazují currentFingerSum
                 const fingers = document.querySelectorAll('#finger-grid .finger-sq');
                 fingers.forEach(sq => {
                     const vv = Number(sq.dataset.value);
                     sq.classList.toggle('on', (currentFingerSum & vv) === vv);
                 });
             }
-        } else {
-            panel.classList.remove('clickable');
         }
     }
 
@@ -543,16 +513,13 @@
         document.getElementById('keypad-bin').style.display = 'none';
         document.getElementById('keypad-dec').style.display = 'none';
         document.getElementById('main-btn').innerText = "START";
-        updateFingerDisplay();
-
-        // NOVÉ: reset součtu
-        currentFingerSum = 0;
 
         fingerPanelVisible = false;
         const panel = document.getElementById('finger-panel');
         panel.classList.remove('visible');
-        panel.classList.remove('clickable');
+        panel.classList.remove('dec-mode');
 
+        currentFingerSum = 0;
         const fingers = document.querySelectorAll('#finger-grid .finger-sq');
         fingers.forEach(el => el.classList.remove('on'));
 
@@ -572,14 +539,8 @@
         const panel = document.getElementById('settings-panel');
         const info = document.getElementById('info');
         const isHidden = panel.style.display === 'none' || panel.style.display === '';
-        
-        if (isHidden) {
-            panel.style.display = 'flex';
-            info.style.display = 'block';
-        } else {
-            panel.style.display = 'none';
-            info.style.display = 'none';
-        }
+        if (isHidden) { panel.style.display = 'flex'; info.style.display = 'block'; }
+        else { panel.style.display = 'none'; info.style.display = 'none'; }
     }
 
     function updateInfo() {
@@ -587,12 +548,13 @@
         const direction = document.getElementById('direction').value;
         localStorage.setItem('binTrainBits', bits);
         localStorage.setItem('binTrainDir', direction);
+
         const maxNum = Math.pow(2, bits) - 1;
         document.getElementById('info').innerText = `Rozsah: 0 až ${formatDecimal(maxNum)}`;
-        
+
         updateTitle();
         updateFingerDisplay();
-        
+
         if (state === 'playing') startGame();
     }
 
@@ -615,20 +577,17 @@
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Enter') {
             event.preventDefault();
-            if (state === 'init') {
-                handleMainAction();
-            } else if (state === 'playing') {
-                checkAnswer();
-            }
+            if (state === 'init') handleMainAction();
+            else if (state === 'playing') checkAnswer();
         }
     });
 
-    document.getElementById('single-input').addEventListener('input', function(e) {
+    document.getElementById('single-input').addEventListener('input', function() {
         const direction = document.getElementById('direction').value;
         const input = this;
         const cursorPosition = input.selectionStart;
         const originalValue = input.value;
-        
+
         if (direction === 'dec2bin') {
             if (/[^01\s]/.test(input.value)) {
                 const invalidChar = input.value.match(/[^01\s]/);
@@ -636,48 +595,38 @@
                 input.value = input.value.replace(/[^01\s]/g, '');
                 return;
             }
-            
+
             let clean = input.value.replace(/\s/g, '');
-            
             if (clean.length > 15) {
                 alert("Maximální počet 0 a 1 je 15, překročili jste limit, opravte!");
                 clean = clean.substring(0, 15);
             }
-            
-            let digitsBeforeCursor = 0;
-            for (let i = 0; i < cursorPosition && i < originalValue.length; i++) {
-                if (/[01]/.test(originalValue[i])) {
-                    digitsBeforeCursor++;
-                }
-            }
-            
+
             let formatted = "";
             let count = 0;
             for (let i = clean.length - 1; i >= 0; i--) {
                 formatted = clean[i] + formatted;
                 count++;
-                if (count % 5 === 0 && i > 0) {
-                    formatted = " " + formatted;
-                }
+                if (count % 5 === 0 && i > 0) formatted = " " + formatted;
             }
-            
+
             input.value = formatted;
-            
+
             let newCursorPos = 0;
             let digitCount = 0;
             for (let i = 0; i < formatted.length; i++) {
-                if (/[01]/.test(formatted[i])) {
-                    digitCount++;
-                }
-                if (digitCount === digitsBeforeCursor) {
-                    newCursorPos = i + 1;
-                    break;
-                }
+                if (/[01]/.test(formatted[i])) digitCount++;
+                if (digitCount === (function(){
+                    let digitsBeforeCursor=0;
+                    for (let i=0;i<cursorPosition && i<originalValue.length;i++){
+                        if(/[01]/.test(originalValue[i])) digitsBeforeCursor++;
+                    }
+                    return digitsBeforeCursor;
+                })()) { newCursorPos = i + 1; break; }
                 newCursorPos = i + 1;
             }
-            
             input.selectionStart = input.selectionEnd = newCursorPos;
-            
+
         } else {
             if (/[^\d\s]/.test(input.value)) {
                 const invalidChar = input.value.match(/[^\d\s]/);
@@ -685,31 +634,22 @@
                 input.value = input.value.replace(/[^\d\s]/g, '');
                 return;
             }
-            
+
             let digitsBeforeCursor = 0;
             for (let i = 0; i < cursorPosition && i < originalValue.length; i++) {
-                if (/\d/.test(originalValue[i])) {
-                    digitsBeforeCursor++;
-                }
+                if (/\d/.test(originalValue[i])) digitsBeforeCursor++;
             }
-            
+
             const formatted = formatDecimalInput(input.value);
-            
             input.value = formatted;
-            
+
             let newCursorPos = 0;
             let digitCount = 0;
             for (let i = 0; i < formatted.length; i++) {
-                if (/\d/.test(formatted[i])) {
-                    digitCount++;
-                }
-                if (digitCount === digitsBeforeCursor) {
-                    newCursorPos = i + 1;
-                    break;
-                }
+                if (/\d/.test(formatted[i])) digitCount++;
+                if (digitCount === digitsBeforeCursor) { newCursorPos = i + 1; break; }
                 newCursorPos = i + 1;
             }
-            
             input.selectionStart = input.selectionEnd = newCursorPos;
         }
     });
@@ -718,11 +658,11 @@
         state = 'playing';
         document.getElementById('home-btn').style.display = 'block';
         document.getElementById('main-btn').innerText = "VÝSLEDEK (KONTROLA)";
-        
+
         const bits = parseInt(document.getElementById('bits').value);
         const direction = document.getElementById('direction').value;
         const maxNum = Math.pow(2, bits) - 1;
-        
+
         currentDecValue = Math.floor(Math.random() * (maxNum + 1));
         const binString = currentDecValue.toString(2);
 
@@ -736,173 +676,134 @@
         document.getElementById('single-input').focus();
 
         const inputContainer = document.getElementById('input-container');
-        
+
         if (direction === 'dec2bin') {
             document.getElementById('question-display').innerText = formatDecimal(currentDecValue);
             expectedAnswer = binString;
             expectedLength = bits;
+
             document.getElementById('keypad-bin').style.display = 'grid';
             document.getElementById('keypad-dec').style.display = 'none';
             inputContainer.className = 'input-with-back bin-mode';
 
-            // NOVÉ: reset součtu prstů při nové úloze (dec2bin)
+            // reset prstů pro každou úlohu
             currentFingerSum = 0;
             const fingers = document.querySelectorAll('#finger-grid .finger-sq');
             fingers.forEach(el => el.classList.remove('on'));
         } else {
-            if (bits === 5) {
-                currentDisplayBits = 5;
-            } else if (bits <= 10) {
-                currentDisplayBits = 10;
-            } else {
-                currentDisplayBits = 15;
-            }
-            
+            if (bits === 5) currentDisplayBits = 5;
+            else if (bits <= 10) currentDisplayBits = 10;
+            else currentDisplayBits = 15;
+
             document.getElementById('question-display').innerText = formatBinaryForDisplay(binString, currentDisplayBits);
             expectedAnswer = currentDecValue.toString();
             expectedLength = maxNum.toString().length;
+
             document.getElementById('keypad-bin').style.display = 'none';
             document.getElementById('keypad-dec').style.display = 'grid';
             inputContainer.className = 'input-with-back dec-mode';
         }
 
         updateFingerDisplay();
-
-        // NOVÉ: aktualizuj klikatelnost panelu podle režimu a viditelnosti
-        const panel = document.getElementById('finger-panel');
-        panel.classList.toggle('clickable', fingerPanelVisible && direction === 'dec2bin');
+        syncFingerPanelClass(); // ✅ zajistí dec-mode podle aktuálního direction a visible
     }
 
     function deleteLeft() {
         if (state !== 'playing') return;
         const input = document.getElementById('single-input');
         const direction = document.getElementById('direction').value;
-        
+
         const cursorPos = input.selectionStart;
         const value = input.value;
-        
         if (cursorPos === 0) return;
-        
+
         let deletePos = -1;
         for (let i = cursorPos - 1; i >= 0; i--) {
             if (direction === 'dec2bin') {
-                if (/[01]/.test(value[i])) {
-                    deletePos = i;
-                    break;
-                }
+                if (/[01]/.test(value[i])) { deletePos = i; break; }
             } else {
-                if (/\d/.test(value[i])) {
-                    deletePos = i;
-                    break;
-                }
+                if (/\d/.test(value[i])) { deletePos = i; break; }
             }
         }
-        
         if (deletePos === -1) return;
-        
+
         let newValue = value.substring(0, deletePos) + value.substring(deletePos + 1);
-        
+
         if (direction === 'dec2bin') {
             let clean = newValue.replace(/\s/g, '');
-            
             let formatted = "";
             let count = 0;
             for (let i = clean.length - 1; i >= 0; i--) {
                 formatted = clean[i] + formatted;
                 count++;
-                if (count % 5 === 0 && i > 0) {
-                    formatted = " " + formatted;
-                }
+                if (count % 5 === 0 && i > 0) formatted = " " + formatted;
             }
-            
             input.value = formatted;
-            
+
             let newCursorPos = 0;
             let digitCount = 0;
             const targetDigits = value.substring(0, deletePos).replace(/\s/g, '').length;
             for (let i = 0; i < formatted.length; i++) {
-                if (/[01]/.test(formatted[i])) {
-                    digitCount++;
-                }
-                if (digitCount === targetDigits) {
-                    newCursorPos = i + 1;
-                    break;
-                }
+                if (/[01]/.test(formatted[i])) digitCount++;
+                if (digitCount === targetDigits) { newCursorPos = i + 1; break; }
                 newCursorPos = i + 1;
             }
-            
             input.selectionStart = input.selectionEnd = newCursorPos;
-            
         } else {
             const formatted = formatDecimalInput(newValue);
             input.value = formatted;
-            
+
             let newCursorPos = 0;
             let digitCount = 0;
             const targetDigits = value.substring(0, deletePos).replace(/\s/g, '').length;
             for (let i = 0; i < formatted.length; i++) {
-                if (/\d/.test(formatted[i])) {
-                    digitCount++;
-                }
-                if (digitCount === targetDigits) {
-                    newCursorPos = i + 1;
-                    break;
-                }
+                if (/\d/.test(formatted[i])) digitCount++;
+                if (digitCount === targetDigits) { newCursorPos = i + 1; break; }
                 newCursorPos = i + 1;
             }
-            
             input.selectionStart = input.selectionEnd = newCursorPos;
         }
-        
+
         input.focus();
     }
 
     function clearAll() {
         if (state !== 'playing') return;
-        const input = document.getElementById('single-input');
-        input.value = '';
-        input.focus();
+        document.getElementById('single-input').value = '';
+        document.getElementById('single-input').focus();
     }
 
     function typeVal(val) {
         if (state !== 'playing') return;
         const direction = document.getElementById('direction').value;
         const input = document.getElementById('single-input');
-        
+
         const start = input.selectionStart;
         const end = input.selectionEnd;
         const value = input.value;
-        
         const hasSelection = start !== end;
-        
+
         if (direction === 'bin2dec') {
             if (!hasSelection && value.replace(/\s/g, '').length >= 6) return;
-            
             const newValue = value.substring(0, start) + val + value.substring(end);
             const formatted = formatDecimalInput(newValue);
             input.value = formatted;
-            
+
             let newCursorPos = 0;
             let digitCount = 0;
             const targetDigits = value.substring(0, start).replace(/\s/g, '').length + 1;
             for (let i = 0; i < formatted.length; i++) {
-                if (/\d/.test(formatted[i])) {
-                    digitCount++;
-                }
-                if (digitCount === targetDigits) {
-                    newCursorPos = i + 1;
-                    break;
-                }
+                if (/\d/.test(formatted[i])) digitCount++;
+                if (digitCount === targetDigits) { newCursorPos = i + 1; break; }
                 newCursorPos = i + 1;
             }
             input.selectionStart = input.selectionEnd = newCursorPos;
-            
         } else {
             if (val !== '0' && val !== '1' && val !== ' ') {
                 alert("Nepovolený znak! Povoleno pouze 0, 1 a mezera.");
                 return;
             }
-            
+
             if (!hasSelection) {
                 let digitsOnly = value.replace(/\s/g, '');
                 if (digitsOnly.length >= 15) {
@@ -910,48 +811,38 @@
                     return;
                 }
             }
-            
+
             let newValue = value.substring(0, start) + val + value.substring(end);
             let clean = newValue.replace(/\s/g, '');
-            
+
             if (clean.length > 15) {
                 alert("Maximální počet 0 a 1 je 15, překročili jste limit, opravte!");
                 clean = clean.substring(0, 15);
             }
-            
+
             let formatted = "";
             let count = 0;
             for (let i = clean.length - 1; i >= 0; i--) {
                 formatted = clean[i] + formatted;
                 count++;
-                if (count % 5 === 0 && i > 0) {
-                    formatted = " " + formatted;
-                }
+                if (count % 5 === 0 && i > 0) formatted = " " + formatted;
             }
-            
+
             input.value = formatted;
-            
+
             let digitsBefore = value.substring(0, start).replace(/\s/g, '').length;
-            if (!hasSelection) {
-                digitsBefore++;
-            }
-            
+            if (!hasSelection) digitsBefore++;
+
             let newCursorPos = 0;
             let digitCount = 0;
             for (let i = 0; i < formatted.length; i++) {
-                if (/[01]/.test(formatted[i])) {
-                    digitCount++;
-                }
-                if (digitCount === digitsBefore) {
-                    newCursorPos = i + 1;
-                    break;
-                }
+                if (/[01]/.test(formatted[i])) digitCount++;
+                if (digitCount === digitsBefore) { newCursorPos = i + 1; break; }
                 newCursorPos = i + 1;
             }
-            
             input.selectionStart = input.selectionEnd = newCursorPos;
         }
-        
+
         input.focus();
     }
 
@@ -959,12 +850,11 @@
         const direction = document.getElementById('direction').value;
         const inputEl = document.getElementById('single-input');
         const rawValue = inputEl.value.trim();
-        
+
         document.getElementById('back-btn').style.display = 'none';
         document.getElementById('clear-btn').style.display = 'none';
 
-        // NOVÉ: pokud jsme v dec2bin a panel je vysunutý, hodnoť podle součtu prstů
-        // (START pak funguje stejně jako dřív – nastaví state a zobrazí výsledek.)
+        // ✅ dec2bin: pokud jsou prsty vysunuté, rozhoduje sum
         if (direction === 'dec2bin' && fingerPanelVisible) {
             const sum = currentFingerSum;
             const isCorrect = (sum === 0) || (sum === currentDecValue);
@@ -973,12 +863,15 @@
             document.getElementById('main-btn').innerText = "START";
             inputEl.disabled = true;
 
-            const formattedCorrect = formatBinary(expectedAnswer);
             inputEl.className = isCorrect ? 'success' : 'error';
-            inputEl.value = formattedCorrect;
+            inputEl.value = formatBinary(expectedAnswer);
 
-            saveToHistory(`${formatDecimal(currentDecValue)} = ${formatBinary(removeLeadingZeros(expectedAnswer))}`, isCorrect);
-            updateFingerDisplay();
+            saveToHistory(
+                `${formatDecimal(currentDecValue)} = ${formatBinary(removeLeadingZeros(expectedAnswer))}`,
+                isCorrect
+            );
+
+            updateFingerDisplay(); // bin2dec jen, takže dec2bin zůstane vizuál ze sumy
             return;
         }
 
@@ -992,27 +885,24 @@
                 updateFingerDisplay();
                 return;
             }
-            
+
             const cleanUser = removeLeadingZeros(rawValue);
             const cleanExpected = removeLeadingZeros(expectedAnswer);
             const isCorrect = cleanUser === cleanExpected;
             const formattedCorrect = formatDecimal(parseInt(cleanExpected));
-            
+
             state = 'evaluated';
             document.getElementById('main-btn').innerText = "START";
             inputEl.disabled = true;
-            
-            if (isCorrect) {
-                inputEl.className = 'success';
-                inputEl.value = formattedCorrect;
-            } else {
-                inputEl.className = 'error';
-            }
-            
+
+            inputEl.className = isCorrect ? 'success' : 'error';
+            inputEl.value = formattedCorrect;
+
             const binForHistory = formatBinary(currentDecValue.toString(2));
             saveToHistory(`${binForHistory} = ${formattedCorrect}`, isCorrect);
-            
+
         } else {
+            // dec2bin: normální input přes 0/1
             if (rawValue === '') {
                 state = 'evaluated';
                 document.getElementById('main-btn').innerText = "START";
@@ -1026,19 +916,14 @@
             const cleanUser = removeLeadingZeros(rawValue);
             const cleanExpected = removeLeadingZeros(expectedAnswer);
             const isCorrect = cleanUser === cleanExpected;
-            
+
             state = 'evaluated';
             document.getElementById('main-btn').innerText = "START";
             inputEl.disabled = true;
-            
+
             const formattedCorrect = formatBinary(cleanExpected);
-            
-            if (isCorrect) {
-                inputEl.className = 'success';
-                inputEl.value = formattedCorrect;
-            } else {
-                inputEl.className = 'error';
-            }
+            inputEl.className = isCorrect ? 'success' : 'error';
+            inputEl.value = formattedCorrect;
 
             const decFormatted = formatDecimal(currentDecValue);
             saveToHistory(`${decFormatted} = ${formattedCorrect}`, isCorrect);
@@ -1067,10 +952,7 @@
         const container = document.getElementById('history-container');
         const list = document.getElementById('history-list');
         list.innerHTML = '';
-        if (history.length === 0) {
-            container.style.display = 'none';
-            return;
-        }
+        if (history.length === 0) { container.style.display = 'none'; return; }
         container.style.display = 'block';
         history.forEach(item => {
             const div = document.createElement('div');
