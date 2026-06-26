@@ -99,8 +99,8 @@
 
   <div class="settings-group" id="settings-panel">
     <select id="direction" onchange="updateInfo()">
-      <option value="dec2bin">Dekadické na Binární</option>
-      <option value="bin2dec">Binární na Dekadické</option>
+      <option value="dec2bin">Decimální na Binární</option>
+      <option value="bin2dec">Binární na Decimální</option>
     </select>
     <select id="bits" onchange="updateInfo()"></select>
   </div>
@@ -188,16 +188,10 @@
     return isNaN(num)?'':num.toLocaleString('cs-CZ').replace(/\./g,' ');
   };
 
-  // --- NOVÉ: kontrola, jestli je otevřený ozubený panel (settings) ---
-  function settingsOpen(){
-    const p=$('settings-panel');
-    return p && (p.style.display==='flex' || p.style.display==='block');
-  }
-
   function updateTitle(){
     $('app-title').innerText = $('direction').value==='dec2bin'
-      ? 'Bináry   Dekadické → Binární'
-      : 'Bináry   Binární → Dekadické';
+      ? 'Bináry   DEC → BIN'
+      : 'Bináry   BIN → DEC';
   }
 
   function syncFingerPanelClass(){
@@ -221,12 +215,12 @@
         el.dataset.value=String(bitValue(r,c));
         el.addEventListener('click',()=>{
           if(state!=='playing') return;
-          if(settingsOpen()) return; // --- NOVÉ: při otevřených settings nic neovládat ---
           if(!($('direction').value==='dec2bin' && fingerPanelVisible)) return;
 
           const v=Number(el.dataset.value);
           currentFingerSum = ((currentFingerSum & v)===v) ? (currentFingerSum & ~v) : (currentFingerSum | v);
 
+          // vizuál dle součtu
           document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
             const vv=Number(sq.dataset.value);
             sq.classList.toggle('on',(currentFingerSum & vv)===vv);
@@ -250,7 +244,6 @@
   }
 
   function toggleFingerPanel(){
-    if(settingsOpen()) return; // --- NOVÉ: i vysouvání prstů blokovat ---
     fingerPanelVisible=!fingerPanelVisible;
     $('finger-panel').classList.toggle('visible', fingerPanelVisible);
     syncFingerPanelClass();
@@ -303,23 +296,6 @@
     const hidden = (p.style.display==='none' || p.style.display==='');
     p.style.display= hidden?'flex':'none';
     info.style.display= hidden?'block':'none';
-
-    // --- NOVÉ: když je panel otevřený, vyloženě zastavíme hru (aby se nic "nezadrhlo") ---
-    if(hidden){
-      // otevřeno
-      try{
-        $('main-btn').style.opacity='0.6';
-        $('main-btn').style.pointerEvents='none';
-        $('single-input').disabled=true;
-      }catch{}
-    }else{
-      // zavřeno
-      try{
-        $('main-btn').style.opacity='';
-        $('main-btn').style.pointerEvents='';
-        $('single-input').disabled=false;
-      }catch{}
-    }
   }
 
   function updateInfo(){
@@ -338,7 +314,6 @@
   }
 
   function handleMainAction(){
-    if(settingsOpen()) return; // --- NOVÉ: blok při otevřených settings ---
     if(state==='init'){
       const secret=$('secret-input').value.trim();
       if(secret.toLowerCase()==='vymazat'){
@@ -356,7 +331,6 @@
   document.addEventListener('keydown',e=>{
     if(e.key!=='Enter') return;
     e.preventDefault();
-    if(settingsOpen()) return; // --- NOVÉ: Enter nemůže spustit kontrolu ---
     if(state==='init') handleMainAction();
     else if(state==='playing') checkAnswer();
   });
@@ -376,7 +350,6 @@
   }
 
   $('single-input').addEventListener('input',function(){
-    if(settingsOpen()) return; // --- NOVÉ: i editování vstupu blokovat ---
     const dir=$('direction').value;
     const input=this;
     const cursorPosition=input.selectionStart;
@@ -450,6 +423,7 @@
       currentFingerSum=0;
       document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
       syncFingerPanelClass();
+      // při otevřeném panelu zobrazíme součet (0 = vše off)
       if(fingerPanelVisible){
         document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
           const vv=Number(sq.dataset.value);
@@ -472,7 +446,6 @@
 
   function deleteLeft(){
     if(state!=='playing') return;
-    if(settingsOpen()) return; // --- NOVÉ ---
     const input=$('single-input'), dir=$('direction').value;
 
     const cursorPos=input.selectionStart;
@@ -499,9 +472,11 @@
 
       const targetDigits=value.slice(0,deletePos).replace(/\s/g,'').length;
       input.selectionStart=input.selectionEnd=computeCursorForDigits(formatted,value,cursorPos,'dec2bin') - (value.slice(0,deletePos).replace(/\s/g,'').length>targetDigits?0:0);
+      // (záměrně necháváme výpočet funkční; vizuálně to sedí jako dřív)
     }else{
       const formatted=formatDecimalInput(newValue);
       input.value=formatted;
+
       input.selectionStart=input.selectionEnd=computeCursorForDigits(formatted,value,cursorPos,'bin2dec');
     }
     input.focus();
@@ -509,14 +484,12 @@
 
   function clearAll(){
     if(state!=='playing') return;
-    if(settingsOpen()) return; // --- NOVÉ ---
     $('single-input').value='';
     $('single-input').focus();
   }
 
   function typeVal(val){
     if(state!=='playing') return;
-    if(settingsOpen()) return; // --- NOVÉ ---
     const dir=$('direction').value;
     const input=$('single-input');
 
@@ -557,12 +530,12 @@
     }
     input.value=formatted;
 
+    // kurzor: jednoduché (stejné jako původně pro praktické použití)
     input.selectionStart=input.selectionEnd=formatted.length;
     input.focus();
   }
 
   function checkAnswer(){
-    if(settingsOpen()) return; // --- NOVÉ: pojistka ---
     const dir=$('direction').value;
     const input=$('single-input');
     const rawValue=input.value.trim();
@@ -586,6 +559,7 @@
       return;
     }
 
+    // bin2dec
     let isCorrect=false, formattedCorrect='';
     if(dir==='bin2dec'){
       if(rawValue===''){
@@ -614,6 +588,7 @@
       return;
     }
 
+    // dec2bin default (když prsty nejsou vysunuté)
     if(rawValue===''){
       state='evaluated';
       $('main-btn').innerText='START';
