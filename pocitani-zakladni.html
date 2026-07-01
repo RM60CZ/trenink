@@ -103,7 +103,6 @@ input{-webkit-appearance:none;border-radius:.75rem}
   </div>
 </div>
 </div>
-</div>
 <div id="historyContainer" class="px-1 opacity-0 transition-opacity duration-500 select-none">
 <div class="text-[9px] font-bold uppercase text-slate-400 tracking-wider mb-1.5">Historie</div>
 <div id="historyList" class="flex flex-wrap gap-1.5"><div id="historyEmpty" class="text-[11px] text-slate-400 italic">Zatím jste nevyřešil(a) žádný příklad</div></div>
@@ -154,8 +153,8 @@ const generate=()=>{
   while(iter++<1000){a=genNum(n1);b=n2===1?Math.floor(Math.random()*8)+2:genNum(n2);if(op==='-'&&a<=b)continue;if(op==='/'&&b===0)continue;break}
   let vysledek,vysledekZ;
   if(op==='+')vysledek=vysledekZ=a+b;
-  else if(op==='-')vysledekZ=a-b;
-  else if(op==='*')vysledekZ=BigInt(a)*BigInt(b);
+  else if(op==='-')vysledek=vysledekZ=a-b;
+  else if(op==='*')vysledek=vysledekZ=BigInt(a)*BigInt(b);
   else{vysledek=a/b;vysledekZ=trunc4(vysledek)}
   return{a,b,op,vysledek,vysledekZ};
 };
@@ -373,25 +372,7 @@ const handle=(e,fromVoice)=>{
 
 btnEl.addEventListener('touchstart',e=>handle(e,false),{passive:false});
 btnEl.addEventListener('click',e=>{if(e.pointerType!=='touch')handle(e,false)});
-$('odpoved').addEventListener('keydown',e=>{
-  // --- PŘIDÁNO: na horní řadě Digit0..Digit9 vždy vkládej číslo ---
-  if(e.code && /^Digit[0-9]$/.test(e.code) && !e.ctrlKey && !e.metaKey && !e.altKey){
-    const digit=e.code.slice(5);
-    e.preventDefault();
-    // Nechávám existující logiku z klávesnice vstupem/validací: přímo vložím číslici do pole
-    // a nechám si to projít stejným stylem jako standardní psaní.
-    const start=odpovedEl.selectionStart ?? odpovedEl.value.length;
-    const end=odpovedEl.selectionEnd ?? odpovedEl.value.length;
-    const before=odpovedEl.value.slice(0,start);
-    const after=odpovedEl.value.slice(end);
-    odpovedEl.value=before+digit+after;
-    // Udržení caret posice (aby se to chovalo přirozeně)
-    const pos=start+1;
-    requestAnimationFrame(()=>{try{odpovedEl.setSelectionRange(pos,pos)}catch(_){}})
-    return;
-  }
-  if(e.key==='Enter')handle(e,false);
-});
+odpovedEl.addEventListener('keydown',e=>{if(e.key==='Enter')handle(e,false)});
 $('settingsToggle').addEventListener('click',()=>$('settingsPanel').classList.toggle('collapsed'));
 
 updateScores();updateBtn();renderHistory();resetToInitialState();
