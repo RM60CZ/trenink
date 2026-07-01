@@ -378,11 +378,11 @@ $('settingsToggle').addEventListener('click',()=>$('settingsPanel').classList.to
 // Konverze písmen na číslech na čísla (česká + slovenská klávesnice)
 const keyboardMap={
   // Česká klávesnice (QWERTZ)
-  'ě':'1', 'č':'2', 'ř':'3', 'š':'4', 'ž':'5', 'ý':'6', 'á':'7', 'í':'8', 'é':'9',
+  '+':'1', 'ě':'2', 'š':'3', 'č':'4', 'ř':'5', 'ž':'6', 'ý':'7', 'á':'8', 'í':'9', 'é':'0',
   
   // Slovenská klávesnice (QWERTZ)
   // Poznámka: + je na 1, ľ na 2, š na 3, č na 4 (stejně jako CZ ž na 5, ý na 6, á na 7, í na 8, é na 9)
-  '+':'1', 'ľ':'2', 'š':'3', 'č':'4'
+  'ľ':'2', 'ť':'5',
 };
 
 odpovedEl.addEventListener('input',e=>{
