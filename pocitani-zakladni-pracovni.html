@@ -376,8 +376,21 @@ odpovedEl.addEventListener('keydown',e=>{if(e.key==='Enter')handle(e,false)});
 $('settingsToggle').addEventListener('click',()=>$('settingsPanel').classList.toggle('collapsed'));
 
 // Konverze písmen na číslech na čísla (česká + slovenská klávesnice)
-const keyboardMap={'ě':'0','č':'1','ř':'2','š':'3','ž':'5','ý':'6','á':'7','í':'8','é':'9'};
-odpovedEl.addEventListener('input',e=>{let val=e.target.value,converted='';for(let char of val)converted+=keyboardMap[char]||(/^[-,.\d]$/.test(char)?char:'');const normalized=norm(converted);e.target.value=normalized?fmtInputStr(normalized):''});
+const keyboardMap={
+  // Česká klávesnice (QWERTZ)
+  'ě':'1', 'č':'2', 'ř':'3', 'š':'4', 'ž':'5', 'ý':'6', 'á':'7', 'í':'8', 'é':'9',
+  
+  // Slovenská klávesnice (QWERTZ)
+  // Poznámka: + je na 1, ľ na 2, š na 3, č na 4 (stejně jako CZ ž na 5, ý na 6, á na 7, í na 8, é na 9)
+  '+':'1', 'ľ':'2', 'š':'3', 'č':'4'
+};
+
+odpovedEl.addEventListener('input',e=>{
+  let val=e.target.value,converted='';
+  for(let char of val)converted+=keyboardMap[char]||(/^[-,.\d]$/.test(char)?char:'');
+  const normalized=norm(converted);
+  e.target.value=normalized?fmtInputStr(normalized):''
+});
 
 updateScores();updateBtn();renderHistory();resetToInitialState();
 })();
