@@ -16,7 +16,8 @@ input{-webkit-appearance:none;border-radius:.75rem}
 #odpoved{position:relative;right:0;transition:right .15s ease}
 #odpoved::placeholder{text-align:center!important;font-size:1.5rem}
 @media(max-width:400px){#odpoved::placeholder{font-size:1rem}}
-#odpoved.hidden-text{color:transparent!important;caret-color:transparent!important;-webkit-text-fill-color:transparent!important}
+/* ZDE JE OPRAVA 1: Přidáno user-select: none, aby text nešel označit */
+#odpoved.hidden-text{color:transparent!important;caret-color:transparent!important;-webkit-text-fill-color:transparent!important;user-select:none!important}
 .math-text{white-space:pre;line-height:1.25;display:block;font-variant-numeric:tabular-nums}
 .worksheet-bg{background:#e2e8f0 radial-gradient(circle,#94a3b8 1px,transparent 1px)/24px 24px}
 .dark .worksheet-bg{background:rgba(30,41,59,.4) radial-gradient(circle,#334155 1px,transparent 1px)}
@@ -121,7 +122,7 @@ $('currentDate').textContent=`${czD[today.getDay()]} ${today.getDate()}. ${czM[t
 const todayStr=today.toISOString().slice(0,10);
 
 const updateThemeIcons=()=>{const d=document.documentElement.classList.contains('dark');themeIconSun.classList.toggle('hidden',!d);themeIconMoon.classList.toggle('hidden',d)};
-themeToggle.addEventListener('click',()=>{document.documentElement.classList.toggle('dark');updateThemeIcons()});
+themeToggle.addEventListener('click',()=>{document.documentElement.classList.toggle('dark');updateThemeIcons'});
 updateThemeIcons();
 
 const updateHomeBtn=()=>homeBtn.classList.toggle('hidden-btn',!aktualniPriklad&&!zobrazitVysledek);
@@ -375,21 +376,28 @@ btnEl.addEventListener('click',e=>{if(e.pointerType!=='touch')handle(e,false)});
 odpovedEl.addEventListener('keydown',e=>{if(e.key==='Enter')handle(e,false)});
 $('settingsToggle').addEventListener('click',()=>$('settingsPanel').classList.toggle('collapsed'));
 
-// Konverze písmen na číslech na čísla (česká + slovenská klávesnice)
+/* ZDE JE OPRAVA 2: Logika převodu kláves */
 const keyboardMap={
   // Česká klávesnice (QWERTZ)
-  '+':'1', 'ě':'2', 'š':'3', 'č':'4', 'ř':'5', 'ž':'6', 'ý':'7', 'á':'8', 'í':'9', 'é':'0',
-  
+  'ě':'1', 'č':'2', 'ř':'3', 'š':'4', 'ž':'5', 'ý':'6', 'á':'7', 'í':'8', 'é':'9',
   // Slovenská klávesnice (QWERTZ)
-  // Poznámka: + je na 1, ľ na 2, š na 3, č na 4 (stejně jako CZ ž na 5, ý na 6, á na 7, í na 8, é na 9)
-  'ľ':'2', 'ť':'5',
+  '+':'1', 'ľ':'2', 'š':'3', 'č':'4'
 };
 
 odpovedEl.addEventListener('input',e=>{
-  let val=e.target.value,converted='';
-  for(let char of val)converted+=keyboardMap[char]||(/^[-,.\d]$/.test(char)?char:'');
-  const normalized=norm(converted);
-  e.target.value=normalized?fmtInputStr(normalized):''
+  let val=e.target.value, converted='';
+  
+  // Pokud řešíme příklad (píšeme číslo), funguje agresivní filtr (pouze číslice)
+  if(zobrazitVysledek && aktualniPriklad){
+    for(let char of val) converted += keyboardMap[char] || (/^[-,.\d]$/.test(char) ? char : '');
+    const normalized = norm(converted);
+    e.target.value = normalized ? fmtInputStr(normalized) : '';
+  }
+  // Pokud je program v "klidovém stavu" (píšeme příkaz), filtr je měkký (čísla převádí, písmena nechává)
+  else {
+    for(let char of val) converted += keyboardMap[char] || char;
+    e.target.value = converted;
+  }
 });
 
 updateScores();updateBtn();renderHistory();resetToInitialState();
