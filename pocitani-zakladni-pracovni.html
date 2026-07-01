@@ -103,7 +103,6 @@ input{-webkit-appearance:none;border-radius:.75rem}
   </div>
 </div>
 </div>
-</div>
 <div id="historyContainer" class="px-1 opacity-0 transition-opacity duration-500 select-none">
 <div class="text-[9px] font-bold uppercase text-slate-400 tracking-wider mb-1.5">Historie</div>
 <div id="historyList" class="flex flex-wrap gap-1.5"><div id="historyEmpty" class="text-[11px] text-slate-400 italic">Zatím jste nevyřešil(a) žádný příklad</div></div>
@@ -154,8 +153,8 @@ const generate=()=>{
   while(iter++<1000){a=genNum(n1);b=n2===1?Math.floor(Math.random()*8)+2:genNum(n2);if(op==='-'&&a<=b)continue;if(op==='/'&&b===0)continue;break}
   let vysledek,vysledekZ;
   if(op==='+')vysledek=vysledekZ=a+b;
-  else if(op==='-')vysledekZ=a-b;
-  else if(op==='*')vysledekZ=BigInt(a)*BigInt(b);
+  else if(op==='-')vysledek=vysledekZ=a-b;
+  else if(op==='*')vysledek=vysledekZ=BigInt(a)*BigInt(b);
   else{vysledek=a/b;vysledekZ=trunc4(vysledek)}
   return{a,b,op,vysledek,vysledekZ};
 };
@@ -227,7 +226,7 @@ const addHist=(ok,userInput)=>{
 };
 
 const WV=(s=>{const o={};s.split(';').forEach(p=>{const[v,w]=p.split(':');w.split(',').forEach(x=>o[x]=+v)});return o})('0:žádná,zadna,nula,nulu,nuly;1:jedna,jeden,jedno,jednu,jedné;2:dvě,dva,dvou;3:tři,třech;4:čtyři,čtyřech;5:pět,pěti;6:šest,šesti;7:sedm,sedmi;8:osm,osmi;9:devět,devíti;10:deset,deseti;11:jedenáct,jedenácti;12:dvanáct,dvanácti;13:třináct,třinácti;14:čtrnáct,čtrnácti;15:patnáct,patnácti;16:šestnáct,šestnácti;17:sedmnáct,sedmnácti;18:osmnáct,osmnácti;19:devatenáct,devatenácti;20:dvacet,dvaceti;30:třicet,třiceti;40:čtyřicet,čtyřiceti;50:padesát,padesáti;60:šedesát,šedesáti;70:sedmdesát,sedmdesáti;80:osmdesát,osmdesáti;90:devadesát,devadesáti;100:sto,sta,stu,stem,stě;200:dvěstě,dvěsta;300:třista,třísta;400:čtyřista,čtyřsta');
-const IGNORE_WORDS=(s=>{const o={};s.split(',').forEach(x=>o[x]=1);return o})('tisíc,tisíce,tisíců,tisíci,tisícům,tisícem,tisících,milion,milión,miliony,milióny,milionu,miliónu,milionů,miliónů,miliarda,miliardy,miliard,miliardě,miliardám,miliardou,miliardách');
+const IGNORE_WORDS=(s=>{const o={};s.split(',').forEach(x=>o[x]=1);return o})('tisíc,tisíce,tisíců,tisíci,tisícům,tisícem,tisích,milion,milión,miliony,milióny,milionu,miliónu,milionů,miliónů,miliarda,miliardy,miliard,miliardě,miliardám,miliardou,miliardách');
 const DEC_RE=/(?:^|\s)(celá|celé|celých|celych|cely|celi|cela|čárka|čárku|carka|carku|tečka|tečku|tecka|tecku)(?:\s|$)/;
 
 const evalPhrase=(phrase,words,startIdx,len)=>{
@@ -373,26 +372,12 @@ const handle=(e,fromVoice)=>{
 
 btnEl.addEventListener('touchstart',e=>handle(e,false),{passive:false});
 btnEl.addEventListener('click',e=>{if(e.pointerType!=='touch')handle(e,false)});
-$('odpoved').addEventListener('keydown',e=>{
-  // --- PŘIDÁNO: na horní řadě Digit0..Digit9 vždy vkládej číslo ---
-  if(e.code && /^Digit[0-9]$/.test(e.code) && !e.ctrlKey && !e.metaKey && !e.altKey){
-    const digit=e.code.slice(5);
-    e.preventDefault();
-    // Nechávám existující logiku z klávesnice vstupem/validací: přímo vložím číslici do pole
-    // a nechám si to projít stejným stylem jako standardní psaní.
-    const start=odpovedEl.selectionStart ?? odpovedEl.value.length;
-    const end=odpovedEl.selectionEnd ?? odpovedEl.value.length;
-    const before=odpovedEl.value.slice(0,start);
-    const after=odpovedEl.value.slice(end);
-    odpovedEl.value=before+digit+after;
-    // Udržení caret posice (aby se to chovalo přirozeně)
-    const pos=start+1;
-    requestAnimationFrame(()=>{try{odpovedEl.setSelectionRange(pos,pos)}catch(_){}})
-    return;
-  }
-  if(e.key==='Enter')handle(e,false);
-});
+odpovedEl.addEventListener('keydown',e=>{if(e.key==='Enter')handle(e,false)});
 $('settingsToggle').addEventListener('click',()=>$('settingsPanel').classList.toggle('collapsed'));
+
+// Konverze písmen na číslech na čísla (česká + slovenská klávesnice)
+const keyboardMap={'ě':'0','č':'1','ř':'2','š':'3','ž':'5','ý':'6','á':'7','í':'8','é':'9'};
+odpovedEl.addEventListener('input',e=>{let val=e.target.value,converted='';for(let char of val)converted+=keyboardMap[char]||(/^[-,.\d]$/.test(char)?char:'');e.target.value=converted});
 
 updateScores();updateBtn();renderHistory();resetToInitialState();
 })();
