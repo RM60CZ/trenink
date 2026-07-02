@@ -16,8 +16,15 @@ input{-webkit-appearance:none;border-radius:.75rem}
 #odpoved{position:relative;right:0;transition:right .15s ease}
 #odpoved::placeholder{text-align:center!important;font-size:1.5rem}
 @media(max-width:400px){#odpoved::placeholder{font-size:1rem}}
-#odpoved.hidden-text{color:transparent!important;caret-color:transparent!important;-webkit-text-fill-color:transparent!important}
-.math-text{white-space:pre;line-height:1.25;display:block;font-variant-numeric:tabular-nums}
+/* Upraveno: Přidáno user-select: none pro skrytí textu při označování */
+#odpoved.hidden-text{
+    color:transparent!important;
+    caret-color:transparent!important;
+    -webkit-text-fill-color:transparent!important;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.math-text{white-space:pre;line-height:1.25;display:block;font-variant-umeric:tabular-nums}
 .worksheet-bg{background:#e2e8f0 radial-gradient(circle,#94a3b8 1px,transparent 1px)/24px 24px}
 .dark .worksheet-bg{background:rgba(30,41,59,.4) radial-gradient(circle,#334155 1px,transparent 1px)}
 .btn-pulse{animation:pulse-blue 2.5s infinite}
@@ -375,6 +382,7 @@ btnEl.addEventListener('click',e=>{if(e.pointerType!=='touch')handle(e,false)});
 odpovedEl.addEventListener('keydown',e=>{if(e.key==='Enter')handle(e,false)});
 $('settingsToggle').addEventListener('click',()=>$('settingsPanel').classList.toggle('collapsed'));
 
+// Upraveno: Změna logiky filtru vstupu
 // Konverze písmen na číslech na čísla (česká + slovenská klávesnice)
 const keyboardMap={
   // Česká klávesnice (QWERTZ)
@@ -384,11 +392,19 @@ const keyboardMap={
 };
 
 odpovedEl.addEventListener('input',e=>{
-  let val=e.target.value,converted='';
-  for(let char of val)converted+=keyboardMap[char]||(/^[-,.\d]$/.test(char)?char:'');
-  const normalized=norm(converted);
-  e.target.value=normalized?fmtInputStr(normalized):''
+  let val=e.target.value;
+
+  // Pokud existuje aktivní příklad (jsme ve výpočtu), aplikujeme přísný filtr pro čísla
+  if(aktualniPriklad){
+    let converted='';
+    for(let char of val)converted+=keyboardMap[char]||(/^[-,.\d]$/.test(char)?char:'');
+    const normalized=norm(converted);
+    e.target.value=normalized?fmtInputStr(normalized):'';
+  }
+  // Pokud aktivní příklad není (jsme v úvodní fázi), filtr nepoužíváme.
+  // Text "Vymazat" je možné napsat a je skrytý díky CSS třídě .hidden-text nastavené v resetToInitialState().
 });
+// Konec úpravy
 
 updateScores();updateBtn();renderHistory();resetToInitialState();
 })();
