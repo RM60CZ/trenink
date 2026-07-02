@@ -309,12 +309,13 @@
 
   // Funkce pro skrytí/odkrytí prvků při nastavení
   function applySettingsVisibility(){
-      // Prsty (panel) - pokud je settingsActive, skryjeme
+      // Prsty (panel) - skryjeme pomocí display:none, ALE necháme logickou proměnnou fingerPanelVisible tak jak je
+      // Pokud je settingsActive, vynutíme display: none. Jinak vrátíme původní stav (podle fingerPanelVisible).
       $('finger-panel').style.display = settingsActive ? 'none' : (fingerPanelVisible ? 'flex' : 'none');
       
       // Tlačítka v hlavičce (P, 🏠, 🌙)
       $('finger-toggle-btn').style.display = settingsActive ? 'none' : 'block';
-      // Home button má svoji vlastní logiku zobrazení (při initu je skrytý)
+      // Home button: Viditelný POUZE pokud hrajeme (state != 'init') A NENÍ aktivní nastavení
       $('home-btn').style.display = settingsActive ? 'none' : (state === 'init' ? 'none' : 'block'); 
       $('theme-btn').style.display = settingsActive ? 'none' : 'block';
       
@@ -336,7 +337,8 @@
 
     updateTitle();
     updateFingerDisplay();
-    if(state==='playing') startGame();
+    // Pokud jsme ve hře, musíme respektovat, zda je nastavení aktivní, jinak hru překreslíme
+    if(state==='playing' && !settingsActive) startGame(); 
     syncFingerPanelClass();
   }
 
@@ -419,7 +421,10 @@
 
   function startGame(){
     state='playing';
-    $('home-btn').style.display='block';
+    
+    // Aktualizace tlačítka Home - musí respektovat settingsActive
+    $('home-btn').style.display = settingsActive ? 'none' : 'block';
+    
     $('main-btn').innerText='VÝSLEDEK (KONTROLA)';
 
     const bits=parseInt($('bits').value,10);
