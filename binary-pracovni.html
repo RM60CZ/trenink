@@ -71,6 +71,12 @@
     .history-item.correct{color:var(--ok);border-color:var(--ok);}
     .history-item.error{color:var(--er);border-color:var(--er);}
 
+    /* Disabled state for settings */
+    .key-btn.disabled, .back-btn.disabled, .clear-btn.disabled, .main-action.disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
     @media (max-width:520px){
       .finger-grid{grid-template-columns:repeat(5,48px);grid-template-rows:repeat(3,calc(36px * 2));column-gap:10px;row-gap:22px;}
       .finger-sq{width:48px;height:36px;}
@@ -149,6 +155,8 @@
 <script>
   let state='init', currentDecValue=0, expectedAnswer='', expectedLength=0, currentDisplayBits=0, fingerPanelVisible=false;
   let currentFingerSum=0;
+  let settingsActive = false; // Nová proměnná pro stav nastavení
+  let savedStateBeforeSettings = 'init'; // Pro uložení stavu hry před otevřením nastavení
 
   const $=id=>document.getElementById(id);
 
@@ -260,6 +268,9 @@
   }
 
   function goHome(){
+    // Pokud je otevřené nastavení, zavřeme ho
+    if(settingsActive) toggleSettings();
+
     state='init';
     $('home-btn').style.display='none';
     $('secret-input').style.display='block';
@@ -280,6 +291,9 @@
     document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
 
     $('secret-input').focus();
+    
+    // Obnovíme plnou funkčnost (odstraníme třídy disabled, pokud tam byly)
+    setControlsDisabled(false);
   }
 
   function toggleTheme(){
@@ -291,11 +305,54 @@
     localStorage.setItem('binTrainTheme',newTheme);
   }
 
+  // Funkce pro zapnutí/vypnutí ovládacích prvků (kromě settings a selectů)
+  function setControlsDisabled(disabled) {
+    const mainBtn = $('main-btn');
+    const backBtn = $('back-btn');
+    const clearBtn = $('clear-btn');
+    const keyBtns = document.querySelectorAll('.key-btn');
+    const fingerBtns = document.querySelectorAll('.finger-sq');
+    
+    if (disabled) {
+      mainBtn.classList.add('disabled');
+      backBtn.classList.add('disabled');
+      clearBtn.classList.add('disabled');
+      keyBtns.forEach(btn => btn.classList.add('disabled'));
+      fingerBtns.forEach(btn => btn.classList.add('disabled')); // optional, pointer-events:none už tam je
+    } else {
+      mainBtn.classList.remove('disabled');
+      backBtn.classList.remove('disabled');
+      clearBtn.classList.remove('disabled');
+      keyBtns.forEach(btn => btn.classList.remove('disabled'));
+      fingerBtns.forEach(btn => btn.classList.remove('disabled'));
+    }
+  }
+
   function toggleSettings(){
     const p=$('settings-panel'), info=$('info');
     const hidden = (p.style.display==='none' || p.style.display==='');
+    
+    // Přepnutí viditelnosti
     p.style.display= hidden?'flex':'none';
     info.style.display= hidden?'block':'none';
+
+    // Logika blokování
+    if (hidden) {
+      // Otevíráme nastavení -> uložíme stav a zablokujeme ovládání
+      savedStateBeforeSettings = state;
+      settingsActive = true;
+      setControlsDisabled(true);
+    } else {
+      // Zavíráme nastavení -> obnovíme stav a odblokujeme
+      settingsActive = false;
+      setControlsDisabled(false);
+      state = savedStateBeforeSettings; // Vrátíme stav hry (např. playing)
+      // Pokud byl stav playing, zajistíme zobrazení správných prvků (goHome to řeší, ale tady nechceme jít home)
+      if (state === 'playing') {
+         // Obnovíme UI pro hru, pokud je potřeba (většinou to stačí odblokovat)
+         $('home-btn').style.display = 'block'; 
+      }
+    }
   }
 
   function updateInfo(){
@@ -314,6 +371,9 @@
   }
 
   function handleMainAction(){
+    // Pokud je nastavení aktivní, tlačítko nic nedělá
+    if (settingsActive) return;
+
     if(state==='init'){
       const secret=$('secret-input').value.trim();
       if(secret.toLowerCase()==='vymazat'){
@@ -472,7 +532,6 @@
 
       const targetDigits=value.slice(0,deletePos).replace(/\s/g,'').length;
       input.selectionStart=input.selectionEnd=computeCursorForDigits(formatted,value,cursorPos,'dec2bin') - (value.slice(0,deletePos).replace(/\s/g,'').length>targetDigits?0:0);
-      // (záměrně necháváme výpočet funkční; vizuálně to sedí jako dřív)
     }else{
       const formatted=formatDecimalInput(newValue);
       input.value=formatted;
@@ -530,7 +589,6 @@
     }
     input.value=formatted;
 
-    // kurzor: jednoduché (stejné jako původně pro praktické použití)
     input.selectionStart=input.selectionEnd=formatted.length;
     input.focus();
   }
