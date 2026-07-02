@@ -15,8 +15,7 @@
     .header-icons{display:flex;gap:12px;align-items:center;}
     .icon-btn{background:none;border:none;font-size:20px;cursor:pointer;color:var(--t);}
     .finger-toggle-btn{background:none;border:none;font-size:24px;font-weight:bold;cursor:pointer;line-height:1;padding:0;color:var(--t);}
-    /* Styl pro deaktivované P */
-    .finger-toggle-btn.disabled { opacity: 0.3; pointer-events: none; }
+    .finger-toggle-btn.disabled{opacity:0.3;pointer-events:none;}
 
     .settings-group{display:none;flex-direction:column;gap:8px;margin-top:4px;}
     select{width:100%;padding:6px;border-radius:6px;border:1px solid var(--b);background:var(--c);color:var(--t);}
@@ -246,7 +245,7 @@
   }
 
   function toggleFingerPanel(){
-    // Pokud je tlačítko deaktivované (např. po výpočtu v BIN->DEC), nic se nestane
+    // Pokud je P deaktivované, nereaguje na kliknutí
     if($('finger-toggle-btn').classList.contains('disabled')) return;
 
     fingerPanelVisible=!fingerPanelVisible;
@@ -279,10 +278,10 @@
     $('keypad-dec').style.display='none';
     $('main-btn').innerText='START';
 
-    // Na začátku (init) P je skryté
+    // P je skryté na úvodní obrazovce
     $('finger-toggle-btn').style.display = 'none'; 
     
-    // Reset prstů
+    // Zasunout prsty
     fingerPanelVisible = false;
     const panel=$('finger-panel');
     panel.classList.remove('visible','dec-mode');
@@ -315,6 +314,7 @@
 
   function applySettingsVisibility(){
       if(settingsActive){
+          // Skryjeme vše
           $('finger-panel').style.display = 'none';
           fingerPanelVisible = false;
           $('finger-panel').classList.remove('visible', 'dec-mode');
@@ -325,18 +325,20 @@
           $('game-area').style.display = 'none';
           $('main-btn').style.display = 'none';
       } else {
+          // Obnovíme zobrazení
           $('theme-btn').style.display = 'block';
           $('game-area').style.display = 'flex';
           $('main-btn').style.display = 'block';
           
-          // Obnovíme viditelnost P podle stavu
+          // Obnovíme stav tlačítka P
           updateFingerButtonState();
           
+          // Obnovíme domeček
           $('home-btn').style.display = state === 'init' ? 'none' : 'block';
       }
   }
 
-  // Nová funkce pro správu stavu tlačítka P
+  // Centralizovaná funkce pro stav tlačítka P
   function updateFingerButtonState(){
       const btn = $('finger-toggle-btn');
       const dir = $('direction').value;
@@ -344,20 +346,21 @@
       if(state === 'init'){
           btn.style.display = 'none'; // Skryté na začátku
       } else {
-          btn.style.display = 'block'; // Viditelné ve hře
+          btn.style.display = 'block'; // Jinak viditelné
           
           if(dir === 'dec2bin'){
-              // DEC->BIN: P je vždy aktivní nástroj
-              btn.classList.remove('disabled');
+              btn.classList.remove('disabled'); // V DEC->BIN vždy aktivní
           } else {
-              // BIN->DEC: P je aktivní jen při hraní
+              // V BIN->DEC aktivní jen během výpočtu
               if(state === 'playing'){
                   btn.classList.remove('disabled');
               } else {
-                  // Po vyhodnocení (evaluated) se P deaktivuje
+                  // Po vyhodnocení se deaktivuje a prsty se zasunou
                   btn.classList.add('disabled');
-                  // A prsty se zasunou
-                  if(fingerPanelVisible) toggleFingerPanel();
+                  if(fingerPanelVisible) {
+                      fingerPanelVisible = false;
+                      $('finger-panel').classList.remove('visible', 'dec-mode');
+                  }
               }
           }
       }
@@ -476,7 +479,7 @@
     $('single-input').value='';
     $('single-input').focus();
 
-    // Obnova stavu tlačítka P při novém kole
+    // Aktualizace stavu P při začátku kola
     updateFingerButtonState();
 
     if(dir==='dec2bin'){
@@ -624,7 +627,7 @@
       saveToHistory(`${formatDecimal(currentDecValue)} = ${formatBinary(removeLeadingZeros(expectedAnswer))}`,isCorrect);
       updateFingerDisplay();
       
-      // DEC->BIN: Po vyhodnocení P zůstává aktivní (pro další kolo)
+      // Po vyhodnocení necháme P aktivní (proDEC->BIN je to kalkulačka)
       updateFingerButtonState();
       return;
     }
@@ -639,7 +642,7 @@
         input.className='';
         updateFingerDisplay();
         
-        // BIN->DEC: Po vyhodnocení P se deaktivuje a prsty zasunou
+        // Po vyhodnocení deaktivujeme P (už nepotřebujeme nápovědu)
         updateFingerButtonState(); 
         return;
       }
@@ -658,7 +661,7 @@
       saveToHistory(`${binForHistory} = ${formattedCorrect}`,isCorrect);
       updateFingerDisplay();
       
-      // BIN->DEC: Po vyhodnocení P se deaktivuje
+      // Po vyhodnocení deaktivujeme P
       updateFingerButtonState();
       return;
     }
