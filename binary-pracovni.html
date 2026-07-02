@@ -274,7 +274,8 @@
     $('keypad-dec').style.display='none';
     $('main-btn').innerText='START';
 
-    fingerPanelVisible=false;
+    // Při návratu domů prsty vždy zasuneme a vynulujeme
+    fingerPanelVisible = false;
     const panel=$('finger-panel');
     panel.classList.remove('visible','dec-mode');
 
@@ -297,33 +298,35 @@
     const p=$('settings-panel'), info=$('info');
     const hidden = (p.style.display==='none' || p.style.display==='');
     
-    // Přepnutí viditelnosti panelu
     p.style.display= hidden?'flex':'none';
     info.style.display= hidden?'block':'none';
     
     settingsActive = hidden;
-
-    // Aplikace viditelnosti (skrytí/odkrytí) ostatních prvků
     applySettingsVisibility();
   }
 
-  // Funkce pro skrytí/odkrytí prvků při nastavení
   function applySettingsVisibility(){
-      // Prsty (panel) - skryjeme pomocí display:none, ALE necháme logickou proměnnou fingerPanelVisible tak jak je
-      // Pokud je settingsActive, vynutíme display: none. Jinak vrátíme původní stav (podle fingerPanelVisible).
-      $('finger-panel').style.display = settingsActive ? 'none' : (fingerPanelVisible ? 'flex' : 'none');
-      
-      // Tlačítka v hlavičce (P, 🏠, 🌙)
-      $('finger-toggle-btn').style.display = settingsActive ? 'none' : 'block';
-      // Home button: Viditelný POUZE pokud hrajeme (state != 'init') A NENÍ aktivní nastavení
-      $('home-btn').style.display = settingsActive ? 'none' : (state === 'init' ? 'none' : 'block'); 
-      $('theme-btn').style.display = settingsActive ? 'none' : 'block';
-      
-      // Herní oblast (vstupy, klávesnice)
-      $('game-area').style.display = settingsActive ? 'none' : 'flex';
-      
-      // Hlavní tlačítko START
-      $('main-btn').style.display = settingsActive ? 'none' : 'block';
+      if(settingsActive){
+          // Skryjeme vše a VYNULUJEME stav prstů, aby po zavření nastavení nebyl zmatek
+          $('finger-panel').style.display = 'none';
+          fingerPanelVisible = false;
+          $('finger-panel').classList.remove('visible', 'dec-mode');
+          
+          $('finger-toggle-btn').style.display = 'none';
+          $('home-btn').style.display = 'none';
+          $('theme-btn').style.display = 'none';
+          $('game-area').style.display = 'none';
+          $('main-btn').style.display = 'none';
+      } else {
+          // Obnovíme zobrazení
+          $('finger-toggle-btn').style.display = 'block';
+          $('theme-btn').style.display = 'block';
+          $('game-area').style.display = 'flex';
+          $('main-btn').style.display = 'block';
+          
+          // Tlačítko domů jen pokud hra běží
+          $('home-btn').style.display = state === 'init' ? 'none' : 'block';
+      }
   }
 
   function updateInfo(){
@@ -337,7 +340,6 @@
 
     updateTitle();
     updateFingerDisplay();
-    // Pokud jsme ve hře, musíme respektovat, zda je nastavení aktivní, jinak hru překreslíme
     if(state==='playing' && !settingsActive) startGame(); 
     syncFingerPanelClass();
   }
@@ -421,10 +423,7 @@
 
   function startGame(){
     state='playing';
-    
-    // Aktualizace tlačítka Home - musí respektovat settingsActive
-    $('home-btn').style.display = settingsActive ? 'none' : 'block';
-    
+    $('home-btn').style.display = settingsActive ? 'none' : 'block'; 
     $('main-btn').innerText='VÝSLEDEK (KONTROLA)';
 
     const bits=parseInt($('bits').value,10);
