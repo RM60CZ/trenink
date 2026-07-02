@@ -71,12 +71,6 @@
     .history-item.correct{color:var(--ok);border-color:var(--ok);}
     .history-item.error{color:var(--er);border-color:var(--er);}
 
-    /* Disabled state for settings */
-    .key-btn.disabled, .back-btn.disabled, .clear-btn.disabled, .main-action.disabled {
-      opacity: 0.5;
-      pointer-events: none;
-    }
-
     @media (max-width:520px){
       .finger-grid{grid-template-columns:repeat(5,48px);grid-template-rows:repeat(3,calc(36px * 2));column-gap:10px;row-gap:22px;}
       .finger-sq{width:48px;height:36px;}
@@ -92,10 +86,10 @@
   <div class="header">
     <h1 id="app-title">Bináry</h1>
     <div class="header-icons">
-      <button class="icon-btn" id="home-btn" onclick="goHome()" style="display:none;">🏠</button>
+      <button class="icon-btn" id="home-btn" onclick="goHome()">🏠</button>
       <button class="finger-toggle-btn" id="finger-toggle-btn" onclick="toggleFingerPanel()">P</button>
-      <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
       <button class="icon-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
+      <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
     </div>
   </div>
 
@@ -113,7 +107,7 @@
 
   <div class="info-text" id="info"></div>
 
-  <div class="game-area">
+  <div class="game-area" id="game-area">
     <input type="text" id="secret-input" inputmode="text" placeholder="Zde můžete smazat historii...">
 
     <div class="question" id="question-display"></div>
@@ -121,8 +115,8 @@
     <div class="input-with-back" id="input-container">
       <input type="text" id="single-input"
              inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-      <button class="back-btn" id="back-btn" onclick="deleteLeft()" style="display:none;">Zpět</button>
-      <button class="clear-btn" id="clear-btn" onclick="clearAll()" style="display:none;">Smazat</button>
+      <button class="back-btn" id="back-btn" onclick="deleteLeft()">Zpět</button>
+      <button class="clear-btn" id="clear-btn" onclick="clearAll()">Smazat</button>
     </div>
 
     <div class="keypad bin" id="keypad-bin">
@@ -146,7 +140,7 @@
 
   <button class="main-action" id="main-btn" onclick="handleMainAction()">START</button>
 
-  <div class="history-container" id="history-container" style="display:none;">
+  <div class="history-container" id="history-container">
     <div class="history-title">Dnešní historie:</div>
     <div class="history-list" id="history-list"></div>
   </div>
@@ -155,8 +149,7 @@
 <script>
   let state='init', currentDecValue=0, expectedAnswer='', expectedLength=0, currentDisplayBits=0, fingerPanelVisible=false;
   let currentFingerSum=0;
-  let settingsActive = false; // Nová proměnná pro stav nastavení
-  let savedStateBeforeSettings = 'init'; // Pro uložení stavu hry před otevřením nastavení
+  let settingsActive = false; 
 
   const $=id=>document.getElementById(id);
 
@@ -228,7 +221,6 @@
           const v=Number(el.dataset.value);
           currentFingerSum = ((currentFingerSum & v)===v) ? (currentFingerSum & ~v) : (currentFingerSum | v);
 
-          // vizuál dle součtu
           document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
             const vv=Number(sq.dataset.value);
             sq.classList.toggle('on',(currentFingerSum & vv)===vv);
@@ -268,7 +260,6 @@
   }
 
   function goHome(){
-    // Pokud je otevřené nastavení, zavřeme ho
     if(settingsActive) toggleSettings();
 
     state='init';
@@ -291,9 +282,6 @@
     document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
 
     $('secret-input').focus();
-    
-    // Obnovíme plnou funkčnost (odstraníme třídy disabled, pokud tam byly)
-    setControlsDisabled(false);
   }
 
   function toggleTheme(){
@@ -305,54 +293,36 @@
     localStorage.setItem('binTrainTheme',newTheme);
   }
 
-  // Funkce pro zapnutí/vypnutí ovládacích prvků (kromě settings a selectů)
-  function setControlsDisabled(disabled) {
-    const mainBtn = $('main-btn');
-    const backBtn = $('back-btn');
-    const clearBtn = $('clear-btn');
-    const keyBtns = document.querySelectorAll('.key-btn');
-    const fingerBtns = document.querySelectorAll('.finger-sq');
-    
-    if (disabled) {
-      mainBtn.classList.add('disabled');
-      backBtn.classList.add('disabled');
-      clearBtn.classList.add('disabled');
-      keyBtns.forEach(btn => btn.classList.add('disabled'));
-      fingerBtns.forEach(btn => btn.classList.add('disabled')); // optional, pointer-events:none už tam je
-    } else {
-      mainBtn.classList.remove('disabled');
-      backBtn.classList.remove('disabled');
-      clearBtn.classList.remove('disabled');
-      keyBtns.forEach(btn => btn.classList.remove('disabled'));
-      fingerBtns.forEach(btn => btn.classList.remove('disabled'));
-    }
-  }
-
   function toggleSettings(){
     const p=$('settings-panel'), info=$('info');
     const hidden = (p.style.display==='none' || p.style.display==='');
     
-    // Přepnutí viditelnosti
+    // Přepnutí viditelnosti panelu
     p.style.display= hidden?'flex':'none';
     info.style.display= hidden?'block':'none';
+    
+    settingsActive = hidden;
 
-    // Logika blokování
-    if (hidden) {
-      // Otevíráme nastavení -> uložíme stav a zablokujeme ovládání
-      savedStateBeforeSettings = state;
-      settingsActive = true;
-      setControlsDisabled(true);
-    } else {
-      // Zavíráme nastavení -> obnovíme stav a odblokujeme
-      settingsActive = false;
-      setControlsDisabled(false);
-      state = savedStateBeforeSettings; // Vrátíme stav hry (např. playing)
-      // Pokud byl stav playing, zajistíme zobrazení správných prvků (goHome to řeší, ale tady nechceme jít home)
-      if (state === 'playing') {
-         // Obnovíme UI pro hru, pokud je potřeba (většinou to stačí odblokovat)
-         $('home-btn').style.display = 'block'; 
-      }
-    }
+    // Aplikace viditelnosti (skrytí/odkrytí) ostatních prvků
+    applySettingsVisibility();
+  }
+
+  // Funkce pro skrytí/odkrytí prvků při nastavení
+  function applySettingsVisibility(){
+      // Prsty (panel) - pokud je settingsActive, skryjeme
+      $('finger-panel').style.display = settingsActive ? 'none' : (fingerPanelVisible ? 'flex' : 'none');
+      
+      // Tlačítka v hlavičce (P, 🏠, 🌙)
+      $('finger-toggle-btn').style.display = settingsActive ? 'none' : 'block';
+      // Home button má svoji vlastní logiku zobrazení (při initu je skrytý)
+      $('home-btn').style.display = settingsActive ? 'none' : (state === 'init' ? 'none' : 'block'); 
+      $('theme-btn').style.display = settingsActive ? 'none' : 'block';
+      
+      // Herní oblast (vstupy, klávesnice)
+      $('game-area').style.display = settingsActive ? 'none' : 'flex';
+      
+      // Hlavní tlačítko START
+      $('main-btn').style.display = settingsActive ? 'none' : 'block';
   }
 
   function updateInfo(){
@@ -371,9 +341,6 @@
   }
 
   function handleMainAction(){
-    // Pokud je nastavení aktivní, tlačítko nic nedělá
-    if (settingsActive) return;
-
     if(state==='init'){
       const secret=$('secret-input').value.trim();
       if(secret.toLowerCase()==='vymazat'){
@@ -483,7 +450,6 @@
       currentFingerSum=0;
       document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
       syncFingerPanelClass();
-      // při otevřeném panelu zobrazíme součet (0 = vše off)
       if(fingerPanelVisible){
         document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
           const vv=Number(sq.dataset.value);
@@ -506,6 +472,7 @@
 
   function deleteLeft(){
     if(state!=='playing') return;
+    
     const input=$('single-input'), dir=$('direction').value;
 
     const cursorPos=input.selectionStart;
@@ -549,6 +516,7 @@
 
   function typeVal(val){
     if(state!=='playing') return;
+    
     const dir=$('direction').value;
     const input=$('single-input');
 
@@ -617,7 +585,6 @@
       return;
     }
 
-    // bin2dec
     let isCorrect=false, formattedCorrect='';
     if(dir==='bin2dec'){
       if(rawValue===''){
@@ -646,7 +613,6 @@
       return;
     }
 
-    // dec2bin default (když prsty nejsou vysunuté)
     if(rawValue===''){
       state='evaluated';
       $('main-btn').innerText='START';
