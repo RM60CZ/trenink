@@ -15,6 +15,8 @@
     .header-icons{display:flex;gap:12px;align-items:center;}
     .icon-btn{background:none;border:none;font-size:20px;cursor:pointer;color:var(--t);}
     .finger-toggle-btn{background:none;border:none;font-size:24px;font-weight:bold;cursor:pointer;line-height:1;padding:0;color:var(--t);}
+    /* Styl pro deaktivované P */
+    .finger-toggle-btn.disabled { opacity: 0.3; pointer-events: none; }
 
     .settings-group{display:none;flex-direction:column;gap:8px;margin-top:4px;}
     select{width:100%;padding:6px;border-radius:6px;border:1px solid var(--b);background:var(--c);color:var(--t);}
@@ -244,6 +246,9 @@
   }
 
   function toggleFingerPanel(){
+    // Pokud je tlačítko deaktivované (např. po výpočtu v BIN->DEC), nic se nestane
+    if($('finger-toggle-btn').classList.contains('disabled')) return;
+
     fingerPanelVisible=!fingerPanelVisible;
     $('finger-panel').classList.toggle('visible', fingerPanelVisible);
     syncFingerPanelClass();
@@ -274,7 +279,10 @@
     $('keypad-dec').style.display='none';
     $('main-btn').innerText='START';
 
-    // Při návratu domů prsty vždy zasuneme a vynulujeme
+    // Na začátku (init) P je skryté
+    $('finger-toggle-btn').style.display = 'none'; 
+    
+    // Reset prstů
     fingerPanelVisible = false;
     const panel=$('finger-panel');
     panel.classList.remove('visible','dec-mode');
@@ -307,7 +315,6 @@
 
   function applySettingsVisibility(){
       if(settingsActive){
-          // Skryjeme vše a VYNULUJEME stav prstů, aby po zavření nastavení nebyl zmatek
           $('finger-panel').style.display = 'none';
           fingerPanelVisible = false;
           $('finger-panel').classList.remove('visible', 'dec-mode');
@@ -318,14 +325,41 @@
           $('game-area').style.display = 'none';
           $('main-btn').style.display = 'none';
       } else {
-          // Obnovíme zobrazení
-          $('finger-toggle-btn').style.display = 'block';
           $('theme-btn').style.display = 'block';
           $('game-area').style.display = 'flex';
           $('main-btn').style.display = 'block';
           
-          // Tlačítko domů jen pokud hra běží
+          // Obnovíme viditelnost P podle stavu
+          updateFingerButtonState();
+          
           $('home-btn').style.display = state === 'init' ? 'none' : 'block';
+      }
+  }
+
+  // Nová funkce pro správu stavu tlačítka P
+  function updateFingerButtonState(){
+      const btn = $('finger-toggle-btn');
+      const dir = $('direction').value;
+
+      if(state === 'init'){
+          btn.style.display = 'none'; // Skryté na začátku
+      } else {
+          btn.style.display = 'block'; // Viditelné ve hře
+          
+          if(dir === 'dec2bin'){
+              // DEC->BIN: P je vždy aktivní nástroj
+              btn.classList.remove('disabled');
+          } else {
+              // BIN->DEC: P je aktivní jen při hraní
+              if(state === 'playing'){
+                  btn.classList.remove('disabled');
+              } else {
+                  // Po vyhodnocení (evaluated) se P deaktivuje
+                  btn.classList.add('disabled');
+                  // A prsty se zasunou
+                  if(fingerPanelVisible) toggleFingerPanel();
+              }
+          }
       }
   }
 
@@ -441,6 +475,9 @@
     $('single-input').className='';
     $('single-input').value='';
     $('single-input').focus();
+
+    // Obnova stavu tlačítka P při novém kole
+    updateFingerButtonState();
 
     if(dir==='dec2bin'){
       $('question-display').innerText=formatDecimal(currentDecValue);
@@ -586,6 +623,9 @@
 
       saveToHistory(`${formatDecimal(currentDecValue)} = ${formatBinary(removeLeadingZeros(expectedAnswer))}`,isCorrect);
       updateFingerDisplay();
+      
+      // DEC->BIN: Po vyhodnocení P zůstává aktivní (pro další kolo)
+      updateFingerButtonState();
       return;
     }
 
@@ -598,6 +638,9 @@
         input.value=formatDecimal(parseInt(expectedAnswer,10));
         input.className='';
         updateFingerDisplay();
+        
+        // BIN->DEC: Po vyhodnocení P se deaktivuje a prsty zasunou
+        updateFingerButtonState(); 
         return;
       }
       const cleanUser=removeLeadingZeros(rawValue);
@@ -614,6 +657,9 @@
       const binForHistory=formatBinary(currentDecValue.toString(2));
       saveToHistory(`${binForHistory} = ${formattedCorrect}`,isCorrect);
       updateFingerDisplay();
+      
+      // BIN->DEC: Po vyhodnocení P se deaktivuje
+      updateFingerButtonState();
       return;
     }
 
@@ -624,6 +670,8 @@
       input.value=formatBinary(expectedAnswer);
       input.className='';
       updateFingerDisplay();
+      
+      updateFingerButtonState();
       return;
     }
 
@@ -640,6 +688,8 @@
 
     saveToHistory(`${formatDecimal(currentDecValue)} = ${formatted}`,isCorrect);
     updateFingerDisplay();
+    
+    updateFingerButtonState();
   }
 
   function checkHistoryDate(){
