@@ -56,24 +56,27 @@
     .clear-btn{padding:0 16px;}
     .back-btn:active,.clear-btn:active{background:var(--btnh);}
 
-    /* BINÁRNÍ KLÁVESNICE (Virtuální pro mobil i PC) */
+    /* BINÁRNÍ KLÁVESNICE (0, 1) */
+    /* Na PC (width > 520px) se ZOBRAZÍ, na Mobilu (width <= 520px) se SKRYJE */
     .keypad-bin{
       display:none; gap:8px; width:100%; justify-content:center; 
       grid-template-columns:repeat(2, 1fr); grid-auto-flow:column;
       max-width:300px;
     }
+    /* Toto pravidlo zajistí zobrazení pouze na PC */
+    @media (min-width: 521px) {
+      .keypad-bin.visible-desktop { display: grid; }
+      .ctrl-buttons-bin.visible-desktop { display: flex; }
+    }
+    /* Na mobilu se tyto tlačítky nikdy neobjeví (CSS display: none vyhrává) */
+    
     .key-btn{
       background:var(--btn);color:var(--t);border:none;padding:12px;border-radius:8px;font-size:18px;font-weight:bold;cursor:pointer;
       user-select:none; -webkit-tap-highlight-color:transparent;
     }
     .key-btn:active{background:var(--btnh);}
     
-    .ctrl-buttons{display:flex;gap:8px;width:100%;justify-content:center;max-width:300px;}
-    
-    /* DEC KLÁVESNICE (Mobilní numerická) */
-    .keypad-dec{
-      display:none;gap:6px;width:100%;grid-template-columns:repeat(3,1fr);
-    }
+    .ctrl-buttons{display:none;gap:8px;width:100%;justify-content:center;max-width:300px;}
 
     .main-action{width:100%;padding:12px;border-radius:8px;background:var(--p);color:var(--pt);border:none;font-size:16px;font-weight:bold;cursor:pointer;}
     .history-container{border-top:1px solid var(--b);padding-top:10px;}
@@ -130,29 +133,23 @@
       <!-- V BIN->DEC režimu bude input aktivní (otevře se numerická klávesnice) -->
       <input type="tel" id="single-input"
              autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-      <!-- Tlačítka Zpět a C jsou duplicitní k těm dole, ale v DEC->BIN režimu je musíme mít viditelné u inputu 
-           pokud nechceme zobrazovat celý keypad. 
-           Ale vlastně v DEC->BIN chceme keypad_bin (0,1) + tlačítka.
-           V BIN->DEC chceme jen input (mobile keyboard) + tlačítka.
-      -->
+      <!-- Tlačítka pro DEC režim (u inputu) - tato jsou správně a zůstanou -->
+      <button class="back-btn" id="back-btn-dec" onclick="deleteLeft()" style="display:none;">⌫</button>
+      <button class="clear-btn" id="clear-btn-dec" onclick="clearAll()" style="display:none;">C</button>
     </div>
 
-    <!-- Virtuální klávesnice pro BIN režim (stejná na PC i Mobil) -->
+    <!-- Virtuální klávesnice pro BIN režim (0,1) -->
+    <!-- Skrytá defaultně, CSS ji zobrazí pouze na Desktopu -->
     <div class="keypad-bin" id="keypad-bin">
       <button class="key-btn" onclick="typeVal('0')">0</button>
       <button class="key-btn" onclick="typeVal('1')">1</button>
     </div>
     
-    <!-- Ovládací tlačítka pro BIN režim -->
-    <div class="ctrl-buttons" id="ctrl-buttons-bin" style="display:none;">
+    <!-- Ovládací tlačítka pro BIN režim na PC -->
+    <div class="ctrl-buttons" id="ctrl-buttons-bin">
         <button class="back-btn" onclick="deleteLeft()">⌫</button>
         <button class="clear-btn" onclick="clearAll()">C</button>
     </div>
-
-    <!-- Pro DEC režim použijeme klasický layout input + tlačítka vedle (z předchozího kroku) -->
-    <!-- Tlačítka pro DEC režim (u inputu) -->
-    <button class="back-btn" id="back-btn-dec" onclick="deleteLeft()" style="display:none;">⌫</button>
-    <button class="clear-btn" id="clear-btn-dec" onclick="clearAll()" style="display:none;">C</button>
 
   </div>
 
@@ -268,15 +265,13 @@
       if(fingerPanelVisible){
         $('single-input').value='';
         $('single-input').className='';
-        $('keypad-bin').style.display='none';
-        $('ctrl-buttons-bin').style.display='none';
-        $('back-btn-dec').style.display='none';
-        $('clear-btn-dec').style.display='none';
+        $('single-input').readOnly = true; // Žádná mobilní klávesnice
         
         if(state === 'playing') {
           startGame();
         } else if(state === 'evaluated') {
            $('single-input').readOnly = true;
+           // Prsty zůstávají
            document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
              const vv=Number(sq.dataset.value);
              sq.classList.toggle('on',(currentFingerSum & vv)===vv);
@@ -315,8 +310,8 @@
       $('finger-toggle-btn').style.display='none';
       $('theme-btn').style.display='none';
       $('single-input').style.display='none';
-      $('keypad-bin').style.display='none';
-      $('ctrl-buttons-bin').style.display='none';
+      $('keypad-bin').classList.remove('visible-desktop'); // Skryjeme PC klávesnici
+      $('ctrl-buttons-bin').classList.remove('visible-desktop');
       $('back-btn-dec').style.display='none';
       $('clear-btn-dec').style.display='none';
       $('finger-panel').classList.remove('visible');
@@ -339,25 +334,29 @@
            
            if($('direction').value==='dec2bin') {
              if(!fingerPanelVisible) {
-               // DEC->BIN, P neaktivní: Zobrazit virtuální klávesnici
+               // DEC->BIN bez P:
+               // Input readonly (mobil klávesnice neotevře)
                $('single-input').readOnly = true;
-               $('keypad-bin').style.display='grid';
-               $('ctrl-buttons-bin').style.display='flex';
+               // PC klávesnici (0,1) necháme na CSS (class visible-desktop ji zobrazí na >520px)
+               $('keypad-bin').classList.add('visible-desktop');
+               $('ctrl-buttons-bin').classList.add('visible-desktop');
+               $('back-btn-dec').style.display='none';
+               $('clear-btn-dec').style.display='none';
              } else {
-               // DEC->BIN, P aktivní: Žádná klávesnice
+               // DEC->BIN s P:
                $('single-input').readOnly = true;
-               $('keypad-bin').style.display='none';
-               $('ctrl-buttons-bin').style.display='none';
+               $('keypad-bin').classList.remove('visible-desktop');
+               $('ctrl-buttons-bin').classList.remove('visible-desktop');
                document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
                  const vv=Number(sq.dataset.value);
                  sq.classList.toggle('on',(currentFingerSum & vv)===vv);
                });
              }
            } else {
-             // BIN->DEC: Mobilní numerická klávesnice
-             $('single-input').readOnly = false;
-             $('keypad-bin').style.display='none';
-             $('ctrl-buttons-bin').style.display='none';
+             // BIN->DEC:
+             $('single-input').readOnly = false; // Mobilní numerická klávesnice
+             $('keypad-bin').classList.remove('visible-desktop');
+             $('ctrl-buttons-bin').classList.remove('visible-desktop');
              $('back-btn-dec').style.display='flex';
              $('clear-btn-dec').style.display='flex';
              $('single-input').focus();
@@ -367,8 +366,8 @@
           $('single-input').style.display='block';
           $('finger-toggle-btn').style.display='block';
           $('single-input').readOnly = true;
-          $('keypad-bin').style.display='none';
-          $('ctrl-buttons-bin').style.display='none';
+          $('keypad-bin').classList.remove('visible-desktop');
+          $('ctrl-buttons-bin').classList.remove('visible-desktop');
           $('back-btn-dec').style.display='none';
           $('clear-btn-dec').style.display='none';
           if(fingerPanelVisible) $('finger-panel').classList.add('visible');
@@ -404,7 +403,7 @@
   }
 
   document.addEventListener('keydown',e=>{
-    if($('single-input').readOnly) return; // Pokud je klávesnice blokována, ignorujeme hardkey
+    if($('single-input').readOnly && $('direction').value!=='bin2dec') return; // V DEC->BIN ignorujeme klávesnici (máme virtuální)
     if(e.key!=='Enter') return;
     e.preventDefault();
     if(state==='init') handleMainAction();
@@ -475,19 +474,20 @@
       // DEC -> BIN
       $('single-input').value='';
       $('single-input').className='';
+      $('single-input').readOnly = true; // DŮLEŽITÉ: Na mobilu neotevře klávesnici
       
       if(fingerPanelVisible){
-        // P aktivní: Input readonly, žádná klávesnice
-        $('single-input').readOnly = true;
-        $('keypad-bin').style.display='none';
-        $('ctrl-buttons-bin').style.display='none';
+        // P aktivní: Prsty, žádná klávesnice
+        $('keypad-bin').classList.remove('visible-desktop');
+        $('ctrl-buttons-bin').classList.remove('visible-desktop');
         $('back-btn-dec').style.display='none';
         $('clear-btn-dec').style.display='none';
       } else {
-        // P neaktivní: Virtuální klávesnice BIN (0,1)
-        $('single-input').readOnly = true; // Aby se neotevřela mobilní klávesnice
-        $('keypad-bin').style.display='grid';
-        $('ctrl-buttons-bin').style.display='flex';
+        // P neaktivní:
+        // Na PC (>520px) CSS zobrazí .keypad-bin thanks to class visible-desktop
+        $('keypad-bin').classList.add('visible-desktop');
+        $('ctrl-buttons-bin').classList.add('visible-desktop');
+        // Na mobilu CSS schová .keypad-bin (display:none), input je readonly -> čistý stav
         $('back-btn-dec').style.display='none';
         $('clear-btn-dec').style.display='none';
       }
@@ -501,8 +501,8 @@
       $('single-input').readOnly = false; // Mobilní numerická klávesnice
       $('single-input').value='';
       $('single-input').className='';
-      $('keypad-bin').style.display='none';
-      $('ctrl-buttons-bin').style.display='none';
+      $('keypad-bin').classList.remove('visible-desktop');
+      $('ctrl-buttons-bin').classList.remove('visible-desktop');
       $('back-btn-dec').style.display='flex';
       $('clear-btn-dec').style.display='flex';
       $('single-input').focus();
@@ -518,6 +518,7 @@
 
   function deleteLeft(){
     if(state!=='playing') return;
+    // V DEC->BIN mode s P active nemůžeme mazat (input readonly)
     if($('single-input').readOnly && $('direction').value!=='dec2bin') return; 
     
     const input=$('single-input'), dir=$('direction').value;
@@ -585,7 +586,6 @@
     }
     input.value=formatted;
     input.selectionStart=input.selectionEnd=formatted.length;
-    // Focus není nutný, input je readonly
   }
 
   function checkAnswer(){
@@ -594,8 +594,8 @@
     const rawValue=input.value.trim();
 
     // Skryjeme všechny ovládací prvky
-    $('keypad-bin').style.display='none';
-    $('ctrl-buttons-bin').style.display='none';
+    $('keypad-bin').classList.remove('visible-desktop');
+    $('ctrl-buttons-bin').classList.remove('visible-desktop');
     $('back-btn-dec').style.display='none';
     $('clear-btn-dec').style.display='none';
 
@@ -729,8 +729,8 @@
     $('main-btn').innerText='START';
     $('question-display').style.display='none';
     $('single-input').style.display='none';
-    $('keypad-bin').style.display='none';
-    $('ctrl-buttons-bin').style.display='none';
+    $('keypad-bin').classList.remove('visible-desktop');
+    $('ctrl-buttons-bin').classList.remove('visible-desktop');
     $('back-btn-dec').style.display='none';
     $('clear-btn-dec').style.display='none';
     $('finger-panel').classList.remove('visible');
