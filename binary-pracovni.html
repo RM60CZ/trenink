@@ -39,6 +39,8 @@
 
     .input-with-back{display:flex;align-items:center;gap:8px;width:100%;justify-content:center;}
     #single-input{width:180px;padding:8px;border-radius:6px;text-align:center;border:2px solid var(--b);background:var(--c);color:var(--t);font-size:18px;font-weight:bold;outline:none;height:44px;display:none;}
+    /* Styl pro disabled input při aktivních prstech */
+    #single-input:disabled{background:#eee;color:#aaa;border-color:#ccc;}
     #single-input.success{color:var(--ok);border-color:var(--ok);}
     #single-input.error{color:var(--er);border-color:var(--er);}
 
@@ -250,14 +252,22 @@
     // Speciální logika pro DEC -> BIN
     if($('direction').value === 'dec2bin'){
       if(fingerPanelVisible){
-        // Aktivace P: Vymažeme input a skryjeme klávesnici
+        // Aktivace P: 
+        // 1. Vymažeme input
         $('single-input').value='';
+        // 2. Skryjeme klávesnici 0,1
         $('keypad-bin').style.display='none';
+        // 3. Input je nepřístupný (disabled) - uživatel nemůže psát
+        $('single-input').disabled=true;
       } else {
-        // Deaktivace P: Zobrazíme klávesnici zpět (pokud jsme ve hře)
-        if(state === 'playing'){
-           $('keypad-bin').style.display='grid';
-        }
+        // Deaktivace P:
+        // 1. Vymažeme input (pro čistý start)
+        $('single-input').value='';
+        // 2. Zobrazíme klávesnici zpět
+        if(state === 'playing') $('keypad-bin').style.display='grid';
+        // 3. Input je přístupný
+        $('single-input').disabled=false;
+        $('single-input').focus();
       }
     }
 
@@ -327,18 +337,25 @@
            $('clear-btn').style.display='flex';
            if(fingerPanelVisible) $('finger-panel').classList.add('visible');
            
-           // Obnova klávesnic
+           // Obnova stavu inputu a klávesnic
            if($('direction').value==='dec2bin') {
-             if(!fingerPanelVisible) $('keypad-bin').style.display='grid'; // Jen pokud není P aktivní
-             else $('keypad-bin').style.display='none';
+             if(!fingerPanelVisible) {
+               $('keypad-bin').style.display='grid';
+               $('single-input').disabled=false;
+             } else {
+               $('keypad-bin').style.display='none';
+               $('single-input').disabled=true;
+             }
            } else {
              $('keypad-dec').style.display='grid';
+             $('single-input').disabled=false;
            }
         } else if(state === 'evaluated') {
           $('question-display').style.display='block'; 
           $('single-input').style.display='block';
           $('finger-toggle-btn').style.display='block';
           if(fingerPanelVisible) $('finger-panel').classList.add('visible');
+          // V evaluated stavu je input vždy disabled (správně)
         }
       }
     }
@@ -392,6 +409,9 @@
   }
 
   $('single-input').addEventListener('input',function(){
+    // Pokud je input disabled (prsty aktivní), nic neděláme
+    if(this.disabled) return;
+
     const dir=$('direction').value;
     const input=this;
     const cursorPosition=input.selectionStart;
@@ -457,6 +477,8 @@
     $('single-input').style.display='block';
     $('back-btn').style.display='flex';
     $('clear-btn').style.display='flex';
+    
+    // Výchozí nastavení inputu (přístupný)
     $('single-input').disabled=false;
     $('single-input').className='';
     $('single-input').value='';
@@ -467,7 +489,7 @@
       expectedAnswer=binString;
       expectedLength=bits;
 
-      // V DEC->BIN je klávesnice viditelná ve výchozím stavu (pokud není P aktivní)
+      // Klávesnice viditelná (P není aktivní)
       $('keypad-bin').style.display='grid';
       $('keypad-dec').style.display='none';
       $('input-container').className='input-with-back bin-mode';
@@ -592,9 +614,11 @@
       isCorrect=(sum===0 || sum===currentDecValue);
       correctFormattedAnswer=formatBinary(expectedAnswer);
       
+      // Vložíme výsledek do inputu (který je disabled, ale uživatel ho vidí)
       input.value = correctFormattedAnswer;
       input.className=isCorrect?'success':'error';
-      input.disabled=true;
+      // Input zůstává disabled (byl disabled už při aktivaci P)
+      input.disabled=true; 
 
       state='evaluated';
       $('main-btn').innerText='START';
@@ -717,7 +741,7 @@
     renderHistory();
     
     state='init';
-    fingerPanelVisible = false; // inicializace proměnné
+    fingerPanelVisible = false; 
     $('finger-toggle-btn').style.display='none'; 
     $('main-btn').innerText='START';
     $('question-display').style.display='none';
