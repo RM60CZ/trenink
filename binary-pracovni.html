@@ -145,7 +145,12 @@
 </div>
 
 <script>
-  let state='init', currentDecValue=0, expectedAnswer='', expectedLength=0, currentDisplayBits=0, fingerPanelVisible=false;
+  // Stav aplikace
+  let state='init', currentDecValue=0, expectedAnswer='', expectedLength=0, currentDisplayBits=0;
+  
+  // GLOBÁLNÍ stav panelu prstů - ten se resetuje JEN při initApp, nikdy při startGame!
+  let fingerPanelVisible = false;
+  
   let currentFingerSum=0;
   let settingsOpen=false; 
   let tempSettings={}; 
@@ -197,6 +202,7 @@
   function syncFingerPanelClass(){
     const panel=$('finger-panel');
     const dir=$('direction').value;
+    // Panel je "dec-mode" (interaktivní) pouze pokud je VIDITELNý a směr je DEC->BIN
     panel.classList.toggle('dec-mode', fingerPanelVisible && dir==='dec2bin');
   }
 
@@ -215,11 +221,14 @@
         el.dataset.value=String(bitValue(r,c));
         el.addEventListener('click',()=>{
           if(state!=='playing') return;
+          // Kliknutí funguje pouze pokud je panel viditelný a režim dec2bin
           if(!($('direction').value==='dec2bin' && fingerPanelVisible)) return;
 
           const v=Number(el.dataset.value);
+          // Toggle bitu
           currentFingerSum = ((currentFingerSum & v)===v) ? (currentFingerSum & ~v) : (currentFingerSum | v);
 
+          // Okamžitá vizuální aktualizace
           document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
             const vv=Number(sq.dataset.value);
             sq.classList.toggle('on',(currentFingerSum & vv)===vv);
@@ -234,36 +243,37 @@
     const dir=$('direction').value;
     const fingers=document.querySelectorAll('#finger-grid .finger-sq');
     fingers.forEach(x=>x.classList.remove('on'));
-    if(dir!=='bin2dec') return;
-
-    fingers.forEach(el=>{
-      const v=Number(el.dataset.value);
-      el.classList.toggle('on',(currentDecValue & v)===v);
-    });
+    
+    // V režimu BIN->DEC zobrazíme aktuální číslo (pasivní)
+    if(dir==='bin2dec'){
+      fingers.forEach(el=>{
+        const v=Number(el.dataset.value);
+        el.classList.toggle('on',(currentDecValue & v)===v);
+      });
+    }
+    // V režimu DEC->BIN zobrazujeme currentFingerSum (aktivní), ale to děláme už v event handleru
   }
 
   function toggleFingerPanel(){
-    const wasVisible = fingerPanelVisible;
-    fingerPanelVisible=!fingerPanelVisible;
+    fingerPanelVisible = !fingerPanelVisible;
+    
+    // Aktualizace DOM
     $('finger-panel').classList.toggle('visible', fingerPanelVisible);
     syncFingerPanelClass();
 
-    // Speciální logika pro DEC -> BIN
     if($('direction').value === 'dec2bin'){
       if(fingerPanelVisible){
-        // Aktivace P:
+        // Aktivace P: 
         $('single-input').value='';
         $('single-input').disabled=true;
         
-        // Skryjeme ovládací prvky
         $('keypad-bin').style.display='none';
         $('back-btn').style.display='none';
         $('clear-btn').style.display='none';
         
-        // Reset součtu při aktivaci
+        // Reset součtu při aktivaci (přepnutí z neaktivního na aktivní)
         currentFingerSum = 0;
         document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
-        
       } else {
         // Deaktivace P:
         $('single-input').value='';
@@ -278,15 +288,10 @@
       }
     }
 
+    // Pokud není viditelný, nic dalšího neřešíme
     if(!fingerPanelVisible) return;
 
     updateFingerDisplay();
-    if($('direction').value==='dec2bin'){
-      document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
-        const vv=Number(sq.dataset.value);
-        sq.classList.toggle('on',(currentFingerSum & vv)===vv);
-      });
-    }
   }
 
   function toggleTheme(){
@@ -312,6 +317,7 @@
         bits: $('bits').value
       };
       
+      // Skryjeme UI
       $('finger-toggle-btn').style.display='none';
       $('theme-btn').style.display='none';
       $('single-input').style.display='none';
@@ -322,26 +328,27 @@
       
       $('keypad-bin').style.display='none';
       $('keypad-dec').style.display='none';
-      
       $('question-display').style.display='none';
       
     } else {
       settingsOpen = false;
       
+      // Obnovíme UI
       $('theme-btn').style.display='block';
       $('main-btn').style.display='block'; 
       
       const changed = (tempSettings.dir !== $('direction').value || tempSettings.bits !== $('bits').value);
       
       if(changed){
-        // Pokud se nastavení změnilo, spustíme novou hru (respektující aktuální stav fingerPanelVisible)
+        // Pokud se změnilo nastavení, spustíme novou hru (NEVERÁ resetovat fingerPanelVisible!)
         startGame();
       } else {
-        // Pokud se nastavení nezměnilo, obnovíme UI podle aktuálního stavu
+        // Pokud se nezměnilo, jen obnovíme UI podle aktuálního stavu
         if(state === 'playing'){
            $('finger-toggle-btn').style.display='block';
            $('question-display').style.display='block'; 
            $('single-input').style.display='block';
+           // Panel zobrazíme podle globálního stavu fingerPanelVisible
            if(fingerPanelVisible) $('finger-panel').classList.add('visible');
            
            if($('direction').value==='dec2bin') {
@@ -355,6 +362,11 @@
                $('back-btn').style.display='none';
                $('clear-btn').style.display='none';
                $('single-input').disabled=true;
+               // Obnovíme vizuální stav prstů podle currentFingerSum
+               document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
+                 const vv=Number(sq.dataset.value);
+                 sq.classList.toggle('on',(currentFingerSum & vv)===vv);
+               });
              }
            } else {
              $('keypad-dec').style.display='grid';
@@ -383,15 +395,8 @@
 
     updateTitle();
     
-    // Důležitá oprava: Pokud jsme již ve hře, změna nastavení v dropdownu
-    // NEspouští automaticky novou hru, která by resetovala prsty.
-    // Hra se spustí jen po zavření nastavení (v toggleSettings).
-    if(!settingsOpen && state==='init'){
-       startGame(); 
-    }
-    
-    // Pokud jsme ve hře a změníme nastavení, jen aktualizujeme info,
-    // ale nezasahujeme do běžící hry.
+    // Důležité: updateInfo NESPOUŠTÍ startGame! 
+    // Nastavení se projeví při stisku Start nebo při zavření settings.
     syncFingerPanelClass();
   }
 
@@ -475,17 +480,19 @@
     
     $('finger-toggle-btn').style.display='block';
 
-    // Zde je klíčová oprava:
-    // NIKDY neresetujeme fingerPanelVisible na false.
-    // Pokud byl true (aktivní), zůstane true.
+    // --- KLÍČOVÁ OPRAVA ---
+    // Proměnnou fingerPanelVisible NERESETUJEME!
+    // Pouze resetujeme součet prstů pro nový příklad.
     
-    // Reset součtu prstů pro nový příklad (vynulujeme hodnotu, ale panel necháme viditelný)
     currentFingerSum = 0;
-    document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
     
-    // Zajistíme, že panel je viditelný podle PŘEDCHOZÍHO stavu (který se nezměnil)
+    // Zajistíme, že panel je viditelný, POKUD byl fingerPanelVisible true
     $('finger-panel').classList.toggle('visible', fingerPanelVisible);
     syncFingerPanelClass();
+    
+    // Vymažeme vizuální stav prstů (nový příklad = prázdné prsty)
+    document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
+    // Ale panel zůstává viditelný!
 
     localStorage.removeItem('binTrainHistory');
     renderHistory();
@@ -510,7 +517,7 @@
         $('clear-btn').style.display='none';
         $('keypad-bin').style.display='none';
       } else {
-        // P není aktivní
+        // P není aktivní: normální režim
         $('single-input').disabled=false;
         $('single-input').value='';
         $('single-input').className='';
@@ -659,7 +666,6 @@
       $('main-btn').innerText='START';
       saveToHistory(`${formatDecimal(currentDecValue)} = ${correctFormattedAnswer}`,isCorrect);
       
-      // Po kontrole aktualizujeme prsty na výsledek
       updateFingerDisplay(); 
       return;
     }
@@ -684,11 +690,7 @@
       input.disabled=true;
       input.className=isCorrect?'success':'error';
       
-      if(!isCorrect) {
-        // Necháme špatnou hodnotu
-      } else {
-        input.value=correctFormattedAnswer;
-      }
+      if(isCorrect) input.value=correctFormattedAnswer;
 
       const binForHistory=formatBinary(currentDecValue.toString(2));
       saveToHistory(`${binForHistory} = ${correctFormattedAnswer}`,isCorrect);
@@ -696,6 +698,7 @@
       return;
     }
 
+    // DEC -> BIN klasická kontrola
     if(rawValue===''){
       state='evaluated';
       $('main-btn').innerText='START';
@@ -716,11 +719,7 @@
     input.disabled=true;
     input.className=isCorrect?'success':'error';
 
-    if(!isCorrect) {
-      // Necháme špatnou hodnotu
-    } else {
-      input.value=correctFormattedAnswer;
-    }
+    if(isCorrect) input.value=correctFormattedAnswer;
 
     saveToHistory(`${formatDecimal(currentDecValue)} = ${correctFormattedAnswer}`,isCorrect);
     updateFingerDisplay();
@@ -777,7 +776,9 @@
     renderHistory();
     
     state='init';
-    fingerPanelVisible = false; 
+    // Reset globálního stavu panelu při startu aplikace
+    fingerPanelVisible = false;
+    
     $('finger-toggle-btn').style.display='none'; 
     $('main-btn').innerText='START';
     $('question-display').style.display='none';
@@ -786,6 +787,7 @@
     $('clear-btn').style.display='none';
     $('keypad-bin').style.display='none';
     $('keypad-dec').style.display='none';
+    $('finger-panel').classList.remove('visible');
   }
 
   window.onload=initApp;
