@@ -258,18 +258,26 @@
       if(fingerPanelVisible){
         // --- AKTIVACE P ---
         
-        // 1. Okamžitě vymažeme input (vizuální reset)
+        // 1. Vymažeme input (vizuální reset)
         $('single-input').value='';
         $('single-input').className='';
         
         // 2. Pokud jsme VE HŘE, vygenerujeme NOVÝ PŘÍKLAD.
-        // Tím zajistíme, že starý "rozpracovaný" pokus zmizí a začíná se čistě s prsty.
         if(state === 'playing') {
           startGame();
-          // startGame() už nastaví input disabled, vymaže prsty a skryje tlačítka.
-          // Důležité: startGame respektuje fingerPanelVisible=true, takže panel P zůstane otevřený.
+        } else if(state === 'evaluated') {
+           // Pokud jsme VYHODNOCENI, jen připravíme UI pro P
+           $('single-input').disabled=true;
+           $('keypad-bin').style.display='none';
+           $('back-btn').style.display='none';
+           $('clear-btn').style.display='none';
+           // Prsty NEVYNULUJEME!
+           document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
+             const vv=Number(sq.dataset.value);
+             sq.classList.toggle('on',(currentFingerSum & vv)===vv);
+           });
         } else {
-           // Pokud jsme v init nebo evaluated, jen připravíme UI
+           // Init stav
            $('single-input').disabled=true;
            $('keypad-bin').style.display='none';
            $('back-btn').style.display='none';
@@ -280,7 +288,6 @@
         
       } else {
         // --- DEAKTIVACE P ---
-        // Stejně jako předtím - simulace START (nový příklad pro ruční zadávání)
         handleMainAction();
       }
     }
@@ -369,6 +376,12 @@
           $('single-input').style.display='block';
           $('finger-toggle-btn').style.display='block';
           if(fingerPanelVisible) $('finger-panel').classList.add('visible');
+          if($('direction').value==='dec2bin' && fingerPanelVisible) {
+             document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
+               const vv=Number(sq.dataset.value);
+               sq.classList.toggle('on',(currentFingerSum & vv)===vv);
+             });
+          }
         }
       }
     }
@@ -467,12 +480,15 @@
     
     $('finger-toggle-btn').style.display='block';
 
-    currentFingerSum = 0;
+    // --- KLÍČOVÁ LOGIKA PRO P ---
+    // Pokud je P aktivní, vynulujeme prsty při startu NOVÉHO PŘÍKLADU.
+    if(fingerPanelVisible) {
+      currentFingerSum = 0;
+      document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
+    }
     
     $('finger-panel').classList.toggle('visible', fingerPanelVisible);
     syncFingerPanelClass();
-    
-    document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
 
     localStorage.removeItem('binTrainHistory');
     renderHistory();
@@ -643,7 +659,8 @@
       $('main-btn').innerText='START';
       saveToHistory(`${formatDecimal(currentDecValue)} = ${correctFormattedAnswer}`,isCorrect);
       
-      updateFingerDisplay(); 
+      // DŮLEŽITÉ: ZDE ODEBRÁNO updateFingerDisplay()
+      // Prsty zůstávají v nastavené pozici pro porovnání.
       return;
     }
 
