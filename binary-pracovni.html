@@ -360,6 +360,9 @@
   function startGame(){
     state='playing';
     $('main-btn').innerText='VÝSLEDEK (KONTROLA)';
+    
+    // Zobrazení tlačítka P při startu hry
+    $('finger-toggle-btn').style.display='block';
 
     const bits=parseInt($('bits').value,10);
     const dir=$('direction').value;
@@ -593,6 +596,9 @@
   }
 
   function initApp(){
+    // Automatické smazání historie při otevření
+    localStorage.removeItem('binTrainHistory');
+
     const savedTheme=localStorage.getItem('binTrainTheme')||'light';
     document.body.dataset.theme=savedTheme;
     $('theme-btn').innerText=savedTheme==='dark'?'☀️':'🌙';
@@ -620,8 +626,9 @@
     updateInfo();
     renderHistory();
     
-    // Inicializace stavu
+    // Inicializace stavu - P tlačítko skryté
     state='init';
+    $('finger-toggle-btn').style.display='none'; // Skrytí P na začátku
     $('main-btn').innerText='START';
     $('question-display').style.display='none';
     $('single-input').style.display='none';
