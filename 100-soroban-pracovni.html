@@ -38,7 +38,6 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       color: var(--text-color);
-      transition: background 0.3s;
     }
 
     .header {
@@ -57,7 +56,6 @@
     }
 
     .soroban-frame {
-      display: flex; flex-direction: column;
       background: var(--wood-dark);
       border: 6px solid var(--bar-color);
       border-radius: 8px;
@@ -67,20 +65,8 @@
       max-height: 500px;
       width: 95%;
       max-width: 900px;
-      position: relative; /* Pro pozicování středové lišty */
-    }
-
-    /* STŘEDOVÁ LIŠTA (POČÍTAČÍ) - TENký obdélníček uprostřed */
-    .reckoning-bar {
-      position: absolute;
-      top: 50%; left: 0; right: 0;
-      height: 15px;
-      background: var(--bar-color);
-      transform: translateY(-50%);
-      z-index: 20;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      border-top: 1px solid rgba(255,255,255,0.1);
-      border-bottom: 1px solid rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
     }
 
     .rods-container {
@@ -88,84 +74,76 @@
       display: flex;
       justify-content: center;
       gap: 4px;
-      padding-bottom: 10px;
-      position: relative; /* Aby bylo nad lištou */
-      z-index: 10;
+      padding: 10px 0;
     }
 
+    /* TYČ */
     .rod {
       flex: 1;
       max-width: 50px;
       display: flex;
-      flex-direction: column;
+      flex-direction: column; /* Hlavní uspořádání: Nebe -> Lišta -> Země */
       background: transparent;
       position: relative;
       height: 100%;
     }
 
-    /* Tyčka procházející skrz */
+    /* Čára tyče */
     .rod::before {
       content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px;
       background: var(--rod-color); transform: translateX(-50%); z-index: 0;
     }
 
-    /* Rozdělení prostoru: 50% nahoře, 50% dole (lišta je mezi nimi) */
+    /* SEKCE KULIČEK */
     .beads-section {
       display: flex; flex-direction: column; align-items: center;
       position: relative; z-index: 1;
       cursor: pointer;
-      height: 50%; /* Polovina výšky rod-u */
     }
     
-    .heaven { justify-content: flex-start; } /* Kuličky se lepí nahoru (k liště) */
-    .earth { justify-content: flex-end; }    /* Kuličky se lepí dolů (k liště) */
+    .heaven { flex: 4; justify-content: flex-end; } /* Nebe dole u lišty */
+    .earth { flex: 6; justify-content: flex-start; } /* Zem nahoře u lišty */
+
+    /* --- STŘEDOVÁ LIŠTA (Nyní je přímo v tyčce) --- */
+    .center-bar {
+      height: 15px; /* Výška lišty */
+      background: var(--bar-color);
+      width: 100%;
+      position: relative;
+      z-index: 10;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      border-radius: 2px;
+    }
 
     .bead {
-      width: 90%; height: 20%; /* Výška kuličky vzhledem k sekci */
+      width: 90%; 
+      aspect-ratio: 1 / 0.6; /* Tvar kuličky */
       background: var(--bead-unit);
       border-radius: 6px;
       border: 1px solid rgba(0,0,0,0.2);
-      transition: transform 0.15s ease-out, background-color 0.3s, box-shadow 0.15s;
+      transition: margin 0.15s ease-out, background-color 0.3s, box-shadow 0.15s;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      position: absolute;
-      left: 5%;
     }
 
-    /* --- HEAVEN LOGIC (Horní kulička) --- */
-    /* Klid: Nahoře (daleko od lišty) */
-    .heaven .bead { top: 5%; }
-    /* Aktivní: Dole (přiložená k liště) */
-    .heaven .bead.active { top: 60%; background: var(--bead-heaven-active); }
+    /* --- HEAVEN LOGIC (1 kulička) --- */
+    .heaven .bead { margin-bottom: 2px; } /* Mezera mezi kuličkou a lištou */
+    .heaven .bead.active { margin-bottom: 0; background: var(--bead-heaven-active); }
 
-    /* --- EARTH LOGIC (Dolní kuličky) --- */
-    /* Klid: Dole (daleko od lišty) */
-    .earth .bead:nth-child(1) { bottom: 5%; }
-    .earth .bead:nth-child(2) { bottom: 5%; transform: translateY(-105%); }
-    .earth .bead:nth-child(3) { bottom: 5%; transform: translateY(-210%); }
-    .earth .bead:nth-child(4) { bottom: 5%; transform: translateY(-315%); }
-
-    /* Aktivní: Nahoře (přiložené k liště) */
-    .earth .bead.active { background: var(--bead-earth-active); box-shadow: inset 0 0 5px rgba(255,255,255,0.3); }
-    
-    .earth .bead:nth-child(1).active { top: 5%; bottom: auto; transform: translateY(0); }
-    .earth .bead:nth-child(2).active { top: 5%; bottom: auto; transform: translateY(105%); }
-    .earth .bead:nth-child(3).active { top: 5%; bottom: auto; transform: translateY(210%); }
-    .earth .bead:nth-child(4).active { top: 5%; bottom: auto; transform: translateY(315%); }
+    /* --- EARTH LOGIC (4 kuličky) --- */
+    .earth .bead { margin-top: 2px; } /* Mezera mezi kuličkou a lištou */
+    .earth .bead.active { margin-top: 0; background: var(--bead-earth-active); box-shadow: inset 0 0 5px rgba(255,255,255,0.3); }
 
     /* BARVY ŘÁDŮ */
     .rod.thousands .bead { background: var(--bead-thousands); border-color: #b8860b; }
     .rod.thousands .heaven .bead.active { background: #8a6d00; }
     .rod.thousands .earth .bead.active { background: #fff8dc; }
 
-    /* Marker přímo na liště */
+    /* Markery na středové liště */
     .marker {
-      position: absolute; 
-      top: 50%; 
+      position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       font-size: 10px; font-weight: bold;
-      color: rgba(255,255,255,0.6);
-      z-index: 30;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+      color: rgba(255,255,255,0.7);
       pointer-events: none;
     }
 
@@ -186,7 +164,7 @@
     @media (max-height: 400px) {
       .header { top: 2px; }
       .value-display { font-size: 20px; }
-      .reckoning-bar { height: 12px; }
+      .center-bar { height: 12px; }
     }
   </style>
 </head>
@@ -203,9 +181,6 @@
   </div>
 
   <div class="soroban-frame">
-    <!-- Středová lišta -->
-    <div class="reckoning-bar" id="reckoning-bar"></div>
-    
     <div class="rods-container" id="soroban"></div>
   </div>
 
@@ -241,7 +216,6 @@
     let UNIT_POSITION = 1;
     const $ = id => document.getElementById(id);
     let rods = [];
-    let currentTheme = 'light';
 
     function init() {
       loadTheme();
@@ -256,17 +230,18 @@
       for (let i = 0; i < NUM_RODS; i++) {
         const rod = document.createElement('div');
         rod.className = 'rod';
-        rod.dataset.index = i;
 
         const distFromRight = NUM_RODS - 1 - i;
         const valueIndex = distFromRight - UNIT_POSITION;
         if (valueIndex >= 3) rod.classList.add('thousands');
 
+        // Nová struktura: Nebe -> Lišta -> Země
         rod.innerHTML = `
-          <div class="beads-section heaven" onclick="handleInput(${i}, 'heaven')">
+          <div class="beads-section heaven" onclick="handleHeavenClick(${i})">
             <div class="bead"></div>
           </div>
-          <div class="beads-section earth" onclick="handleInput(event, ${i}, 'earth')">
+          <div class="center-bar"></div> <!-- STŘEDOVÁ LIŠTA -->
+          <div class="beads-section earth" onclick="handleEarthClick(event, ${i})">
             <div class="bead"></div>
             <div class="bead"></div>
             <div class="bead"></div>
@@ -274,7 +249,7 @@
           </div>
         `;
         
-        container.prepend(rod);
+        container.prepend(rod); 
         rods.push({ heaven: 0, earth: 0, element: rod });
       }
       
@@ -284,34 +259,27 @@
 
     // --- OVLÁDÁNÍ ---
     
-    function handleInput(rodIndex, section) {
-      if (section === 'heaven') {
-        const rod = rods[rodIndex];
-        rod.heaven = rod.heaven === 0 ? 5 : 0;
-        updateRodsVisuals();
-        updateDisplay();
-      }
+    function handleHeavenClick(rodIndex) {
+      const rod = rods[rodIndex];
+      rod.heaven = rod.heaven === 0 ? 5 : 0;
+      updateRodsVisuals();
+      updateDisplay();
     }
 
-    function handleInput(e, rodIndex, section) {
-      if (section !== 'earth') return;
-      
-      // Detekce pozice kliknutí
+    function handleEarthClick(e, rodIndex) {
       const rect = e.currentTarget.getBoundingClientRect();
       const clickY = e.clientY - rect.top;
       const height = rect.height;
       
-      const relativePos = clickY / height; // 0 = úplně nahoře (u lišty), 1 = úplně dole
+      const relativePos = clickY / height; // 0 = u lišty (nahoře), 1 = daleko od lišty (dole)
 
       let newCount = 0;
       
-      // Mapování prostoru na počet kuliček
-      // Kliknutí blízko liště (0.0) -> více kuliček
       if (relativePos < 0.20) newCount = 4;
       else if (relativePos < 0.40) newCount = 3;
       else if (relativePos < 0.60) newCount = 2;
       else if (relativePos < 0.80) newCount = 1;
-      else newCount = 0; // Kliknutí dole
+      else newCount = 0;
 
       const currentCount = rods[rodIndex].earth;
       rods[rodIndex].earth = (newCount === currentCount) ? 0 : newCount;
@@ -327,7 +295,23 @@
         
         const eBeads = rod.element.querySelectorAll('.earth .bead');
         eBeads.forEach((bead, i) => {
-          bead.classList.toggle('active', (i + 1) <= rod.earth);
+          // Zobrazíme jen kuličky, které patří do aktuálního počtu
+          // Chceme, aby se kuličky "přilepily" k liště, proto skrýváme ty, které nejsou aktivní
+          if (rod.earth === 0) {
+            bead.style.display = 'none';
+          } else {
+            bead.style.display = 'block';
+            // Pokud je i < earth, je to kulička u lišty
+            // Pokud je i >= earth, je to prázdné místo
+            // Tato logika zajistí, že se kuličky seskupí u lišty
+            if (i < rod.earth) {
+              bead.classList.add('active');
+              bead.style.order = 1; // Dole v kontejneru (u lišty)
+            } else {
+              bead.classList.remove('active');
+              bead.style.order = 2; // Nahoře v kontejneru (prázdné místo)
+            }
+          }
         });
       });
     }
@@ -338,8 +322,7 @@
       rods.forEach((rod, index) => {
         const distFromRight = rods.length - 1 - index;
         const exponent = distFromRight - UNIT_POSITION;
-        // Kontrola záporného exponentu (desetinná místa vlevo od jednotek)
-        if (exponent < 0) return; // Pro jednoduchost ignorujeme, nebo zaokrouhlujeme
+        if (exponent < 0) return;
         
         const placeValue = 10n ** BigInt(exponent);
         const digit = rod.heaven + rod.earth;
@@ -350,10 +333,8 @@
     }
 
     function updateMarkers() {
-      // Odstraníme staré markery
       document.querySelectorAll('.marker').forEach(m => m.remove());
       
-      const bar = $('reckoning-bar');
       const rodWidth = $('soroban').offsetWidth / NUM_RODS;
 
       for (let i = 0; i < NUM_RODS; i++) {
@@ -368,13 +349,11 @@
         else if (valIndex === 12) label = "bil";
         
         if (label) {
+          // Najdeme lištu v dané tyči
+          const bar = rods[i].element.querySelector('.center-bar');
           const marker = document.createElement('div');
           marker.className = 'marker';
           marker.innerText = label;
-          // Pozice: střed tyče i
-          // Počítáme zleva
-          const leftPos = (i * rodWidth) + (rodWidth / 2);
-          marker.style.left = leftPos + 'px';
           bar.appendChild(marker);
         }
       }
@@ -389,7 +368,6 @@
       updateDisplay();
     }
 
-    // SETTINGS & THEME
     function openSettings() { $('settings-modal').classList.add('visible'); }
     function closeSettings() { $('settings-modal').classList.remove('visible'); }
     
@@ -401,8 +379,7 @@
     }
 
     function toggleTheme() {
-      const body = document.body;
-      body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.body.dataset.theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
       saveTheme();
       updateRodsVisuals();
     }
