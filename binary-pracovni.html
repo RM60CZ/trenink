@@ -242,9 +242,24 @@
   }
 
   function toggleFingerPanel(){
+    const wasVisible = fingerPanelVisible;
     fingerPanelVisible=!fingerPanelVisible;
     $('finger-panel').classList.toggle('visible', fingerPanelVisible);
     syncFingerPanelClass();
+
+    // Speciální logika pro DEC -> BIN
+    if($('direction').value === 'dec2bin'){
+      if(fingerPanelVisible){
+        // Aktivace P: Vymažeme input a skryjeme klávesnici
+        $('single-input').value='';
+        $('keypad-bin').style.display='none';
+      } else {
+        // Deaktivace P: Zobrazíme klávesnici zpět (pokud jsme ve hře)
+        if(state === 'playing'){
+           $('keypad-bin').style.display='grid';
+        }
+      }
+    }
 
     if(!fingerPanelVisible) return;
 
@@ -311,8 +326,14 @@
            $('back-btn').style.display='flex';
            $('clear-btn').style.display='flex';
            if(fingerPanelVisible) $('finger-panel').classList.add('visible');
-           if($('direction').value==='dec2bin') $('keypad-bin').style.display='grid';
-           else $('keypad-dec').style.display='grid';
+           
+           // Obnova klávesnic
+           if($('direction').value==='dec2bin') {
+             if(!fingerPanelVisible) $('keypad-bin').style.display='grid'; // Jen pokud není P aktivní
+             else $('keypad-bin').style.display='none';
+           } else {
+             $('keypad-dec').style.display='grid';
+           }
         } else if(state === 'evaluated') {
           $('question-display').style.display='block'; 
           $('single-input').style.display='block';
@@ -417,6 +438,10 @@
     $('main-btn').style.display='block'; 
     
     $('finger-toggle-btn').style.display='block';
+    
+    // Reset panelu P při startu
+    fingerPanelVisible = false;
+    $('finger-panel').classList.remove('visible');
 
     localStorage.removeItem('binTrainHistory');
     renderHistory();
@@ -442,6 +467,7 @@
       expectedAnswer=binString;
       expectedLength=bits;
 
+      // V DEC->BIN je klávesnice viditelná ve výchozím stavu (pokud není P aktivní)
       $('keypad-bin').style.display='grid';
       $('keypad-dec').style.display='none';
       $('input-container').className='input-with-back bin-mode';
@@ -449,12 +475,6 @@
       currentFingerSum=0;
       document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
       syncFingerPanelClass();
-      if(fingerPanelVisible){
-        document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
-          const vv=Number(sq.dataset.value);
-          sq.classList.toggle('on',(currentFingerSum & vv)===vv);
-        });
-      }
     }else{
       currentDisplayBits = bits===5 ? 5 : (bits<=10 ? 10 : 15);
       $('question-display').innerText=formatBinaryForDisplay(binString,currentDisplayBits);
@@ -567,17 +587,11 @@
     let isCorrect=false;
     let correctFormattedAnswer='';
 
-    // --- Kontrola pro DEC -> BIN s prsty ---
     if(dir==='dec2bin' && fingerPanelVisible){
       const sum=currentFingerSum;
       isCorrect=(sum===0 || sum===currentDecValue);
       correctFormattedAnswer=formatBinary(expectedAnswer);
       
-      // Pokud je špatně, nastavíme červenou, ale NECHÁME hodnotu v inputu (která odpovídá prstům, ale uživatel ji nevidí, 
-      // prsty jsou vizualizací, takže zobrazíme správný výsledek, nebo necháme prsty? 
-      // V zadání: "špatný musí zůstat v inputu". U prstů je input skrytý, interaguje se přes prsty.
-      // Zde zobrazíme správný výsledek v inputu pro porovnání, protože prsty uživatel "nevidí" jako text.
-      // Ale pokud je to špatně, obarvíme input červeně a vložíme tam správný výsledek.
       input.value = correctFormattedAnswer;
       input.className=isCorrect?'success':'error';
       input.disabled=true;
@@ -589,14 +603,13 @@
       return;
     }
 
-    // --- Kontrola pro BIN -> DEC ---
     if(dir==='bin2dec'){
       if(rawValue===''){
         state='evaluated';
         $('main-btn').innerText='START';
         input.disabled=true;
         input.value=formatDecimal(parseInt(expectedAnswer,10));
-        input.className=''; // Neutrální, prázdná odpověď
+        input.className='';
         updateFingerDisplay();
         return;
       }
@@ -611,10 +624,8 @@
       input.className=isCorrect?'success':'error';
       
       if(!isCorrect) {
-        // Špatná odpověď: NECHÁME uživatelův vstup v inputu (už ho má tam).
-        // Pouze obarvíme okraj červeně (error class).
+        // Necháme špatnou hodnotu
       } else {
-        // Správná odpověď: naformátujeme hezky (odstraníme mezery na začátku, přidáme tisíce)
         input.value=correctFormattedAnswer;
       }
 
@@ -624,7 +635,7 @@
       return;
     }
 
-    // --- Kontrola pro DEC -> BIN (bez prstů) ---
+    // DEC -> BIN klasická kontrola
     if(rawValue===''){
       state='evaluated';
       $('main-btn').innerText='START';
@@ -646,10 +657,8 @@
     input.className=isCorrect?'success':'error';
 
     if(!isCorrect) {
-      // Špatná odpověď: NECHÁME uživatelův vstup v inputu.
-      // Pouze obarvíme okraj červeně.
+      // Necháme špatnou hodnotu
     } else {
-      // Správná odpověď: naformátujeme hezky
       input.value=correctFormattedAnswer;
     }
 
@@ -708,6 +717,7 @@
     renderHistory();
     
     state='init';
+    fingerPanelVisible = false; // inicializace proměnné
     $('finger-toggle-btn').style.display='none'; 
     $('main-btn').innerText='START';
     $('question-display').style.display='none';
