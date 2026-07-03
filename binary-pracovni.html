@@ -274,14 +274,12 @@
     info.style.display= willBeOpen ? 'block' : 'none';
 
     if(willBeOpen){
-      // Otevírání nastavení
       settingsOpen = true;
       tempSettings = {
         dir: $('direction').value,
         bits: $('bits').value
       };
       
-      // Skryjeme všechna tlačítka a prvky
       $('finger-toggle-btn').style.display='none';
       $('theme-btn').style.display='none';
       $('single-input').style.display='none';
@@ -290,47 +288,36 @@
       $('finger-panel').classList.remove('visible');
       $('main-btn').style.display='none'; 
       
-      // Skryjeme klávesnice
       $('keypad-bin').style.display='none';
       $('keypad-dec').style.display='none';
       
-      // Skryjeme zadání (otázku)
       $('question-display').style.display='none';
       
     } else {
-      // Zavírání nastavení
       settingsOpen = false;
       
-      // Zobrazíme zpět hlavní tlačítka
       $('theme-btn').style.display='block';
       $('main-btn').style.display='block'; 
       
-      // Zjistíme, zda došlo ke změně
       const changed = (tempSettings.dir !== $('direction').value || tempSettings.bits !== $('bits').value);
       
       if(changed){
-        // Pokud došlo ke změně, spustíme novou hru (to zajistí zobrazení zadání i klávesnic)
         startGame();
       } else {
-        // Pokud nedošlo ke změně, obnovíme původní stav
         if(state === 'playing'){
            $('finger-toggle-btn').style.display='block';
-           $('question-display').style.display='block'; // Zobrazíme zadání zpět
+           $('question-display').style.display='block'; 
            $('single-input').style.display='block';
            $('back-btn').style.display='flex';
            $('clear-btn').style.display='flex';
            if(fingerPanelVisible) $('finger-panel').classList.add('visible');
-           // Obnovíme správnou klávesnici
            if($('direction').value==='dec2bin') $('keypad-bin').style.display='grid';
            else $('keypad-dec').style.display='grid';
         } else if(state === 'evaluated') {
-          $('question-display').style.display='block'; // Zobrazíme zadání zpět
+          $('question-display').style.display='block'; 
           $('single-input').style.display='block';
           $('finger-toggle-btn').style.display='block';
           if(fingerPanelVisible) $('finger-panel').classList.add('visible');
-          // V evaluated stavu jsou klávesnice skryté
-        } else {
-           // init stav - nic dalšího nezobrazujeme (kromě main-btn, který už je viditelný)
         }
       }
     }
@@ -574,54 +561,70 @@
 
     $('back-btn').style.display='none';
     $('clear-btn').style.display='none';
-    // Po vyhodnocení skryjeme klávesnice
     $('keypad-bin').style.display='none';
     $('keypad-dec').style.display='none';
 
+    let isCorrect=false;
+    let correctFormattedAnswer='';
+
+    // --- Kontrola pro DEC -> BIN s prsty ---
     if(dir==='dec2bin' && fingerPanelVisible){
       const sum=currentFingerSum;
-      const isCorrect=(sum===0 || sum===currentDecValue);
+      isCorrect=(sum===0 || sum===currentDecValue);
+      correctFormattedAnswer=formatBinary(expectedAnswer);
+      
+      // Pokud je špatně, nastavíme červenou, ale NECHÁME hodnotu v inputu (která odpovídá prstům, ale uživatel ji nevidí, 
+      // prsty jsou vizualizací, takže zobrazíme správný výsledek, nebo necháme prsty? 
+      // V zadání: "špatný musí zůstat v inputu". U prstů je input skrytý, interaguje se přes prsty.
+      // Zde zobrazíme správný výsledek v inputu pro porovnání, protože prsty uživatel "nevidí" jako text.
+      // Ale pokud je to špatně, obarvíme input červeně a vložíme tam správný výsledek.
+      input.value = correctFormattedAnswer;
+      input.className=isCorrect?'success':'error';
+      input.disabled=true;
 
       state='evaluated';
       $('main-btn').innerText='START';
-      input.disabled=true;
-
-      input.className=isCorrect?'success':'error';
-      input.value=formatBinary(expectedAnswer);
-
-      saveToHistory(`${formatDecimal(currentDecValue)} = ${formatBinary(removeLeadingZeros(expectedAnswer))}`,isCorrect);
+      saveToHistory(`${formatDecimal(currentDecValue)} = ${correctFormattedAnswer}`,isCorrect);
       updateFingerDisplay();
       return;
     }
 
-    let isCorrect=false, formattedCorrect='';
+    // --- Kontrola pro BIN -> DEC ---
     if(dir==='bin2dec'){
       if(rawValue===''){
         state='evaluated';
         $('main-btn').innerText='START';
         input.disabled=true;
         input.value=formatDecimal(parseInt(expectedAnswer,10));
-        input.className='';
+        input.className=''; // Neutrální, prázdná odpověď
         updateFingerDisplay();
         return;
       }
       const cleanUser=removeLeadingZeros(rawValue);
       const cleanExpected=removeLeadingZeros(expectedAnswer);
       isCorrect=cleanUser===cleanExpected;
-      formattedCorrect=formatDecimal(parseInt(cleanExpected,10));
+      correctFormattedAnswer=formatDecimal(parseInt(cleanExpected,10));
 
       state='evaluated';
       $('main-btn').innerText='START';
       input.disabled=true;
       input.className=isCorrect?'success':'error';
-      input.value=formattedCorrect;
+      
+      if(!isCorrect) {
+        // Špatná odpověď: NECHÁME uživatelův vstup v inputu (už ho má tam).
+        // Pouze obarvíme okraj červeně (error class).
+      } else {
+        // Správná odpověď: naformátujeme hezky (odstraníme mezery na začátku, přidáme tisíce)
+        input.value=correctFormattedAnswer;
+      }
 
       const binForHistory=formatBinary(currentDecValue.toString(2));
-      saveToHistory(`${binForHistory} = ${formattedCorrect}`,isCorrect);
+      saveToHistory(`${binForHistory} = ${correctFormattedAnswer}`,isCorrect);
       updateFingerDisplay();
       return;
     }
 
+    // --- Kontrola pro DEC -> BIN (bez prstů) ---
     if(rawValue===''){
       state='evaluated';
       $('main-btn').innerText='START';
@@ -635,15 +638,22 @@
     const cleanUser=removeLeadingZeros(rawValue);
     const cleanExpected=removeLeadingZeros(expectedAnswer);
     isCorrect=cleanUser===cleanExpected;
-    const formatted=formatBinary(cleanExpected);
+    correctFormattedAnswer=formatBinary(cleanExpected);
 
     state='evaluated';
     $('main-btn').innerText='START';
     input.disabled=true;
     input.className=isCorrect?'success':'error';
-    input.value=formatted;
 
-    saveToHistory(`${formatDecimal(currentDecValue)} = ${formatted}`,isCorrect);
+    if(!isCorrect) {
+      // Špatná odpověď: NECHÁME uživatelův vstup v inputu.
+      // Pouze obarvíme okraj červeně.
+    } else {
+      // Správná odpověď: naformátujeme hezky
+      input.value=correctFormattedAnswer;
+    }
+
+    saveToHistory(`${formatDecimal(currentDecValue)} = ${correctFormattedAnswer}`,isCorrect);
     updateFingerDisplay();
   }
 
