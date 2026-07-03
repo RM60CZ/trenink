@@ -290,9 +290,12 @@
       $('finger-panel').classList.remove('visible');
       $('main-btn').style.display='none'; 
       
-      // Skryjeme klávesnice (0,1 i 0-9)
+      // Skryjeme klávesnice
       $('keypad-bin').style.display='none';
       $('keypad-dec').style.display='none';
+      
+      // Skryjeme zadání (otázku)
+      $('question-display').style.display='none';
       
     } else {
       // Zavírání nastavení
@@ -306,12 +309,13 @@
       const changed = (tempSettings.dir !== $('direction').value || tempSettings.bits !== $('bits').value);
       
       if(changed){
-        // Pokud došlo ke změně, spustíme novou hru (to zajistí zobrazení inputu i klávesnic)
+        // Pokud došlo ke změně, spustíme novou hru (to zajistí zobrazení zadání i klávesnic)
         startGame();
       } else {
         // Pokud nedošlo ke změně, obnovíme původní stav
         if(state === 'playing'){
            $('finger-toggle-btn').style.display='block';
+           $('question-display').style.display='block'; // Zobrazíme zadání zpět
            $('single-input').style.display='block';
            $('back-btn').style.display='flex';
            $('clear-btn').style.display='flex';
@@ -320,12 +324,13 @@
            if($('direction').value==='dec2bin') $('keypad-bin').style.display='grid';
            else $('keypad-dec').style.display='grid';
         } else if(state === 'evaluated') {
+          $('question-display').style.display='block'; // Zobrazíme zadání zpět
           $('single-input').style.display='block';
           $('finger-toggle-btn').style.display='block';
           if(fingerPanelVisible) $('finger-panel').classList.add('visible');
-          // V evaluated stavu jsou klávesnice skryté (input disabled), takže je neobnovujeme
+          // V evaluated stavu jsou klávesnice skryté
         } else {
-           // init stav - nic dalšího nezobrazujeme
+           // init stav - nic dalšího nezobrazujeme (kromě main-btn, který už je viditelný)
         }
       }
     }
