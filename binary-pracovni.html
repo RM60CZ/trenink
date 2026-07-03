@@ -257,13 +257,20 @@
     if($('direction').value === 'dec2bin'){
       if(fingerPanelVisible){
         // --- AKTIVACE P ---
+        
+        // 1. Vymažeme vstup bez ohledu na to, co tam bylo
         $('single-input').value='';
+        $('single-input').className=''; // Reset stylů (success/error)
+        
+        // 2. Deaktivujeme input
         $('single-input').disabled=true;
         
+        // 3. Skryjeme ovládací prvky
         $('keypad-bin').style.display='none';
         $('back-btn').style.display='none';
         $('clear-btn').style.display='none';
         
+        // 4. Resetujeme součet prstů (začínáme od nuly)
         currentFingerSum = 0;
         document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
         
