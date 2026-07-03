@@ -38,28 +38,42 @@
     .question{font-size:28px;font-weight:bold;display:none;text-align:center;}
 
     .input-with-back{display:flex;align-items:center;gap:8px;width:100%;justify-content:center;}
-    #single-input{width:180px;padding:8px;border-radius:6px;text-align:center;border:2px solid var(--b);background:var(--c);color:var(--t);font-size:18px;font-weight:bold;outline:none;height:44px;display:none;}
+    #single-input{
+      width:180px; 
+      padding:10px; border-radius:8px; text-align:center; 
+      border:2px solid var(--b); background:var(--c); color:var(--t); 
+      font-size:20px; font-weight:bold; outline:none; height:48px; display:none;
+      -webkit-appearance: none; appearance: none;
+    }
     #single-input:disabled{background:#eee;color:#aaa;border-color:#ccc;}
     #single-input.success{color:var(--ok);border-color:var(--ok);}
     #single-input.error{color:var(--er);border-color:var(--er);}
 
     .back-btn,.clear-btn{
-      background:var(--btn);color:var(--t);border:none;border-radius:6px;font-size:14px;font-weight:bold;cursor:pointer;height:44px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+      background:var(--btn);color:var(--t);border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
     }
     .back-btn{width:48px;padding:0;}
     .clear-btn{padding:0 16px;}
     .back-btn:active,.clear-btn:active{background:var(--btnh);}
 
-    .input-with-back.dec-mode .clear-btn,.input-with-back.bin-mode .clear-btn{
-      flex:1;max-width:calc(100% - 180px - 8px - 48px - 8px);
+    /* BINÁRNÍ KLÁVESNICE (Virtuální pro mobil i PC) */
+    .keypad-bin{
+      display:none; gap:8px; width:100%; justify-content:center; 
+      grid-template-columns:repeat(2, 1fr); grid-auto-flow:column;
+      max-width:300px;
     }
-
-    .keypad{display:none;gap:6px;width:100%;grid-auto-flow:row;}
-    .keypad.bin{grid-template-columns:1fr;width:180px;margin-right:auto;margin-left:0;}
-    .keypad.dec{grid-template-columns:repeat(3,1fr);}
-    .key-btn{background:var(--btn);color:var(--t);border:none;padding:10px;border-radius:6px;font-size:16px;font-weight:bold;cursor:pointer;}
+    .key-btn{
+      background:var(--btn);color:var(--t);border:none;padding:12px;border-radius:8px;font-size:18px;font-weight:bold;cursor:pointer;
+      user-select:none; -webkit-tap-highlight-color:transparent;
+    }
     .key-btn:active{background:var(--btnh);}
-    .key-0{grid-column:span 2;}
+    
+    .ctrl-buttons{display:flex;gap:8px;width:100%;justify-content:center;max-width:300px;}
+    
+    /* DEC KLÁVESNICE (Mobilní numerická) */
+    .keypad-dec{
+      display:none;gap:6px;width:100%;grid-template-columns:repeat(3,1fr);
+    }
 
     .main-action{width:100%;padding:12px;border-radius:8px;background:var(--p);color:var(--pt);border:none;font-size:16px;font-weight:bold;cursor:pointer;}
     .history-container{border-top:1px solid var(--b);padding-top:10px;}
@@ -110,30 +124,36 @@
   <div class="game-area">
     <div class="question" id="question-display"></div>
 
+    <!-- Input Container -->
     <div class="input-with-back" id="input-container">
-      <input type="text" id="single-input"
-             inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-      <button class="back-btn" id="back-btn" onclick="deleteLeft()" style="display:none;">Zpět</button>
-      <button class="clear-btn" id="clear-btn" onclick="clearAll()" style="display:none;">Smazat</button>
+      <!-- V DEC->BIN režimu bude input readonly (klávesnice se neotevře) -->
+      <!-- V BIN->DEC režimu bude input aktivní (otevře se numerická klávesnice) -->
+      <input type="tel" id="single-input"
+             autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <!-- Tlačítka Zpět a C jsou duplicitní k těm dole, ale v DEC->BIN režimu je musíme mít viditelné u inputu 
+           pokud nechceme zobrazovat celý keypad. 
+           Ale vlastně v DEC->BIN chceme keypad_bin (0,1) + tlačítka.
+           V BIN->DEC chceme jen input (mobile keyboard) + tlačítka.
+      -->
     </div>
 
-    <div class="keypad bin" id="keypad-bin">
+    <!-- Virtuální klávesnice pro BIN režim (stejná na PC i Mobil) -->
+    <div class="keypad-bin" id="keypad-bin">
       <button class="key-btn" onclick="typeVal('0')">0</button>
       <button class="key-btn" onclick="typeVal('1')">1</button>
     </div>
-
-    <div class="keypad dec" id="keypad-dec">
-      <button class="key-btn" onclick="typeVal('7')">7</button>
-      <button class="key-btn" onclick="typeVal('8')">8</button>
-      <button class="key-btn" onclick="typeVal('9')">9</button>
-      <button class="key-btn" onclick="typeVal('4')">4</button>
-      <button class="key-btn" onclick="typeVal('5')">5</button>
-      <button class="key-btn" onclick="typeVal('6')">6</button>
-      <button class="key-btn" onclick="typeVal('1')">1</button>
-      <button class="key-btn" onclick="typeVal('2')">2</button>
-      <button class="key-btn" onclick="typeVal('3')">3</button>
-      <button class="key-btn key-0" onclick="typeVal('0')">0</button>
+    
+    <!-- Ovládací tlačítka pro BIN režim -->
+    <div class="ctrl-buttons" id="ctrl-buttons-bin" style="display:none;">
+        <button class="back-btn" onclick="deleteLeft()">⌫</button>
+        <button class="clear-btn" onclick="clearAll()">C</button>
     </div>
+
+    <!-- Pro DEC režim použijeme klasický layout input + tlačítka vedle (z předchozího kroku) -->
+    <!-- Tlačítka pro DEC režim (u inputu) -->
+    <button class="back-btn" id="back-btn-dec" onclick="deleteLeft()" style="display:none;">⌫</button>
+    <button class="clear-btn" id="clear-btn-dec" onclick="clearAll()" style="display:none;">C</button>
+
   </div>
 
   <button class="main-action" id="main-btn" onclick="handleMainAction()">START</button>
@@ -145,12 +165,8 @@
 </div>
 
 <script>
-  // Stav aplikace
   let state='init', currentDecValue=0, expectedAnswer='', expectedLength=0, currentDisplayBits=0;
-  
-  // GLOBÁLNÍ stav panelu prstů
   let fingerPanelVisible = false;
-  
   let currentFingerSum=0;
   let settingsOpen=false; 
   let tempSettings={}; 
@@ -178,7 +194,6 @@
     if(clean==='') clean='0';
     while(clean.length<displayBits) clean='0'+clean;
     clean=clean.slice(-displayBits);
-
     let out='',count=0;
     for(let i=clean.length-1;i>=0;i--){
       out=clean[i]+out;
@@ -209,7 +224,6 @@
     const grid=$('finger-grid');
     grid.innerHTML='';
     const rows=3, cols=5;
-
     const bitExponent=(r,c)=>(rows-1-r)*cols+(cols-1-c);
     const bitValue=(r,c)=>2**bitExponent(r,c);
 
@@ -221,10 +235,8 @@
         el.addEventListener('click',()=>{
           if(state!=='playing') return;
           if(!($('direction').value==='dec2bin' && fingerPanelVisible)) return;
-
           const v=Number(el.dataset.value);
           currentFingerSum = ((currentFingerSum & v)===v) ? (currentFingerSum & ~v) : (currentFingerSum | v);
-
           document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
             const vv=Number(sq.dataset.value);
             sq.classList.toggle('on',(currentFingerSum & vv)===vv);
@@ -239,7 +251,6 @@
     const dir=$('direction').value;
     const fingers=document.querySelectorAll('#finger-grid .finger-sq');
     fingers.forEach(x=>x.classList.remove('on'));
-    
     if(dir==='bin2dec'){
       fingers.forEach(el=>{
         const v=Number(el.dataset.value);
@@ -250,50 +261,36 @@
 
   function toggleFingerPanel(){
     fingerPanelVisible = !fingerPanelVisible;
-    
     $('finger-panel').classList.toggle('visible', fingerPanelVisible);
     syncFingerPanelClass();
 
     if($('direction').value === 'dec2bin'){
       if(fingerPanelVisible){
-        // --- AKTIVACE P ---
-        
-        // 1. Vymažeme input (vizuální reset)
         $('single-input').value='';
         $('single-input').className='';
+        $('keypad-bin').style.display='none';
+        $('ctrl-buttons-bin').style.display='none';
+        $('back-btn-dec').style.display='none';
+        $('clear-btn-dec').style.display='none';
         
-        // 2. Pokud jsme VE HŘE, vygenerujeme NOVÝ PŘÍKLAD.
         if(state === 'playing') {
           startGame();
         } else if(state === 'evaluated') {
-           // Pokud jsme VYHODNOCENI, jen připravíme UI pro P
-           $('single-input').disabled=true;
-           $('keypad-bin').style.display='none';
-           $('back-btn').style.display='none';
-           $('clear-btn').style.display='none';
-           // Prsty NEVYNULUJEME!
+           $('single-input').readOnly = true;
            document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
              const vv=Number(sq.dataset.value);
              sq.classList.toggle('on',(currentFingerSum & vv)===vv);
            });
         } else {
-           // Init stav
-           $('single-input').disabled=true;
-           $('keypad-bin').style.display='none';
-           $('back-btn').style.display='none';
-           $('clear-btn').style.display='none';
+           $('single-input').readOnly = true;
            currentFingerSum = 0;
            document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
         }
-        
       } else {
-        // --- DEAKTIVACE P ---
         handleMainAction();
       }
     }
-
     if(!fingerPanelVisible) return;
-
     updateFingerDisplay();
   }
 
@@ -309,37 +306,28 @@
   function toggleSettings(){
     const p=$('settings-panel'), info=$('info');
     const willBeOpen = (p.style.display==='none' || p.style.display==='');
-    
     p.style.display= willBeOpen ? 'flex' : 'none';
     info.style.display= willBeOpen ? 'block' : 'none';
 
     if(willBeOpen){
       settingsOpen = true;
-      tempSettings = {
-        dir: $('direction').value,
-        bits: $('bits').value
-      };
-      
+      tempSettings = { dir: $('direction').value, bits: $('bits').value };
       $('finger-toggle-btn').style.display='none';
       $('theme-btn').style.display='none';
       $('single-input').style.display='none';
-      $('back-btn').style.display='none';
-      $('clear-btn').style.display='none';
+      $('keypad-bin').style.display='none';
+      $('ctrl-buttons-bin').style.display='none';
+      $('back-btn-dec').style.display='none';
+      $('clear-btn-dec').style.display='none';
       $('finger-panel').classList.remove('visible');
       $('main-btn').style.display='none'; 
-      
-      $('keypad-bin').style.display='none';
-      $('keypad-dec').style.display='none';
       $('question-display').style.display='none';
-      
     } else {
       settingsOpen = false;
-      
       $('theme-btn').style.display='block';
       $('main-btn').style.display='block'; 
       
       const changed = (tempSettings.dir !== $('direction').value || tempSettings.bits !== $('bits').value);
-      
       if(changed){
         startGame();
       } else {
@@ -351,30 +339,38 @@
            
            if($('direction').value==='dec2bin') {
              if(!fingerPanelVisible) {
+               // DEC->BIN, P neaktivní: Zobrazit virtuální klávesnici
+               $('single-input').readOnly = true;
                $('keypad-bin').style.display='grid';
-               $('back-btn').style.display='flex';
-               $('clear-btn').style.display='flex';
-               $('single-input').disabled=false;
+               $('ctrl-buttons-bin').style.display='flex';
              } else {
+               // DEC->BIN, P aktivní: Žádná klávesnice
+               $('single-input').readOnly = true;
                $('keypad-bin').style.display='none';
-               $('back-btn').style.display='none';
-               $('clear-btn').style.display='none';
-               $('single-input').disabled=true;
+               $('ctrl-buttons-bin').style.display='none';
                document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
                  const vv=Number(sq.dataset.value);
                  sq.classList.toggle('on',(currentFingerSum & vv)===vv);
                });
              }
            } else {
-             $('keypad-dec').style.display='grid';
-             $('back-btn').style.display='flex';
-             $('clear-btn').style.display='flex';
-             $('single-input').disabled=false;
+             // BIN->DEC: Mobilní numerická klávesnice
+             $('single-input').readOnly = false;
+             $('keypad-bin').style.display='none';
+             $('ctrl-buttons-bin').style.display='none';
+             $('back-btn-dec').style.display='flex';
+             $('clear-btn-dec').style.display='flex';
+             $('single-input').focus();
            }
         } else if(state === 'evaluated') {
           $('question-display').style.display='block'; 
           $('single-input').style.display='block';
           $('finger-toggle-btn').style.display='block';
+          $('single-input').readOnly = true;
+          $('keypad-bin').style.display='none';
+          $('ctrl-buttons-bin').style.display='none';
+          $('back-btn-dec').style.display='none';
+          $('clear-btn-dec').style.display='none';
           if(fingerPanelVisible) $('finger-panel').classList.add('visible');
           if($('direction').value==='dec2bin' && fingerPanelVisible) {
              document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
@@ -392,10 +388,8 @@
     const dir=$('direction').value;
     localStorage.setItem('binTrainBits',bits);
     localStorage.setItem('binTrainDir',dir);
-
     const maxNum=2**bits - 1;
     $('info').innerText=`Rozsah: 0 až ${formatDecimal(maxNum)}`;
-
     updateTitle();
     syncFingerPanelClass();
   }
@@ -410,6 +404,7 @@
   }
 
   document.addEventListener('keydown',e=>{
+    if($('single-input').readOnly) return; // Pokud je klávesnice blokována, ignorujeme hardkey
     if(e.key!=='Enter') return;
     e.preventDefault();
     if(state==='init') handleMainAction();
@@ -430,47 +425,22 @@
     return newCursorPos;
   }
 
+  // Input event handler - funguje jen pro DEC režim (BIN režim řeší typeVal)
   $('single-input').addEventListener('input',function(){
-    if(this.disabled) return;
+    if(this.readOnly) return;
 
     const dir=$('direction').value;
     const input=this;
     const cursorPosition=input.selectionStart;
     const originalValue=input.value;
 
-    if(dir==='dec2bin'){
-      if(/[^01\s]/.test(input.value)){
-        const invalidChar=input.value.match(/[^01\s]/);
-        alert(`Nepovolený znak: "${invalidChar}". Povoleno pouze 0, 1 a mezera.`);
-        input.value=input.value.replace(/[^01\s]/g,'');
-        return;
-      }
-      let clean=input.value.replace(/\s/g,'');
-      if(clean.length>15){
-        alert("Maximální počet 0 a 1 je 15, překročili jste limit, opravte!");
-        clean=clean.slice(0,15);
-      }
-
-      let formatted='',count=0;
-      for(let i=clean.length-1;i>=0;i--){
-        formatted=clean[i]+formatted;
-        if(++count%5===0 && i>0) formatted=' '+formatted;
-      }
-
-      input.value=formatted;
-      input.selectionStart=input.selectionEnd=computeCursorForDigits(formatted,originalValue,cursorPosition,'dec2bin');
-    }else{
-      if(/[^\d\s]/.test(input.value)){
-        const invalidChar=input.value.match(/[^\d\s]/);
-        alert(`Nepovolený znak: "${invalidChar}". Povolena pouze čísla.`);
-        input.value=input.value.replace(/[^\d\s]/g,'');
-        return;
-      }
-
-      const formatted=formatDecimalInput(input.value);
-      input.value=formatted;
-      input.selectionStart=input.selectionEnd=computeCursorForDigits(formatted,originalValue,cursorPosition,'bin2dec');
+    // BIN->DEC logika
+    if(/[^\d\s]/.test(input.value)){
+      input.value=input.value.replace(/[^\d\s]/g,'');
     }
+    const formatted=formatDecimalInput(input.value);
+    input.value=formatted;
+    input.selectionStart=input.selectionEnd=computeCursorForDigits(formatted,originalValue,cursorPosition,'bin2dec');
   });
 
   function startGame(){
@@ -480,9 +450,7 @@
     
     $('finger-toggle-btn').style.display='block';
 
-    // --- KLÍČOVÁ LOGIKA PRO P ---
-    // Pokud je P aktivní, vynulujeme prsty při startu NOVÉHO PŘÍKLADU.
-    if(fingerPanelVisible) {
+    if(fingerPanelVisible && $('direction').value==='dec2bin') {
       currentFingerSum = 0;
       document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
     }
@@ -504,45 +472,45 @@
     $('single-input').style.display='block';
     
     if(dir === 'dec2bin'){
+      // DEC -> BIN
+      $('single-input').value='';
+      $('single-input').className='';
+      
       if(fingerPanelVisible){
-        $('single-input').disabled=true;
-        $('single-input').value='';
-        $('single-input').className='';
-        $('back-btn').style.display='none';
-        $('clear-btn').style.display='none';
+        // P aktivní: Input readonly, žádná klávesnice
+        $('single-input').readOnly = true;
         $('keypad-bin').style.display='none';
+        $('ctrl-buttons-bin').style.display='none';
+        $('back-btn-dec').style.display='none';
+        $('clear-btn-dec').style.display='none';
       } else {
-        $('single-input').disabled=false;
-        $('single-input').value='';
-        $('single-input').className='';
-        $('back-btn').style.display='flex';
-        $('clear-btn').style.display='flex';
+        // P neaktivní: Virtuální klávesnice BIN (0,1)
+        $('single-input').readOnly = true; // Aby se neotevřela mobilní klávesnice
         $('keypad-bin').style.display='grid';
-        $('single-input').focus();
+        $('ctrl-buttons-bin').style.display='flex';
+        $('back-btn-dec').style.display='none';
+        $('clear-btn-dec').style.display='none';
       }
       
       $('question-display').innerText=formatDecimal(currentDecValue);
       expectedAnswer=binString;
       expectedLength=bits;
-      $('keypad-dec').style.display='none';
-      $('input-container').className='input-with-back bin-mode';
 
     }else{
-      $('single-input').disabled=false;
+      // BIN -> DEC
+      $('single-input').readOnly = false; // Mobilní numerická klávesnice
       $('single-input').value='';
       $('single-input').className='';
-      $('back-btn').style.display='flex';
-      $('clear-btn').style.display='flex';
+      $('keypad-bin').style.display='none';
+      $('ctrl-buttons-bin').style.display='none';
+      $('back-btn-dec').style.display='flex';
+      $('clear-btn-dec').style.display='flex';
       $('single-input').focus();
       
       currentDisplayBits = bits===5 ? 5 : (bits<=10 ? 10 : 15);
       $('question-display').innerText=formatBinaryForDisplay(binString,currentDisplayBits);
       expectedAnswer=currentDecValue.toString();
       expectedLength=maxNum.toString().length;
-
-      $('keypad-bin').style.display='none';
-      $('keypad-dec').style.display='grid';
-      $('input-container').className='input-with-back dec-mode';
       
       updateFingerDisplay();
     }
@@ -550,8 +518,9 @@
 
   function deleteLeft(){
     if(state!=='playing') return;
+    if($('single-input').readOnly && $('direction').value!=='dec2bin') return; 
+    
     const input=$('single-input'), dir=$('direction').value;
-
     const cursorPos=input.selectionStart;
     if(cursorPos===0) return;
 
@@ -588,29 +557,18 @@
     $('single-input').focus();
   }
 
+  // Typování přes virtuální klávesnici (pouze pro BIN režim)
   function typeVal(val){
     if(state!=='playing') return;
-    const dir=$('direction').value;
     const input=$('single-input');
-
+    
+    // BIN logika
     const start=input.selectionStart, end=input.selectionEnd;
     const value=input.value;
     const hasSelection=start!==end;
 
-    if(dir==='bin2dec'){
-      if(!hasSelection && value.replace(/\s/g,'').length>=6) return;
-      const newValue=value.slice(0,start)+val+value.slice(end);
-      input.value=formatDecimalInput(newValue);
+    if(!['0','1'].includes(val)) return;
 
-      input.selectionStart=input.selectionEnd=computeCursorForDigits(input.value,value,start,'bin2dec');
-      input.focus();
-      return;
-    }
-
-    if(!['0','1',' '].includes(val)){
-      alert("Nepovolený znak! Povoleno pouze 0, 1 a mezera.");
-      return;
-    }
     if(!hasSelection && value.replace(/\s/g,'').length>=15){
       alert("Maximální počet 0 a 1 je 15, překročili jste limit, opravte!");
       return;
@@ -618,10 +576,7 @@
 
     let newValue=value.slice(0,start)+val+value.slice(end);
     let clean=newValue.replace(/\s/g,'');
-    if(clean.length>15){
-      alert("Maximální počet 0 a 1 je 15, překročili jste limit, opravte!");
-      clean=clean.slice(0,15);
-    }
+    if(clean.length>15) clean=clean.slice(0,15);
 
     let formatted='',count=0;
     for(let i=clean.length-1;i>=0;i--){
@@ -630,7 +585,7 @@
     }
     input.value=formatted;
     input.selectionStart=input.selectionEnd=formatted.length;
-    input.focus();
+    // Focus není nutný, input je readonly
   }
 
   function checkAnswer(){
@@ -638,10 +593,11 @@
     const input=$('single-input');
     const rawValue=input.value.trim();
 
-    $('back-btn').style.display='none';
-    $('clear-btn').style.display='none';
+    // Skryjeme všechny ovládací prvky
     $('keypad-bin').style.display='none';
-    $('keypad-dec').style.display='none';
+    $('ctrl-buttons-bin').style.display='none';
+    $('back-btn-dec').style.display='none';
+    $('clear-btn-dec').style.display='none';
 
     let isCorrect=false;
     let correctFormattedAnswer='';
@@ -653,14 +609,11 @@
       
       input.value = correctFormattedAnswer;
       input.className=isCorrect?'success':'error';
-      input.disabled=true;
+      input.readOnly = true; 
 
       state='evaluated';
       $('main-btn').innerText='START';
       saveToHistory(`${formatDecimal(currentDecValue)} = ${correctFormattedAnswer}`,isCorrect);
-      
-      // DŮLEŽITÉ: ZDE ODEBRÁNO updateFingerDisplay()
-      // Prsty zůstávají v nastavené pozici pro porovnání.
       return;
     }
 
@@ -668,7 +621,7 @@
       if(rawValue===''){
         state='evaluated';
         $('main-btn').innerText='START';
-        input.disabled=true;
+        input.readOnly = true;
         input.value=formatDecimal(parseInt(expectedAnswer,10));
         input.className='';
         updateFingerDisplay();
@@ -681,7 +634,7 @@
 
       state='evaluated';
       $('main-btn').innerText='START';
-      input.disabled=true;
+      input.readOnly = true;
       input.className=isCorrect?'success':'error';
       
       if(isCorrect) input.value=correctFormattedAnswer;
@@ -692,10 +645,11 @@
       return;
     }
 
+    // DEC->BIN bez P
     if(rawValue===''){
       state='evaluated';
       $('main-btn').innerText='START';
-      input.disabled=true;
+      input.readOnly = true;
       input.value=formatBinary(expectedAnswer);
       input.className='';
       updateFingerDisplay();
@@ -709,7 +663,7 @@
 
     state='evaluated';
     $('main-btn').innerText='START';
-    input.disabled=true;
+    input.readOnly = true;
     input.className=isCorrect?'success':'error';
 
     if(isCorrect) input.value=correctFormattedAnswer;
@@ -775,10 +729,10 @@
     $('main-btn').innerText='START';
     $('question-display').style.display='none';
     $('single-input').style.display='none';
-    $('back-btn').style.display='none';
-    $('clear-btn').style.display='none';
     $('keypad-bin').style.display='none';
-    $('keypad-dec').style.display='none';
+    $('ctrl-buttons-bin').style.display='none';
+    $('back-btn-dec').style.display='none';
+    $('clear-btn-dec').style.display='none';
     $('finger-panel').classList.remove('visible');
   }
 
