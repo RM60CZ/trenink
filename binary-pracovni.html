@@ -259,6 +259,11 @@
         $('keypad-bin').style.display='none';
         $('back-btn').style.display='none';
         $('clear-btn').style.display='none';
+        
+        // Reset součtu prstů při aktivaci
+        currentFingerSum = 0;
+        document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
+        
       } else {
         // Deaktivace P:
         $('single-input').value='';
@@ -277,6 +282,7 @@
     if(!fingerPanelVisible) return;
 
     updateFingerDisplay();
+    // Pro DEC->BIN nastavíme prsty podle součtu (v tu chvíli 0, viz výše)
     if($('direction').value==='dec2bin'){
       document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
         const vv=Number(sq.dataset.value);
@@ -464,10 +470,17 @@
     $('main-btn').style.display='block'; 
     
     $('finger-toggle-btn').style.display='block';
+
+    // NERESETUJEME fingerPanelVisible!
+    // Pokud byl aktivní, zůstává aktivní. Panel se zobrazí/skryje podle něj.
     
-    // Reset panelu P při startu
-    fingerPanelVisible = false;
-    $('finger-panel').classList.remove('visible');
+    // Reset součtu prstů pro novou hru (pokud je panel aktivní)
+    currentFingerSum = 0;
+    document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
+    
+    // Zajistíme viditelnost panelu podle stavu
+    $('finger-panel').classList.toggle('visible', fingerPanelVisible);
+    syncFingerPanelClass();
 
     localStorage.removeItem('binTrainHistory');
     renderHistory();
@@ -482,28 +495,42 @@
     $('question-display').style.display='block';
     $('single-input').style.display='block';
     
-    // Ve výchozím stavu (P není aktivní) jsou tlačítka vidět
-    $('back-btn').style.display='flex';
-    $('clear-btn').style.display='flex';
-    
-    $('single-input').disabled=false;
-    $('single-input').className='';
-    $('single-input').value='';
-    $('single-input').focus();
-
-    if(dir==='dec2bin'){
+    // Nastavení inputu a tlačítek podle režimu a stavu P
+    if(dir === 'dec2bin'){
+      if(fingerPanelVisible){
+        // P je aktivní: input disabled, tlačítka skrytá
+        $('single-input').disabled=true;
+        $('single-input').value='';
+        $('single-input').className='';
+        $('back-btn').style.display='none';
+        $('clear-btn').style.display='none';
+        $('keypad-bin').style.display='none';
+      } else {
+        // P není aktivní: normální režim
+        $('single-input').disabled=false;
+        $('single-input').value='';
+        $('single-input').className='';
+        $('back-btn').style.display='flex';
+        $('clear-btn').style.display='flex';
+        $('keypad-bin').style.display='grid';
+        $('single-input').focus();
+      }
+      
       $('question-display').innerText=formatDecimal(currentDecValue);
       expectedAnswer=binString;
       expectedLength=bits;
-
-      $('keypad-bin').style.display='grid';
       $('keypad-dec').style.display='none';
       $('input-container').className='input-with-back bin-mode';
 
-      currentFingerSum=0;
-      document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
-      syncFingerPanelClass();
     }else{
+      // BIN -> DEC: P je vždy pasivní (jen zobrazuje), input a tlačítka jsou normální
+      $('single-input').disabled=false;
+      $('single-input').value='';
+      $('single-input').className='';
+      $('back-btn').style.display='flex';
+      $('clear-btn').style.display='flex';
+      $('single-input').focus();
+      
       currentDisplayBits = bits===5 ? 5 : (bits<=10 ? 10 : 15);
       $('question-display').innerText=formatBinaryForDisplay(binString,currentDisplayBits);
       expectedAnswer=currentDecValue.toString();
@@ -512,8 +539,8 @@
       $('keypad-bin').style.display='none';
       $('keypad-dec').style.display='grid';
       $('input-container').className='input-with-back dec-mode';
+      
       updateFingerDisplay();
-      syncFingerPanelClass();
     }
   }
 
