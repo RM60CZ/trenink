@@ -255,21 +255,21 @@
         $('single-input').value='';
         $('single-input').disabled=true;
         
-        // Skryjeme ovládací prvky pro input (klávesnici i tlačítka Zpět/Smazat)
+        // Skryjeme ovládací prvky
         $('keypad-bin').style.display='none';
         $('back-btn').style.display='none';
         $('clear-btn').style.display='none';
         
-        // Reset součtu prstů při aktivaci
-        currentFingerSum = 0;
-        document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
-        
+        // Reset součtu při aktivaci (pokud jsme už ve hře, jinak se resetuje v startGame)
+        if(state === 'playing') {
+          currentFingerSum = 0;
+          document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
+        }
       } else {
         // Deaktivace P:
         $('single-input').value='';
         $('single-input').disabled=false;
         
-        // Zobrazíme prvky zpět (pokud jsme ve hře)
         if(state === 'playing'){
           $('keypad-bin').style.display='grid';
           $('back-btn').style.display='flex';
@@ -282,7 +282,6 @@
     if(!fingerPanelVisible) return;
 
     updateFingerDisplay();
-    // Pro DEC->BIN nastavíme prsty podle součtu (v tu chvíli 0, viz výše)
     if($('direction').value==='dec2bin'){
       document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
         const vv=Number(sq.dataset.value);
@@ -344,7 +343,6 @@
            $('single-input').style.display='block';
            if(fingerPanelVisible) $('finger-panel').classList.add('visible');
            
-           // Obnova stavu
            if($('direction').value==='dec2bin') {
              if(!fingerPanelVisible) {
                $('keypad-bin').style.display='grid';
@@ -368,7 +366,6 @@
           $('single-input').style.display='block';
           $('finger-toggle-btn').style.display='block';
           if(fingerPanelVisible) $('finger-panel').classList.add('visible');
-          // V evaluated stavu jsou tlačítka skryté (back/clear) a input disabled, to je správně
         }
       }
     }
@@ -471,14 +468,14 @@
     
     $('finger-toggle-btn').style.display='block';
 
-    // NERESETUJEME fingerPanelVisible!
-    // Pokud byl aktivní, zůstává aktivní. Panel se zobrazí/skryje podle něj.
+    // Důležité: NEMĚNÍME fingerPanelVisible!
+    // Pokud byl aktivní, zůstává aktivní.
     
-    // Reset součtu prstů pro novou hru (pokud je panel aktivní)
+    // Reset součtu prstů pro novou hru (ať je panel vidět nebo ne)
     currentFingerSum = 0;
     document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
     
-    // Zajistíme viditelnost panelu podle stavu
+    // Viditelnost panelu podle STAVU (který se nezměnil)
     $('finger-panel').classList.toggle('visible', fingerPanelVisible);
     syncFingerPanelClass();
 
@@ -495,10 +492,9 @@
     $('question-display').style.display='block';
     $('single-input').style.display='block';
     
-    // Nastavení inputu a tlačítek podle režimu a stavu P
     if(dir === 'dec2bin'){
       if(fingerPanelVisible){
-        // P je aktivní: input disabled, tlačítka skrytá
+        // P je aktivní: input disabled, tlačítka skrytá, prsty resetovány (viz výše)
         $('single-input').disabled=true;
         $('single-input').value='';
         $('single-input').className='';
@@ -506,7 +502,7 @@
         $('clear-btn').style.display='none';
         $('keypad-bin').style.display='none';
       } else {
-        // P není aktivní: normální režim
+        // P není aktivní
         $('single-input').disabled=false;
         $('single-input').value='';
         $('single-input').className='';
@@ -523,7 +519,7 @@
       $('input-container').className='input-with-back bin-mode';
 
     }else{
-      // BIN -> DEC: P je vždy pasivní (jen zobrazuje), input a tlačítka jsou normální
+      // BIN -> DEC
       $('single-input').disabled=false;
       $('single-input').value='';
       $('single-input').className='';
@@ -634,7 +630,6 @@
     const input=$('single-input');
     const rawValue=input.value.trim();
 
-    // Skryjeme ovládací prvky po kontrole
     $('back-btn').style.display='none';
     $('clear-btn').style.display='none';
     $('keypad-bin').style.display='none';
@@ -655,7 +650,9 @@
       state='evaluated';
       $('main-btn').innerText='START';
       saveToHistory(`${formatDecimal(currentDecValue)} = ${correctFormattedAnswer}`,isCorrect);
-      updateFingerDisplay();
+      
+      // Po kontrole aktualizujeme prsty na výsledek (shodné s inputem)
+      updateFingerDisplay(); 
       return;
     }
 
