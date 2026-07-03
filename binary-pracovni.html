@@ -146,6 +146,8 @@
 <script>
   let state='init', currentDecValue=0, expectedAnswer='', expectedLength=0, currentDisplayBits=0, fingerPanelVisible=false;
   let currentFingerSum=0;
+  let settingsOpen=false; // Sleduje, zda je nastavení otevřené
+  let tempSettings={}; // Dočasně uloží nastavení při otevření pro porovnání
 
   const $=id=>document.getElementById(id);
 
@@ -266,9 +268,64 @@
 
   function toggleSettings(){
     const p=$('settings-panel'), info=$('info');
-    const hidden = (p.style.display==='none' || p.style.display==='');
-    p.style.display= hidden?'flex':'none';
-    info.style.display= hidden?'block':'none';
+    const willBeOpen = (p.style.display==='none' || p.style.display==='');
+    
+    p.style.display= willBeOpen ? 'flex' : 'none';
+    info.style.display= willBeOpen ? 'block' : 'none';
+
+    if(willBeOpen){
+      // Otevírání nastavení
+      settingsOpen = true;
+      // Uložíme aktuální nastavení pro porovnání
+      tempSettings = {
+        dir: $('direction').value,
+        bits: $('bits').value
+      };
+      
+      // Skryjeme prvky
+      $('finger-toggle-btn').style.display='none';
+      $('theme-btn').style.display='none';
+      $('single-input').style.display='none';
+      $('back-btn').style.display='none';
+      $('clear-btn').style.display='none';
+      $('finger-panel').classList.remove('visible');
+      $('main-btn').style.display='none'; // Skryjeme tlačítko START/VÝSLEDEK
+      
+    } else {
+      // Zavírání nastavení
+      settingsOpen = false;
+      
+      // Zobrazíme zpět prvky, které byly skryty (kromě těch, co řídí stav hry)
+      $('theme-btn').style.display='block';
+      $('main-btn').style.display='block'; // Zobrazíme tlačítko zpět
+      
+      // Zjistíme, zda došlo ke změně
+      const changed = (tempSettings.dir !== $('direction').value || tempSettings.bits !== $('bits').value);
+      
+      if(changed){
+        // Pokud došlo ke změně, spustíme novou hru (to resetuje stav a zobrazí potřebné prvky)
+        startGame();
+      } else {
+        // Pokud nedošlo ke změně, obnovíme původní stav hry
+        if(state === 'playing'){
+          $('finger-toggle-btn').style.display='block';
+          $('single-input').style.display='block';
+          $('back-btn').style.display='flex';
+          $('clear-btn').style.display='flex';
+          if(fingerPanelVisible) $('finger-panel').classList.add('visible');
+          if($('direction').value==='dec2bin') $('keypad-bin').style.display='grid';
+          else $('keypad-dec').style.display='grid';
+        } else if(state === 'evaluated') {
+          // Po vyhodnocení zůstává input viditelný, ale bez tlačítek zpět/mazat
+          $('single-input').style.display='block';
+          $('finger-toggle-btn').style.display='block';
+          if(fingerPanelVisible) $('finger-panel').classList.add('visible');
+        } else {
+          // init stav
+          // Jen zobrazíme start tlačítko (už je výše)
+        }
+      }
+    }
   }
 
   function updateInfo(){
@@ -281,9 +338,13 @@
     $('info').innerText=`Rozsah: 0 až ${formatDecimal(maxNum)}`;
 
     updateTitle();
-    updateFingerDisplay();
-    if(state==='playing') startGame();
-    syncFingerPanelClass();
+    // Pozor: updateFingerDisplay a syncFingerPanelClass voláme až po zavření nastavení v toggleSettings
+    // Pokud je nastavení otevřené, nechceme měnit stav hry
+    if(!settingsOpen){
+       updateFingerDisplay();
+       if(state==='playing') startGame(); // Restart hry při změně, pokud hrajeme (ale settingsOpen to ošetří)
+       syncFingerPanelClass();
+    }
   }
 
   function handleMainAction(){
@@ -360,9 +421,14 @@
   function startGame(){
     state='playing';
     $('main-btn').innerText='VÝSLEDEK (KONTROLA)';
+    $('main-btn').style.display='block'; // Zobrazíme tlačítko (pro případ, že bylo skryté v nastavení)
     
     // Zobrazení tlačítka P při startu hry
     $('finger-toggle-btn').style.display='block';
+
+    // Vymažeme kontrolní výsledek při startu nové hry
+    localStorage.removeItem('binTrainHistory');
+    renderHistory();
 
     const bits=parseInt($('bits').value,10);
     const dir=$('direction').value;
