@@ -146,8 +146,8 @@
 <script>
   let state='init', currentDecValue=0, expectedAnswer='', expectedLength=0, currentDisplayBits=0, fingerPanelVisible=false;
   let currentFingerSum=0;
-  let settingsOpen=false; // Sleduje, zda je nastavení otevřené
-  let tempSettings={}; // Dočasně uloží nastavení při otevření pro porovnání
+  let settingsOpen=false; 
+  let tempSettings={}; 
 
   const $=id=>document.getElementById(id);
 
@@ -276,53 +276,56 @@
     if(willBeOpen){
       // Otevírání nastavení
       settingsOpen = true;
-      // Uložíme aktuální nastavení pro porovnání
       tempSettings = {
         dir: $('direction').value,
         bits: $('bits').value
       };
       
-      // Skryjeme prvky
+      // Skryjeme všechna tlačítka a prvky
       $('finger-toggle-btn').style.display='none';
       $('theme-btn').style.display='none';
       $('single-input').style.display='none';
       $('back-btn').style.display='none';
       $('clear-btn').style.display='none';
       $('finger-panel').classList.remove('visible');
-      $('main-btn').style.display='none'; // Skryjeme tlačítko START/VÝSLEDEK
+      $('main-btn').style.display='none'; 
+      
+      // Skryjeme klávesnice (0,1 i 0-9)
+      $('keypad-bin').style.display='none';
+      $('keypad-dec').style.display='none';
       
     } else {
       // Zavírání nastavení
       settingsOpen = false;
       
-      // Zobrazíme zpět prvky, které byly skryty (kromě těch, co řídí stav hry)
+      // Zobrazíme zpět hlavní tlačítka
       $('theme-btn').style.display='block';
-      $('main-btn').style.display='block'; // Zobrazíme tlačítko zpět
+      $('main-btn').style.display='block'; 
       
       // Zjistíme, zda došlo ke změně
       const changed = (tempSettings.dir !== $('direction').value || tempSettings.bits !== $('bits').value);
       
       if(changed){
-        // Pokud došlo ke změně, spustíme novou hru (to resetuje stav a zobrazí potřebné prvky)
+        // Pokud došlo ke změně, spustíme novou hru (to zajistí zobrazení inputu i klávesnic)
         startGame();
       } else {
-        // Pokud nedošlo ke změně, obnovíme původní stav hry
+        // Pokud nedošlo ke změně, obnovíme původní stav
         if(state === 'playing'){
-          $('finger-toggle-btn').style.display='block';
-          $('single-input').style.display='block';
-          $('back-btn').style.display='flex';
-          $('clear-btn').style.display='flex';
-          if(fingerPanelVisible) $('finger-panel').classList.add('visible');
-          if($('direction').value==='dec2bin') $('keypad-bin').style.display='grid';
-          else $('keypad-dec').style.display='grid';
+           $('finger-toggle-btn').style.display='block';
+           $('single-input').style.display='block';
+           $('back-btn').style.display='flex';
+           $('clear-btn').style.display='flex';
+           if(fingerPanelVisible) $('finger-panel').classList.add('visible');
+           // Obnovíme správnou klávesnici
+           if($('direction').value==='dec2bin') $('keypad-bin').style.display='grid';
+           else $('keypad-dec').style.display='grid';
         } else if(state === 'evaluated') {
-          // Po vyhodnocení zůstává input viditelný, ale bez tlačítek zpět/mazat
           $('single-input').style.display='block';
           $('finger-toggle-btn').style.display='block';
           if(fingerPanelVisible) $('finger-panel').classList.add('visible');
+          // V evaluated stavu jsou klávesnice skryté (input disabled), takže je neobnovujeme
         } else {
-          // init stav
-          // Jen zobrazíme start tlačítko (už je výše)
+           // init stav - nic dalšího nezobrazujeme
         }
       }
     }
@@ -338,11 +341,9 @@
     $('info').innerText=`Rozsah: 0 až ${formatDecimal(maxNum)}`;
 
     updateTitle();
-    // Pozor: updateFingerDisplay a syncFingerPanelClass voláme až po zavření nastavení v toggleSettings
-    // Pokud je nastavení otevřené, nechceme měnit stav hry
     if(!settingsOpen){
        updateFingerDisplay();
-       if(state==='playing') startGame(); // Restart hry při změně, pokud hrajeme (ale settingsOpen to ošetří)
+       if(state==='playing') startGame(); 
        syncFingerPanelClass();
     }
   }
@@ -421,12 +422,10 @@
   function startGame(){
     state='playing';
     $('main-btn').innerText='VÝSLEDEK (KONTROLA)';
-    $('main-btn').style.display='block'; // Zobrazíme tlačítko (pro případ, že bylo skryté v nastavení)
+    $('main-btn').style.display='block'; 
     
-    // Zobrazení tlačítka P při startu hry
     $('finger-toggle-btn').style.display='block';
 
-    // Vymažeme kontrolní výsledek při startu nové hry
     localStorage.removeItem('binTrainHistory');
     renderHistory();
 
@@ -570,6 +569,9 @@
 
     $('back-btn').style.display='none';
     $('clear-btn').style.display='none';
+    // Po vyhodnocení skryjeme klávesnice
+    $('keypad-bin').style.display='none';
+    $('keypad-dec').style.display='none';
 
     if(dir==='dec2bin' && fingerPanelVisible){
       const sum=currentFingerSum;
@@ -641,7 +643,6 @@
   }
 
   function saveToHistory(text,isCorrect){
-    // Uložíme pouze poslední výsledek (pole o délce 1)
     const history=[{text,isCorrect}];
     localStorage.setItem('binTrainHistory',JSON.stringify(history));
     renderHistory();
@@ -662,7 +663,6 @@
   }
 
   function initApp(){
-    // Automatické smazání historie při otevření
     localStorage.removeItem('binTrainHistory');
 
     const savedTheme=localStorage.getItem('binTrainTheme')||'light';
@@ -692,9 +692,8 @@
     updateInfo();
     renderHistory();
     
-    // Inicializace stavu - P tlačítko skryté
     state='init';
-    $('finger-toggle-btn').style.display='none'; // Skrytí P na začátku
+    $('finger-toggle-btn').style.display='none'; 
     $('main-btn').innerText='START';
     $('question-display').style.display='none';
     $('single-input').style.display='none';
