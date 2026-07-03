@@ -263,7 +263,7 @@
 
     if($('direction').value === 'dec2bin'){
       if(fingerPanelVisible){
-        // Aktivace P: 
+        // --- AKTIVACE P ---
         $('single-input').value='';
         $('single-input').disabled=true;
         
@@ -271,24 +271,31 @@
         $('back-btn').style.display='none';
         $('clear-btn').style.display='none';
         
-        // Reset součtu při aktivaci (přepnutí z neaktivního na aktivní)
+        // Reset součtu při aktivaci
         currentFingerSum = 0;
         document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
-      } else {
-        // Deaktivace P:
-        $('single-input').value='';
-        $('single-input').disabled=false;
         
-        if(state === 'playing'){
-          $('keypad-bin').style.display='grid';
-          $('back-btn').style.display='flex';
-          $('clear-btn').style.display='flex';
+        // Pokud jsme už ve hře (playing), po aktivaci P chceme, aby input byl disabled a prsty resetovány (hotovo)
+        // Pokud jsme v init, nic se nestane, uživatel musí stisknout Start
+        
+      } else {
+        // --- DEAKTIVACE P ---
+        
+        // Pokud jsme ve hře, vygenerujeme NOVÝ PŘÍKLAD
+        if(state === 'playing') {
+          startGame();
+        } else if(state === 'evaluated') {
+          // Pokud byl příklad vyhodnocen, deaktivace P znamená Start nového příkladu
+          startGame();
+        } else {
+          // Init stav - nic speciálního
+          $('single-input').value='';
+          $('single-input').disabled=false;
+          $('single-input').focus();
         }
-        $('single-input').focus();
       }
     }
 
-    // Pokud není viditelný, nic dalšího neřešíme
     if(!fingerPanelVisible) return;
 
     updateFingerDisplay();
