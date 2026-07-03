@@ -85,7 +85,7 @@
 <body data-theme="light">
 <div class="app-container">
   <div class="header">
-    <h1 id="app-title">Bináry</h>
+    <h1 id="app-title">Bináry</h1>
     <div class="header-icons">
       <button class="finger-toggle-btn" id="finger-toggle-btn" onclick="toggleFingerPanel()">P</button>
       <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
@@ -263,19 +263,15 @@
         $('single-input').className='';
         
         // 2. Pokud jsme VE HŘE, vygenerujeme NOVÝ PŘÍKLAD.
-        // Tím zajistíme, že starý "rozpracovaný" pokus zmizí a začíná se čistě s prsty.
         if(state === 'playing') {
           startGame();
-          // startGame() už nastaví input disabled, vymaže prsty a skryje tlačítka.
-          // Důležité: startGame respektuje fingerPanelVisible=true, takže panel P zůstane otevřený.
         } else if(state === 'evaluated') {
-           // Pokud jsme VYHODNOCENI (po kontrole), jen připravíme UI pro P
+           // Pokud jsme VYHODNOCENI, jen připravíme UI pro P
            $('single-input').disabled=true;
            $('keypad-bin').style.display='none';
            $('back-btn').style.display='none';
            $('clear-btn').style.display='none';
-           // Prsty NEVYNULUJEME! Necháme uživateli jeho konstrukci prohlédnout.
-           // currentFingerSum se zachová.
+           // Prsty NEVYNULUJEME!
            document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
              const vv=Number(sq.dataset.value);
              sq.classList.toggle('on',(currentFingerSum & vv)===vv);
@@ -292,7 +288,6 @@
         
       } else {
         // --- DEAKTIVACE P ---
-        // Stejně jako předtím - simulace START (nový příklad pro ruční zadávání)
         handleMainAction();
       }
     }
@@ -381,7 +376,6 @@
           $('single-input').style.display='block';
           $('finger-toggle-btn').style.display='block';
           if(fingerPanelVisible) $('finger-panel').classList.add('visible');
-          // Zde také necháme prsty v jejich stavu (uživatel se dívá na výsledek)
           if($('direction').value==='dec2bin' && fingerPanelVisible) {
              document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
                const vv=Number(sq.dataset.value);
@@ -665,7 +659,8 @@
       $('main-btn').innerText='START';
       saveToHistory(`${formatDecimal(currentDecValue)} = ${correctFormattedAnswer}`,isCorrect);
       
-      updateFingerDisplay(); 
+      // DŮLEŽITÉ: ZDE ODEBRÁNO updateFingerDisplay()
+      // Prsty zůstávají v nastavené pozici pro porovnání.
       return;
     }
 
