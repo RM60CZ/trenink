@@ -1,7 +1,256 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Bináry</title>
+  <style>
+    :root{--bg:#f5f5f7;--t:#1d1d1f;--c:#fff;--b:#d2d2d7;--btn:#e8e8ed;--btnh:#d2d2d7;--p:#0071e3;--pt:#fff;--ok:#34c759;--er:#ff3b30;}
+    [data-theme="dark"]{--bg:#000;--t:#f5f5f7;--c:#1c1c1e;--b:#38383a;--btn:#2c2c2e;--btnh:#3a3a3c;}
+    *{box-sizing:border-box;font-family:-apple-system,sans-serif;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--t);display:flex;justify-content:center;padding:10px;min-height:100vh;}
+    .app-container{background:var(--c);border-radius:12px;padding:16px;width:100%;max-width:400px;box-shadow:0 4px 12px rgba(0,0,0,.1);display:flex;flex-direction:column;gap:12px;}
+    .header{display:flex;justify-content:space-between;align-items:center;}
+    .header h1{font-size:18px;white-space:pre-wrap;}
+    .header-icons{display:flex;gap:12px;align-items:center;}
+    .icon-btn{background:none;border:none;font-size:20px;cursor:pointer;color:var(--t);}
+    .finger-toggle-btn{background:none;border:none;font-size:24px;font-weight:bold;cursor:pointer;line-height:1;padding:0;color:var(--t);}
+
+    .settings-group{display:none;flex-direction:column;gap:8px;margin-top:4px;}
+    select{width:100%;padding:6px;border-radius:6px;border:1px solid var(--b);background:var(--c);color:var(--t);}
+    .info-text{font-size:12px;color:#86868b;text-align:center;display:none;}
+
+    .finger-panel{display:none;justify-content:center;overflow:hidden;}
+    .finger-panel.visible{display:flex;}
+    .finger-panel.dec-mode .finger-sq{pointer-events:auto;}
+    .finger-grid{display:grid;grid-template-columns:repeat(5,56px);grid-template-rows:repeat(3,calc(40px * 2));column-gap:14px;row-gap:26px;justify-content:center;align-content:center;max-width:100%;touch-action:manipulation;}
+    .finger-sq{
+      width:56px;height:40px;background:#d6d6db;border:none;border-radius:12px;
+      user-select:none;-webkit-tap-highlight-color:transparent;align-self:end;
+      transform-origin:bottom center;transition:transform .18s ease,background-color .18s ease,box-shadow .18s ease;
+      box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 3px 10px rgba(0,0,0,.28);
+      pointer-events:none;
+    }
+    .finger-sq.on{background:#8fa39a;transform:scaleY(2);box-shadow:0 1px 0 rgba(255,255,255,.15) inset,0 8px 18px rgba(0,0,0,.35);}
+
+    .game-area{min-height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+    
+    .question{font-size:28px;font-weight:bold;display:none;text-align:center;}
+
+    .input-with-back{display:flex;align-items:center;gap:8px;width:100%;justify-content:center;}
+    #single-input{width:180px;padding:8px;border-radius:6px;text-align:center;border:2px solid var(--b);background:var(--c);color:var(--t);font-size:18px;font-weight:bold;outline:none;height:44px;display:none;}
+    #single-input:disabled{background:#eee;color:#aaa;border-color:#ccc;}
+    #single-input.success{color:var(--ok);border-color:var(--ok);}
+    #single-input.error{color:var(--er);border-color:var(--er);}
+
+    .back-btn,.clear-btn{
+      background:var(--btn);color:var(--t);border:none;border-radius:6px;font-size:14px;font-weight:bold;cursor:pointer;height:44px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    }
+    .back-btn{width:48px;padding:0;}
+    .clear-btn{padding:0 16px;}
+    .back-btn:active,.clear-btn:active{background:var(--btnh);}
+
+    .input-with-back.dec-mode .clear-btn,.input-with-back.bin-mode .clear-btn{
+      flex:1;max-width:calc(100% - 180px - 8px - 48px - 8px);
+    }
+
+    .keypad{display:none;gap:6px;width:100%;grid-auto-flow:row;}
+    .keypad.bin{grid-template-columns:1fr;width:180px;margin-right:auto;margin-left:0;}
+    .keypad.dec{grid-template-columns:repeat(3,1fr);}
+    .key-btn{background:var(--btn);color:var(--t);border:none;padding:10px;border-radius:6px;font-size:16px;font-weight:bold;cursor:pointer;}
+    .key-btn:active{background:var(--btnh);}
+    .key-0{grid-column:span 2;}
+
+    .main-action{width:100%;padding:12px;border-radius:8px;background:var(--p);color:var(--pt);border:none;font-size:16px;font-weight:bold;cursor:pointer;}
+    .history-container{border-top:1px solid var(--b);padding-top:10px;}
+    .history-title{font-size:14px;font-weight:bold;margin-bottom:8px;}
+    .history-list{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:8px;}
+    .history-item{
+      padding:4px 8px;border-radius:4px;font-family:"Courier New","Lucida Console",Consolas,monospace;font-size:14px;display:inline-block;background:var(--c);color:var(--t);
+      border:1px solid transparent;font-feature-settings:"zero" 0;
+    }
+    .history-item.correct{color:var(--ok);border-color:var(--ok);}
+    .history-item.error{color:var(--er);border-color:var(--er);}
+
+    @media (max-width:520px){
+      .finger-grid{grid-template-columns:repeat(5,48px);grid-template-rows:repeat(3,calc(36px * 2));column-gap:10px;row-gap:22px;}
+      .finger-sq{width:48px;height:36px;}
+    }
+    @media (max-width:390px){
+      .finger-grid{grid-template-columns:repeat(5,42px);grid-template-rows:repeat(3,calc(34px * 2));column-gap:8px;row-gap:20px;}
+      .finger-sq{width:42px;height:34px;}
+    }
+  </style>
+</head>
+<body data-theme="light">
+<div class="app-container">
+  <div class="header">
+    <h1 id="app-title">Bináry</h1>
+    <div class="header-icons">
+      <button class="finger-toggle-btn" id="finger-toggle-btn" onclick="toggleFingerPanel()">P</button>
+      <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
+      <button class="icon-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
+    </div>
+  </div>
+
+  <div class="finger-panel" id="finger-panel">
+    <div class="finger-grid" id="finger-grid"></div>
+  </div>
+
+  <div class="settings-group" id="settings-panel">
+    <select id="direction" onchange="updateInfo()">
+      <option value="dec2bin">Decimální na Binární</option>
+      <option value="bin2dec">Binární na Decimální</option>
+    </select>
+    <select id="bits" onchange="updateInfo()"></select>
+  </div>
+
+  <div class="info-text" id="info"></div>
+
+  <div class="game-area">
+    <div class="question" id="question-display"></div>
+
+    <div class="input-with-back" id="input-container">
+      <input type="text" id="single-input"
+             inputmode="none" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <button class="back-btn" id="back-btn" onclick="deleteLeft()" style="display:none;">Zpět</button>
+      <button class="clear-btn" id="clear-btn" onclick="clearAll()" style="display:none;">Smazat</button>
+    </div>
+
+    <div class="keypad bin" id="keypad-bin">
+      <button class="key-btn" onclick="typeVal('0')">0</button>
+      <button class="key-btn" onclick="typeVal('1')">1</button>
+    </div>
+
+    <div class="keypad dec" id="keypad-dec">
+      <button class="key-btn" onclick="typeVal('7')">7</button>
+      <button class="key-btn" onclick="typeVal('8')">8</button>
+      <button class="key-btn" onclick="typeVal('9')">9</button>
+      <button class="key-btn" onclick="typeVal('4')">4</button>
+      <button class="key-btn" onclick="typeVal('5')">5</button>
+      <button class="key-btn" onclick="typeVal('6')">6</button>
+      <button class="key-btn" onclick="typeVal('1')">1</button>
+      <button class="key-btn" onclick="typeVal('2')">2</button>
+      <button class="key-btn" onclick="typeVal('3')">3</button>
+      <button class="key-btn key-0" onclick="typeVal('0')">0</button>
+    </div>
+  </div>
+
+  <button class="main-action" id="main-btn" onclick="handleMainAction()">START</button>
+
+  <div class="history-container" id="history-container" style="display:none;">
+    <div class="history-title">Kontrolní výsledek:</div>
+    <div class="history-list" id="history-list"></div>
+  </div>
+</div>
+
+<script>
+  // Stav aplikace
+  let state='init', currentDecValue=0, expectedAnswer='', expectedLength=0, currentDisplayBits=0;
+  
+  // GLOBÁLNÍ stav panelu prstů
+  let fingerPanelVisible = false;
+  
+  let currentFingerSum=0;
+  let settingsOpen=false; 
+  let tempSettings={}; 
+
+  const $=id=>document.getElementById(id);
+
+  const formatDecimal=num=>num.toLocaleString('cs-CZ');
+  const removeLeadingZeros=str=>{
+    const clean=str.replace(/\s/g,'');
+    const stripped=clean.replace(/^0+/,'');
+    return stripped===''?'0':stripped;
+  };
+  const formatBinary=binStr=>{
+    const clean=binStr.replace(/\s/g,'');
+    if(clean==='') return '';
+    let out='',count=0;
+    for(let i=clean.length-1;i>=0;i--){
+      out=clean[i]+out;
+      if(++count%5===0 && i>0) out=' '+out;
+    }
+    return out;
+  };
+  const formatBinaryForDisplay=(binStr,displayBits)=>{
+    let clean=binStr.replace(/\s/g,'').replace(/^0+/,'');
+    if(clean==='') clean='0';
+    while(clean.length<displayBits) clean='0'+clean;
+    clean=clean.slice(-displayBits);
+
+    let out='',count=0;
+    for(let i=clean.length-1;i>=0;i--){
+      out=clean[i]+out;
+      if(++count%5===0 && i>0) out=' '+out;
+    }
+    return out;
+  };
+  const formatDecimalInput=value=>{
+    let clean=value.replace(/\s/g,'').replace(/\D/g,'');
+    if(clean==='') return '';
+    const num=parseInt(clean,10);
+    return isNaN(num)?'':num.toLocaleString('cs-CZ').replace(/\./g,' ');
+  };
+
+  function updateTitle(){
+    $('app-title').innerText = $('direction').value==='dec2bin'
+      ? 'Bináry   DEC → BIN'
+      : 'Bináry   BIN → DEC';
+  }
+
+  function syncFingerPanelClass(){
+    const panel=$('finger-panel');
+    const dir=$('direction').value;
+    panel.classList.toggle('dec-mode', fingerPanelVisible && dir==='dec2bin');
+  }
+
+  function initFingerGrid(){
+    const grid=$('finger-grid');
+    grid.innerHTML='';
+    const rows=3, cols=5;
+
+    const bitExponent=(r,c)=>(rows-1-r)*cols+(cols-1-c);
+    const bitValue=(r,c)=>2**bitExponent(r,c);
+
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        const el=document.createElement('div');
+        el.className='finger-sq';
+        el.dataset.value=String(bitValue(r,c));
+        el.addEventListener('click',()=>{
+          if(state!=='playing') return;
+          if(!($('direction').value==='dec2bin' && fingerPanelVisible)) return;
+
+          const v=Number(el.dataset.value);
+          currentFingerSum = ((currentFingerSum & v)===v) ? (currentFingerSum & ~v) : (currentFingerSum | v);
+
+          document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
+            const vv=Number(sq.dataset.value);
+            sq.classList.toggle('on',(currentFingerSum & vv)===vv);
+          });
+        });
+        grid.appendChild(el);
+      }
+    }
+  }
+
+  function updateFingerDisplay(){
+    const dir=$('direction').value;
+    const fingers=document.querySelectorAll('#finger-grid .finger-sq');
+    fingers.forEach(x=>x.classList.remove('on'));
+    
+    if(dir==='bin2dec'){
+      fingers.forEach(el=>{
+        const v=Number(el.dataset.value);
+        el.classList.toggle('on',(currentDecValue & v)===v);
+      });
+    }
+  }
+
   function toggleFingerPanel(){
     fingerPanelVisible = !fingerPanelVisible;
     
-    // Aktualizace DOM
     $('finger-panel').classList.toggle('visible', fingerPanelVisible);
     syncFingerPanelClass();
 
@@ -36,3 +285,483 @@
 
     updateFingerDisplay();
   }
+
+  function toggleTheme(){
+    const body=document.body;
+    const isDark=body.dataset.theme==='dark';
+    const newTheme=isDark?'light':'dark';
+    body.dataset.theme=newTheme;
+    $('theme-btn').innerText=newTheme==='dark'?'☀️':'🌙';
+    localStorage.setItem('binTrainTheme',newTheme);
+  }
+
+  function toggleSettings(){
+    const p=$('settings-panel'), info=$('info');
+    const willBeOpen = (p.style.display==='none' || p.style.display==='');
+    
+    p.style.display= willBeOpen ? 'flex' : 'none';
+    info.style.display= willBeOpen ? 'block' : 'none';
+
+    if(willBeOpen){
+      settingsOpen = true;
+      tempSettings = {
+        dir: $('direction').value,
+        bits: $('bits').value
+      };
+      
+      $('finger-toggle-btn').style.display='none';
+      $('theme-btn').style.display='none';
+      $('single-input').style.display='none';
+      $('back-btn').style.display='none';
+      $('clear-btn').style.display='none';
+      $('finger-panel').classList.remove('visible');
+      $('main-btn').style.display='none'; 
+      
+      $('keypad-bin').style.display='none';
+      $('keypad-dec').style.display='none';
+      $('question-display').style.display='none';
+      
+    } else {
+      settingsOpen = false;
+      
+      $('theme-btn').style.display='block';
+      $('main-btn').style.display='block'; 
+      
+      const changed = (tempSettings.dir !== $('direction').value || tempSettings.bits !== $('bits').value);
+      
+      if(changed){
+        startGame();
+      } else {
+        if(state === 'playing'){
+           $('finger-toggle-btn').style.display='block';
+           $('question-display').style.display='block'; 
+           $('single-input').style.display='block';
+           if(fingerPanelVisible) $('finger-panel').classList.add('visible');
+           
+           if($('direction').value==='dec2bin') {
+             if(!fingerPanelVisible) {
+               $('keypad-bin').style.display='grid';
+               $('back-btn').style.display='flex';
+               $('clear-btn').style.display='flex';
+               $('single-input').disabled=false;
+             } else {
+               $('keypad-bin').style.display='none';
+               $('back-btn').style.display='none';
+               $('clear-btn').style.display='none';
+               $('single-input').disabled=true;
+               document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
+                 const vv=Number(sq.dataset.value);
+                 sq.classList.toggle('on',(currentFingerSum & vv)===vv);
+               });
+             }
+           } else {
+             $('keypad-dec').style.display='grid';
+             $('back-btn').style.display='flex';
+             $('clear-btn').style.display='flex';
+             $('single-input').disabled=false;
+           }
+        } else if(state === 'evaluated') {
+          $('question-display').style.display='block'; 
+          $('single-input').style.display='block';
+          $('finger-toggle-btn').style.display='block';
+          if(fingerPanelVisible) $('finger-panel').classList.add('visible');
+        }
+      }
+    }
+  }
+
+  function updateInfo(){
+    const bits=parseInt($('bits').value,10);
+    const dir=$('direction').value;
+    localStorage.setItem('binTrainBits',bits);
+    localStorage.setItem('binTrainDir',dir);
+
+    const maxNum=2**bits - 1;
+    $('info').innerText=`Rozsah: 0 až ${formatDecimal(maxNum)}`;
+
+    updateTitle();
+    syncFingerPanelClass();
+  }
+
+  function handleMainAction(){
+    if(state==='init'){
+      startGame();
+      return;
+    }
+    if(state==='playing') checkAnswer();
+    else if(state==='evaluated') startGame();
+  }
+
+  document.addEventListener('keydown',e=>{
+    if(e.key!=='Enter') return;
+    e.preventDefault();
+    if(state==='init') handleMainAction();
+    else if(state==='playing') checkAnswer();
+  });
+
+  function computeCursorForDigits(formatted, originalValue, cursorPosition, direction){
+    let digitsBefore=0;
+    for(let i=0;i<cursorPosition && i<originalValue.length;i++){
+      if(direction==='dec2bin' ? /[01]/.test(originalValue[i]) : /\d/.test(originalValue[i])) digitsBefore++;
+    }
+    let newCursorPos=0, digitCount=0;
+    for(let i=0;i<formatted.length;i++){
+      if(direction==='dec2bin' ? /[01]/.test(formatted[i]) : /\d/.test(formatted[i])) digitCount++;
+      if(digitCount===digitsBefore){ newCursorPos=i+1; break; }
+      newCursorPos=i+1;
+    }
+    return newCursorPos;
+  }
+
+  $('single-input').addEventListener('input',function(){
+    if(this.disabled) return;
+
+    const dir=$('direction').value;
+    const input=this;
+    const cursorPosition=input.selectionStart;
+    const originalValue=input.value;
+
+    if(dir==='dec2bin'){
+      if(/[^01\s]/.test(input.value)){
+        const invalidChar=input.value.match(/[^01\s]/);
+        alert(`Nepovolený znak: "${invalidChar}". Povoleno pouze 0, 1 a mezera.`);
+        input.value=input.value.replace(/[^01\s]/g,'');
+        return;
+      }
+      let clean=input.value.replace(/\s/g,'');
+      if(clean.length>15){
+        alert("Maximální počet 0 a 1 je 15, překročili jste limit, opravte!");
+        clean=clean.slice(0,15);
+      }
+
+      let formatted='',count=0;
+      for(let i=clean.length-1;i>=0;i--){
+        formatted=clean[i]+formatted;
+        if(++count%5===0 && i>0) formatted=' '+formatted;
+      }
+
+      input.value=formatted;
+      input.selectionStart=input.selectionEnd=computeCursorForDigits(formatted,originalValue,cursorPosition,'dec2bin');
+    }else{
+      if(/[^\d\s]/.test(input.value)){
+        const invalidChar=input.value.match(/[^\d\s]/);
+        alert(`Nepovolený znak: "${invalidChar}". Povolena pouze čísla.`);
+        input.value=input.value.replace(/[^\d\s]/g,'');
+        return;
+      }
+
+      const formatted=formatDecimalInput(input.value);
+      input.value=formatted;
+      input.selectionStart=input.selectionEnd=computeCursorForDigits(formatted,originalValue,cursorPosition,'bin2dec');
+    }
+  });
+
+  function startGame(){
+    state='playing';
+    $('main-btn').innerText='VÝSLEDEK (KONTROLA)';
+    $('main-btn').style.display='block'; 
+    
+    $('finger-toggle-btn').style.display='block';
+
+    currentFingerSum = 0;
+    
+    $('finger-panel').classList.toggle('visible', fingerPanelVisible);
+    syncFingerPanelClass();
+    
+    document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
+
+    localStorage.removeItem('binTrainHistory');
+    renderHistory();
+
+    const bits=parseInt($('bits').value,10);
+    const dir=$('direction').value;
+    const maxNum=2**bits - 1;
+
+    currentDecValue=Math.floor(Math.random()*(maxNum+1));
+    const binString=currentDecValue.toString(2);
+
+    $('question-display').style.display='block';
+    $('single-input').style.display='block';
+    
+    if(dir === 'dec2bin'){
+      if(fingerPanelVisible){
+        $('single-input').disabled=true;
+        $('single-input').value='';
+        $('single-input').className='';
+        $('back-btn').style.display='none';
+        $('clear-btn').style.display='none';
+        $('keypad-bin').style.display='none';
+      } else {
+        $('single-input').disabled=false;
+        $('single-input').value='';
+        $('single-input').className='';
+        $('back-btn').style.display='flex';
+        $('clear-btn').style.display='flex';
+        $('keypad-bin').style.display='grid';
+        $('single-input').focus();
+      }
+      
+      $('question-display').innerText=formatDecimal(currentDecValue);
+      expectedAnswer=binString;
+      expectedLength=bits;
+      $('keypad-dec').style.display='none';
+      $('input-container').className='input-with-back bin-mode';
+
+    }else{
+      $('single-input').disabled=false;
+      $('single-input').value='';
+      $('single-input').className='';
+      $('back-btn').style.display='flex';
+      $('clear-btn').style.display='flex';
+      $('single-input').focus();
+      
+      currentDisplayBits = bits===5 ? 5 : (bits<=10 ? 10 : 15);
+      $('question-display').innerText=formatBinaryForDisplay(binString,currentDisplayBits);
+      expectedAnswer=currentDecValue.toString();
+      expectedLength=maxNum.toString().length;
+
+      $('keypad-bin').style.display='none';
+      $('keypad-dec').style.display='grid';
+      $('input-container').className='input-with-back dec-mode';
+      
+      updateFingerDisplay();
+    }
+  }
+
+  function deleteLeft(){
+    if(state!=='playing') return;
+    const input=$('single-input'), dir=$('direction').value;
+
+    const cursorPos=input.selectionStart;
+    if(cursorPos===0) return;
+
+    const value=input.value;
+    let deletePos=-1;
+    for(let i=cursorPos-1;i>=0;i--){
+      if(dir==='dec2bin'){ if(/[01]/.test(value[i])){ deletePos=i; break; } }
+      else{ if(/\d/.test(value[i])){ deletePos=i; break; } }
+    }
+    if(deletePos===-1) return;
+
+    const newValue=value.slice(0,deletePos)+value.slice(deletePos+1);
+
+    if(dir==='dec2bin'){
+      const clean=newValue.replace(/\s/g,'');
+      let formatted='',count=0;
+      for(let i=clean.length-1;i>=0;i--){
+        formatted=clean[i]+formatted;
+        if(++count%5===0 && i>0) formatted=' '+formatted;
+      }
+      input.value=formatted;
+      input.selectionStart=input.selectionEnd=computeCursorForDigits(formatted,value,cursorPos,'dec2bin');
+    }else{
+      const formatted=formatDecimalInput(newValue);
+      input.value=formatted;
+      input.selectionStart=input.selectionEnd=computeCursorForDigits(formatted,value,cursorPos,'bin2dec');
+    }
+    input.focus();
+  }
+
+  function clearAll(){
+    if(state!=='playing') return;
+    $('single-input').value='';
+    $('single-input').focus();
+  }
+
+  function typeVal(val){
+    if(state!=='playing') return;
+    const dir=$('direction').value;
+    const input=$('single-input');
+
+    const start=input.selectionStart, end=input.selectionEnd;
+    const value=input.value;
+    const hasSelection=start!==end;
+
+    if(dir==='bin2dec'){
+      if(!hasSelection && value.replace(/\s/g,'').length>=6) return;
+      const newValue=value.slice(0,start)+val+value.slice(end);
+      input.value=formatDecimalInput(newValue);
+
+      input.selectionStart=input.selectionEnd=computeCursorForDigits(input.value,value,start,'bin2dec');
+      input.focus();
+      return;
+    }
+
+    if(!['0','1',' '].includes(val)){
+      alert("Nepovolený znak! Povoleno pouze 0, 1 a mezera.");
+      return;
+    }
+    if(!hasSelection && value.replace(/\s/g,'').length>=15){
+      alert("Maximální počet 0 a 1 je 15, překročili jste limit, opravte!");
+      return;
+    }
+
+    let newValue=value.slice(0,start)+val+value.slice(end);
+    let clean=newValue.replace(/\s/g,'');
+    if(clean.length>15){
+      alert("Maximální počet 0 a 1 je 15, překročili jste limit, opravte!");
+      clean=clean.slice(0,15);
+    }
+
+    let formatted='',count=0;
+    for(let i=clean.length-1;i>=0;i--){
+      formatted=clean[i]+formatted;
+      if(++count%5===0 && i>0) formatted=' '+formatted;
+    }
+    input.value=formatted;
+    input.selectionStart=input.selectionEnd=formatted.length;
+    input.focus();
+  }
+
+  function checkAnswer(){
+    const dir=$('direction').value;
+    const input=$('single-input');
+    const rawValue=input.value.trim();
+
+    $('back-btn').style.display='none';
+    $('clear-btn').style.display='none';
+    $('keypad-bin').style.display='none';
+    $('keypad-dec').style.display='none';
+
+    let isCorrect=false;
+    let correctFormattedAnswer='';
+
+    if(dir==='dec2bin' && fingerPanelVisible){
+      const sum=currentFingerSum;
+      isCorrect=(sum===0 || sum===currentDecValue);
+      correctFormattedAnswer=formatBinary(expectedAnswer);
+      
+      input.value = correctFormattedAnswer;
+      input.className=isCorrect?'success':'error';
+      input.disabled=true;
+
+      state='evaluated';
+      $('main-btn').innerText='START';
+      saveToHistory(`${formatDecimal(currentDecValue)} = ${correctFormattedAnswer}`,isCorrect);
+      
+      updateFingerDisplay(); 
+      return;
+    }
+
+    if(dir==='bin2dec'){
+      if(rawValue===''){
+        state='evaluated';
+        $('main-btn').innerText='START';
+        input.disabled=true;
+        input.value=formatDecimal(parseInt(expectedAnswer,10));
+        input.className='';
+        updateFingerDisplay();
+        return;
+      }
+      const cleanUser=removeLeadingZeros(rawValue);
+      const cleanExpected=removeLeadingZeros(expectedAnswer);
+      isCorrect=cleanUser===cleanExpected;
+      correctFormattedAnswer=formatDecimal(parseInt(cleanExpected,10));
+
+      state='evaluated';
+      $('main-btn').innerText='START';
+      input.disabled=true;
+      input.className=isCorrect?'success':'error';
+      
+      if(isCorrect) input.value=correctFormattedAnswer;
+
+      const binForHistory=formatBinary(currentDecValue.toString(2));
+      saveToHistory(`${binForHistory} = ${correctFormattedAnswer}`,isCorrect);
+      updateFingerDisplay();
+      return;
+    }
+
+    if(rawValue===''){
+      state='evaluated';
+      $('main-btn').innerText='START';
+      input.disabled=true;
+      input.value=formatBinary(expectedAnswer);
+      input.className='';
+      updateFingerDisplay();
+      return;
+    }
+
+    const cleanUser=removeLeadingZeros(rawValue);
+    const cleanExpected=removeLeadingZeros(expectedAnswer);
+    isCorrect=cleanUser===cleanExpected;
+    correctFormattedAnswer=formatBinary(cleanExpected);
+
+    state='evaluated';
+    $('main-btn').innerText='START';
+    input.disabled=true;
+    input.className=isCorrect?'success':'error';
+
+    if(isCorrect) input.value=correctFormattedAnswer;
+
+    saveToHistory(`${formatDecimal(currentDecValue)} = ${correctFormattedAnswer}`,isCorrect);
+    updateFingerDisplay();
+  }
+
+  function saveToHistory(text,isCorrect){
+    const history=[{text,isCorrect}];
+    localStorage.setItem('binTrainHistory',JSON.stringify(history));
+    renderHistory();
+  }
+
+  function renderHistory(){
+    const history=JSON.parse(localStorage.getItem('binTrainHistory')||'[]');
+    const container=$('history-container'), list=$('history-list');
+    list.innerHTML='';
+    if(history.length===0){ container.style.display='none'; return; }
+    container.style.display='block';
+    history.forEach(it=>{
+      const div=document.createElement('div');
+      div.className=`history-item ${it.isCorrect?'correct':'error'}`;
+      div.innerText=it.text;
+      list.appendChild(div);
+    });
+  }
+
+  function initApp(){
+    localStorage.removeItem('binTrainHistory');
+
+    const savedTheme=localStorage.getItem('binTrainTheme')||'light';
+    document.body.dataset.theme=savedTheme;
+    $('theme-btn').innerText=savedTheme==='dark'?'☀️':'🌙';
+
+    const bitSelect=$('bits');
+    bitSelect.innerHTML='';
+    for(let i=5;i<=15;i++){
+      const maxVal=2**i - 1;
+      const opt=document.createElement('option');
+      opt.value=i;
+      opt.innerHTML=`${i} bitů ≤ ${formatDecimal(maxVal)}`;
+      bitSelect.appendChild(opt);
+    }
+
+    const savedDir=localStorage.getItem('binTrainDir');
+    if(savedDir) $('direction').value=savedDir;
+    const savedBits=localStorage.getItem('binTrainBits');
+    if(savedBits) $('bits').value=savedBits;
+
+    $('settings-panel').style.display='none';
+    $('info').style.display='none';
+
+    initFingerGrid();
+    updateTitle();
+    updateInfo();
+    renderHistory();
+    
+    state='init';
+    fingerPanelVisible = false;
+    
+    $('finger-toggle-btn').style.display='none'; 
+    $('main-btn').innerText='START';
+    $('question-display').style.display='none';
+    $('single-input').style.display='none';
+    $('back-btn').style.display='none';
+    $('clear-btn').style.display='none';
+    $('keypad-bin').style.display='none';
+    $('keypad-dec').style.display='none';
+    $('finger-panel').classList.remove('visible');
+  }
+
+  window.onload=initApp;
+</script>
+</body>
+</html>
