@@ -260,11 +260,10 @@
         $('back-btn').style.display='none';
         $('clear-btn').style.display='none';
         
-        // Reset součtu při aktivaci (pokud jsme už ve hře, jinak se resetuje v startGame)
-        if(state === 'playing') {
-          currentFingerSum = 0;
-          document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
-        }
+        // Reset součtu při aktivaci
+        currentFingerSum = 0;
+        document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
+        
       } else {
         // Deaktivace P:
         $('single-input').value='';
@@ -335,8 +334,10 @@
       const changed = (tempSettings.dir !== $('direction').value || tempSettings.bits !== $('bits').value);
       
       if(changed){
+        // Pokud se nastavení změnilo, spustíme novou hru (respektující aktuální stav fingerPanelVisible)
         startGame();
       } else {
+        // Pokud se nastavení nezměnilo, obnovíme UI podle aktuálního stavu
         if(state === 'playing'){
            $('finger-toggle-btn').style.display='block';
            $('question-display').style.display='block'; 
@@ -381,11 +382,17 @@
     $('info').innerText=`Rozsah: 0 až ${formatDecimal(maxNum)}`;
 
     updateTitle();
-    if(!settingsOpen){
-       updateFingerDisplay();
-       if(state==='playing') startGame(); 
-       syncFingerPanelClass();
+    
+    // Důležitá oprava: Pokud jsme již ve hře, změna nastavení v dropdownu
+    // NEspouští automaticky novou hru, která by resetovala prsty.
+    // Hra se spustí jen po zavření nastavení (v toggleSettings).
+    if(!settingsOpen && state==='init'){
+       startGame(); 
     }
+    
+    // Pokud jsme ve hře a změníme nastavení, jen aktualizujeme info,
+    // ale nezasahujeme do běžící hry.
+    syncFingerPanelClass();
   }
 
   function handleMainAction(){
@@ -468,14 +475,15 @@
     
     $('finger-toggle-btn').style.display='block';
 
-    // Důležité: NEMĚNÍME fingerPanelVisible!
-    // Pokud byl aktivní, zůstává aktivní.
+    // Zde je klíčová oprava:
+    // NIKDY neresetujeme fingerPanelVisible na false.
+    // Pokud byl true (aktivní), zůstane true.
     
-    // Reset součtu prstů pro novou hru (ať je panel vidět nebo ne)
+    // Reset součtu prstů pro nový příklad (vynulujeme hodnotu, ale panel necháme viditelný)
     currentFingerSum = 0;
     document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
     
-    // Viditelnost panelu podle STAVU (který se nezměnil)
+    // Zajistíme, že panel je viditelný podle PŘEDCHOZÍHO stavu (který se nezměnil)
     $('finger-panel').classList.toggle('visible', fingerPanelVisible);
     syncFingerPanelClass();
 
@@ -494,7 +502,7 @@
     
     if(dir === 'dec2bin'){
       if(fingerPanelVisible){
-        // P je aktivní: input disabled, tlačítka skrytá, prsty resetovány (viz výše)
+        // P je aktivní: input disabled, tlačítka skrytá
         $('single-input').disabled=true;
         $('single-input').value='';
         $('single-input').className='';
@@ -651,7 +659,7 @@
       $('main-btn').innerText='START';
       saveToHistory(`${formatDecimal(currentDecValue)} = ${correctFormattedAnswer}`,isCorrect);
       
-      // Po kontrole aktualizujeme prsty na výsledek (shodné s inputem)
+      // Po kontrole aktualizujeme prsty na výsledek
       updateFingerDisplay(); 
       return;
     }
