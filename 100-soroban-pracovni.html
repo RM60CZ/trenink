@@ -12,7 +12,7 @@
       --bead-unit: #888;
       --bead-heaven-active: #555;
       --bead-earth-active: #333;
-      --rod-color: #8b4513; /* Jednotná barva pro všechny tyče */
+      --rod-color: #8b4513; /* Standardní barva tyče pro VŠECHNY tyče */
       --bar-color: #5d4037;
       --text-color: #333;
       --bead-gap: 6px; 
@@ -27,7 +27,7 @@
       --bead-unit: #666;
       --bead-heaven-active: #aaa;
       --bead-earth-active: #ccc;
-      --rod-color: #3e2723;
+      --rod-color: #3e2723; /* Tmavá barva tyče */
       --bar-color: #4e342e;
       --text-color: #ddd;
       --blue-bead: #5F9EA0;
@@ -66,8 +66,8 @@
       border-radius: 8px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.4);
       padding: 0 10px;
-      /* ZMENA: Výška snížena z 90% na 65% pro kompaktnější vzhled */
-      height: 65%;
+      /* ZMENA 1: Výška snížena na 60% */
+      height: 60%;
       max-height: 400px; 
       width: 95%;
       max-width: 900px;
@@ -76,14 +76,14 @@
 
     .reckoning-bar {
       position: absolute;
-      top: 25%; left: 0; right: 0;
+      /* ZMENA 2: Lišta posunutá níže (na 60%) aby se zmenšila mezera pod ní */
+      top: 60%; 
+      left: 0; right: 0;
       height: 15px;
       background: var(--bar-color);
       transform: translateY(-50%);
       z-index: 20;
       box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      border-top: 1px solid rgba(255,255,255,0.1);
-      border-bottom: 1px solid rgba(0,0,0,0.2);
     }
 
     .rods-container {
@@ -105,11 +105,12 @@
       height: 100%;
     }
 
-    /* ZMENA: Odstraněna .rod.blue-rod::before, všechny tyče mají barvu --rod-color */
+    /* ZMENA 3: Tyče (lišty) jsou VŠECHNY stejně barevné. Žádné modré tyče. */
     .rod::before {
       content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px;
       background: var(--rod-color); transform: translateX(-50%); z-index: 0;
     }
+    /* Odstraněno: .rod.blue-rod::before { ... } */
 
     .bead {
       width: 90%;
@@ -127,7 +128,8 @@
     .heaven {
       position: absolute;
       top: 0; left: 0; right: 0;
-      height: 25%; 
+      /* Heaven oblast je nyní 60% (shora až k liště) */
+      height: 60%; 
       cursor: pointer;
       z-index: 1;
     }
@@ -138,24 +140,22 @@
       bottom: calc(0px + var(--bead-gap)); 
       background: var(--bead-heaven-active);
     }
+    /* Modré kostičky v Heaven? Obvykle ne, ale pokud chcete... normální soroban má nahoře všechny stejně. */
+    /* Zachovám standard: Heaven kostička je standardní barva. */
 
     .earth {
       position: absolute;
       bottom: 0; left: 0; right: 0;
-      height: 75%; 
+      /* Earth oblast je nyní 40% (od liště dolů) */
+      height: 40%; 
       cursor: pointer;
       z-index: 1;
     }
     
-    /* ZMENA: Umístění spodních kostiček - "zhustění" a zmenšení mezery k liště */
-    /* Původně byly rozprostřené přes celých 75% výšky. Nyní je prostor nad 4. kostičkou zmenšen. */
-    /* bottom: 5% -> 1. zespoda */
-    /* Další kostičky se pohybují v rozměru kostičky + gap */
-    
+    /* Umístění kostiček - zůstává relativní v rámci jejich oblasti */
     .earth .bead:nth-child(1) { bottom: 5%; }
     .earth .bead:nth-child(2) { bottom: calc(5% + var(--bead-size) + var(--bead-gap)); }
     .earth .bead:nth-child(3) { bottom: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
-    /* 4. zespoda (nejvýše) - Posunuta blíže k ostatním, mezera nahoru se zvětší sama díky height: 65% */
     .earth .bead:nth-child(4) { bottom: calc(5% + (var(--bead-size) * 3) + (var(--bead-gap) * 3)); }
 
     .earth .bead.active { 
@@ -163,12 +163,11 @@
       box-shadow: inset 0 0 5px rgba(255,255,255,0.3);
     }
     
-    /* Specifické barvy pro kostičky na pozicích jednotek/desítek/stovek */
-    /* Modré kostičky zůstávají modré, tyč je normální */
+    /* ZMENA 4: Modré kostičky ZŮSTÁVÁJÍ modré. Ostatní jsou standardní. */
     .rod.blue-rod .earth .bead { background: var(--blue-bead); }
     .rod.blue-rod .earth .bead.active { background: var(--blue-bead-active); }
     
-    /* Aktivní pozice */
+    /* Pozice aktivních (nahoru) */
     .earth .bead:nth-child(4).active { bottom: auto; top: 5%; }
     .earth .bead:nth-child(3).active { bottom: auto; top: calc(5% + var(--bead-size) + var(--bead-gap)); }
     .earth .bead:nth-child(2).active { bottom: auto; top: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
@@ -273,7 +272,7 @@
         rod.className = 'rod';
         rod.dataset.index = i;
 
-        // ZMENA: Zachováme blue-rod pouze pro barvu KOSTIČEK, tyč už nebude modrá (CSS řeší)
+        // Modrá třída ZŮSTÁVÁ pouze pro kostičky (CSS ji použije jen pro beads)
         if (i === 4 || i === 7 || i === 10 || i === 13) {
           rod.classList.add('blue-rod');
         }
