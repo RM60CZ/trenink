@@ -125,7 +125,6 @@
       position: absolute;
       left: 5%;
       z-index: 5;
-      /* Důležité: musíme mít pointer-events auto, abyste mohl kliknout přímo na kostičku */
       pointer-events: auto; 
     }
     .rod.blue-rod .bead {
@@ -158,9 +157,7 @@
       z-index: 1;
     }
     
-    /* Umístění kostiček */
-    /* nth-child 1 = 1. zespoda (nejníže) */
-    /* nth-child 4 = 4. zespoda (nejvýše) */
+    /* Umístění kostiček (CSS pořád stejné) */
     .earth .bead:nth-child(1) { bottom: 5%; }
     .earth .bead:nth-child(2) { bottom: calc(5% + var(--bead-size) + var(--bead-gap)); }
     .earth .bead:nth-child(3) { bottom: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
@@ -174,7 +171,7 @@
       background: var(--blue-bead-active); 
     }
     
-    /* Aktivní pozice - vláček u lišty */
+    /* Aktivní pozice */
     .earth .bead:nth-child(4).active { bottom: auto; top: 5%; }
     .earth .bead:nth-child(3).active { bottom: auto; top: calc(5% + var(--bead-size) + var(--bead-gap)); }
     .earth .bead:nth-child(2).active { bottom: auto; top: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
@@ -313,53 +310,72 @@
     function handleEarthClick(e, index) {
       const rodData = rods[NUM_RODS - index];
       
-      // 1. Zjistíme, na kterou kostičku jsme klikli PŘÍMO
-      // e.target je prvek, na který se kliklo. Může to být .bead nebo .earth (pozadí)
+      // 1. Identifikace kliknuté kostičky
       let clickedBeadIndex = -1;
       const beads = rodData.element.querySelectorAll('.earth .bead');
       
       beads.forEach((bead, i) => {
         if (bead === e.target) {
-          clickedBeadIndex = i; // 0 = 1. zespoda, 1 = 2. zespoda, ...
+          clickedBeadIndex = i; // 0 = 1. zespoda, 3 = 4. zespoda
         }
       });
 
-      // Pokud jsme klikli na pozadí a ne na kostičku, použijeme starou logiku jako fallback
-      // (pro případ, že by někdo klikl do mezery, ačkoliv kostičky jsou velké)
+      // Fallback pro kliknutí do mezery
       if (clickedBeadIndex === -1) {
           const rect = e.currentTarget.getBoundingClientRect();
           const clickY = e.clientY - rect.top;
           const height = rect.height;
           const relativePos = clickY / height;
-          
           if (relativePos > 0.75) clickedBeadIndex = 0;
           else if (relativePos > 0.50) clickedBeadIndex = 1;
           else if (relativePos > 0.25) clickedBeadIndex = 2;
           else clickedBeadIndex = 3;
       }
 
-      // Převod indexu (0-3) na pořadí zespoda (1-4)
-      const clickedBeadFromBottom = clickedBeadIndex + 1;
+      const clickedBeadFromBottom = clickedBeadIndex + 1; // 1 až 4
+      
+      // 2. Zjištění stavu (aktivní/neaktivní)
+      const totalBeads = 4;
+      const currentActive = rodData.earth;
+      
+      // Kostička je aktivní, pokud její index (0-3) je >= (4 - currentActive)
+      // Příklad: currentActive = 2 (nahoře 3. a 4.). 
+      // Indexy aktivních: 2 a 3. 
+      // Podmínka: index >= (4 - 2) -> index >= 2. Platí pro 2 a 3.
+      const isActive = clickedBeadIndex >= (totalBeads - currentActive);
 
-      // 2. Aplikujeme logiku vláčku
-      // Kliknutí na X. kostičku zespoda znamená, že X a všechny nad ní jedou nahoru.
-      // Počet kostiček nahoru = (4 - X) + 1
-      // Např. Klik na 3. -> (4-3) + 1 = 2 kostičky nahoru (3. a 4.).
-      
-      let countToMove = (4 - clickedBeadFromBottom) + 1;
-
-      // Pokud klikneme na poslední aktivní kostičku (konec vláčku), vláček se zruší (vrátí dolů)?
-      // Nebo přesněji: kliknutí nastavuje stav.
-      // Pokud už je tam 2 (3. a 4. nahoře) a kliknu znova na 3., countToMove je 2. Stav se nemění.
-      // Pokud chci "vypnout", musím kliknout na 4. (pod lištu), countToMove bude 1.
-      // Pokud kliknu na 4. když je 1 nahoře, countToMove je 1. Nic se nestane.
-      
-      // Ale tady je háček: standardní chování sorobanu při kliknutí na horní hranu aktivního vláčku je stáhnout ho.
-      // To by ale znamenalo složitější logiku "pokud kliknuto na poslední aktivní, odečti 1".
-      // Prozatím necháme nastavovací logiku: Kliknu na 3. -> 3. a 4. jsou nahoru.
-      // To odpovídá vašemu zadání "Když stisknu 3 tak se posune 4 nahoru a 3 za ní".
-      
-      rodData.earth = countToMove;
+      // 3. Logika
+      if (isActive) {
+        // SKLÁDÁNÍ DOLŮ:
+        // Klikli jsme na aktivní kostičku (součást vláčku).
+        // Chceme, aby tato a všechny pod ní spadly dolů.
+        // Zůstane aktivních jen to, co je NAD ní.
+        
+        // Příklad: Nahoře 1,2,3,4. Klik na 3.
+        // 3. zespoda má index 2.
+        // Nad ní je jen 4. zespoda (index 3).
+        // Počet aktivních zůstane 1.
+        
+        // Vzorec: newActive = totalBeads - clickedBeadFromBottom.
+        // Příklad: Klik na 3. (index 2). newActive = 4 - 3 = 1. (Zůstane 4.).
+        // Příklad: Nahoře 3,4. Klik na 3. (index 2). newActive = 4 - 3 = 1. (Zůstane 4., 3. spadne).
+        
+        rodData.earth = totalBeads - clickedBeadFromBottom;
+        
+      } else {
+        // TAŽENÍ NAHORU:
+        // Klikli jsme na neaktivní kostičku (mimo vláček).
+        // Chceme vláček rozšířit tak, aby "chytil" tuto kostičku a všechny nad ní.
+        
+        // Příklad: Nahoře 3,4. Klik na 1. (je dole).
+        // Chceme, aby 1. vyrazila nahoru a potáhla 2,3,4.
+        // Počet aktivních = (4 - 1) + 1 = 4.
+        
+        // Příklad: Nahoře nic (0). Klik na 3.
+        // Počet aktivních = (4 - 3) + 1 = 2.
+        
+        rodData.earth = (totalBeads - clickedBeadFromBottom) + 1;
+      }
 
       updateRodsVisuals();
       updateDisplay();
@@ -375,9 +391,6 @@
         const activeCount = rod.earth;
         
         eBeads.forEach((bead, i) => {
-            // i je 0 pro 1. zespoda, 3 pro 4. zespoda.
-            // Chceme aktivních posledních 'activeCount' kostiček.
-            // Příklad activeCount = 2: aktivujeme indexy 2 a 3 (což je 3. a 4. zespoda).
             bead.classList.toggle('active', i >= totalBeads - activeCount);
         });
       });
