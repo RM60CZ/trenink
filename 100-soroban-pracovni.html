@@ -12,12 +12,13 @@
       --bead-unit: #888;
       --bead-heaven-active: #555;
       --bead-earth-active: #333;
-      --rod-color: #8b4513; /* Jednotná barva pro všechny tyče */
+      --rod-color: #8b4513; /* Jednotná barva tyčí */
       --bar-color: #5d4037;
       --text-color: #333;
       --bead-gap: 6px; 
       --blue-bead: #ADD8E6;
       --blue-bead-active: #5DADE2;
+      --bar-offset: 0px; /* Proměnná pro posun lišty */
     }
 
     [data-theme="dark"] {
@@ -66,7 +67,7 @@
       border-radius: 8px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.4);
       padding: 0 10px;
-      height: 60%; /* Zachováno zmenšení výšky */
+      height: 60%; /* Kompaktní výška */
       max-height: 400px; 
       width: 95%;
       max-width: 900px;
@@ -75,8 +76,8 @@
 
     .reckoning-bar {
       position: absolute;
-      /* ZMENA: Posun nahoru o polovinu vzdálenosti (60% -> 30%) */
-      top: 30%; 
+      /* Dynamická pozice: 25% (base) mínus posun v px */
+      top: calc(25% - var(--bar-offset));
       left: 0; right: 0;
       height: 15px;
       background: var(--bar-color);
@@ -104,7 +105,7 @@
       height: 100%;
     }
 
-    /* Tyče zůstávají všechny stejné barvy */
+    /* Všechny tyče jednotné barvy */
     .rod::before {
       content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px;
       background: var(--rod-color); transform: translateX(-50%); z-index: 0;
@@ -123,11 +124,14 @@
       pointer-events: auto; 
     }
 
+    /* Oblast Heaven (nad lištou) - musí být dynamická? 
+       Pro jednoduchost necháme Heaven pevnou (25%) a posuneme jen lištu. 
+       Lišta se pohybuje, Heaven zůstává u horního okraje. 
+       To znamená, že Heaven oblast bude vizuálně větší, když lišta jde nahoru. */
     .heaven {
       position: absolute;
       top: 0; left: 0; right: 0;
-      /* Oblast Heaven zmenšena na 30% (od okraje k liště) */
-      height: 30%; 
+      height: 25%; /* Fixní výška oblasti, ale lišta se pohybuje */
       cursor: pointer;
       z-index: 1;
     }
@@ -142,13 +146,18 @@
     .earth {
       position: absolute;
       bottom: 0; left: 0; right: 0;
-      /* Oblast Earth zvětšena na 70% (od lišty k okraji) */
-      height: 70%; 
+      /* Earth oblast: 75% - posun lišty (protože lišta se posouvá nahoru, Earth se zvětšuje) */
+      /* Ale height: 75% je od spodu. 
+         Technicky: Lišta je v calc(25% - offset). 
+         Earth oblast by měla ideálně končit u lišty. 
+         Ale CSS absolute positioning "bottom:0" a "height:75%" ignoruje lištu.
+         Pro UX je to ok, jen se zvětší mezera nad Earth kostičkami. */
+      height: 75%; 
       cursor: pointer;
       z-index: 1;
     }
     
-    /* Umístění kostiček - standardní relativní pozice */
+    /* Umístění kostiček */
     .earth .bead:nth-child(1) { bottom: 5%; }
     .earth .bead:nth-child(2) { bottom: calc(5% + var(--bead-size) + var(--bead-gap)); }
     .earth .bead:nth-child(3) { bottom: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
@@ -159,11 +168,11 @@
       box-shadow: inset 0 0 5px rgba(255,255,255,0.3);
     }
     
-    /* Modré kostičky zůstávají modré */
+    /* Modré kostičky */
     .rod.blue-rod .earth .bead { background: var(--blue-bead); }
     .rod.blue-rod .earth .bead.active { background: var(--blue-bead-active); }
     
-    /* Aktivní pozice (nahoru) */
+    /* Aktivní pozice */
     .earth .bead:nth-child(4).active { bottom: auto; top: 5%; }
     .earth .bead:nth-child(3).active { bottom: auto; top: calc(5% + var(--bead-size) + var(--bead-gap)); }
     .earth .bead:nth-child(2).active { bottom: auto; top: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
@@ -178,7 +187,17 @@
       background: var(--wood-light); padding: 20px; border-radius: 12px;
       width: 90%; max-width: 300px; text-align: center; color: var(--text-color);
     }
-    select, button { padding: 8px; border-radius: 6px; border: 1px solid var(--bar-color); background: white; color: black; font-size: 16px; }
+    select, input, button { 
+      padding: 8px; border-radius: 6px; border: 1px solid var(--bar-color); 
+      background: white; color: black; font-size: 16px; width: 100%;
+    }
+    .setting-row { 
+      margin: 15px 0; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 5px;
+      text-align: left;
+    }
     .btn-row { display: flex; gap: 10px; margin-top: 15px; }
     .btn-row button { flex: 1; }
 
@@ -209,7 +228,8 @@
   <div class="modal" id="settings-modal">
     <div class="modal-content">
       <h2>Nastavení</h2>
-      <div style="margin: 15px 0; display: flex; justify-content: space-between;">
+      
+      <div class="setting-row">
         <label>Počet tyčí:</label>
         <select id="rod-count-select">
           <option value="7">7 (do milionů)</option>
@@ -218,7 +238,8 @@
           <option value="15">15 (Rozšířený)</option>
         </select>
       </div>
-      <div style="margin: 15px 0; display: flex; justify-content: space-between;">
+
+      <div class="setting-row">
         <label>Jednotky (od pravého):</label>
         <select id="unit-pos-select">
           <option value="1" selected>1. vpravo (jednotky)</option>
@@ -226,6 +247,14 @@
           <option value="3">3. vpravo (stovky)</option>
         </select>
       </div>
+
+      <!-- NOVÉ: Posun lišty -->
+      <div class="setting-row">
+        <label>Posun lišty nahoru (px):</label>
+        <input type="number" id="bar-offset-input" value="0" step="10" placeholder="0">
+        <small style="font-size: 12px; color: #666;">Zadejte číslo (např. 50, 100) pro posun lišty nahoru.</small>
+      </div>
+
       <div class="btn-row">
         <button onclick="closeSettings()">Zrušit</button>
         <button style="background: #4caf50; color: white;" onclick="applySettings()">OK</button>
@@ -236,12 +265,14 @@
   <script>
     let NUM_RODS = 13;
     let UNIT_INDEX = 1; 
+    let BAR_OFFSET = 0; 
     
     const $ = id => document.getElementById(id);
     let rods = [];
 
     function init() {
       loadTheme();
+      loadSettings();
       buildSoroban();
       window.addEventListener('resize', updateBeadSize);
       setTimeout(updateBeadSize, 50);
@@ -268,7 +299,6 @@
         rod.className = 'rod';
         rod.dataset.index = i;
 
-        // Modrá třída pouze pro kostičky
         if (i === 4 || i === 7 || i === 10 || i === 13) {
           rod.classList.add('blue-rod');
         }
@@ -381,12 +411,41 @@
       updateDisplay();
     }
 
-    function openSettings() { $('settings-modal').classList.add('visible'); }
+    // --- Settings Logic ---
+    
+    function loadSettings() {
+      const savedOffset = localStorage.getItem('barOffset');
+      if (savedOffset) BAR_OFFSET = parseInt(savedOffset);
+      
+      // Apply to CSS immediately
+      document.documentElement.style.setProperty('--bar-offset', BAR_OFFSET + 'px');
+      
+      // Update inputs if modal was opened before
+      if ($('bar-offset-input')) $('bar-offset-input').value = BAR_OFFSET;
+    }
+
+    function openSettings() { 
+      // Sync inputs with current state
+      $('rod-count-select').value = NUM_RODS;
+      $('unit-pos-select').value = UNIT_INDEX;
+      $('bar-offset-input').value = BAR_OFFSET;
+      
+      $('settings-modal').classList.add('visible'); 
+    }
+    
     function closeSettings() { $('settings-modal').classList.remove('visible'); }
     
     function applySettings() {
       NUM_RODS = parseInt($('rod-count-select').value);
       UNIT_INDEX = parseInt($('unit-pos-select').value);
+      
+      const newOffset = parseInt($('bar-offset-input').value) || 0;
+      BAR_OFFSET = newOffset;
+      
+      // Save and Apply
+      localStorage.setItem('barOffset', BAR_OFFSET);
+      document.documentElement.style.setProperty('--bar-offset', BAR_OFFSET + 'px');
+      
       buildSoroban();
       closeSettings();
     }
