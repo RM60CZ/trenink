@@ -9,10 +9,10 @@
       --bg: #e0e0e0;
       --wood-light: #f4e4bc;
       --wood-dark: #d4c49c;
-      --bead-unit: #888;
+      --bead-unit: #888; /* Šedá pro neaktivní kostičky */
       --bead-heaven-active: #555;
       --bead-earth-active: #333;
-      --rod-color: #8b4513;
+      --rod-color: #8b4513; /* Hnědá pro tyčky */
       --bar-color: #5d4037;
       --text-color: #333;
       --bead-gap: 6px; 
@@ -86,7 +86,7 @@
       position: absolute;
       top: 0; left: 10px; right: 10px; bottom: 0;
       display: flex;
-      justify-content: center;
+      justify-content: center; /* Zde nechám center, dokud neřeknete jinak */
       gap: 4px;
       z-index: 10;
     }
@@ -110,7 +110,7 @@
     
     .bead {
       width: 90%;
-      background: var(--bead-unit);
+      background: var(--bead-unit); /* Použití proměnné pro barvu */
       border-radius: 6px;
       border: 1px solid rgba(0,0,0,0.2);
       transition: transform 0.15s ease-out, background-color 0.3s, box-shadow 0.15s;
