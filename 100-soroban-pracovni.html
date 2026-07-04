@@ -106,7 +106,6 @@
       height: 100%;
     }
 
-    /* TYČE - BARVY */
     .rod::before {
       content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px;
       background: var(--rod-color); transform: translateX(-50%); z-index: 0;
@@ -116,7 +115,6 @@
       background: var(--blue-rod);
     }
 
-    /* KOSTIČKY - BARVY */
     .bead {
       width: 90%;
       background: var(--bead-unit);
@@ -132,7 +130,6 @@
       background: var(--blue-bead);
     }
 
-    /* HORNI SEKCE */
     .heaven {
       position: absolute;
       top: 0; left: 0; right: 0;
@@ -141,6 +138,7 @@
       z-index: 1;
     }
     .heaven .bead { top: 5%; }
+    
     .heaven .bead.active {
       top: auto;
       bottom: calc(0px + var(--bead-gap)); 
@@ -150,7 +148,6 @@
       background: var(--blue-bead-active);
     }
 
-    /* DOLNI SEKCE */
     .earth {
       position: absolute;
       bottom: 0; left: 0; right: 0;
@@ -176,7 +173,6 @@
     .earth .bead:nth-child(3).active { bottom: auto; top: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
     .earth .bead:nth-child(4).active { bottom: auto; top: calc(5% + (var(--bead-size) * 3) + (var(--bead-gap) * 3)); }
 
-    /* UI */
     .modal {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center;
@@ -229,9 +225,9 @@
       <div style="margin: 15px 0; display: flex; justify-content: space-between;">
         <label>Jednotky (od pravého):</label>
         <select id="unit-pos-select">
-          <option value="0">Úplně vpravo</option>
-          <option value="1" selected>1. vpravo</option>
-          <option value="2">2. vpravo</option>
+          <option value="1" selected>1. vpravo (jednotky)</option>
+          <option value="2">2. vpravo (desítky)</option>
+          <option value="3">3. vpravo (stovky)</option>
         </select>
       </div>
       <div class="btn-row">
@@ -243,7 +239,10 @@
 
   <script>
     let NUM_RODS = 13;
-    let UNIT_POSITION = 1;
+    // Indexování nyní začíná od 1 (1. sloupec zprava = index 1)
+    // Defaultně jednotky na 1. sloupci zprava, tedy UNIT_INDEX = 1
+    let UNIT_INDEX = 1; 
+    
     const $ = id => document.getElementById(id);
     let rods = [];
 
@@ -270,19 +269,14 @@
       container.innerHTML = '';
       rods = [];
 
-      for (let i = 0; i < NUM_RODS; i++) {
+      // Generujeme indexy 1 až NUM_RODS
+      for (let i = 1; i <= NUM_RODS; i++) {
         const rod = document.createElement('div');
         rod.className = 'rod';
-        rod.dataset.index = i;
+        rod.dataset.index = i; // Ukládáme index 1-N
 
-        // Logika pro obarvení zprava:
-        // i=0 -> 1. zprava
-        // i=3 -> 4. zprava
-        // i=6 -> 7. zprava
-        // i=9 -> 10. zprava
-        // i=12 -> 13. zprava
-        const posFromRight = i + 1;
-        if (posFromRight === 4 || posFromRight === 7 || posFromRight === 10 || posFromRight === 13) {
+        // Obarvení přesně podle indexů 4, 7, 10, 13
+        if (i === 4 || i === 7 || i === 10 || i === 13) {
           rod.classList.add('blue-rod');
         }
 
@@ -299,21 +293,27 @@
         `;
         
         container.prepend(rod);
-        rods.push({ heaven: 0, earth: 0, element: rod });
+        // Pole rods indexujeme od 0, ale data uchováváme logická
+        // rods[0] bude odpovídat indexu NUM_RODS (úplně vlevo)
+        // rods[NUM_RODS-1] bude odpovídat indexu 1 (úplně vpravo)
+        rods.unshift({ heaven: 0, earth: 0, element: rod });
       }
       
       updateBeadSize();
       updateDisplay();
     }
 
-    function handleHeavenClick(rodIndex) {
-      const rod = rods[rodIndex];
-      rod.heaven = rod.heaven === 0 ? 5 : 0;
+    function handleHeavenClick(index) {
+      // index je 1 až NUM_RODS
+      // v poli rods je index 1 na pozici NUM_RODS - 1
+      const rodData = rods[NUM_RODS - index];
+      rodData.heaven = rodData.heaven === 0 ? 5 : 0;
       updateRodsVisuals();
       updateDisplay();
     }
 
-    function handleEarthClick(e, rodIndex) {
+    function handleEarthClick(e, index) {
+      const rodData = rods[NUM_RODS - index];
       const rect = e.currentTarget.getBoundingClientRect();
       const clickY = e.clientY - rect.top;
       const height = rect.height;
@@ -326,8 +326,8 @@
       else if (relativePos < 0.80) newCount = 1;
       else newCount = 0;
 
-      const currentCount = rods[rodIndex].earth;
-      rods[rodIndex].earth = (newCount === currentCount) ? 0 : newCount;
+      const currentCount = rodData.earth;
+      rodData.earth = (newCount === currentCount) ? 0 : newCount;
 
       updateRodsVisuals();
       updateDisplay();
@@ -347,13 +347,28 @@
 
     function updateDisplay() {
       let totalValue = 0n;
-      rods.forEach((rod, index) => {
-        const exponent = index - UNIT_POSITION;
-        if (exponent < 0) return;
+      
+      // rods[0] je nejlevější (index NUM_RODS)
+      // rods[NUM_RODS-1] je nejpravější (index 1)
+      
+      rods.forEach((rod, arrayIndex) => {
+        // Převedeme index pole zpět na logický index sloupce (1 až NUM_RODS)
+        const colIndex = NUM_RODS - arrayIndex;
+        
+        // Řádová hodnota:
+        // Pokud UNIT_INDEX = 1 (jednotky na 1. sloupci zprava), pak exponent pro colIndex 1 je 0.
+        // Pokud colIndex = 2, exponent = 1 (desítky).
+        // Vzorec: exponent = colIndex - UNIT_INDEX
+        
+        const exponent = colIndex - UNIT_INDEX;
+        
+        if (exponent < 0) return; // Záporné exponenty ignorujeme (části jednotek)
+
         const placeValue = 10n ** BigInt(exponent);
         const digit = rod.heaven + rod.earth;
         totalValue += BigInt(digit) * placeValue;
       });
+      
       $('display').innerText = totalValue.toLocaleString('cs-CZ');
     }
 
@@ -371,7 +386,7 @@
     
     function applySettings() {
       NUM_RODS = parseInt($('rod-count-select').value);
-      UNIT_POSITION = parseInt($('unit-pos-select').value);
+      UNIT_INDEX = parseInt($('unit-pos-select').value);
       buildSoroban();
       closeSettings();
     }
