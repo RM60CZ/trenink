@@ -9,13 +9,17 @@
       --bg: #e0e0e0;
       --wood-light: #f4e4bc;
       --wood-dark: #d4c49c;
-      --bead-unit: #888; /* Šedá pro neaktivní kostičky */
+      --bead-unit: #888;
       --bead-heaven-active: #555;
       --bead-earth-active: #333;
-      --rod-color: #8b4513; /* Hnědá pro tyčky */
+      --rod-color: #8b4513;
       --bar-color: #5d4037;
       --text-color: #333;
       --bead-gap: 6px; 
+      
+      /* NOVÉ BARVY PRO MODRÉ TYČE */
+      --blue-rod: #87CEFA; /* Světle modrá pro tyč */
+      --blue-bead: #ADD8E6; /* Světle modrá pro kostky */
     }
 
     [data-theme="dark"] {
@@ -28,6 +32,10 @@
       --rod-color: #3e2723;
       --bar-color: #4e342e;
       --text-color: #ddd;
+      
+      /* Modré barvy pro tmavý režim */
+      --blue-rod: #4682B4;
+      --blue-bead: #5F9EA0;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
@@ -86,7 +94,7 @@
       position: absolute;
       top: 0; left: 10px; right: 10px; bottom: 0;
       display: flex;
-      justify-content: center; /* Zde nechám center, dokud neřeknete jinak */
+      justify-content: center;
       gap: 4px;
       z-index: 10;
     }
@@ -101,16 +109,23 @@
       height: 100%;
     }
 
+    /* VÝCHOZÍ BARVA TYČE */
     .rod::before {
       content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px;
       background: var(--rod-color); transform: translateX(-50%); z-index: 0;
+      transition: background 0.3s;
+    }
+
+    /* MODRÁ BARVA TYČE */
+    .rod.blue-rod::before {
+      background: var(--blue-rod);
     }
 
     /* --- KAMENY --- */
     
     .bead {
       width: 90%;
-      background: var(--bead-unit); /* Použití proměnné pro barvu */
+      background: var(--bead-unit);
       border-radius: 6px;
       border: 1px solid rgba(0,0,0,0.2);
       transition: transform 0.15s ease-out, background-color 0.3s, box-shadow 0.15s;
@@ -118,6 +133,11 @@
       position: absolute;
       left: 5%;
       z-index: 5;
+    }
+
+    /* MODRÁ BARVA KOSTIČEK V MODRÉM SLOUPCI */
+    .rod.blue-rod .bead {
+      background: var(--blue-bead);
     }
 
     /* --- HORNI SEKCE (HEAVEN) --- */
@@ -132,11 +152,14 @@
     .heaven .bead {
       top: 5%; 
     }
-    /* ZDE JE ZMĚNA: Přesné odsazení od lišty pomocí calc() a --bead-gap */
     .heaven .bead.active {
       top: auto;
       bottom: calc(0px + var(--bead-gap)); 
       background: var(--bead-heaven-active);
+    }
+    /* Přepis pro aktivní modrou kostku (aby nebyla úplně černá) */
+    .rod.blue-rod .heaven .bead.active {
+      background: #5DADE2; /* Světlejší modrá pro aktivní stav */
     }
 
     /* --- DOLNI SEKCE (EARTH) --- */
@@ -156,6 +179,10 @@
     .earth .bead.active { 
       background: var(--bead-earth-active); 
       box-shadow: inset 0 0 5px rgba(255,255,255,0.3);
+    }
+    /* Přepis pro aktivní modrou kostku */
+    .rod.blue-rod .earth .bead.active { 
+      background: #5DADE2; 
     }
     
     .earth .bead:nth-child(1).active { bottom: auto; top: 5%; }
@@ -266,6 +293,15 @@
         const rod = document.createElement('div');
         rod.className = 'rod';
         rod.dataset.index = i;
+
+        // LOGIKA PRO OBARVENÍ ZPRAVA
+        // index 0 = 1. zprava, index 3 = 4. zprava, atd.
+        const distFromRight = NUM_RODS - 1 - i;
+        
+        // Obarvíme 4., 7., 10., 13. zprava
+        if (distFromRight === 3 || distFromRight === 6 || distFromRight === 9 || distFromRight === 12) {
+          rod.classList.add('blue-rod');
+        }
 
         rod.innerHTML = `
           <div class="heaven" onclick="handleHeavenClick(${i})">
