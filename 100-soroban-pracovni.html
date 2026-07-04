@@ -68,10 +68,10 @@
       position: relative;
     }
 
-    /* STŘEDOVÁ LIŠTA - přesně v půlce */
+    /* STŘEDOVÁ LIŠTA - V první čtvrtině shora */
     .reckoning-bar {
       position: absolute;
-      top: 50%; left: 0; right: 0;
+      top: 25%; left: 0; right: 0;
       height: 15px;
       background: var(--bar-color);
       transform: translateY(-50%);
@@ -82,12 +82,11 @@
     }
 
     .rods-container {
-      flex: 1;
+      position: absolute;
+      top: 0; left: 10px; right: 10px; bottom: 0;
       display: flex;
       justify-content: center;
       gap: 4px;
-      padding-bottom: 10px;
-      position: relative;
       z-index: 10;
     }
 
@@ -106,18 +105,29 @@
       background: var(--rod-color); transform: translateX(-50%); z-index: 0;
     }
 
-    .beads-section {
+    /* --- ROZVRŽENÍ PROSTORU --- */
+    /* Horní sekce (Heaven): 0% až 25% */
+    .beads-section.heaven {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 25%;
       display: flex; flex-direction: column; align-items: center;
-      position: relative; z-index: 1;
-      cursor: pointer;
-      height: 50%;
+      z-index: 1; cursor: pointer;
     }
     
-    .heaven { justify-content: flex-start; }
-    .earth { justify-content: flex-end; }
+    /* Dolní sekce (Earth): 25% až 100% (zbývající 3/4) */
+    .beads-section.earth {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 75%;
+      display: flex; flex-direction: column; align-items: center;
+      z-index: 1; cursor: pointer;
+    }
 
     .bead {
-      width: 90%; height: 20%;
+      width: 90%;
+      /* Výška kamene se přizpůsobí sekci */
+      height: 20%; 
       background: var(--bead-unit);
       border-radius: 6px;
       border: 1px solid rgba(0,0,0,0.2);
@@ -128,21 +138,31 @@
     }
 
     /* --- HEAVEN LOGIC (Horní kulička) --- */
-    .heaven .bead { top: 5%; }
-    .heaven .bead.active { top: 60%; background: var(--bead-heaven-active); }
+    /* Klid: Nahoře */
+    .heaven .bead { top: 0%; }
+    /* Aktivní: Dole (přiložená k liště) */
+    .heaven .bead.active { 
+      top: auto; bottom: 0%; 
+      background: var(--bead-heaven-active); 
+    }
 
     /* --- EARTH LOGIC (Dolní kuličky) --- */
-    .earth .bead:nth-child(1) { bottom: 5%; }
-    .earth .bead:nth-child(2) { bottom: 5%; transform: translateY(-105%); }
-    .earth .bead:nth-child(3) { bottom: 5%; transform: translateY(-210%); }
-    .earth .bead:nth-child(4) { bottom: 5%; transform: translateY(-315%); }
+    /* Výška sekce je 75% celku. 4 kameny + mezery. */
+    /* Každý blok (kámen+mezera) zabírá 25% výšky sekce */
+    
+    /* Klid: Dole */
+    .earth .bead:nth-child(1) { bottom: 0%; }
+    .earth .bead:nth-child(2) { bottom: 25%; }
+    .earth .bead:nth-child(3) { bottom: 50%; }
+    .earth .bead:nth-child(4) { bottom: 75%; }
 
     .earth .bead.active { background: var(--bead-earth-active); box-shadow: inset 0 0 5px rgba(255,255,255,0.3); }
     
-    .earth .bead:nth-child(1).active { top: 5%; bottom: auto; transform: translateY(0); }
-    .earth .bead:nth-child(2).active { top: 5%; bottom: auto; transform: translateY(105%); }
-    .earth .bead:nth-child(3).active { top: 5%; bottom: auto; transform: translateY(210%); }
-    .earth .bead:nth-child(4).active { top: 5%; bottom: auto; transform: translateY(315%); }
+    /* Aktivní: Nahoře (přiložené k liště) */
+    .earth .bead:nth-child(1).active { bottom: auto; top: 0%; }
+    .earth .bead:nth-child(2).active { bottom: auto; top: 25%; }
+    .earth .bead:nth-child(3).active { bottom: auto; top: 50%; }
+    .earth .bead:nth-child(4).active { bottom: auto; top: 75%; }
 
     /* Modal & UI */
     .modal {
@@ -178,7 +198,7 @@
   </div>
 
   <div class="soroban-frame">
-    <div class="reckoning-bar" id="reckoning-bar"></div>
+    <div class="reckoning-bar"></div>
     
     <div class="rods-container" id="soroban"></div>
   </div>
