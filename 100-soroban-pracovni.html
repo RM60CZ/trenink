@@ -317,12 +317,13 @@
       const clickY = e.clientY - rect.top;
       const height = rect.height;
       
-      // Rozdělení spodní sekce na 4 zóny (0-25%, 25-50%, 50-75%, 75-100%)
-      // Kliknutím určujeme, kolikátou kostičku od spodu jsme chtěli chytit.
+      // Relativní pozice odshora (0.0 až 1.0)
       const relativePos = clickY / height;
       
-      // 0 = 1. zespoda, 1 = 2. zespoda, 2 = 3. zespoda, 3 = 4. zespoda
-      // (Logika se počítá shora, protože y souřadnice roste dolů, ale my čteme zespoda)
+      // Přepočet na kostičky ZESPODA:
+      // 1. zespoda je v rozsahu 75-100% (konec sekce)
+      // 4. zespoda je v rozsahu 0-25% (začátek sekce)
+      
       let clickedBeadFromBottom = 0;
       if (relativePos > 0.75) clickedBeadFromBottom = 1;
       else if (relativePos > 0.50) clickedBeadFromBottom = 2;
@@ -332,19 +333,19 @@
       const currentCount = rodData.earth;
 
       // Logika "Vláčku":
-      // Pokud klikneme na kostičku, která je už v aktivním bloku nahoře,
-      // znamená to, že chceme blok odloučit od lišty až po tuto kostičku (sjede dolů).
-      // Pokud klikneme na kostičku dole, chceme, aby k liště vyjela včetně všech nad ní.
+      // 1. Jsme klikli na kostičku, která je NYNÍ aktivní (v bloku u lišty)?
+      //    Aktivní blok má vždy velikost 'currentCount'.
+      //    Pokud clickedBeadFromBottom <= currentCount, znamená to, že jsme trefili horní blok.
+      //    -> Chceme ho zkrátit (stáhnout) na pozici, kam jsme klikli.
       
       if (clickedBeadFromBottom <= currentCount) {
-        // Kostička je nahoře (v aktivním bloku). 
-        // Chceme ji stáhnout dolů i se všemi nad ní.
-        // (Pozor: "nad ní" znamená větší index, ale menší hodnota u vláčku jdoucího nahoru)
-        // Necháme nahoře jen to, co je pod ťuknutou kostičkou.
+        // Klikli jsme dovnitř aktivního bloku (nebo na jeho konec).
+        // Chceme, aby blok končil na této kostičce.
+        // Tedy: pod ťuknutou kostičkou zůstanou aktivní.
         rodData.earth = clickedBeadFromBottom - 1;
       } else {
-        // Kostička je dole. 
-        // Chceme ji vytáhnout nahoru i se všemi, co jsou nad ní (už nahoře).
+        // 2. Klikli jsme na kostičku, která je dole (neaktivní).
+        //    Chceme blok rozšířit (vytáhnout) až k této kostičce.
         rodData.earth = clickedBeadFromBottom;
       }
 
