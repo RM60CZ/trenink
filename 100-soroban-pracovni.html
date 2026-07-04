@@ -15,7 +15,7 @@
       --rod-color: #8b4513;
       --bar-color: #5d4037;
       --text-color: #333;
-      --bead-gap: 6px; /* ZVĚTŠENÁ MEZERA */
+      --bead-gap: 6px;
     }
 
     [data-theme="dark"] {
@@ -27,7 +27,7 @@
       --bead-earth-active: #ccc;
       --rod-color: #3e2723;
       --bar-color: #4e342e;
-      --text-color: #ddd;
+      --text_color: #ddd;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
@@ -110,7 +110,6 @@
     
     .bead {
       width: 90%;
-      /* Výška se nastaví v JS */
       background: var(--bead-unit);
       border-radius: 6px;
       border: 1px solid rgba(0,0,0,0.2);
@@ -131,11 +130,9 @@
     }
 
     .heaven .bead {
-      /* Výchozí: Nahoře (daleko od lišty) */
       top: 5%; 
     }
     .heaven .bead.active {
-      /* Aktivní: Dole u lišty */
       top: auto;
       bottom: 5%;
       background: var(--bead-heaven-active);
@@ -150,13 +147,11 @@
       z-index: 1;
     }
 
-    /* Dolní kameny v klidu (slepené dole) - s novou mezerou */
     .earth .bead:nth-child(1) { bottom: 5%; }
     .earth .bead:nth-child(2) { bottom: calc(5% + var(--bead-size) + var(--bead-gap)); }
     .earth .bead:nth-child(3) { bottom: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
     .earth .bead:nth-child(4) { bottom: calc(5% + (var(--bead-size) * 3) + (var(--bead-gap) * 3)); }
 
-    /* Aktivní: Skočí nahoru k liště */
     .earth .bead.active { 
       background: var(--bead-earth-active); 
       box-shadow: inset 0 0 5px rgba(255,255,255,0.3);
@@ -271,11 +266,12 @@
         rod.className = 'rod';
         rod.dataset.index = i;
 
+        // ZDE JE KLÍČOVÁ ZMĚNA: Rozdělené funkce
         rod.innerHTML = `
-          <div class="heaven" onclick="handleInput(${i}, 'heaven')">
+          <div class="heaven" onclick="handleHeavenClick(${i})">
             <div class="bead"></div>
           </div>
-          <div class="earth" onclick="handleInput(event, ${i}, 'earth')">
+          <div class="earth" onclick="handleEarthClick(event, ${i})">
             <div class="bead"></div>
             <div class="bead"></div>
             <div class="bead"></div>
@@ -291,19 +287,18 @@
       updateDisplay();
     }
 
-    function handleInput(rodIndex, section) {
-      if (section === 'heaven') {
-        const rod = rods[rodIndex];
-        // Logika: Pokud je 0 (nahoře), nastav na 5 (dolu). Pokud je 5 (dolu), nastav na 0 (nahoru).
-        rod.heaven = rod.heaven === 0 ? 5 : 0;
-        updateRodsVisuals();
-        updateDisplay();
-      }
+    // OPRAVENÁ FUNKCE PRO HORNI KAMENY
+    function handleHeavenClick(rodIndex) {
+      const rod = rods[rodIndex];
+      // Přepnutí stavu: 0 -> 5 nebo 5 -> 0
+      rod.heaven = rod.heaven === 0 ? 5 : 0;
+      
+      updateRodsVisuals();
+      updateDisplay();
     }
 
-    function handleInput(e, rodIndex, section) {
-      if (section !== 'earth') return;
-      
+    // PŘEJMENOVANÁ FUNKCE PRO DOLNI KAMENY
+    function handleEarthClick(e, rodIndex) {
       const rect = e.currentTarget.getBoundingClientRect();
       const clickY = e.clientY - rect.top;
       const height = rect.height;
@@ -328,7 +323,6 @@
     function updateRodsVisuals() {
       rods.forEach(rod => {
         const hBead = rod.element.querySelector('.heaven .bead');
-        // Pokud je hodnota 5, kámen JE aktivní (je dole u lišty)
         hBead.classList.toggle('active', rod.heaven === 5);
         
         const eBeads = rod.element.querySelectorAll('.earth .bead');
