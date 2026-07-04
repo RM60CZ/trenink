@@ -27,7 +27,7 @@
       --bead-earth-active: #ccc;
       --rod-color: #3e2723;
       --bar-color: #4e342e;
-      --text_color: #ddd;
+      --text-color: #ddd;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
@@ -266,7 +266,7 @@
         rod.className = 'rod';
         rod.dataset.index = i;
 
-        // ZDE JE KLÍČOVÁ ZMĚNA: Rozdělené funkce
+        // OPRAVA: Volané funkce se nyní jmenují stejně jako ty definované níže
         rod.innerHTML = `
           <div class="heaven" onclick="handleHeavenClick(${i})">
             <div class="bead"></div>
@@ -287,7 +287,7 @@
       updateDisplay();
     }
 
-    // OPRAVENÁ FUNKCE PRO HORNI KAMENY
+    // OPRAVA: Funkce se nyní jmenuje handleHeavenClick (shodně s voláním výše)
     function handleHeavenClick(rodIndex) {
       const rod = rods[rodIndex];
       // Přepnutí stavu: 0 -> 5 nebo 5 -> 0
@@ -297,7 +297,6 @@
       updateDisplay();
     }
 
-    // PŘEJMENOVANÁ FUNKCE PRO DOLNI KAMENY
     function handleEarthClick(e, rodIndex) {
       const rect = e.currentTarget.getBoundingClientRect();
       const clickY = e.clientY - rect.top;
