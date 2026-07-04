@@ -15,7 +15,7 @@
       --rod-color: #8b4513;
       --bar-color: #5d4037;
       --text-color: #333;
-      --bead-gap: 4px; /* Zmenšeno gap pro mobily, aby se lépe vešly */
+      --bead-gap: 4px; 
       --blue-bead: #ADD8E6;
       --blue-bead-active: #5DADE2;
       --bar-offset: 0px;
@@ -96,7 +96,7 @@
 
     .rod {
       flex: 1;
-      max-width: 50px; /* Na PC omezeno */
+      max-width: 50px; 
       display: flex;
       flex-direction: column;
       background: transparent;
@@ -189,60 +189,65 @@
     /* --- MOBILNÍ OPTIMIZACE (CELÁ ŠÍŘKA) --- */
     @media (max-width: 600px) {
       body {
-        justify-content: flex-start; /* Posuneme obsah trochu nahoru */
+        justify-content: flex-start; /* Posun nahoru */
+        padding-top: 0;
       }
       .header {
-        top: 5px; left: 2px; right: 2px; /* Minimal okraje pro header */
-        justify-content: center; /* Centrované tlačítka */
-        flex-wrap: wrap;
-        gap: 5px;
+        /* Header úplně nahoře bez okrajů */
+        top: 0; left: 0; right: 0;
+        padding: 5px 5px 0 5px;
+        background: var(--bg); /* Pozadí aby nebyl průhledný */
+        justify-content: space-between;
+        position: relative; /* Změna z absolute pro lepší flow */
+        width: 100%;
+        order: 1; /* První v pořadí */
+        box-sizing: border-box;
       }
       .value-display {
-        font-size: 20px;
+        font-size: 18px;
         padding: 4px 10px;
-        order: -1; /* Číslo nahoru */
-        width: 100%;
-        margin-bottom: 5px;
+        min-width: auto;
       }
       .btn-icon {
         font-size: 18px;
-        padding: 8px; /* Větší touch area */
+        padding: 8px;
       }
 
       .soroban-frame {
-        /* Na mobilu: plná šířka, minimální okraje rámu */
-        width: 100%; 
-        max-width: 100%;
-        height: calc(100vh - 60px); /* Výška přes celou obrazovku mínus header */
-        max-height: none;
-        border-width: 4px; /* Tenčí rámeček */
-        border-radius: 0; /* Hranatý pro maximální využití */
-        padding: 0 2px; /* Minimální padding vnitřek */
-        margin-top: 50px; /* Odstup od headeru */
+        /* DŮLEŽITÉ: Vynucení plné šířky a výšky */
+        order: 2; /* Druhý v pořadí pod headerem */
+        width: 100%;
+        max-width: 100% !important; /* Přepíše 900px limit */
+        height: calc(100vh - 50px); /* Výška přes zbytek obrazovky */
+        max-height: none !important;
+        
+        border-width: 4px;
+        border-left: none; /* Odstranění bočních rámečků pro max šířku */
+        border-right: none;
+        border-radius: 0;
+        padding: 0 2px; /* Minimální padding */
+        margin: 0;
+        box-shadow: none;
       }
 
       .rods-container {
-        left: 2px; right: 2px; /* Container až na kraj */
-        gap: 2px; /* Menší mezery mezi tyčemi */
+        left: 2px; right: 2px;
+        gap: 2px;
       }
 
       .rod {
-        max-width: none; /* Tyče se roztáhnou flexibilně */
+        max-width: none !important; /* Tyče se roztáhnou */
       }
 
       .bead {
-        width: 95%; /* Kostičky téměř přes celou tyč */
+        width: 95%;
         left: 2.5%;
-        border-radius: 4px; /* Menší radius pro lepší fit */
+        border-radius: 4px;
       }
       
       .reckoning-bar {
-        height: 10px; /* Tenčí lišta na mobilu */
+        height: 10px;
       }
-      
-      /* Úprava Heaven/Earth oblastí pro velké mobilní displeje */
-      .heaven { height: 25%; }
-      .earth { height: 75%; }
     }
   </style>
 </head>
@@ -319,6 +324,10 @@
       const rod = document.querySelector('.rod');
       if (!rod) return;
       const width = rod.offsetWidth;
+      // Na malých obrazovkách zmenšíme gap
+      const gap = window.innerWidth < 600 ? 2 : 4;
+      document.documentElement.style.setProperty('--bead-gap', gap + 'px');
+      
       const size = width * 0.9; 
       document.documentElement.style.setProperty('--bead-size', size + 'px');
       document.querySelectorAll('.bead').forEach(bead => {
