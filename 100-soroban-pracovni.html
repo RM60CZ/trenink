@@ -68,7 +68,7 @@
       position: relative;
     }
 
-    /* STŘEDOVÁ LIŠTA - POSUNUTÁ DO 1/4 ZESHORA */
+    /* STŘEDOVÁ LIŠTA - V PRVNÍ ČTVRTINĚ */
     .reckoning-bar {
       position: absolute;
       top: 25%; left: 0; right: 0;
@@ -82,12 +82,11 @@
     }
 
     .rods-container {
-      flex: 1;
+      position: absolute;
+      top: 0; left: 10px; right: 10px; bottom: 0;
       display: flex;
       justify-content: center;
       gap: 4px;
-      padding-bottom: 10px;
-      position: relative;
       z-index: 10;
     }
 
@@ -106,18 +105,11 @@
       background: var(--rod-color); transform: translateX(-50%); z-index: 0;
     }
 
-    .beads-section {
-      display: flex; flex-direction: column; align-items: center;
-      position: relative; z-index: 1;
-      cursor: pointer;
-      height: 50%;
-    }
+    /* --- KAMENY --- */
     
-    .heaven { justify-content: flex-start; }
-    .earth { justify-content: flex-end; }
-
     .bead {
-      width: 90%; height: 20%;
+      width: 90%;
+      /* Výška se nastaví v JS na šířku (čtverec) */
       background: var(--bead-unit);
       border-radius: 6px;
       border: 1px solid rgba(0,0,0,0.2);
@@ -125,24 +117,54 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
       position: absolute;
       left: 5%;
+      z-index: 5;
     }
 
-    /* --- HEAVEN LOGIC (Horní kulička) --- */
-    .heaven .bead { top: 5%; }
-    .heaven .bead.active { top: 60%; background: var(--bead-heaven-active); }
+    /* --- HORNI SEKCE (HEAVEN) --- */
+    .heaven {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 25%; /* Prostor nad lištou */
+      cursor: pointer;
+      z-index: 1;
+    }
 
-    /* --- EARTH LOGIC (Dolní kuličky) --- */
+    .heaven .bead {
+      /* Výchozí: Nahoře */
+      top: 5%; 
+    }
+    .heaven .bead.active {
+      /* Aktivní: Dole u lišty */
+      top: auto;
+      bottom: 5%;
+      background: var(--bead-heaven-active);
+    }
+
+    /* --- DOLNI SEKCE (EARTH) --- */
+    .earth {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 75%; /* Prostor pod lištou */
+      cursor: pointer;
+      z-index: 1;
+    }
+
+    /* 4 dolní kameny v klidu (slepené dole) */
     .earth .bead:nth-child(1) { bottom: 5%; }
-    .earth .bead:nth-child(2) { bottom: 5%; transform: translateY(-105%); }
-    .earth .bead:nth-child(3) { bottom: 5%; transform: translateY(-210%); }
-    .earth .bead:nth-child(4) { bottom: 5%; transform: translateY(-315%); }
+    .earth .bead:nth-child(2) { bottom: calc(5% + var(--bead-size) + 2px); }
+    .earth .bead:nth-child(3) { bottom: calc(5% + (var(--bead-size) * 2) + 4px); }
+    .earth .bead:nth-child(4) { bottom: calc(5% + (var(--bead-size) * 3) + 6px); }
 
-    .earth .bead.active { background: var(--bead-earth-active); box-shadow: inset 0 0 5px rgba(255,255,255,0.3); }
+    /* Aktivní: Skočí nahoru k liště */
+    .earth .bead.active { 
+      background: var(--bead-earth-active); 
+      box-shadow: inset 0 0 5px rgba(255,255,255,0.3);
+    }
     
-    .earth .bead:nth-child(1).active { top: 5%; bottom: auto; transform: translateY(0); }
-    .earth .bead:nth-child(2).active { top: 5%; bottom: auto; transform: translateY(105%); }
-    .earth .bead:nth-child(3).active { top: 5%; bottom: auto; transform: translateY(210%); }
-    .earth .bead:nth-child(4).active { top: 5%; bottom: auto; transform: translateY(315%); }
+    .earth .bead:nth-child(1).active { bottom: auto; top: 5%; }
+    .earth .bead:nth-child(2).active { bottom: auto; top: calc(5% + var(--bead-size) + 2px); }
+    .earth .bead:nth-child(3).active { bottom: auto; top: calc(5% + (var(--bead-size) * 2) + 4px); }
+    .earth .bead:nth-child(4).active { bottom: auto; top: calc(5% + (var(--bead-size) * 3) + 6px); }
 
     /* Modal & UI */
     .modal {
@@ -220,6 +242,27 @@
     function init() {
       loadTheme();
       buildSoroban();
+      // Nastavení velikosti kamenů po načtení a změně velikosti okna
+      window.addEventListener('resize', updateBeadSize);
+      setTimeout(updateBeadSize, 50); // Malé zpoždění pro správné vykreslení
+    }
+
+    // Funkce pro nastavení čtvercových kamenů
+    function updateBeadSize() {
+      const rod = document.querySelector('.rod');
+      if (!rod) return;
+      
+      const width = rod.offsetWidth;
+      // Výška = šířka (čtverec)
+      const size = width * 0.9; // 90% šířky tyče (odpovídá width: 90% v CSS)
+      
+      // Uložíme velikost do CSS proměnné na úrovni dokumentu
+      document.documentElement.style.setProperty('--bead-size', size + 'px');
+      
+      // A rovnou nastavíme výšku všem kamenům pro jistotu
+      document.querySelectorAll('.bead').forEach(bead => {
+        bead.style.height = size + 'px';
+      });
     }
 
     function buildSoroban() {
@@ -233,10 +276,10 @@
         rod.dataset.index = i;
 
         rod.innerHTML = `
-          <div class="beads-section heaven" onclick="handleInput(${i}, 'heaven')">
+          <div class="heaven" onclick="handleInput(${i}, 'heaven')">
             <div class="bead"></div>
           </div>
-          <div class="beads-section earth" onclick="handleInput(event, ${i}, 'earth')">
+          <div class="earth" onclick="handleInput(event, ${i}, 'earth')">
             <div class="bead"></div>
             <div class="bead"></div>
             <div class="bead"></div>
@@ -248,6 +291,7 @@
         rods.push({ heaven: 0, earth: 0, element: rod });
       }
       
+      updateBeadSize();
       updateDisplay();
     }
 
@@ -271,6 +315,8 @@
 
       let newCount = 0;
       
+      // Rozdělení na 5 vertikálních sekcí (0-4, 4-8 atd.)
+      // Protože dolních kamenů je 5 pozic (0,1,2,3,4)
       if (relativePos < 0.20) newCount = 4;
       else if (relativePos < 0.40) newCount = 3;
       else if (relativePos < 0.60) newCount = 2;
