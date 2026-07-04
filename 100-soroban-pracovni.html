@@ -12,11 +12,11 @@
       --bead-unit: #888;
       --bead-heaven-active: #555;
       --bead-earth-active: #333;
-      --rod-color: #8b4513; /* Standardní barva tyče pro VŠECHNY tyče */
+      --rod-color: #8b4513; /* Jednotná barva pro všechny tyče */
       --bar-color: #5d4037;
       --text-color: #333;
       --bead-gap: 6px; 
-      --blue-bead: #ADD8E6; /* Barva pro modré kostičky */
+      --blue-bead: #ADD8E6;
       --blue-bead-active: #5DADE2;
     }
 
@@ -27,7 +27,7 @@
       --bead-unit: #666;
       --bead-heaven-active: #aaa;
       --bead-earth-active: #ccc;
-      --rod-color: #3e2723; /* Tmavá barva tyče */
+      --rod-color: #3e2723;
       --bar-color: #4e342e;
       --text-color: #ddd;
       --blue-bead: #5F9EA0;
@@ -66,8 +66,7 @@
       border-radius: 8px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.4);
       padding: 0 10px;
-      /* ZMENA 1: Výška snížena na 60% */
-      height: 60%;
+      height: 60%; /* Zachováno zmenšení výšky */
       max-height: 400px; 
       width: 95%;
       max-width: 900px;
@@ -76,8 +75,8 @@
 
     .reckoning-bar {
       position: absolute;
-      /* ZMENA 2: Lišta posunutá níže (na 60%) aby se zmenšila mezera pod ní */
-      top: 60%; 
+      /* ZMENA: Posun nahoru o polovinu vzdálenosti (60% -> 30%) */
+      top: 30%; 
       left: 0; right: 0;
       height: 15px;
       background: var(--bar-color);
@@ -105,12 +104,11 @@
       height: 100%;
     }
 
-    /* ZMENA 3: Tyče (lišty) jsou VŠECHNY stejně barevné. Žádné modré tyče. */
+    /* Tyče zůstávají všechny stejné barvy */
     .rod::before {
       content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px;
       background: var(--rod-color); transform: translateX(-50%); z-index: 0;
     }
-    /* Odstraněno: .rod.blue-rod::before { ... } */
 
     .bead {
       width: 90%;
@@ -128,8 +126,8 @@
     .heaven {
       position: absolute;
       top: 0; left: 0; right: 0;
-      /* Heaven oblast je nyní 60% (shora až k liště) */
-      height: 60%; 
+      /* Oblast Heaven zmenšena na 30% (od okraje k liště) */
+      height: 30%; 
       cursor: pointer;
       z-index: 1;
     }
@@ -140,19 +138,17 @@
       bottom: calc(0px + var(--bead-gap)); 
       background: var(--bead-heaven-active);
     }
-    /* Modré kostičky v Heaven? Obvykle ne, ale pokud chcete... normální soroban má nahoře všechny stejně. */
-    /* Zachovám standard: Heaven kostička je standardní barva. */
 
     .earth {
       position: absolute;
       bottom: 0; left: 0; right: 0;
-      /* Earth oblast je nyní 40% (od liště dolů) */
-      height: 40%; 
+      /* Oblast Earth zvětšena na 70% (od lišty k okraji) */
+      height: 70%; 
       cursor: pointer;
       z-index: 1;
     }
     
-    /* Umístění kostiček - zůstává relativní v rámci jejich oblasti */
+    /* Umístění kostiček - standardní relativní pozice */
     .earth .bead:nth-child(1) { bottom: 5%; }
     .earth .bead:nth-child(2) { bottom: calc(5% + var(--bead-size) + var(--bead-gap)); }
     .earth .bead:nth-child(3) { bottom: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
@@ -163,11 +159,11 @@
       box-shadow: inset 0 0 5px rgba(255,255,255,0.3);
     }
     
-    /* ZMENA 4: Modré kostičky ZŮSTÁVÁJÍ modré. Ostatní jsou standardní. */
+    /* Modré kostičky zůstávají modré */
     .rod.blue-rod .earth .bead { background: var(--blue-bead); }
     .rod.blue-rod .earth .bead.active { background: var(--blue-bead-active); }
     
-    /* Pozice aktivních (nahoru) */
+    /* Aktivní pozice (nahoru) */
     .earth .bead:nth-child(4).active { bottom: auto; top: 5%; }
     .earth .bead:nth-child(3).active { bottom: auto; top: calc(5% + var(--bead-size) + var(--bead-gap)); }
     .earth .bead:nth-child(2).active { bottom: auto; top: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
@@ -272,7 +268,7 @@
         rod.className = 'rod';
         rod.dataset.index = i;
 
-        // Modrá třída ZŮSTÁVÁ pouze pro kostičky (CSS ji použije jen pro beads)
+        // Modrá třída pouze pro kostičky
         if (i === 4 || i === 7 || i === 10 || i === 13) {
           rod.classList.add('blue-rod');
         }
