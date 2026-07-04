@@ -12,13 +12,13 @@
       --bead-unit: #888;
       --bead-heaven-active: #555;
       --bead-earth-active: #333;
-      --rod-color: #8b4513; /* Jednotná barva tyčí */
+      --rod-color: #8b4513;
       --bar-color: #5d4037;
       --text-color: #333;
-      --bead-gap: 6px; 
+      --bead-gap: 4px; /* Zmenšeno gap pro mobily, aby se lépe vešly */
       --blue-bead: #ADD8E6;
       --blue-bead-active: #5DADE2;
-      --bar-offset: 0px; /* Proměnná pro posun lišty */
+      --bar-offset: 0px;
     }
 
     [data-theme="dark"] {
@@ -51,12 +51,12 @@
       z-index: 100;
     }
     .value-display {
-      font-size: 28px; font-weight: bold;
-      background: rgba(0,0,0,0.1); padding: 5px 15px; border-radius: 20px;
-      min-width: 120px; text-align: center; font-variant-numeric: tabular-nums;
+      font-size: 24px; font-weight: bold;
+      background: rgba(0,0,0,0.1); padding: 4px 12px; border-radius: 20px;
+      min-width: 100px; text-align: center; font-variant-numeric: tabular-nums;
     }
     .btn-icon {
-      background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-color);
+      background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-color);
       padding: 5px;
     }
 
@@ -67,7 +67,7 @@
       border-radius: 8px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.4);
       padding: 0 10px;
-      height: 60%; /* Kompaktní výška */
+      height: 60%;
       max-height: 400px; 
       width: 95%;
       max-width: 900px;
@@ -76,7 +76,6 @@
 
     .reckoning-bar {
       position: absolute;
-      /* Dynamická pozice: 25% (base) mínus posun v px */
       top: calc(25% - var(--bar-offset));
       left: 0; right: 0;
       height: 15px;
@@ -97,7 +96,7 @@
 
     .rod {
       flex: 1;
-      max-width: 50px;
+      max-width: 50px; /* Na PC omezeno */
       display: flex;
       flex-direction: column;
       background: transparent;
@@ -105,7 +104,6 @@
       height: 100%;
     }
 
-    /* Všechny tyče jednotné barvy */
     .rod::before {
       content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px;
       background: var(--rod-color); transform: translateX(-50%); z-index: 0;
@@ -124,14 +122,10 @@
       pointer-events: auto; 
     }
 
-    /* Oblast Heaven (nad lištou) - musí být dynamická? 
-       Pro jednoduchost necháme Heaven pevnou (25%) a posuneme jen lištu. 
-       Lišta se pohybuje, Heaven zůstává u horního okraje. 
-       To znamená, že Heaven oblast bude vizuálně větší, když lišta jde nahoru. */
     .heaven {
       position: absolute;
       top: 0; left: 0; right: 0;
-      height: 25%; /* Fixní výška oblasti, ale lišta se pohybuje */
+      height: 25%;
       cursor: pointer;
       z-index: 1;
     }
@@ -146,18 +140,11 @@
     .earth {
       position: absolute;
       bottom: 0; left: 0; right: 0;
-      /* Earth oblast: 75% - posun lišty (protože lišta se posouvá nahoru, Earth se zvětšuje) */
-      /* Ale height: 75% je od spodu. 
-         Technicky: Lišta je v calc(25% - offset). 
-         Earth oblast by měla ideálně končit u lišty. 
-         Ale CSS absolute positioning "bottom:0" a "height:75%" ignoruje lištu.
-         Pro UX je to ok, jen se zvětší mezera nad Earth kostičkami. */
-      height: 75%; 
+      height: 75%;
       cursor: pointer;
       z-index: 1;
     }
     
-    /* Umístění kostiček */
     .earth .bead:nth-child(1) { bottom: 5%; }
     .earth .bead:nth-child(2) { bottom: calc(5% + var(--bead-size) + var(--bead-gap)); }
     .earth .bead:nth-child(3) { bottom: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
@@ -168,11 +155,9 @@
       box-shadow: inset 0 0 5px rgba(255,255,255,0.3);
     }
     
-    /* Modré kostičky */
     .rod.blue-rod .earth .bead { background: var(--blue-bead); }
     .rod.blue-rod .earth .bead.active { background: var(--blue-bead-active); }
     
-    /* Aktivní pozice */
     .earth .bead:nth-child(4).active { bottom: auto; top: 5%; }
     .earth .bead:nth-child(3).active { bottom: auto; top: calc(5% + var(--bead-size) + var(--bead-gap)); }
     .earth .bead:nth-child(2).active { bottom: auto; top: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
@@ -201,10 +186,63 @@
     .btn-row { display: flex; gap: 10px; margin-top: 15px; }
     .btn-row button { flex: 1; }
 
-    @media (max-height: 400px) {
-      .header { top: 2px; }
-      .value-display { font-size: 20px; }
-      .reckoning-bar { height: 12px; }
+    /* --- MOBILNÍ OPTIMIZACE (CELÁ ŠÍŘKA) --- */
+    @media (max-width: 600px) {
+      body {
+        justify-content: flex-start; /* Posuneme obsah trochu nahoru */
+      }
+      .header {
+        top: 5px; left: 2px; right: 2px; /* Minimal okraje pro header */
+        justify-content: center; /* Centrované tlačítka */
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+      .value-display {
+        font-size: 20px;
+        padding: 4px 10px;
+        order: -1; /* Číslo nahoru */
+        width: 100%;
+        margin-bottom: 5px;
+      }
+      .btn-icon {
+        font-size: 18px;
+        padding: 8px; /* Větší touch area */
+      }
+
+      .soroban-frame {
+        /* Na mobilu: plná šířka, minimální okraje rámu */
+        width: 100%; 
+        max-width: 100%;
+        height: calc(100vh - 60px); /* Výška přes celou obrazovku mínus header */
+        max-height: none;
+        border-width: 4px; /* Tenčí rámeček */
+        border-radius: 0; /* Hranatý pro maximální využití */
+        padding: 0 2px; /* Minimální padding vnitřek */
+        margin-top: 50px; /* Odstup od headeru */
+      }
+
+      .rods-container {
+        left: 2px; right: 2px; /* Container až na kraj */
+        gap: 2px; /* Menší mezery mezi tyčemi */
+      }
+
+      .rod {
+        max-width: none; /* Tyče se roztáhnou flexibilně */
+      }
+
+      .bead {
+        width: 95%; /* Kostičky téměř přes celou tyč */
+        left: 2.5%;
+        border-radius: 4px; /* Menší radius pro lepší fit */
+      }
+      
+      .reckoning-bar {
+        height: 10px; /* Tenčí lišta na mobilu */
+      }
+      
+      /* Úprava Heaven/Earth oblastí pro velké mobilní displeje */
+      .heaven { height: 25%; }
+      .earth { height: 75%; }
     }
   </style>
 </head>
@@ -212,7 +250,7 @@
 
   <div class="header">
     <div class="value-display" id="display">0</div>
-    <div style="display:flex; gap:10px;">
+    <div style="display:flex; gap:5px;">
       <button class="btn-icon" onclick="newChallenge()" title="Nová hádanka">❓</button>
       <button class="btn-icon" onclick="resetSoroban()" title="Vynulovat">↺</button>
       <button class="btn-icon" onclick="openSettings()" title="Nastavení">⚙️</button>
@@ -232,27 +270,26 @@
       <div class="setting-row">
         <label>Počet tyčí:</label>
         <select id="rod-count-select">
-          <option value="7">7 (do milionů)</option>
-          <option value="9">9 (do stovek mil.)</option>
-          <option value="13" selected>13 (Standard)</option>
-          <option value="15">15 (Rozšířený)</option>
+          <option value="7">7</option>
+          <option value="9">9</option>
+          <option value="13" selected>13</option>
+          <option value="15">15</option>
         </select>
       </div>
 
       <div class="setting-row">
         <label>Jednotky (od pravého):</label>
         <select id="unit-pos-select">
-          <option value="1" selected>1. vpravo (jednotky)</option>
-          <option value="2">2. vpravo (desítky)</option>
-          <option value="3">3. vpravo (stovky)</option>
+          <option value="1" selected>1. vpravo</option>
+          <option value="2">2. vpravo</option>
+          <option value="3">3. vpravo</option>
         </select>
       </div>
 
-      <!-- NOVÉ: Posun lišty -->
       <div class="setting-row">
         <label>Posun lišty nahoru (px):</label>
         <input type="number" id="bar-offset-input" value="0" step="10" placeholder="0">
-        <small style="font-size: 12px; color: #666;">Zadejte číslo (např. 50, 100) pro posun lišty nahoru.</small>
+        <small style="font-size: 12px; color: #666;">Zadejte číslo (např. 50, 100).</small>
       </div>
 
       <div class="btn-row">
@@ -411,25 +448,17 @@
       updateDisplay();
     }
 
-    // --- Settings Logic ---
-    
     function loadSettings() {
       const savedOffset = localStorage.getItem('barOffset');
       if (savedOffset) BAR_OFFSET = parseInt(savedOffset);
-      
-      // Apply to CSS immediately
       document.documentElement.style.setProperty('--bar-offset', BAR_OFFSET + 'px');
-      
-      // Update inputs if modal was opened before
       if ($('bar-offset-input')) $('bar-offset-input').value = BAR_OFFSET;
     }
 
     function openSettings() { 
-      // Sync inputs with current state
       $('rod-count-select').value = NUM_RODS;
       $('unit-pos-select').value = UNIT_INDEX;
       $('bar-offset-input').value = BAR_OFFSET;
-      
       $('settings-modal').classList.add('visible'); 
     }
     
@@ -442,7 +471,6 @@
       const newOffset = parseInt($('bar-offset-input').value) || 0;
       BAR_OFFSET = newOffset;
       
-      // Save and Apply
       localStorage.setItem('barOffset', BAR_OFFSET);
       document.documentElement.style.setProperty('--bar-offset', BAR_OFFSET + 'px');
       
