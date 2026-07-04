@@ -16,8 +16,6 @@
       --bar-color: #5d4037;
       --text-color: #333;
       --bead-gap: 6px; 
-      
-      /* BARVY PRO MODRÉ TYČE */
       --blue-rod: #87CEFA;
       --blue-bead: #ADD8E6;
       --blue-bead-active: #5DADE2;
@@ -33,7 +31,6 @@
       --rod-color: #3e2723;
       --bar-color: #4e342e;
       --text-color: #ddd;
-      
       --blue-rod: #4682B4;
       --blue-bead: #5F9EA0;
       --blue-bead-active: #4682B4;
@@ -78,7 +75,6 @@
       position: relative;
     }
 
-    /* STŘEDOVÁ LIŠTA */
     .reckoning-bar {
       position: absolute;
       top: 25%; left: 0; right: 0;
@@ -110,20 +106,17 @@
       height: 100%;
     }
 
-    /* VÝCHOZÍ BARVA TYČE */
+    /* TYČE - BARVY */
     .rod::before {
-      content: ''; position: absolute; top: 0; bottom: 0 left: 50%; width: 2px;
+      content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px;
       background: var(--rod-color); transform: translateX(-50%); z-index: 0;
       transition: background 0.3s;
     }
-
-    /* MODRÁ BARVA TYČE */
     .rod.blue-rod::before {
       background: var(--blue-rod);
     }
 
-    /* --- KAMENY --- */
-    
+    /* KOSTIČKY - BARVY */
     .bead {
       width: 90%;
       background: var(--bead-unit);
@@ -135,13 +128,11 @@
       left: 5%;
       z-index: 5;
     }
-
-    /* MODRÁ BARVA KOSTIČEK V MODRÉM SLOUPCI */
     .rod.blue-rod .bead {
       background: var(--blue-bead);
     }
 
-    /* --- HORNI SEKCE (HEAVEN) --- */
+    /* HORNI SEKCE */
     .heaven {
       position: absolute;
       top: 0; left: 0; right: 0;
@@ -149,10 +140,7 @@
       cursor: pointer;
       z-index: 1;
     }
-
-    .heaven .bead {
-      top: 5%; 
-    }
+    .heaven .bead { top: 5%; }
     .heaven .bead.active {
       top: auto;
       bottom: calc(0px + var(--bead-gap)); 
@@ -162,7 +150,7 @@
       background: var(--blue-bead-active);
     }
 
-    /* --- DOLNI SEKCE (EARTH) --- */
+    /* DOLNI SEKCE */
     .earth {
       position: absolute;
       bottom: 0; left: 0; right: 0;
@@ -170,7 +158,6 @@
       cursor: pointer;
       z-index: 1;
     }
-
     .earth .bead:nth-child(1) { bottom: 5%; }
     .earth .bead:nth-child(2) { bottom: calc(5% + var(--bead-size) + var(--bead-gap)); }
     .earth .bead:nth-child(3) { bottom: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
@@ -189,7 +176,7 @@
     .earth .bead:nth-child(3).active { bottom: auto; top: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
     .earth .bead:nth-child(4).active { bottom: auto; top: calc(5% + (var(--bead-size) * 3) + (var(--bead-gap) * 3)); }
 
-    /* Modal & UI */
+    /* UI */
     .modal {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center;
@@ -213,420 +200,199 @@
 <body>
 
   <div class="header">
-    < logic for rod indexing from the right was flawed. The `prepend` method means that the first rod added becomes the last in the DOM, so the logic needs to be inverted. Here is the corrected code with the proper rod indexing.
+    <div class="value-display" id="display">0</div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn-icon" onclick="newChallenge()" title="Nová hádanka">❓</button>
+      <button class="btn-icon" onclick="resetSoroban()" title="Vynulovat">↺</button>
+      <button class="btn-icon" onclick="openSettings()" title="Nastavení">⚙️</button>
+      <button class="btn-icon" id="theme-btn" onclick="toggleTheme()" title="Téma">🌙</button>
+    </div>
+  </div>
 
-```html  
-<!DOCTYPE html>  
-<html lang="cs">  
-<head>  
-  <meta charset="UTF-8">  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  
-  <title>Soroban Tréner</title>  
-  <style>  
-    :root {  
-      --bg: #e0e0e0;  
-      --wood-light: #f4e4bc;  
-      --wood-dark: #d4c49c;  
-      --bead-unit: #888;  
-      --bead-heaven-active: #555;  
-      --bead-earth-active: #333;  
-      --rod-color: #8b4513;  
-      --bar-color: #5d4037;  
-      --text-color: #333;  
-      --bead-gap: 6px;   
-      --blue-rod: #87CEFA;  
-      --blue-bead: #ADD8E6;  
-      --blue-bead-active: #5DADE2;  
-    }  
+  <div class="soroban-frame">
+    <div class="reckoning-bar"></div>
+    <div class="rods-container" id="soroban"></div>
+  </div>
 
-    [data-theme="dark"] {  
-      --bg: #121212;  
-      --wood-light: #2c2c2c;  
-      --wood-dark: #1a1a1a;  
-      --bead-unit: #666;  
-      --bead-heaven-active: #aaa;  
-      --bead-earth-active: #ccc;  
-      --rod-color: #3e2723;  
-      --bar-color: #4e342e;  
-      --text-color: #ddd;  
-      --blue-rod: #4682B4;  
-      --blue-bead: #5F9EA0;  
-      --blue-bead-active: #4682B4;  
-    }  
+  <div class="modal" id="settings-modal">
+    <div class="modal-content">
+      <h2>Nastavení</h2>
+      <div style="margin: 15px 0; display: flex; justify-content: space-between;">
+        <label>Počet tyčí:</label>
+        <select id="rod-count-select">
+          <option value="7">7 (do milionů)</option>
+          <option value="9">9 (do stovek mil.)</option>
+          <option value="13" selected>13 (Standard)</option>
+          <option value="15">15 (Rozšířený)</option>
+        </select>
+      </div>
+      <div style="margin: 15px 0; display: flex; justify-content: space-between;">
+        <label>Jednotky (od pravého):</label>
+        <select id="unit-pos-select">
+          <option value="0">Úplně vpravo</option>
+          <option value="1" selected>1. vpravo</option>
+          <option value="2">2. vpravo</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <button onclick="closeSettings()">Zrušit</button>
+        <button style="background: #4caf50; color: white;" onclick="applySettings()">OK</button>
+      </div>
+    </div>
+  </div>
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }  
-    body {  
-      margin: 0; padding: 0; height: 100vh; width: 100vw;  
-      background: var(--bg); overflow: hidden;  
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;  
-      display: flex; flex-direction: column; align-items: center; justify-content: center;  
-      color: var(--text-color);  
-      transition: background 0.3s;  
-    }  
+  <script>
+    let NUM_RODS = 13;
+    let UNIT_POSITION = 1;
+    const $ = id => document.getElementById(id);
+    let rods = [];
 
-    .header {  
-      position: absolute; top: 10px; left: 10px; right: 10px;  
-      display: flex; justify-content: space-between; align-items: center;  
-      z-index: 100;  
-    }  
-    .value-display {  
-      font-size: 28px; font-weight: bold;  
-      background: rgba(0,0,0,0.1); padding: 0px 15px; border-radius: 20px;  
-      min-width: 120px; text-align: center; font-variant-numeric: tabular-nums;  
-    }  
-    .btn-icon {  
-      background: none; border: 0; border: none; font-size: 24px; cursor: pointer; color: var(--text-color);  
-      padding: 5px;  
-    }  
+    function init() {
+      loadTheme();
+      buildSoroban();
+      window.addEventListener('resize', updateBeadSize);
+      setTimeout(updateBeadSize, 50);
+    }
 
-    .soroban-frame {  
-      display: flex; flex-direction: column;  
-      background: var(--wood-dark);  
-      border: 6px solid var(--bar-color);  
-      border-radius: 8px;  
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);  
-      padding: 0 10px;  
-      height: 90%;  
-      max-height: 500px;  
-      width: 95%;  
-      max-width: 900px;  
-      position: relative;  
-    }  
+    function updateBeadSize() {
+      const rod = document.querySelector('.rod');
+      if (!rod) return;
+      const width = rod.offsetWidth;
+      const size = width * 0.9; 
+      document.documentElement.style.setProperty('--bead-size', size + 'px');
+      document.querySelectorAll('.bead').forEach(bead => {
+        bead.style.height = size + 'px';
+      });
+    }
 
-    .reckoning-bar {  
-      position: absolute;  
-      top: 25%; left: 0; right: 0;  
-      height: 15px;  
-      background: var(--bar-color);  
-      transform: translateY(-50%);  
-      z-index: 20;  
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);  
-      border-top: 1px solid rgba(255,255,255,0.1);  
-      border-bottom: 1px solid rgba(0,0,0,0.2);  
-    }  
+    function buildSoroban() {
+      const container = $('soroban');
+      container.innerHTML = '';
+      rods = [];
 
-    .rods-container {  
-      position: absolute;  
-      top: 0; left: 10px; right: 10px; bottom: 0;  
-      display: flex;  
-      justify-content: center;  
-      gap: 4px;  
-      z-index: 10;  
-    }  
+      for (let i = 0; i < NUM_RODS; i++) {
+        const rod = document.createElement('div');
+        rod.className = 'rod';
+        rod.dataset.index = i;
 
-    .rod {  
-      flex: 1;  
-      max-width: 50px;  
-      display: flex;  
-      flex-direction: column;  
-      background: transparent;  
-      position: relative;  
-      height: 100%;  
-    }  
+        // Logika pro obarvení zprava:
+        // i=0 -> 1. zprava
+        // i=3 -> 4. zprava
+        // i=6 -> 7. zprava
+        // i=9 -> 10. zprava
+        // i=12 -> 13. zprava
+        const posFromRight = i + 1;
+        if (posFromRight === 4 || posFromRight === 7 || posFromRight === 10 || posFromRight === 13) {
+          rod.classList.add('blue-rod');
+        }
 
-    .rod::before {  
-      content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px;  
-      background: var(--rod-color); transform: translateX(-50%); z-index: 0;  
-      transition: background 0.3s;  
-    }  
+        rod.innerHTML = `
+          <div class="heaven" onclick="handleHeavenClick(${i})">
+            <div class="bead"></div>
+          </div>
+          <div class="earth" onclick="handleEarthClick(event, ${i})">
+            <div class="bead"></div>
+            <div class="bead"></div>
+            <div class="bead"></div>
+            <div class="bead"></div>
+          </div>
+        `;
+        
+        container.prepend(rod);
+        rods.push({ heaven: 0, earth: 0, element: rod });
+      }
+      
+      updateBeadSize();
+      updateDisplay();
+    }
 
-    .rod.blue-rod::before {  
-      background: var(--blue-rod);  
-    }  
+    function handleHeavenClick(rodIndex) {
+      const rod = rods[rodIndex];
+      rod.heaven = rod.heaven === 0 ? 5 : 0;
+      updateRodsVisuals();
+      updateDisplay();
+    }
 
-    .bead {  
-      width: 90%;  
-      background: var(--bead-unit);  
-      border-radius: 6px;  
-      border: 1px solid rgba(0,0,0,0.2);  
-      transition: transform 0.15s ease-out, background-color 0.3s, box-shadow 0.15s;  
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);  
-      position: absolute;  
-      left: 5%;  
-      z-index: 5;  
-    }  
+    function handleEarthClick(e, rodIndex) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const clickY = e.clientY - rect.top;
+      const height = rect.height;
+      const relativePos = clickY / height;
 
-    .rod.blue-rod .bead {  
-      background: var(--blue-bead);  
-    }  
+      let newCount = 0;
+      if (relativePos < 0.20) newCount = 4;
+      else if (relativePos < 0.40) newCount = 3;
+      else if (relativePos < 0.60) newCount = 2;
+      else if (relativePos < 0.80) newCount = 1;
+      else newCount = 0;
 
-    .heaven {  
-      position: absolute;  
-      top: 0; left: 0; right: 0;  
-      height: 25%;   
-      cursor: pointer;  
-      z-index: 1;  
-    }  
+      const currentCount = rods[rodIndex].earth;
+      rods[rodIndex].earth = (newCount === currentCount) ? 0 : newCount;
 
-    .heaven .bead {  
-      top: 5%;   
-    }  
-    .heaven .bead.active {  
-      top: auto;  
-      bottom: calc(0px + var(--bead-gap));   
-      background: var(--bead-heaven-active);  
-    }  
-    .rod.blue-rod .heaven .bead.active {  
-      background: var(--blue-bead-active);  
-    }  
+      updateRodsVisuals();
+      updateDisplay();
+    }
 
-    .earth {  
-      position: absolute;  
-      bottom: 0; left: 0; right: 0;  
-      height: 75%;   
-      cursor: pointer;  
-      z-index: 1;  
-    }  
+    function updateRodsVisuals() {
+      rods.forEach(rod => {
+        const hBead = rod.element.querySelector('.heaven .bead');
+        hBead.classList.toggle('active', rod.heaven === 5);
+        
+        const eBeads = rod.element.querySelectorAll('.earth .bead');
+        eBeads.forEach((bead, i) => {
+          bead.classList.toggle('active', (i + 1) <= rod.earth);
+        });
+      });
+    }
 
-    .earth .bead:nth-child(1) { bottom: 5%; }  
-    .earth .bead:nth-child(2) { bottom: calc(5% + var(--bead-size) + var(--bead-gap)); }  
-    .earth .bead:nth-child(3) { bottom: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }  
-    .earth .bead:nth-child(4) { bottom: calc(5% + (var(--bead-size) * 3) + (var(--bead-gap) * 3)); }  
+    function updateDisplay() {
+      let totalValue = 0n;
+      rods.forEach((rod, index) => {
+        const exponent = index - UNIT_POSITION;
+        if (exponent < 0) return;
+        const placeValue = 10n ** BigInt(exponent);
+        const digit = rod.heaven + rod.earth;
+        totalValue += BigInt(digit) * placeValue;
+      });
+      $('display').innerText = totalValue.toLocaleString('cs-CZ');
+    }
 
-    .earth .bead.active {   
-      background: var(--bead-earth-active);   
-      box-shadow: inset 0 0 5px rgba(255,255,255,0.3);  
-    }  
-    .rod.blue-rod .earth .bead.active {   
-      background: var(--blue-bead-active);   
-    }  
+    function resetSoroban() {
+      rods.forEach(rod => {
+        rod.heaven = 0;
+        rod.earth = 0;
+      });
+      updateRodsVisuals();
+      updateDisplay();
+    }
+
+    function openSettings() { $('settings-modal').classList.add('visible'); }
+    function closeSettings() { $('settings-modal').classList.remove('visible'); }
     
-    .earth .bead:nth-child(1).active { bottom: auto; top: 5%; }  
-    .earth .bead:nth-child(2).active { bottom: auto; top: calc(5% + var(--bead-size) + var(--bead-gap)); }  
-    .earth .bead:nth-child(3).active { bottom: auto; top: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }  
-    .earth .bead:nth-child(4).active { bottom: auto; top: calc(5% + (var(--bead-size) * 3) + (var(--bead-gap) * 3)); }  
+    function applySettings() {
+      NUM_RODS = parseInt($('rod-count-select').value);
+      UNIT_POSITION = parseInt($('unit-pos-select').value);
+      buildSoroban();
+      closeSettings();
+    }
 
-    .modal {  
-      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;  
-      background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center;  
-    }  
-    .modal.visible { display: flex; }  
-    .modal-content {  
-      background: var(--var(--wood-light)); padding: 20px; border-radius: 12px;  
-      width: 90%; max-width: 300px; text-align: center; content: var(--text-color);  
-    }  
-    select, button { padding: 8px; border-radius: 6px; border: 1px solid var(--bar-color); background: white; color: black; font-size: 16px; }  
-    .btn-row { display: flex; gap: 10px; margin-top: 15px; }  
-    .btn-row button { flex: 1; }  
+    function toggleTheme() {
+      const body = document.body;
+      body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark';
+      saveTheme();
+    }
+    function saveTheme() { localStorage.setItem('sorobanTheme', document.body.dataset.theme); }
+    function loadTheme() {
+      const t = localStorage.getItem('sorobanTheme') || 'light';
+      document.body.dataset.theme = t;
+    }
 
-    @media (max-height: 400px) {  
-      .header { top: 2px; }  
-      .value-display { font-size: 20px; }  
-      .reckoning-bar { height: 12px; }  
-    }  
-  </style>  
-</head>  
-<body>  
+    function newChallenge() {
+      resetSoroban();
+      alert("Tréninkový režim: Nastavte si vlastní číslo.");
+    }
 
-  <div class="header">  
-    <div class="value-display" id="display">0</div>  
-    <div style="display:flex; gap:10px;">  
-      <button class="btn-icon" onclick="newChallenge()" title="Nová hádanka">❓</button>  
-      <button class="btn-icon" onclick="resetSoroban()" title="Vynulovat">↺</button>  
-      <button class="btn-icon" onclick="openSettings()" title="Nastavení">⚙️</button>  
-      <button class="btn-icon" id="theme-btn" onclick="toggleTheme()" title="Téma">🌙</button>  
-    </div>  
-  </div>  
-
-  <div class="soroban-frame">  
-    <div class="reckoning-bar"></div>  
-    
-    <div class="rods-container" id="soroban"></div>  
-  </div>  
-
-  <div class="modal" id="settings-modal">  
-    <div class="modal-content">  
-      <h2>Nastavení</h2>  
-      <div style="margin: 15px 0; display: flex; justify-content: space-between;">  
-        <label>Počet tyčí:</label>  
-        <2select id="rod-count-select">  
-          <option value="7">7 (do milionů)</option>  
-          <option value="9">9 (do stovek mil.)</option>  
-          <option value="13" selected>13 (Standard)</option>  
-          <option value="15">15 (Rozšířený)</option>  
-        </select>  
-      </div>  
-      <div style="margin: 15px 0; display: flex; justify-content: space-between;">  
-        <label>Jednotky (od pravého):</label>  
-        <select id="unit-pos-select">  
-          <option value="0">Úplně vpravo</option>  
-          <option value="1" selected>1. vpravo</option>  
-2         <option value="2">2. vpravo</option>  
-        </select>  
-      </div>  
-      <div class="btn-row">  
-        <button onclick="closeSettings()">Zrušit</button>  
-        <button style="background: #4caf50; color: white;" onclick="applySettings()">OK</button>  
-      </div>  
-    </div>  
-  </div>  
-
-  <script>  
-    let NUM_RODS = 13;  
-    let UNIT_POSITION = 1;  
-    const $ = id => document.getElementById(id);  
-    let rods = [];  
-    let currentTheme = 'light';  
-
-    function init() {  
-      loadTheme();  
-      buildSoroban();  
-      window.addEventListener('resize', updateBeadSize);  
-      setTimeout(updateBeadSize, 50);  
-    }  
-
-    function updateBeadSize() {  
-      const rod = document.querySelector('.rod');  
-      if (!rod) return;  
-      
-      const width = rod.offsetWidth;  
-      const size = width * 0.9;   
-      
-      document.documentElement.style.setProperty('--bead-size', size + 'px');  
-      
-      document.querySelectorAll('.bead').forEach(bead => {  
-        bead.style.height = size + 'p}>x';  
-      });  
-    }  
-
-    function buildSoroban() {  
-      const container = $('soroban');  
-      container.innerHTML = '';  
-      rods = [];  
-
-      // Vytváříme tyče zleva doprava, ale díky prepend se nakonec nejvyšší index dostane úplně vlevo  
-      for (let i = 0; i < NUM_RODS; i++) {  
-        const rod = document.createElement('div');  
-        rod.className = 'rod';  
-        rod.dataset.index = i;  
-
-        // Výpočet pozice zprava:  
-        // Protože používáme prepend, index 0 skončí zcela vpravo.  
-        // Takže index i odpovídá (i+1). pozici zprava.  
-        const posFromRight = i + 1;  
-        
-        // Obarvíme 4., 7., 10. a 13. zprava  
-        if (posFromRight === 4 || posFromRight === 7 || posFromRight === 10 || posFromRight === 13) {  
-          rod.classList.add('blue-rod');  
-        }  
-
-        rod.innerHTML = `  
-          <div class="heaven" onclick="handleHeavenClick(${i})">  
-            <div class="bead"></div>  
-          </div>  
-          <div class="earth" onclick="handleEarthClick(event, ${i})">  
-            <div class="bead"></div>  
-            <div class="bead"></div>  
-            <div class="bead"></div>  
-            <div class="bead"></div>  
-          </div>  
-        `;  
-        
-        container.prepend(rod);  
-        rods.push({ heaven: 0, earth: 0, element: rod });  
-      }  
-      
-      updateBeadSize();  
-      updateDisplay();  
-    }  
-
-    function handleHeavenClick(rodIndex) {  
-      const rod = rods[rodIndex];  
-      rod.heaven = rod.heaven === 0 ? 5 : 0;  
-      
-      updateRodsVisuals();  
-      updateDisplay();  
-    }  
-
-    function handleEarthClick(e, rodIndex) {  
-      const rect = e.currentTarget.getBoundingClientRect();  
-      const clickY = e.clientY - rect.top;  
-      const height = rect.height;  
-      
-      const relativePos = clickY / height;  
-
-      let newCount = 0;  
-      
-      if (relativePos < 0.20) newCount = 4;  
-      else if (relativePos < 0.40) newCount = 3;  
-      else if (relativePos < 0.60) newCount = 2;  
-      else if (relativePos < 0.80) newCount = 1;  
-      else newCount = 0;  
-
-      const currentCount = rods[rodIndex].earth;  
-      rods[rodIndex].earth = (newCount === currentCount) ? 0 : newCount;  
-
-      updateRodsVisuals();  
-      updateDisplay();  
-    }  
-
-    function updateRodsVisuals() {  
-      rods.forEach(rod => {  
-        const hBead = rod.element.querySelector('.heaven .bead');  
-        hBead.classList.toggle('active', rod.heaven === 5);  
-        
-        const eBeads = rod.element.querySelectorAll('.earth .bead');  
-        eBeads.forEach((bead, i) => {  
-          bead.classList.toggle('active', (i + 1) <= rod.earth);  
-        });  
-      });  
-    }  
-
-    function updateDisplay() {  
-      let totalValue = 0n;  
-      
-      // Aktualizace počítání s ohledem na správné pořadí zprava  
-      rods.forEach((rod, index) => {  
-        // Protože první prvek v poli 'rods' je ten, který byl vložen jako první (a skončil vpravo),  
-        // jeho hodnota je exponent 0. Druhý prvek je exponent 1, atd.  
-        const exponent = index - UNIT_POSITION;  
-        if (exponent < 0) return; // Záporné exponenty ignorujeme (např. desetiny)  
-        
-        const placeValue = 10n ** BigInt(exponent);  
-        const digit = rod.heaven + rod.earth;  
-        totalValue += BigInt(digit) * placeValue;  
-      });  
-      
-      $('display').innerText = totalValue.toLocaleString('cs-CZ');  
-    }  
-
-    function resetSoroban() {  
-      rods.forEach(rod => {  
-        rod.heaven = 0;  
-        rod.earth = 0;  
-      });  
-      updateRodsVisuals();  
-      updateDisplay();  
-    }  
-
-    function openSettings() { $('settings-modal').classList.add('visible'); }  
-    function closeSettings() { $('settings-modal').classList.remove('visible'); }  
-    
-    function applySettings() {  
-      NUM_RODS = parseInt($('rod-count-select').value);  
-      UNIT_POSITION = parseInt($('unit-pos-select').value);  
-      buildSoroban();  
-      closeSettings();  
-    }  
-
-    function toggleTheme() {  
-      const body = document.body;  
-      body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark';  
-      saveTheme();  
-      updateRodsVisuals();  
-    }  
-    function saveTheme() { localStorage.setItem('sorobanTheme', document.body.dataset.theme); }  
-    function loadTheme() {  
-      const t = localStorage.getItem('sorobanTheme') || 'light';  
-      document.body.dataset.theme = t;  
-    }  
-
-    function newChallenge() {  
-      resetSoroban();  
-      alert("Tréninkový režim: Nastavte si vlastní číslo nebo si vymyslete úlohu.");  
-    }  
-
-    window.onload = init;  
-  </script>  
-</body>  
-</html>  
+    window.onload = init;
+  </script>
+</body>
+</html>
