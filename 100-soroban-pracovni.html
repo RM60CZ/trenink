@@ -15,7 +15,7 @@
       --rod-color: #8b4513;
       --bar-color: #5d4037;
       --text-color: #333;
-      --bead-gap: 6px;
+      --bead-gap: 6px; 
     }
 
     [data-theme="dark"] {
@@ -132,9 +132,10 @@
     .heaven .bead {
       top: 5%; 
     }
+    /* ZDE JE ZMĚNA: Přesné odsazení od lišty pomocí calc() a --bead-gap */
     .heaven .bead.active {
       top: auto;
-      bottom: 5%;
+      bottom: calc(0px + var(--bead-gap)); 
       background: var(--bead-heaven-active);
     }
 
@@ -266,7 +267,6 @@
         rod.className = 'rod';
         rod.dataset.index = i;
 
-        // OPRAVA: Volané funkce se nyní jmenují stejně jako ty definované níže
         rod.innerHTML = `
           <div class="heaven" onclick="handleHeavenClick(${i})">
             <div class="bead"></div>
@@ -287,10 +287,8 @@
       updateDisplay();
     }
 
-    // OPRAVA: Funkce se nyní jmenuje handleHeavenClick (shodně s voláním výše)
     function handleHeavenClick(rodIndex) {
       const rod = rods[rodIndex];
-      // Přepnutí stavu: 0 -> 5 nebo 5 -> 0
       rod.heaven = rod.heaven === 0 ? 5 : 0;
       
       updateRodsVisuals();
