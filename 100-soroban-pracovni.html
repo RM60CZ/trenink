@@ -12,12 +12,11 @@
       --bead-unit: #888;
       --bead-heaven-active: #555;
       --bead-earth-active: #333;
-      --rod-color: #8b4513;
+      --rod-color: #8b4513; /* Jednotná barva pro všechny tyče */
       --bar-color: #5d4037;
       --text-color: #333;
       --bead-gap: 6px; 
-      --blue-rod: #87CEFA;
-      --blue-bead: #ADD8E6;
+      --blue-bead: #ADD8E6; /* Barva pro modré kostičky */
       --blue-bead-active: #5DADE2;
     }
 
@@ -31,7 +30,6 @@
       --rod-color: #3e2723;
       --bar-color: #4e342e;
       --text-color: #ddd;
-      --blue-rod: #4682B4;
       --blue-bead: #5F9EA0;
       --blue-bead-active: #4682B4;
     }
@@ -68,8 +66,9 @@
       border-radius: 8px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.4);
       padding: 0 10px;
-      height: 90%;
-      max-height: 500px;
+      /* ZMENA: Výška snížena z 90% na 65% pro kompaktnější vzhled */
+      height: 65%;
+      max-height: 400px; 
       width: 95%;
       max-width: 900px;
       position: relative;
@@ -106,13 +105,10 @@
       height: 100%;
     }
 
+    /* ZMENA: Odstraněna .rod.blue-rod::before, všechny tyče mají barvu --rod-color */
     .rod::before {
       content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px;
       background: var(--rod-color); transform: translateX(-50%); z-index: 0;
-      transition: background 0.3s;
-    }
-    .rod.blue-rod::before {
-      background: var(--blue-rod);
     }
 
     .bead {
@@ -126,9 +122,6 @@
       left: 5%;
       z-index: 5;
       pointer-events: auto; 
-    }
-    .rod.blue-rod .bead {
-      background: var(--blue-bead);
     }
 
     .heaven {
@@ -145,9 +138,6 @@
       bottom: calc(0px + var(--bead-gap)); 
       background: var(--bead-heaven-active);
     }
-    .rod.blue-rod .heaven .bead.active {
-      background: var(--blue-bead-active);
-    }
 
     .earth {
       position: absolute;
@@ -157,19 +147,26 @@
       z-index: 1;
     }
     
-    /* Umístění kostiček (CSS pořád stejné) */
+    /* ZMENA: Umístění spodních kostiček - "zhustění" a zmenšení mezery k liště */
+    /* Původně byly rozprostřené přes celých 75% výšky. Nyní je prostor nad 4. kostičkou zmenšen. */
+    /* bottom: 5% -> 1. zespoda */
+    /* Další kostičky se pohybují v rozměru kostičky + gap */
+    
     .earth .bead:nth-child(1) { bottom: 5%; }
     .earth .bead:nth-child(2) { bottom: calc(5% + var(--bead-size) + var(--bead-gap)); }
     .earth .bead:nth-child(3) { bottom: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
+    /* 4. zespoda (nejvýše) - Posunuta blíže k ostatním, mezera nahoru se zvětší sama díky height: 65% */
     .earth .bead:nth-child(4) { bottom: calc(5% + (var(--bead-size) * 3) + (var(--bead-gap) * 3)); }
 
     .earth .bead.active { 
       background: var(--bead-earth-active); 
       box-shadow: inset 0 0 5px rgba(255,255,255,0.3);
     }
-    .rod.blue-rod .earth .bead.active { 
-      background: var(--blue-bead-active); 
-    }
+    
+    /* Specifické barvy pro kostičky na pozicích jednotek/desítek/stovek */
+    /* Modré kostičky zůstávají modré, tyč je normální */
+    .rod.blue-rod .earth .bead { background: var(--blue-bead); }
+    .rod.blue-rod .earth .bead.active { background: var(--blue-bead-active); }
     
     /* Aktivní pozice */
     .earth .bead:nth-child(4).active { bottom: auto; top: 5%; }
@@ -276,6 +273,7 @@
         rod.className = 'rod';
         rod.dataset.index = i;
 
+        // ZMENA: Zachováme blue-rod pouze pro barvu KOSTIČEK, tyč už nebude modrá (CSS řeší)
         if (i === 4 || i === 7 || i === 10 || i === 13) {
           rod.classList.add('blue-rod');
         }
@@ -310,17 +308,15 @@
     function handleEarthClick(e, index) {
       const rodData = rods[NUM_RODS - index];
       
-      // 1. Identifikace kliknuté kostičky
       let clickedBeadIndex = -1;
       const beads = rodData.element.querySelectorAll('.earth .bead');
       
       beads.forEach((bead, i) => {
         if (bead === e.target) {
-          clickedBeadIndex = i; // 0 = 1. zespoda, 3 = 4. zespoda
+          clickedBeadIndex = i; 
         }
       });
 
-      // Fallback pro kliknutí do mezery
       if (clickedBeadIndex === -1) {
           const rect = e.currentTarget.getBoundingClientRect();
           const clickY = e.clientY - rect.top;
@@ -332,48 +328,16 @@
           else clickedBeadIndex = 3;
       }
 
-      const clickedBeadFromBottom = clickedBeadIndex + 1; // 1 až 4
+      const clickedBeadFromBottom = clickedBeadIndex + 1;
       
-      // 2. Zjištění stavu (aktivní/neaktivní)
       const totalBeads = 4;
       const currentActive = rodData.earth;
       
-      // Kostička je aktivní, pokud její index (0-3) je >= (4 - currentActive)
-      // Příklad: currentActive = 2 (nahoře 3. a 4.). 
-      // Indexy aktivních: 2 a 3. 
-      // Podmínka: index >= (4 - 2) -> index >= 2. Platí pro 2 a 3.
       const isActive = clickedBeadIndex >= (totalBeads - currentActive);
 
-      // 3. Logika
       if (isActive) {
-        // SKLÁDÁNÍ DOLŮ:
-        // Klikli jsme na aktivní kostičku (součást vláčku).
-        // Chceme, aby tato a všechny pod ní spadly dolů.
-        // Zůstane aktivních jen to, co je NAD ní.
-        
-        // Příklad: Nahoře 1,2,3,4. Klik na 3.
-        // 3. zespoda má index 2.
-        // Nad ní je jen 4. zespoda (index 3).
-        // Počet aktivních zůstane 1.
-        
-        // Vzorec: newActive = totalBeads - clickedBeadFromBottom.
-        // Příklad: Klik na 3. (index 2). newActive = 4 - 3 = 1. (Zůstane 4.).
-        // Příklad: Nahoře 3,4. Klik na 3. (index 2). newActive = 4 - 3 = 1. (Zůstane 4., 3. spadne).
-        
         rodData.earth = totalBeads - clickedBeadFromBottom;
-        
       } else {
-        // TAŽENÍ NAHORU:
-        // Klikli jsme na neaktivní kostičku (mimo vláček).
-        // Chceme vláček rozšířit tak, aby "chytil" tuto kostičku a všechny nad ní.
-        
-        // Příklad: Nahoře 3,4. Klik na 1. (je dole).
-        // Chceme, aby 1. vyrazila nahoru a potáhla 2,3,4.
-        // Počet aktivních = (4 - 1) + 1 = 4.
-        
-        // Příklad: Nahoře nic (0). Klik na 3.
-        // Počet aktivních = (4 - 3) + 1 = 2.
-        
         rodData.earth = (totalBeads - clickedBeadFromBottom) + 1;
       }
 
