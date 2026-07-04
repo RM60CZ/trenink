@@ -162,7 +162,7 @@
     .earth .bead:nth-child(3) { bottom: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
     .earth .bead:nth-child(4) { bottom: calc(5% + (var(--bead-size) * 3) + (var(--bead-gap) * 3)); }
 
-    /* Aktivní kostička znamená, že je odtržená od spodní základny a je u lišty */
+    /* Aktivní kostička = odtržená od spodní základny, visí u lišty */
     .earth .bead.active { 
       background: var(--bead-earth-active); 
       box-shadow: inset 0 0 5px rgba(255,255,255,0.3);
@@ -172,13 +172,13 @@
     }
     
     /* Umístění AKTIVNÍCH kostiček - vláček u lišty */
-    /* 1. aktivní (dole pod ostatními aktivními) */
+    /* 1. aktivní (nejníže u lišty) */
     .earth .bead:nth-child(1).active { bottom: auto; top: 5%; }
-    /* 2. aktivní (nad 1. aktivní) */
+    /* 2. aktivní (nad 1.) */
     .earth .bead:nth-child(2).active { bottom: auto; top: calc(5% + var(--bead-size) + var(--bead-gap)); }
-    /* 3. aktivní (nad 2. aktivní) */
+    /* 3. aktivní (nad 2.) */
     .earth .bead:nth-child(3).active { bottom: auto; top: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
-    /* 4. aktivní (nad 3. aktivní) */
+    /* 4. aktivní (nad 3.) */
     .earth .bead:nth-child(4).active { bottom: auto; top: calc(5% + (var(--bead-size) * 3) + (var(--bead-gap) * 3)); }
 
     .modal {
@@ -330,24 +330,10 @@
       else if (relativePos > 0.25) clickedBeadFromBottom = 3;
       else clickedBeadFromBottom = 4;
 
-      const currentCount = rodData.earth;
-
-      // Logika "Vláčku":
-      // 1. Jsme klikli na kostičku, která je NYNÍ aktivní (v bloku u lišty)?
-      //    Aktivní blok má vždy velikost 'currentCount'.
-      //    Pokud clickedBeadFromBottom <= currentCount, znamená to, že jsme trefili horní blok.
-      //    -> Chceme ho zkrátit (stáhnout) na pozici, kam jsme klikli.
-      
-      if (clickedBeadFromBottom <= currentCount) {
-        // Klikli jsme dovnitř aktivního bloku (nebo na jeho konec).
-        // Chceme, aby blok končil na této kostičce.
-        // Tedy: pod ťuknutou kostičkou zůstanou aktivní.
-        rodData.earth = clickedBeadFromBottom - 1;
-      } else {
-        // 2. Klikli jsme na kostičku, která je dole (neaktivní).
-        //    Chceme blok rozšířit (vytáhnout) až k této kostičce.
-        rodData.earth = clickedBeadFromBottom;
-      }
+      // LOGIKA VLÁČKU:
+      // Kliknutí na X. kostičku zespoda nastaví počet aktivních na X.
+      // (Všechny od 1. po X. costičku se přesunou k liště)
+      rodData.earth = clickedBeadFromBottom;
 
       updateRodsVisuals();
       updateDisplay();
@@ -360,7 +346,6 @@
         
         const eBeads = rod.element.querySelectorAll('.earth .bead');
         // Kostička je aktivní, pokud je její pořadí menší nebo rovno počtu aktivních (rod.earth)
-        // Přesně to vytváří efekt "vláčku", kdy 1, 2, 3... kostička tvoří blok.
         eBeads.forEach((bead, i) => {
           bead.classList.toggle('active', (i + 1) <= rod.earth);
         });
