@@ -2,17 +2,14 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <!-- CRITICAL for Fullscreen PWA -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
-  <!-- Barva rámu -->
   <meta name="theme-color" content="#d4c49c">
   
   <title>Soroban</title>
   
-  <!-- Manifest generation script -->
   <script>
     const manifest = {
       "name": "Soroban",
@@ -50,7 +47,6 @@
       --bar-offset: 0px;
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
-      --header-height: 50px; /* Výška horní lišty v standalone */
     }
 
     [data-theme="dark"] {
@@ -76,33 +72,30 @@
       background: var(--wood-dark); 
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      /* Důležité:Žádné centrování, necháme obsah přirozeně vyplnit prostor */
+      display: flex; flex-direction: column; 
       color: var(--text-color);
       touch-action: manipulation;
     }
 
-    /* --- STANDALONE PWA MODE (Fullscreen on Mobile) --- */
+    /* --- STANDALONE PWA MODE (Fullscren na mobilu) --- */
     @media all and (display-mode: standalone) {
       html, body {
-        /* Reset justify, necháme elementy plnit prostor odshora */
         justify-content: flex-start;
-        padding: 0;
       }
 
-      /* Horní lišta - Viditelná v standalone */
+      /* Horní lišta - pevně nahoře */
       .header {
-        display: flex !important; /* Force show */
+        display: flex !important;
         position: fixed;
-        top: env(safe-area-inset-top); /* Začíná pod výřezem */
-        left: 0; right: 0;
-        height: var(--header-height);
+        top: 0; left: 0; right: 0;
+        height: calc(var(--safe-top) + 50px); /* Výška lišty + bezpečný prostor */
+        padding-top: var(--safe-top); /* Odsazení pro výřez kamery */
         background: var(--wood-dark);
         z-index: 100;
         align-items: center;
-        justify-content: center; /* Číslo přesně na střed */
+        justify-content: center;
         border-bottom: 1px solid rgba(0,0,0,0.2);
-        /* Tlačítka skryta, ovládání Long Press */
-        padding: 0;
       }
       
       .header .btn-icon { display: none; }
@@ -114,52 +107,51 @@
         text-align: center;
       }
 
-      /* SOROBAN FRAME */
+      /* Rám sorobanu */
       .soroban-frame {
         position: fixed;
+        top: 0; /* Začíná úplně nahoře, překrývá header (header je nad ním v z-indexu) */
         left: 0; right: 0;
-        /* TOP: Začíná POD horní lištou (která je pod safe-area) */
-        top: calc(env(safe-area-inset-top) + var(--header-height));
-        
-        /* BOTTOM: Končí PRESNĚ na spodním okraji (zahrnu safe-area inset) */
-        /* Výpočet: 100% výška displeje MINUS (horní safe area + lišta) */
-        /* Zbytek vyplní soroban. Spodní padding sorobanu zajistí obsah v safe area */
-        height: calc(100% - env(safe-area-inset-top) - var(--header-height));
-        
+        /* Výška přes celou obrazovku */
+        height: 100%;
         width: 100%;
         max-width: none; max-height: none;
         border: none; border-radius: 0;
         box-shadow: none;
+        background: var(--wood-dark);
         
-        /* Důležité: Spodní padding rámce = Safe Area, takže kuličky nebudou pod hranou */
-        padding-bottom: env(safe-area-inset-bottom);
-        padding-top: 0; /* Nahoře už je lišta */
-        
-        display: flex;
-        flex-direction: column;
+        /* Důležité: Spodní padding, aby kuličky nebyly pod hranou */
+        padding-bottom: var(--safe-bottom);
+        padding-left: 10px;
+        padding-right: 10px;
       }
-      
-      /* Kontejner tyčí vyplní zbytek */
+
+      /* Kontejner tyčí - PŘILEPEN DOLŮ */
       .rods-container {
         position: absolute;
-        top: 0; 
-        /* Dola respektujeme padding-bottom frameu */
-        bottom: env(safe-area-inset-bottom); 
+        top: auto; /* Rušíme top */
+        bottom: var(--safe-bottom); /* Přilepí kuličky na spodek (respektuje safe area) */
         left: 10px; right: 10px;
-        height: auto;
+        height: 60%; /* Výška oblasti tyčí (cca 4/5 sorobanu) */
+        margin-top: calc(var(--safe-top) + 60px); /* Odsazení odshora, aby nenabíhaly na lištu */
+      }
+      
+      /* Reckoning bar musí být relativní k rodiči */
+      .reckoning-bar {
+        position: absolute;
+        /* Lišta je vždy ve výšce 25% kontejneru tyčí */
       }
     }
 
-    /* --- BROWSER MODE (Desktop/Mobile) --- */
+    /* --- BROWSER MODE --- */
     .header {
-      /* Defaultně relativní v browser módu */
       position: relative; 
       width: 100%;
-      top: 0; left: 0; right: 0;
       padding: 10px;
       display: flex; justify-content: space-between; align-items: center;
       z-index: 100;
       background: var(--bg);
+      flex-shrink: 0;
     }
     .value-display {
       font-size: 24px; font-weight: bold;
@@ -184,6 +176,7 @@
       max-width: 900px;
       position: relative;
       touch-action: none; 
+      flex-grow: 1;
     }
 
     .reckoning-bar {
@@ -303,7 +296,6 @@
     }
     .toast.show { opacity: 1; }
 
-    /* Mobile Browser Adjustments */
     @media (max-width: 600px) {
       @media all and (display-mode: browser) {
         .header { padding: 5px; }
@@ -317,7 +309,6 @@
   <!-- HEADER -->
   <div class="header" id="header">
     <div class="value-display" id="display">0</div>
-    <!-- Tlačítka viditelná jen v browser módu -->
     <div style="display:flex; gap:5px;" id="btn-group">
       <button class="btn-icon" onclick="newChallenge()" title="Nová hádanka">❓</button>
       <button class="btn-icon" onclick="resetSoroban()" title="Vynulovat">↺</button>
@@ -377,9 +368,8 @@
     const $ = id => document.getElementById(id);
     let rods = [];
     let isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    let headerVisible = true; // Stav horní lišty v standalone
+    let headerVisible = true;
 
-    // Register Service Worker
     if ('serviceWorker' in navigator) {
       const swCode = `
         self.addEventListener('install', e => self.skipWaiting());
@@ -448,63 +438,53 @@
       updateDisplay();
     }
 
-    // --- Long Press Logic (Controls for PWA) ---
-    let pressTimer = null;
-    let pressStartX = 0;
-
     function setupLongPress() {
       const frame = $('frame');
       
       frame.addEventListener('touchstart', (e) => {
-        if (!isStandalone) return; // V browser módu máme tlačítka
+        if (!isStandalone) return;
 
         pressStartX = e.touches[0].clientX;
         pressTimer = setTimeout(() => {
           const screenWidth = window.innerWidth;
-          // Left side (25% width) -> RESET
           if (pressStartX < screenWidth * 0.25) {
             resetSoroban();
             showToast("Soroban vynulován");
           } 
-          // Right side (25% width) -> SETTINGS
           else if (pressStartX > screenWidth * 0.75) {
             openSettings();
           }
-          // Center (50% width) -> TOGGLE HEADER
           else {
             toggleHeader();
           }
-        }, 600); // 600ms hold
+        }, 600);
       }, {passive: true});
 
       frame.addEventListener('touchend', () => clearTimeout(pressTimer));
       frame.addEventListener('touchmove', () => clearTimeout(pressTimer));
     }
+    
+    let pressTimer = null;
+    let pressStartX = 0;
 
     function toggleHeader() {
       if (!isStandalone) return;
       
       const header = $('header');
-      const frame = $('frame');
+      const container = $('soroban'); // Kontejner tyčí
       
       if (headerVisible) {
-        // Skrýt header
         header.style.display = 'none';
-        // Posunout Frame nahoru (zvětšit výšku)
-        frame.style.top = 'env(safe-area-inset-top)';
-        frame.style.height = 'calc(100% - env(safe-area-inset-top))';
+        // Když skryjeme header, posuneme tyče výš (zmenšíme margin-top)
+        container.style.marginTop = '20px'; // Malý odstup odshora
         showToast("Lišta skryta");
       } else {
-        // Zobrazit header
         header.style.display = 'flex';
-        // Posunout Frame dolů (zmenšit výšku)
-        frame.style.top = 'calc(env(safe-area-inset-top) + 50px)';
-        frame.style.height = 'calc(100% - env(safe-area-inset-top) - 50px)';
+        // Obnovíme odstup
+        container.style.marginTop = 'calc(var(--safe-top) + 60px)';
         showToast("Lišta zobrazena");
       }
       headerVisible = !headerVisible;
-      
-      // Recalculate beads after layout change
       setTimeout(updateBeadSize, 100);
     }
 
