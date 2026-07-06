@@ -54,9 +54,18 @@
       touch-action: manipulation;
     }
 
-    /* Skrytí headeru v standalone režimu */
+    /* --- STANDALONE REŽIM (PWA) --- */
+    /* V standalone režimu neexistuje UI prohlížeče, aplikace musí vyplnit celou obrazovku */
+    body.standalone {
+      /* Zajistí, že obsah respektuje výřezy (notch) a status bar */
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
     body.standalone .header { display: none !important; }
     body.standalone .soroban-frame {
+      /* V PWA na mobilu chceme 100% výšku OBSAHU (minus safe areas) */
       height: 100% !important;
       width: 100% !important;
       max-width: 100% !important;
@@ -64,12 +73,22 @@
       border: none;
       border-radius: 0;
       background: var(--wood-dark);
+      box-shadow: none;
+      margin: 0;
     }
     body.standalone .rods-container {
-      top: var(--safe-top); 
-      bottom: var(--safe-bottom);
+      /* Posunutí tyčí vzhledem k safe areas */
+      top: env(safe-area-inset-top); 
+      bottom: env(safe-area-inset-bottom);
+      /* Override pro desktop PWA, pokud je okno velké, neposouváme */
+      @media (min-width: 601px) and (min-height: 500px) {
+         top: 0; bottom: 0;
+      }
     }
+    body.standalone .rod { max-width: 60px; }
+    body.standalone .bead { border-radius: 6px; }
 
+    /* --- STANDARDNÍ HEADER (PROHLÍŽEČ) --- */
     .header {
       position: absolute; top: 10px; left: 10px; right: 10px;
       display: flex; justify-content: space-between; align-items: center;
@@ -85,6 +104,7 @@
       padding: 5px;
     }
 
+    /* --- SOROBAN FRAME (DEFAULT PRO DESKTOP) --- */
     .soroban-frame {
       display: flex; flex-direction: column;
       background: var(--wood-dark);
@@ -92,12 +112,12 @@
       border-radius: 8px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.4);
       padding: 0 10px;
+      /* Defaultně 60% výšky, ale na mobilu v prohlížeči to přebijeme */
       height: 60%;
       max-height: 400px; 
       width: 95%;
       max-width: 900px;
       position: relative;
-      /* Aktivace Long Press */
       touch-action: none; 
     }
 
@@ -208,7 +228,6 @@
     .btn-row { display: flex; gap: 10px; margin-top: 15px; }
     .btn-row button { flex: 1; }
 
-    /* Toast notifikace pro skryté funkce */
     .toast {
       position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
       background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px;
@@ -217,30 +236,44 @@
     }
     .toast.show { opacity: 1; }
 
-    @media (max-width: 600px) {
+    /* --- MOBILNÍ REŽIM V PROHLÍŽEČI (NE STANDALONE) --- */
+    /* Důležité: Toto pravidlo musí být přesně definováno, aby přebilo defaultní height: 60% */
+    @media (max-width: 600px), (max-height: 500px) {
+      /* Pokud NENÍ standalone, ale je malý displej (mobilní prohlížeč) */
+      body:not(.standalone) {
+        justify-content: flex-start; /* Obsah odshora */
+        padding: 0;
+      }
+      
       body:not(.standalone) .header {
+        position: relative;
         top: 0; left: 0; right: 0;
         padding: 5px 5px 0 5px;
         background: var(--bg);
         justify-content: space-between;
-        position: relative;
         width: 100%;
-        order: 1;
+        order: 1; /* Header první */
         box-sizing: border-box;
+        flex-shrink: 0;
+        height: auto; /* Automatická výška headeru */
+        min-height: 40px;
       }
       body:not(.standalone) .value-display { font-size: 18px; padding: 4px 10px; min-width: auto; }
       body:not(.standalone) .btn-icon { font-size: 18px; padding: 8px; }
+      
       body:not(.standalone) .soroban-frame {
         order: 2;
         width: 100%;
         max-width: 100% !important;
-        height: calc(100vh - 50px);
+        /* FIX: Výška musí být 100% z REMAINING viewportu, ne 60% celku */
+        height: calc(100vh - 40px); /* 100vh minus header height (cca 40px) */
         max-height: none !important;
         border-left: none; border-right: none;
         border-radius: 0;
         padding: 0 2px;
         margin: 0;
         box-shadow: none;
+        flex-grow: 1; /* Zajistí vyplnění prostoru */
       }
       body:not(.standalone) .rods-container { left: 2px; right: 2px; gap: 2px; }
       body:not(.standalone) .rod { max-width: none !important; }
@@ -329,16 +362,10 @@
         document.body.classList.add('standalone');
         isStandalone = true;
         
-        // Zjištění safe area (pro výřezy u fotoaparátu na iPhone atd.)
-        const computedStyle = getComputedStyle(document.documentElement);
-        const safeTop = computedStyle.getPropertyValue('--safe-top') || '0px';
-        const safeBottom = computedStyle.getPropertyValue('--safe-bottom') || '0px';
-        
-        // Pokud browser podporuje env(safe-area-inset...), použijeme ji
-        // Jinak fallback na 0
+        // Nastavení CSS proměnných pro safe areas (iOS)
         if (CSS.supports('padding-top: env(safe-area-inset-top)')) {
-           document.documentElement.style.setProperty('--safe-top', 'env(safe-area-inset-top)');
-           document.documentElement.style.setProperty('--safe-bottom', 'env(safe-area-inset-bottom)');
+           // CSS již obsahuje env() v standalone sekci, zde jen pro info
+           console.log("Safe areas supported");
         }
       }
     }
@@ -399,24 +426,19 @@
       const frame = $('frame');
       
       frame.addEventListener('touchstart', (e) => {
-        // Pokud jsme v prohlížeči (ne standalone), nechceme long press blokovat
-        // Ale tlačítka máme skrytá jen v standalone
         if (!isStandalone) return;
 
-        // Zapamatujeme si X pozici
         pressStartX = e.touches[0].clientX;
         pressTimer = setTimeout(() => {
           const screenWidth = window.innerWidth;
-          // Pokud držíme vlevo (25% obrazovky) -> RESET
           if (pressStartX < screenWidth * 0.25) {
             resetSoroban();
             showToast("Soroban vynulován");
           } 
-          // Pokud držíme vpravo (25% obrazovky) -> SETTINGS
           else if (pressStartX > screenWidth * 0.75) {
             openSettings();
           }
-        }, 600); // 600ms = Long Press
+        }, 600);
       }, {passive: true});
 
       frame.addEventListener('touchend', () => {
@@ -424,7 +446,7 @@
       });
 
       frame.addEventListener('touchmove', () => {
-        clearTimeout(pressTimer); // Pokud hýbeme prstem, zrušíme
+        clearTimeout(pressTimer);
       });
     }
 
@@ -567,7 +589,6 @@
 
     function newChallenge() {
       resetSoroban();
-      // V standalone režimu alert vypadá jako systémové okno
       alert("Tréninkový režim: Nastavte si vlastní číslo.");
     }
 
