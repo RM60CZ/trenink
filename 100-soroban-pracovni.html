@@ -2,13 +2,38 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <!-- Důležité pro Android/iOS Fullscreen režim -->
+  <!-- CRITICAL for Fullscreen PWA -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#d4c49c"> <!-- Barva rámu -->
+  <!-- Barva celé aplikace (musí odpovídat wood-dark pro plynulý přechod) -->
+  <meta name="theme-color" content="#d4c49c">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
   <title>Soroban</title>
+  
+  <!-- Manifest generation script (for Android) -->
+  <script>
+    const manifest = {
+      "name": "Soroban",
+      "short_name": "Soroban",
+      "display": "standalone",
+      "background_color": "#d4c49c",
+      "theme_color": "#d4c49c",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23d4c49c' width='100' height='100'/><rect x='45' y='10' width='10' height='80' rx='5' fill='%235d4037'/><circle cx='50' cy='35' r='10' fill='%23333'/></svg>",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    };
+    const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+    const manifestURL = URL.createObjectURL(manifestBlob);
+    document.write(`<link rel="manifest" href="${manifestURL}">`);
+  </script>
+
   <style>
     :root {
       --bg: #e0e0e0;
@@ -24,8 +49,8 @@
       --blue-bead: #ADD8E6;
       --blue-bead-active: #5DADE2;
       --bar-offset: 0px;
-      --safe-top: 0px;
-      --safe-bottom: 0px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     [data-theme="dark"] {
@@ -44,51 +69,58 @@
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+    
+    /* HTML/BODY SETUP FOR TRUE FULLSCREEN */
     html, body {
       margin: 0; padding: 0; 
       height: 100%; width: 100%;
-      background: var(--bg); overflow: hidden;
+      background: var(--wood-dark); /* Important: background matches frame */
+      overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      /* Flex setup helps centering in browser mode, but PWA will override */
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       color: var(--text-color);
       touch-action: manipulation;
     }
 
-    /* --- STANDALONE REŽIM (PWA) --- */
-    /* V standalone režimu neexistuje UI prohlížeče, aplikace musí vyplnit celou obrazovku */
-    body.standalone {
-      /* Zajistí, že obsah respektuje výřezy (notch) a status bar */
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
-      padding-left: env(safe-area-inset-left);
-      padding-right: env(safe-area-inset-right);
-    }
-    body.standalone .header { display: none !important; }
-    body.standalone .soroban-frame {
-      /* V PWA na mobilu chceme 100% výšku OBSAHU (minus safe areas) */
-      height: 100% !important;
-      width: 100% !important;
-      max-width: 100% !important;
-      max-height: 100% !important;
-      border: none;
-      border-radius: 0;
-      background: var(--wood-dark);
-      box-shadow: none;
-      margin: 0;
-    }
-    body.standalone .rods-container {
-      /* Posunutí tyčí vzhledem k safe areas */
-      top: env(safe-area-inset-top); 
-      bottom: env(safe-area-inset-bottom);
-      /* Override pro desktop PWA, pokud je okno velké, neposouváme */
-      @media (min-width: 601px) and (min-height: 500px) {
-         top: 0; bottom: 0;
+    /* --- STANDALONE PWA MODE (The mode you want) --- */
+    /* This CSS kicks in ONLY when launched from Home Screen */
+    @media all and (display-mode: standalone) {
+      html, body {
+        /* Extend content into safe areas (notches/status bar) */
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        /* Reset justify to start so header/frame stack naturally */
+        justify-content: flex-start;
+      }
+      
+      /* Hide the UI Header completely */
+      .header { display: none !important; }
+      
+      /* Make Soroban fill the ENTIRE available screen space */
+      .soroban-frame {
+        position: fixed; /* Absolute positioning */
+        top: 0; left: 0; right: 0; bottom: 0;
+        width: 100% !important;
+        height: 100% !important; /* 100% of viewport */
+        max-width: none; max-height: none;
+        border: none; border-radius: 0;
+        box-shadow: none;
+        background: var(--wood-dark);
+        /* Padding to respect safe areas inside the frame */
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+
+      .rods-container {
+        /* Ensure rods use full height inside the padded frame */
+        position: absolute;
+        top: 0; bottom: 0; left: 10px; right: 10px;
+        height: auto;
       }
     }
-    body.standalone .rod { max-width: 60px; }
-    body.standalone .bead { border-radius: 6px; }
 
-    /* --- STANDARDNÍ HEADER (PROHLÍŽEČ) --- */
+    /* --- BROWSER MODE (Desktop/Mobile with URL bar) --- */
+    /* Fallback styling if user opens in browser */
     .header {
       position: absolute; top: 10px; left: 10px; right: 10px;
       display: flex; justify-content: space-between; align-items: center;
@@ -104,7 +136,6 @@
       padding: 5px;
     }
 
-    /* --- SOROBAN FRAME (DEFAULT PRO DESKTOP) --- */
     .soroban-frame {
       display: flex; flex-direction: column;
       background: var(--wood-dark);
@@ -112,8 +143,7 @@
       border-radius: 8px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.4);
       padding: 0 10px;
-      /* Defaultně 60% výšky, ale na mobilu v prohlížeči to přebijeme */
-      height: 60%;
+      height: 60%; /* Default height in browser */
       max-height: 400px; 
       width: 95%;
       max-width: 900px;
@@ -228,62 +258,30 @@
     .btn-row { display: flex; gap: 10px; margin-top: 15px; }
     .btn-row button { flex: 1; }
 
+    /* Toast for feedback in PWA mode */
     .toast {
-      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      position: fixed; 
+      bottom: calc(20px + env(safe-area-inset-bottom)); /* Safe area respect */
+      left: 50%; transform: translateX(-50%);
       background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px;
       font-size: 14px; z-index: 300; opacity: 0; transition: opacity 0.3s;
       pointer-events: none;
     }
     .toast.show { opacity: 1; }
 
-    /* --- MOBILNÍ REŽIM V PROHLÍŽEČI (NE STANDALONE) --- */
-    /* Důležité: Toto pravidlo musí být přesně definováno, aby přebilo defaultní height: 60% */
-    @media (max-width: 600px), (max-height: 500px) {
-      /* Pokud NENÍ standalone, ale je malý displej (mobilní prohlížeč) */
-      body:not(.standalone) {
-        justify-content: flex-start; /* Obsah odshora */
-        padding: 0;
+    /* Mobile Browser Adjustments */
+    @media (max-width: 600px) {
+      /* Only apply if NOT standalone (otherwise header is hidden) */
+      @media all and (display-mode: browser) {
+        .header { position: relative; top:0; width:100%; padding:5px; background: var(--bg); }
+        .soroban-frame { width:100%; height: auto; flex-grow:1; border-radius:0; border-left:none; border-right:none; }
       }
-      
-      body:not(.standalone) .header {
-        position: relative;
-        top: 0; left: 0; right: 0;
-        padding: 5px 5px 0 5px;
-        background: var(--bg);
-        justify-content: space-between;
-        width: 100%;
-        order: 1; /* Header první */
-        box-sizing: border-box;
-        flex-shrink: 0;
-        height: auto; /* Automatická výška headeru */
-        min-height: 40px;
-      }
-      body:not(.standalone) .value-display { font-size: 18px; padding: 4px 10px; min-width: auto; }
-      body:not(.standalone) .btn-icon { font-size: 18px; padding: 8px; }
-      
-      body:not(.standalone) .soroban-frame {
-        order: 2;
-        width: 100%;
-        max-width: 100% !important;
-        /* FIX: Výška musí být 100% z REMAINING viewportu, ne 60% celku */
-        height: calc(100vh - 40px); /* 100vh minus header height (cca 40px) */
-        max-height: none !important;
-        border-left: none; border-right: none;
-        border-radius: 0;
-        padding: 0 2px;
-        margin: 0;
-        box-shadow: none;
-        flex-grow: 1; /* Zajistí vyplnění prostoru */
-      }
-      body:not(.standalone) .rods-container { left: 2px; right: 2px; gap: 2px; }
-      body:not(.standalone) .rod { max-width: none !important; }
-      body:not(.standalone) .bead { width: 95%; left: 2.5%; border-radius: 4px; }
-      body:not(.standalone) .reckoning-bar { height: 10px; }
     }
   </style>
 </head>
 <body>
 
+  <!-- HEADER (Visible only in Browser Mode) -->
   <div class="header">
     <div class="value-display" id="display">0</div>
     <div style="display:flex; gap:5px;">
@@ -294,7 +292,7 @@
     </div>
   </div>
 
-  <!-- Soroban frame s detekcí Long Press -->
+  <!-- Soroban frame -->
   <div class="soroban-frame" id="frame">
     <div class="reckoning-bar"></div>
     <div class="rods-container" id="soroban"></div>
@@ -344,30 +342,28 @@
     
     const $ = id => document.getElementById(id);
     let rods = [];
-    let isStandalone = false;
+    let isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+    // Register Service Worker for iOS Safari "Add to Home" capability
+    if ('serviceWorker' in navigator) {
+      // Create a dummy service worker inline blob to satisfy iOS requirements
+      const swCode = `
+        self.addEventListener('install', e => self.skipWaiting());
+        self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+        self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));
+      `;
+      const swBlob = new Blob([swCode], {type: 'application/javascript'});
+      const swUrl = URL.createObjectURL(swBlob);
+      navigator.serviceWorker.register(swUrl).catch(err => console.log("SW registration optional for Android, failed: ", err));
+    }
 
     function init() {
-      checkStandalone();
       loadTheme();
       loadSettings();
       buildSoroban();
       setupLongPress();
       window.addEventListener('resize', updateBeadSize);
       setTimeout(updateBeadSize, 50);
-    }
-
-    function checkStandalone() {
-      // Detekce standalone režimu (PWA)
-      if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-        document.body.classList.add('standalone');
-        isStandalone = true;
-        
-        // Nastavení CSS proměnných pro safe areas (iOS)
-        if (CSS.supports('padding-top: env(safe-area-inset-top)')) {
-           // CSS již obsahuje env() v standalone sekci, zde jen pro info
-           console.log("Safe areas supported");
-        }
-      }
     }
 
     function updateBeadSize() {
@@ -418,7 +414,7 @@
       updateDisplay();
     }
 
-    // --- Long Press Logic pro skrytá tlačítka ---
+    // --- Long Press Logic (Controls for PWA Fullscreen) ---
     let pressTimer = null;
     let pressStartX = 0;
 
@@ -426,28 +422,23 @@
       const frame = $('frame');
       
       frame.addEventListener('touchstart', (e) => {
-        if (!isStandalone) return;
-
         pressStartX = e.touches[0].clientX;
         pressTimer = setTimeout(() => {
           const screenWidth = window.innerWidth;
+          // Left side (25% width) -> RESET
           if (pressStartX < screenWidth * 0.25) {
             resetSoroban();
             showToast("Soroban vynulován");
           } 
+          // Right side (25% width) -> SETTINGS
           else if (pressStartX > screenWidth * 0.75) {
             openSettings();
           }
-        }, 600);
+        }, 600); // 600ms hold
       }, {passive: true});
 
-      frame.addEventListener('touchend', () => {
-        clearTimeout(pressTimer);
-      });
-
-      frame.addEventListener('touchmove', () => {
-        clearTimeout(pressTimer);
-      });
+      frame.addEventListener('touchend', () => clearTimeout(pressTimer));
+      frame.addEventListener('touchmove', () => clearTimeout(pressTimer));
     }
 
     function showToast(msg) {
@@ -471,9 +462,7 @@
       const beads = rodData.element.querySelectorAll('.earth .bead');
       
       beads.forEach((bead, i) => {
-        if (bead === e.target) {
-          clickedBeadIndex = i; 
-        }
+        if (bead === e.target) clickedBeadIndex = i; 
       });
 
       if (clickedBeadIndex === -1) {
@@ -488,10 +477,8 @@
       }
 
       const clickedBeadFromBottom = clickedBeadIndex + 1;
-      
       const totalBeads = 4;
       const currentActive = rodData.earth;
-      
       const isActive = clickedBeadIndex >= (totalBeads - currentActive);
 
       if (isActive) {
@@ -537,10 +524,7 @@
     }
 
     function resetSoroban() {
-      rods.forEach(rod => {
-        rod.heaven = 0;
-        rod.earth = 0;
-      });
+      rods.forEach(rod => { rod.heaven = 0; rod.earth = 0; });
       updateRodsVisuals();
       updateDisplay();
     }
@@ -589,7 +573,8 @@
 
     function newChallenge() {
       resetSoroban();
-      alert("Tréninkový režim: Nastavte si vlastní číslo.");
+      if(!isStandalone) alert("Tréninkový režim: Nastavte si vlastní číslo.");
+      else showToast("Manuální režim");
     }
 
     window.onload = init;
