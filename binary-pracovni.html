@@ -129,17 +129,13 @@
 
     <!-- Input Container -->
     <div class="input-with-back" id="input-container">
-      <!-- V DEC->BIN režimu bude input readonly (klávesnice se neotevře) -->
-      <!-- V BIN->DEC režimu bude input aktivní (otevře se numerická klávesnice) -->
       <input type="tel" id="single-input"
              autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-      <!-- Tlačítka pro DEC režim (u inputu) - tato jsou správně a zůstanou -->
       <button class="back-btn" id="back-btn-dec" onclick="deleteLeft()" style="display:none;">⌫</button>
       <button class="clear-btn" id="clear-btn-dec" onclick="clearAll()" style="display:none;">C</button>
     </div>
 
     <!-- Virtuální klávesnice pro BIN režim (0,1) -->
-    <!-- Skrytá defaultně, CSS ji zobrazí pouze na Desktopu -->
     <div class="keypad-bin" id="keypad-bin">
       <button class="key-btn" onclick="typeVal('0')">0</button>
       <button class="key-btn" onclick="typeVal('1')">1</button>
@@ -265,13 +261,12 @@
       if(fingerPanelVisible){
         $('single-input').value='';
         $('single-input').className='';
-        $('single-input').readOnly = true; // Žádná mobilní klávesnice
+        $('single-input').readOnly = true;
         
         if(state === 'playing') {
           startGame();
         } else if(state === 'evaluated') {
            $('single-input').readOnly = true;
-           // Prsty zůstávají
            document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
              const vv=Number(sq.dataset.value);
              sq.classList.toggle('on',(currentFingerSum & vv)===vv);
@@ -310,7 +305,7 @@
       $('finger-toggle-btn').style.display='none';
       $('theme-btn').style.display='none';
       $('single-input').style.display='none';
-      $('keypad-bin').classList.remove('visible-desktop'); // Skryjeme PC klávesnici
+      $('keypad-bin').classList.remove('visible-desktop');
       $('ctrl-buttons-bin').classList.remove('visible-desktop');
       $('back-btn-dec').style.display='none';
       $('clear-btn-dec').style.display='none';
@@ -334,16 +329,12 @@
            
            if($('direction').value==='dec2bin') {
              if(!fingerPanelVisible) {
-               // DEC->BIN bez P:
-               // Input readonly (mobil klávesnice neotevře)
                $('single-input').readOnly = true;
-               // PC klávesnici (0,1) necháme na CSS (class visible-desktop ji zobrazí na >520px)
                $('keypad-bin').classList.add('visible-desktop');
                $('ctrl-buttons-bin').classList.add('visible-desktop');
                $('back-btn-dec').style.display='none';
                $('clear-btn-dec').style.display='none';
              } else {
-               // DEC->BIN s P:
                $('single-input').readOnly = true;
                $('keypad-bin').classList.remove('visible-desktop');
                $('ctrl-buttons-bin').classList.remove('visible-desktop');
@@ -353,8 +344,7 @@
                });
              }
            } else {
-             // BIN->DEC:
-             $('single-input').readOnly = false; // Mobilní numerická klávesnice
+             $('single-input').readOnly = false;
              $('keypad-bin').classList.remove('visible-desktop');
              $('ctrl-buttons-bin').classList.remove('visible-desktop');
              $('back-btn-dec').style.display='flex';
@@ -403,7 +393,7 @@
   }
 
   document.addEventListener('keydown',e=>{
-    if($('single-input').readOnly && $('direction').value!=='bin2dec') return; // V DEC->BIN ignorujeme klávesnici (máme virtuální)
+    if($('single-input').readOnly && $('direction').value!=='bin2dec') return;
     if(e.key!=='Enter') return;
     e.preventDefault();
     if(state==='init') handleMainAction();
@@ -424,7 +414,6 @@
     return newCursorPos;
   }
 
-  // Input event handler - funguje jen pro DEC režim (BIN režim řeší typeVal)
   $('single-input').addEventListener('input',function(){
     if(this.readOnly) return;
 
@@ -433,7 +422,6 @@
     const cursorPosition=input.selectionStart;
     const originalValue=input.value;
 
-    // BIN->DEC logika
     if(/[^\d\s]/.test(input.value)){
       input.value=input.value.replace(/[^\d\s]/g,'');
     }
@@ -471,23 +459,18 @@
     $('single-input').style.display='block';
     
     if(dir === 'dec2bin'){
-      // DEC -> BIN
       $('single-input').value='';
       $('single-input').className='';
-      $('single-input').readOnly = true; // DŮLEŽITÉ: Na mobilu neotevře klávesnici
+      $('single-input').readOnly = true;
       
       if(fingerPanelVisible){
-        // P aktivní: Prsty, žádná klávesnice
         $('keypad-bin').classList.remove('visible-desktop');
         $('ctrl-buttons-bin').classList.remove('visible-desktop');
         $('back-btn-dec').style.display='none';
         $('clear-btn-dec').style.display='none';
       } else {
-        // P neaktivní:
-        // Na PC (>520px) CSS zobrazí .keypad-bin thanks to class visible-desktop
         $('keypad-bin').classList.add('visible-desktop');
         $('ctrl-buttons-bin').classList.add('visible-desktop');
-        // Na mobilu CSS schová .keypad-bin (display:none), input je readonly -> čistý stav
         $('back-btn-dec').style.display='none';
         $('clear-btn-dec').style.display='none';
       }
@@ -497,8 +480,7 @@
       expectedLength=bits;
 
     }else{
-      // BIN -> DEC
-      $('single-input').readOnly = false; // Mobilní numerická klávesnice
+      $('single-input').readOnly = false;
       $('single-input').value='';
       $('single-input').className='';
       $('keypad-bin').classList.remove('visible-desktop');
@@ -518,7 +500,6 @@
 
   function deleteLeft(){
     if(state!=='playing') return;
-    // V DEC->BIN mode s P active nemůžeme mazat (input readonly)
     if($('single-input').readOnly && $('direction').value!=='dec2bin') return; 
     
     const input=$('single-input'), dir=$('direction').value;
@@ -558,12 +539,10 @@
     $('single-input').focus();
   }
 
-  // Typování přes virtuální klávesnici (pouze pro BIN režim)
   function typeVal(val){
     if(state!=='playing') return;
     const input=$('single-input');
     
-    // BIN logika
     const start=input.selectionStart, end=input.selectionEnd;
     const value=input.value;
     const hasSelection=start!==end;
@@ -593,7 +572,6 @@
     const input=$('single-input');
     const rawValue=input.value.trim();
 
-    // Skryjeme všechny ovládací prvky
     $('keypad-bin').classList.remove('visible-desktop');
     $('ctrl-buttons-bin').classList.remove('visible-desktop');
     $('back-btn-dec').style.display='none';
@@ -604,10 +582,16 @@
 
     if(dir==='dec2bin' && fingerPanelVisible){
       const sum=currentFingerSum;
-      isCorrect=(sum===0 || sum===currentDecValue);
+      isCorrect=(sum===currentDecValue);
       correctFormattedAnswer=formatBinary(expectedAnswer);
       
-      input.value = correctFormattedAnswer;
+      // UPRAVENO: Pokud je odpověď špatně, do inputu se vypíše chybný vstup (sum), nikoliv správná odpověď.
+      if(isCorrect) {
+        input.value = correctFormattedAnswer;
+      } else {
+        input.value = formatBinary(sum.toString(2));
+      }
+      
       input.className=isCorrect?'success':'error';
       input.readOnly = true; 
 
