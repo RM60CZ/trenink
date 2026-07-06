@@ -7,13 +7,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
-  <!-- Barva celé aplikace (musí odpovídat wood-dark pro plynulý přechod) -->
+  <!-- Barva rámu -->
   <meta name="theme-color" content="#d4c49c">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
   <title>Soroban</title>
   
-  <!-- Manifest generation script (for Android) -->
+  <!-- Manifest generation script -->
   <script>
     const manifest = {
       "name": "Soroban",
@@ -51,6 +50,7 @@
       --bar-offset: 0px;
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --header-height: 50px; /* Výška horní lišty v standalone */
     }
 
     [data-theme="dark"] {
@@ -70,61 +70,96 @@
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
     
-    /* HTML/BODY SETUP FOR TRUE FULLSCREEN */
     html, body {
       margin: 0; padding: 0; 
       height: 100%; width: 100%;
-      background: var(--wood-dark); /* Important: background matches frame */
+      background: var(--wood-dark); 
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      /* Flex setup helps centering in browser mode, but PWA will override */
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       color: var(--text-color);
       touch-action: manipulation;
     }
 
-    /* --- STANDALONE PWA MODE (The mode you want) --- */
-    /* This CSS kicks in ONLY when launched from Home Screen */
+    /* --- STANDALONE PWA MODE (Fullscreen on Mobile) --- */
     @media all and (display-mode: standalone) {
       html, body {
-        /* Extend content into safe areas (notches/status bar) */
-        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-        /* Reset justify to start so header/frame stack naturally */
+        /* Reset justify, necháme elementy plnit prostor odshora */
         justify-content: flex-start;
+        padding: 0;
+      }
+
+      /* Horní lišta - Viditelná v standalone */
+      .header {
+        display: flex !important; /* Force show */
+        position: fixed;
+        top: env(safe-area-inset-top); /* Začíná pod výřezem */
+        left: 0; right: 0;
+        height: var(--header-height);
+        background: var(--wood-dark);
+        z-index: 100;
+        align-items: center;
+        justify-content: center; /* Číslo přesně na střed */
+        border-bottom: 1px solid rgba(0,0,0,0.2);
+        /* Tlačítka skryta, ovládání Long Press */
+        padding: 0;
       }
       
-      /* Hide the UI Header completely */
-      .header { display: none !important; }
-      
-      /* Make Soroban fill the ENTIRE available screen space */
+      .header .btn-icon { display: none; }
+      .header .value-display { 
+        font-size: 24px; 
+        background: transparent; 
+        padding: 0; 
+        min-width: auto;
+        text-align: center;
+      }
+
+      /* SOROBAN FRAME */
       .soroban-frame {
-        position: fixed; /* Absolute positioning */
-        top: 0; left: 0; right: 0; bottom: 0;
-        width: 100% !important;
-        height: 100% !important; /* 100% of viewport */
+        position: fixed;
+        left: 0; right: 0;
+        /* TOP: Začíná POD horní lištou (která je pod safe-area) */
+        top: calc(env(safe-area-inset-top) + var(--header-height));
+        
+        /* BOTTOM: Končí PRESNĚ na spodním okraji (zahrnu safe-area inset) */
+        /* Výpočet: 100% výška displeje MINUS (horní safe area + lišta) */
+        /* Zbytek vyplní soroban. Spodní padding sorobanu zajistí obsah v safe area */
+        height: calc(100% - env(safe-area-inset-top) - var(--header-height));
+        
+        width: 100%;
         max-width: none; max-height: none;
         border: none; border-radius: 0;
         box-shadow: none;
-        background: var(--wood-dark);
-        /* Padding to respect safe areas inside the frame */
-        padding-top: env(safe-area-inset-top);
+        
+        /* Důležité: Spodní padding rámce = Safe Area, takže kuličky nebudou pod hranou */
         padding-bottom: env(safe-area-inset-bottom);
+        padding-top: 0; /* Nahoře už je lišta */
+        
+        display: flex;
+        flex-direction: column;
       }
-
+      
+      /* Kontejner tyčí vyplní zbytek */
       .rods-container {
-        /* Ensure rods use full height inside the padded frame */
         position: absolute;
-        top: 0; bottom: 0; left: 10px; right: 10px;
+        top: 0; 
+        /* Dola respektujeme padding-bottom frameu */
+        bottom: env(safe-area-inset-bottom); 
+        left: 10px; right: 10px;
         height: auto;
       }
     }
 
-    /* --- BROWSER MODE (Desktop/Mobile with URL bar) --- */
-    /* Fallback styling if user opens in browser */
+    /* --- BROWSER MODE (Desktop/Mobile) --- */
     .header {
-      position: absolute; top: 10px; left: 10px; right: 10px;
+      /* Defaultně relativní v browser módu */
+      position: relative; 
+      width: 100%;
+      top: 0; left: 0; right: 0;
+      padding: 10px;
       display: flex; justify-content: space-between; align-items: center;
       z-index: 100;
+      background: var(--bg);
     }
     .value-display {
       font-size: 24px; font-weight: bold;
@@ -143,7 +178,7 @@
       border-radius: 8px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.4);
       padding: 0 10px;
-      height: 60%; /* Default height in browser */
+      height: 60%;
       max-height: 400px; 
       width: 95%;
       max-width: 900px;
@@ -258,10 +293,9 @@
     .btn-row { display: flex; gap: 10px; margin-top: 15px; }
     .btn-row button { flex: 1; }
 
-    /* Toast for feedback in PWA mode */
     .toast {
       position: fixed; 
-      bottom: calc(20px + env(safe-area-inset-bottom)); /* Safe area respect */
+      bottom: calc(20px + env(safe-area-inset-bottom));
       left: 50%; transform: translateX(-50%);
       background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px;
       font-size: 14px; z-index: 300; opacity: 0; transition: opacity 0.3s;
@@ -271,9 +305,8 @@
 
     /* Mobile Browser Adjustments */
     @media (max-width: 600px) {
-      /* Only apply if NOT standalone (otherwise header is hidden) */
       @media all and (display-mode: browser) {
-        .header { position: relative; top:0; width:100%; padding:5px; background: var(--bg); }
+        .header { padding: 5px; }
         .soroban-frame { width:100%; height: auto; flex-grow:1; border-radius:0; border-left:none; border-right:none; }
       }
     }
@@ -281,10 +314,11 @@
 </head>
 <body>
 
-  <!-- HEADER (Visible only in Browser Mode) -->
-  <div class="header">
+  <!-- HEADER -->
+  <div class="header" id="header">
     <div class="value-display" id="display">0</div>
-    <div style="display:flex; gap:5px;">
+    <!-- Tlačítka viditelná jen v browser módu -->
+    <div style="display:flex; gap:5px;" id="btn-group">
       <button class="btn-icon" onclick="newChallenge()" title="Nová hádanka">❓</button>
       <button class="btn-icon" onclick="resetSoroban()" title="Vynulovat">↺</button>
       <button class="btn-icon" onclick="openSettings()" title="Nastavení">⚙️</button>
@@ -343,10 +377,10 @@
     const $ = id => document.getElementById(id);
     let rods = [];
     let isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    let headerVisible = true; // Stav horní lišty v standalone
 
-    // Register Service Worker for iOS Safari "Add to Home" capability
+    // Register Service Worker
     if ('serviceWorker' in navigator) {
-      // Create a dummy service worker inline blob to satisfy iOS requirements
       const swCode = `
         self.addEventListener('install', e => self.skipWaiting());
         self.addEventListener('activate', e => e.waitUntil(clients.claim()));
@@ -354,7 +388,7 @@
       `;
       const swBlob = new Blob([swCode], {type: 'application/javascript'});
       const swUrl = URL.createObjectURL(swBlob);
-      navigator.serviceWorker.register(swUrl).catch(err => console.log("SW registration optional for Android, failed: ", err));
+      navigator.serviceWorker.register(swUrl).catch(err => console.log("SW registration optional: ", err));
     }
 
     function init() {
@@ -414,7 +448,7 @@
       updateDisplay();
     }
 
-    // --- Long Press Logic (Controls for PWA Fullscreen) ---
+    // --- Long Press Logic (Controls for PWA) ---
     let pressTimer = null;
     let pressStartX = 0;
 
@@ -422,6 +456,8 @@
       const frame = $('frame');
       
       frame.addEventListener('touchstart', (e) => {
+        if (!isStandalone) return; // V browser módu máme tlačítka
+
         pressStartX = e.touches[0].clientX;
         pressTimer = setTimeout(() => {
           const screenWidth = window.innerWidth;
@@ -434,11 +470,42 @@
           else if (pressStartX > screenWidth * 0.75) {
             openSettings();
           }
+          // Center (50% width) -> TOGGLE HEADER
+          else {
+            toggleHeader();
+          }
         }, 600); // 600ms hold
       }, {passive: true});
 
       frame.addEventListener('touchend', () => clearTimeout(pressTimer));
       frame.addEventListener('touchmove', () => clearTimeout(pressTimer));
+    }
+
+    function toggleHeader() {
+      if (!isStandalone) return;
+      
+      const header = $('header');
+      const frame = $('frame');
+      
+      if (headerVisible) {
+        // Skrýt header
+        header.style.display = 'none';
+        // Posunout Frame nahoru (zvětšit výšku)
+        frame.style.top = 'env(safe-area-inset-top)';
+        frame.style.height = 'calc(100% - env(safe-area-inset-top))';
+        showToast("Lišta skryta");
+      } else {
+        // Zobrazit header
+        header.style.display = 'flex';
+        // Posunout Frame dolů (zmenšit výšku)
+        frame.style.top = 'calc(env(safe-area-inset-top) + 50px)';
+        frame.style.height = 'calc(100% - env(safe-area-inset-top) - 50px)';
+        showToast("Lišta zobrazena");
+      }
+      headerVisible = !headerVisible;
+      
+      // Recalculate beads after layout change
+      setTimeout(updateBeadSize, 100);
     }
 
     function showToast(msg) {
@@ -568,7 +635,7 @@
     function loadTheme() {
       const t = localStorage.getItem('sorobanTheme') || 'light';
       document.body.dataset.theme = t;
-      if(t === 'dark') document.documentElement.style.setProperty('--theme-color', '#121212');
+      if(t === 'dark') document.documentElement.style.setProperty('--theme-color', '#1a1a1a');
     }
 
     function newChallenge() {
