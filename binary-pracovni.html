@@ -39,9 +39,10 @@
 
     .input-with-back{display:flex;align-items:center;gap:8px;width:100%;justify-content:center;}
     #single-input{
-      /* ZMĚNA ZDE: Přidáno flex-grow: 1; a odstraněno fixní width: 180px */
+      /* ZMĚNA: Input se roztáhne na dostupný prostor */
       flex-grow: 1;
-      min-width: 0; /* Zajistí správné zmenšování v flex kontejneru */
+      min-width: 0;
+      /* Původní styly */
       padding:10px; border-radius:8px; text-align:center; 
       border:2px solid var(--b); background:var(--c); color:var(--t); 
       font-size:20px; font-weight:bold; outline:none; height:48px; display:none;
@@ -58,7 +59,6 @@
     .clear-btn{padding:0 16px;}
     .back-btn:active,.clear-btn:active{background:var(--btnh);}
 
-    /* BINÁRNÍ KLÁVESNICE (0, 1) */
     .keypad-bin{
       display:none; gap:8px; width:100%; justify-content:center; 
       grid-template-columns:repeat(2, 1fr); grid-auto-flow:column;
@@ -578,10 +578,21 @@
 
     if(dir==='dec2bin' && fingerPanelVisible){
       const sum=currentFingerSum;
+      
+      // OPRAVA: Pokud není nic zadáno (sum === 0), zobrazí se správný výsledek bez barvy a neukládá se do historie.
+      if(sum === 0){
+        state='evaluated';
+        $('main-btn').innerText='START';
+        input.value = formatBinary(expectedAnswer);
+        input.className = ''; // Bez barvy
+        input.readOnly = true;
+        return;
+      }
+
       isCorrect=(sum===currentDecValue);
       correctFormattedAnswer=formatBinary(expectedAnswer);
       
-      // UPRAVENO: Pokud je odpověď špatně, do inputu se vypíše chybný vstup (sum), nikoliv správná odpověď.
+      // Pokud je špatně, v inputu zůstane uživatelova chyba. Pokud dobře, správný výsledek.
       if(isCorrect) {
         input.value = correctFormattedAnswer;
       } else {
