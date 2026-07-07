@@ -17,6 +17,7 @@
       "display": "standalone",
       "background_color": "#d4c49c",
       "theme_color": "#d4c49c",
+      "orientation": "landscape",
       "icons": [
         {
           "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23d4c49c' width='100' height='100'/><rect x='45' y='10' width='10' height='80' rx='5' fill='%235d4037'/><circle cx='50' cy='35' r='10' fill='%23333'/></svg>",
@@ -47,18 +48,16 @@
       
       --bead-size: 40px; 
       --bar-height: 15px;
-      --tiny-gap: 2px; /* Nepatrná mezera u rámu */
+      --tiny-gap: 2px; /* Mezera u rámu */
       
-      /* VÝŠKY SEKCÍ */
-      /* Heaven: 1 kostka + 0.5 kostky (volný prostor nad lištou) + tiny_gap */
+      /* Výšky sekcí - těsné uspořádání */
       --heaven-height: calc(var(--bead-size) * 1.5 + var(--tiny-gap));
-      
-      /* Earth: 4 kostky + 3 mezery + 0.5 kostky (volný prostor pod lištou) + tiny_gap */
       --earth-height: calc(var(--bead-size) * 4 + var(--bead-gap) * 3 + var(--bead-size) * 0.5 + var(--tiny-gap));
       
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
-      --header-height: 60px;
+      --safe-left: env(safe-area-inset-left, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
     }
 
     [data-theme="dark"] {
@@ -73,7 +72,6 @@
       --text-color: #ddd;
       --blue-bead: #5F9EA0;
       --blue-bead-active: #4682B4;
-      --theme-color: #1a1a1a;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
@@ -84,82 +82,108 @@
       background: var(--wood-dark); 
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      display: flex; flex-direction: column; 
       color: var(--text-color);
       touch-action: manipulation;
     }
 
-    @media all and (display-mode: standalone) {
-      html, body { justify-content: flex-start; }
-      .header {
-        display: flex !important;
-        position: fixed; top: 0; left: 0; right: 0;
-        height: calc(var(--safe-top) + var(--header-height));
-        padding-top: var(--safe-top);
-        background: var(--wood-dark); z-index: 100;
-        align-items: center; justify-content: center;
-        border-bottom: 1px solid rgba(0,0,0,0.2);
-      }
-      .header .btn-icon { display: none; }
-      .header .value-display { font-size: 24px; background: transparent; padding: 0; text-align: center; }
-      .soroban-frame {
-        position: fixed; left: 0; right: 0; bottom: 0;
-        height: calc(100% - var(--safe-top) - var(--header-height));
-        width: 100%; max-width: none; max-height: none;
-        border: none; border-radius: 0; box-shadow: none; background: var(--wood-dark);
-        padding-bottom: var(--safe-bottom);
-        padding-left: 10px; padding-right: 10px;
-      }
-      .rods-container {
-        position: absolute; top: 0; left: 10px; right: 10px; bottom: var(--safe-bottom);
-        height: auto; align-items: center;
-      }
+    /* ORIENTAČNÍ VAROVÁNÍ */
+    #orientation-warning {
+      display: none; /* Skryto defaultně, JS zapne pokud je na výšku */
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--wood-dark);
+      color: var(--text-color);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      text-align: center;
+      font-size: 1.5em;
+      padding: 20px;
+    }
+    #orientation-warning svg {
+      width: 80px;
+      height: 80px;
+      fill: var(--text-color);
+      margin-bottom: 20px;
+      animation: rotate-phone 2s infinite linear;
+    }
+    @keyframes rotate-phone {
+      0% { transform: rotate(0deg); }
+      50% { transform: rotate(90deg); }
+      100% { transform: rotate(90deg); }
     }
 
-    .header {
-      position: relative; width: 100%; padding: 10px;
-      display: flex; justify-content: space-between; align-items: center;
-      z-index: 100; background: var(--bg); flex-shrink: 0;
+    /* HLAVNÍ KONTAJNER PRO LAYOUT */
+    /* Zarovná obsah doleva a dolů */
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end; /* Dolů */
+      align-items: flex-start;   /* Doleva */
+      height: 100%;
+      width: 100%;
+      padding-bottom: var(--safe-bottom);
+      padding-left: var(--safe-left);
     }
+
+    /* HEADER - NAD SOROBANEM, VLEVO */
+    .header {
+      display: flex;
+      justify-content: flex-start; /* Tlačítka vlevo */
+      align-items: center;
+      z-index: 100;
+      background: transparent; /* Průhledné pozadí, aby byl vidět prostor */
+      padding: 5px 10px;
+      width: auto; /* Šířka podle obsahu, ne přes celou obrazovku */
+      flex-shrink: 0;
+    }
+    
     .value-display {
       font-size: 24px; font-weight: bold;
       background: rgba(0,0,0,0.1); padding: 4px 12px; border-radius: 20px;
-      min-width: 100px; text-align: center; font-variant-numeric: tabular-nums;
+      min-width: 80px; text-align: center; font-variant-numeric: tabular-nums;
+      margin-right: 10px; /* Mezera před tlačítky */
     }
     .btn-icon { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-color); padding: 5px; }
 
-    /* RÁM SOROABNU */
+    /* RÁM SOROBANU */
     .soroban-frame {
-      display: flex; flex-direction: column;
+      display: flex;
       background: var(--wood-dark);
       border: 6px solid var(--bar-color);
       border-radius: 8px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.4);
       padding: 0 10px;
-      height: 60%; max-height: 400px; width: 95%; max-width: 900px;
-      position: relative; touch-action: none; flex-grow: 1;
-      justify-content: center; align-items: center;
-      
-      /* FIX: Overflow hidden usekne vizuální lištu na hranici rámu */
-      overflow: hidden; 
+      /* Důležité: Šířka podle obsahu, ne fullscreen */
+      width: auto; 
+      max-width: calc(100vw - var(--safe-left) - 20px); /* Omezení na šířku obrazovky */
+      height: auto; /* Výška podle obsahu */
+      position: relative; 
+      touch-action: none;
+      /* Již není centerován na střed */
+      margin-left: 10px; /* Malá rezerva od okraje */
+      margin-bottom: 10px; /* Malá rezerva od spodu (nad safe-area) */
     }
 
     .rods-container {
-      position: absolute; top: 0; left: 10px; right: 10px; bottom: 0;
-      display: flex; justify-content: center; gap: 4px; z-index: 10;
+      display: flex; 
+      justify-content: flex-start; /* Tyče zleva */
+      gap: 4px; 
+      z-index: 10;
       align-items: center;
     }
 
     /* TYČ */
     .rod {
-      flex: 1; max-width: 50px; 
+      /* Šířka tyče se nastavuje JS podle velikosti kuličky */
+      width: calc(var(--bead-size) + 10px);
       display: flex; flex-direction: column; 
       background: transparent; position: relative; 
       height: calc(var(--heaven-height) + var(--bar-height) + var(--earth-height));
       align-items: center;
     }
     
-    /* Samotná tyčka (stick) */
     .rod::before {
       content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px;
       background: var(--rod-color); transform: translateX(-50%); z-index: 0;
@@ -171,12 +195,10 @@
       width: 100%;
       height: var(--heaven-height);
       order: 1;
-      display: flex; flex-direction: column;
     }
     
     .heaven .bead {
       position: absolute;
-      /* Zero: Nepatrná mezera od horního rámu */
       top: var(--tiny-gap); 
       left: 5%; width: 90%;
       height: var(--bead-size);
@@ -186,19 +208,13 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
       transition: top 0.15s ease-out, background-color 0.3s;
       cursor: pointer;
-      z-index: 5; /* Kostka je nad tyčkou */
+      z-index: 5; 
     }
     
-    /* Aktivní: Spadne dolů. 
-       Pozice: Výška sekce - 1 kostka. 
-       Tím vzniká mezi ní a rámem nahoře volný prostor 0.5 kostky + tiny.
-       A dotýká se spodní hrany sekce (lišty). */
     .heaven .bead.active {
       top: calc(var(--heaven-height) - var(--bead-size));
       background: var(--bead-heaven-active);
     }
-    
-    /* Blue Rod - Horní kostičky */
     .rod.blue-rod .heaven .bead { background: var(--blue-bead); }
     .rod.blue-rod .heaven .bead.active { background: var(--blue-bead-active); }
 
@@ -211,7 +227,6 @@
       flex-shrink: 0;
     }
     
-    /* Vizuální lišta - Roztáhne se a díky overflow:hidden na frame se usekne */
     .reckoning-bar::after {
       content: '';
       position: absolute;
@@ -228,12 +243,10 @@
       width: 100%;
       height: var(--earth-height);
       order: 3;
-      display: flex; flex-direction: column;
     }
     
     .earth .bead {
       position: absolute;
-      /* Zero: Nepatrná mezera od spodního rámu */
       bottom: var(--tiny-gap); 
       left: 5%; width: 90%;
       height: var(--bead-size);
@@ -246,16 +259,11 @@
       z-index: 5;
     }
     
-    /* Pozice v nule (seskupené dole) */
     .earth .bead:nth-child(1) { bottom: var(--tiny-gap); }
     .earth .bead:nth-child(2) { bottom: calc(var(--tiny-gap) + var(--bead-size) + var(--bead-gap)); }
     .earth .bead:nth-child(3) { bottom: calc(var(--tiny-gap) + var(--bead-size) * 2 + var(--bead-gap) * 2); }
     .earth .bead:nth-child(4) { bottom: calc(var(--tiny-gap) + var(--bead-size) * 3 + var(--bead-gap) * 3); }
 
-    /* Aktivní: Vystoupají nahoru.
-       Top 0 znamená dotyk s horní hranou Earth sekce (spodní hrana lišty).
-       Mezera nad nimi (k lište) je 0.
-       Mezera pod nimi (k rámu) je 0.5 kostky + tiny. */
     .earth .bead.active {
       background: var(--bead-earth-active); 
       box-shadow: inset 0 0 5px rgba(255,255,255,0.3);
@@ -267,7 +275,6 @@
     .earth .bead:nth-child(2).active { top: calc(var(--bead-size) * 2 + var(--bead-gap) * 2); }
     .earth .bead:nth-child(1).active { top: calc(var(--bead-size) * 3 + var(--bead-gap) * 3); }
 
-    /* Blue Rod - Spodní kostičky */
     .rod.blue-rod .earth .bead { background: var(--blue-bead); }
     .rod.blue-rod .earth .bead.active { background: var(--blue-bead-active); }
 
@@ -282,28 +289,43 @@
     .toast { position: fixed; bottom: calc(20px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
     .toast.show { opacity: 1; }
 
-    @media (max-width: 600px) {
-      @media all and (display-mode: browser) {
-        .header { padding: 5px; }
-        .soroban-frame { width:100%; height: auto; flex-grow:1; border-radius:0; border-left:none; border-right:none; }
-      }
+    /* Skrytí čehokoli jiného než varování na výšku */
+    @media (orientation: portrait) {
+      /* JS ovládá zobrazení, ale pro jistotu CSS pro PWA */
+      .app-container { display: none; }
+      #orientation-warning { display: flex !important; }
+    }
+    
+    @media (orientation: landscape) {
+      #orientation-warning { display: none !important; }
+      .app-container { display: flex; }
     }
   </style>
 </head>
 <body>
 
-  <div class="header" id="header">
-    <div class="value-display" id="display">0</div>
-    <div style="display:flex; gap:5px;" id="btn-group">
-      <button class="btn-icon" onclick="newChallenge()" title="Nová hádanka">❓</button>
-      <button class="btn-icon" onclick="resetSoroban()" title="Vynulovat">↺</button>
-      <button class="btn-icon" onclick="openSettings()" title="Nastavení">⚙️</button>
-      <button class="btn-icon" id="theme-btn" onclick="toggleTheme()" title="Téma">🌙</button>
-    </div>
+  <!-- Varování při otočení na výšku -->
+  <div id="orientation-warning">
+    <svg viewBox="0 0 24 24">
+      <path d="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h1.5C23.44 4.84 18.29 0 12 0l-.66.03 3.81 3.81 1.33-1.32zm-6.25-.77c-.59-.59-1.54-.59-2.12 0L1.75 8.11c-.59.59-.59 1.54 0 2.12l12.02 12.02c.59.59 1.54.59 2.12 0l6.36-6.36c.59-.59.59-1.54 0-2.12L10.23 1.75zm4.6 19.44L2.81 9.17l6.36-6.36 12.02 12.02-6.36 6.36zm-7.31.29C4.25 19.94 1.91 16.76 1.55 13H.05C.56 19.16 5.71 24 12 24l.66-.03-3.81-3.81-1.33 1.32z"/>
+    </svg>
+    <div>Prosím otočte zařízení na šířku</div>
   </div>
 
-  <div class="soroban-frame" id="frame">
-    <div class="rods-container" id="soroban"></div>
+  <div class="app-container" id="app">
+    <div class="header" id="header">
+      <div class="value-display" id="display">0</div>
+      <div style="display:flex; gap:5px;" id="btn-group">
+        <button class="btn-icon" onclick="newChallenge()" title="Nová hádanka">❓</button>
+        <button class="btn-icon" onclick="resetSoroban()" title="Vynulovat">↺</button>
+        <button class="btn-icon" onclick="openSettings()" title="Nastavení">⚙️</button>
+        <button class="btn-icon" id="theme-btn" onclick="toggleTheme()" title="Téma">🌙</button>
+      </div>
+    </div>
+
+    <div class="soroban-frame" id="frame">
+      <div class="rods-container" id="soroban"></div>
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -314,10 +336,7 @@
       <div class="setting-row">
         <label>Počet tyčí:</label>
         <select id="rod-count-select">
-          <option value="7">7</option>
-          <option value="9">9</option>
-          <option value="13" selected>13</option>
-          <option value="15">15</option>
+          <!-- Generováno JS 2-13 -->
         </select>
       </div>
       <div class="setting-row">
@@ -341,44 +360,87 @@
     
     const $ = id => document.getElementById(id);
     let rods = [];
-    let isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    let headerVisible = true;
-
-    if ('serviceWorker' in navigator) {
-      const swCode = `self.addEventListener('install', e => self.skipWaiting()); self.addEventListener('activate', e => e.waitUntil(clients.claim())); self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));`;
-      const swBlob = new Blob([swCode], {type: 'application/javascript'});
-      navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(err => console.log("SW optional"));
+    
+    // Inicializace při startu
+    function init() {
+      populateSettings();
+      loadTheme();
+      checkOrientation(); // Zkontroluj orientaci hned na začátku
+      window.addEventListener('resize', checkOrientation);
+      buildSoroban();
     }
 
-    function init() {
-      loadTheme();
-      buildSoroban();
-      setupLongPress();
-      window.addEventListener('resize', updateBeadSize);
-      setTimeout(updateBeadSize, 50);
+    // Generování options pro nastavení (2 až 13)
+    function populateSettings() {
+      const select = $('rod-count-select');
+      select.innerHTML = '';
+      for(let i=2; i<=13; i++) {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.innerText = i;
+        if(i === NUM_RODS) opt.selected = true;
+        select.appendChild(opt);
+      }
+    }
+
+    // Kontrola orientace
+    function checkOrientation() {
+      const isPortrait = window.innerHeight > window.innerWidth;
+      const warning = $('orientation-warning');
+      const app = $('app');
+      
+      if (isPortrait) {
+        warning.style.display = 'flex';
+        app.style.display = 'none';
+      } else {
+        warning.style.display = 'none';
+        app.style.display = 'flex';
+        // Přepočet velikosti po změně orientace
+        updateBeadSize();
+      }
     }
 
     function updateBeadSize() {
-      const rod = document.querySelector('.rod');
-      if (!rod) return;
-      const width = rod.offsetWidth;
-      const gap = window.innerWidth < 600 ? 2 : 4;
-      const size = Math.floor(width * 0.9); 
+      // Velikost kuličky odvozena od výšky obrazovky (v landscape módu)
+      // Cílem: využít dostupnou výšku, ale neroztahovat zbytečně
+      const availableHeight = window.innerHeight - 60; // Rezerva pro header
+      // Výška sorobanu = 5 kuliček (1+4) + mezery + lišta
+      // 1 bead + 4 beads + gaps ~ 5.5 bead heights visually + bar
+      const targetBeadHeight = availableHeight / 6.5; 
       
-      document.documentElement.style.setProperty('--bead-size', size + 'px');
-      document.documentElement.style.setProperty('--bead-gap', gap + 'px');
-      document.querySelectorAll('.bead').forEach(bead => bead.style.height = size + 'px');
+      // Limit pro šířku tyče
+      const rodWidth = Math.min(targetBeadHeight + 10, 50); // Max 50px šířka tyče
+      
+      document.documentElement.style.setProperty('--bead-size', targetBeadHeight + 'px');
+      document.documentElement.style.setProperty('--bead-gap', '4px');
+      
+      // Nastavení šířky tyče pevně, aby se neroztahovala
+      document.querySelectorAll('.rod').forEach(r => r.style.width = rodWidth + 'px');
     }
 
     function buildSoroban() {
       const container = $('soroban');
       container.innerHTML = '';
       rods = [];
+      
+      // Modré tyče pro orientaci (každé 3. od pravé)
+      // Pozn: indexujeme od 1 zleva doprava, ale logicky zprava
+      // Pro 13 tyčí: modré na 13, 10, 7, 4 (zleva indexy: 13, 10, 7, 4)
+      // Vizuálně v kódu: poslední přidaná je vlevo.
+      
       for (let i = 1; i <= NUM_RODS; i++) {
         const rod = document.createElement('div');
         rod.className = 'rod';
-        rod.dataset.index = i;
-        if (i === 4 || i === 7 || i === 10 || i === 13) rod.classList.add('blue-rod');
+        rod.dataset.index = i; // 1 = úplně vlevo, NUM_RODS = vpravo
+        
+        // Logika pro modrou tyč: zprava počítáno (jednotky, tisíce...)
+        // V loopu jde i zleva doprava.
+        // Pro 13 tyčí: pozice zprava: 1, 2, 3(Blue), 4, 5, 6, 7(Blue)...
+        // Pozice zprava = NUM_RODS - i + 1
+        const posFromRight = NUM_RODS - i + 1;
+        if (posFromRight % 3 === 0) {
+           rod.classList.add('blue-rod');
+        }
         
         rod.innerHTML = `
           <div class="heaven" onclick="handleHeavenClick(${i})">
@@ -392,54 +454,33 @@
             <div class="bead"></div>
           </div>`;
         
-        container.prepend(rod);
-        rods.unshift({ heaven: 0, earth: 0, element: rod });
+        container.appendChild(rod);
+        rods.push({ heaven: 0, earth: 0, element: rod });
       }
+      
+      // Po sestavení aktualizujeme velikost
       updateBeadSize();
       updateDisplay();
     }
 
-    function setupLongPress() {
-      const frame = $('frame');
-      frame.addEventListener('touchstart', (e) => {
-        if (!isStandalone) return;
-        pressStartX = e.touches[0].clientX;
-        pressTimer = setTimeout(() => {
-          const screenWidth = window.innerWidth;
-          if (pressStartX < screenWidth * 0.25) { resetSoroban(); showToast("Vynulováno"); }
-          else if (pressStartX > screenWidth * 0.75) { openSettings(); }
-          else { toggleHeader(); }
-        }, 600);
-      }, {passive: true});
-      frame.addEventListener('touchend', () => clearTimeout(pressTimer));
-      frame.addEventListener('touchmove', () => clearTimeout(pressTimer));
+    function showToast(msg) { 
+      const t = $('toast'); 
+      t.innerText = msg; 
+      t.classList.add('show'); 
+      setTimeout(() => t.classList.remove('show'), 2000); 
     }
-    let pressTimer = null; let pressStartX = 0;
-
-    function toggleHeader() {
-      if (!isStandalone) return;
-      const header = $('header'); const frame = $('frame');
-      if (headerVisible) {
-        header.style.display = 'none';
-        frame.style.height = 'calc(100% - var(--safe-top))';
-      } else {
-        header.style.display = 'flex';
-        frame.style.height = 'calc(100% - var(--safe-top) - var(--header-height))';
-      }
-      headerVisible = !headerVisible;
-      setTimeout(updateBeadSize, 100);
-    }
-
-    function showToast(msg) { const t = $('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
 
     function handleHeavenClick(index) {
-      const rodData = rods[NUM_RODS - index];
+      // Index 1 = vlevo, NUM_RODS = vpravo
+      // rods pole: index 0 = vlevo
+      const rodData = rods[index - 1];
       rodData.heaven = rodData.heaven === 0 ? 5 : 0;
-      updateRodsVisuals(); updateDisplay();
+      updateRodsVisuals(); 
+      updateDisplay();
     }
 
     function handleEarthClick(e, index) {
-      const rodData = rods[NUM_RODS - index];
+      const rodData = rods[index - 1];
       const beads = rodData.element.querySelectorAll('.earth .bead');
       let clickedBeadIndex = -1;
       
@@ -479,9 +520,13 @@
     function updateDisplay() {
       let totalValue = 0n;
       rods.forEach((rod, arrayIndex) => {
+        // arrayIndex 0 = vlevo (nejvyšší řád)
+        // colIndex zprava: NUM_RODS - arrayIndex
         const colIndex = NUM_RODS - arrayIndex;
         const exponent = colIndex - UNIT_INDEX;
-        if (exponent < 0) return;
+        
+        if (exponent < 0) return; // Desetinná místa zatím neřešíme
+        
         totalValue += BigInt(rod.heaven + rod.earth) * (10n ** BigInt(exponent));
       });
       $('display').innerText = totalValue.toLocaleString('cs-CZ');
@@ -493,21 +538,35 @@
     }
 
     function openSettings() { 
+      // Aktualizace výběru podle aktuálního stavu
       $('rod-count-select').value = NUM_RODS;
       $('unit-pos-select').value = UNIT_INDEX;
       $('settings-modal').classList.add('visible'); 
     }
     function closeSettings() { $('settings-modal').classList.remove('visible'); }
+    
     function applySettings() {
       NUM_RODS = parseInt($('rod-count-select').value);
       UNIT_INDEX = parseInt($('unit-pos-select').value);
-      buildSoroban(); closeSettings();
+      buildSoroban(); 
+      closeSettings();
     }
 
-    function toggleTheme() { const body = document.body; body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark'; saveTheme(); }
+    function toggleTheme() { 
+      const body = document.body; 
+      body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark'; 
+      saveTheme(); 
+    }
     function saveTheme() { localStorage.setItem('sorobanTheme', document.body.dataset.theme); }
-    function loadTheme() { const t = localStorage.getItem('sorobanTheme') || 'light'; document.body.dataset.theme = t; if(t === 'dark') document.documentElement.style.setProperty('--theme-color', '#1a1a1a'); }
-    function newChallenge() { resetSoroban(); if(!isStandalone) alert("Tréninkový režim."); else showToast("Manuální režim"); }
+    function loadTheme() { 
+      const t = localStorage.getItem('sorobanTheme') || 'light'; 
+      document.body.dataset.theme = t; 
+    }
+    
+    function newChallenge() { 
+      resetSoroban(); 
+      showToast("Režim: Volné počítání"); 
+    }
 
     window.onload = init;
   </script>
