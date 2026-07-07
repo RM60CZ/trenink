@@ -50,8 +50,10 @@
       --bar-height: 15px;
       --tiny-gap: 2px; /* Mezera u rámu */
       
-      /* Výšky sekcí - těsné uspořádání */
+      /* Výšky sekcí - kompaktní uspořádání */
+      /* Heaven: 1 kulička + 0.5 mezery nad ní */
       --heaven-height: calc(var(--bead-size) * 1.5 + var(--tiny-gap));
+      /* Earth: 4 kuličky + 3 mezery + 0.5 mezery pod nimi */
       --earth-height: calc(var(--bead-size) * 4 + var(--bead-gap) * 3 + var(--bead-size) * 0.5 + var(--tiny-gap));
       
       --safe-top: env(safe-area-inset-top, 0px);
@@ -88,7 +90,7 @@
 
     /* ORIENTAČNÍ VAROVÁNÍ */
     #orientation-warning {
-      display: none; /* Skryto defaultně, JS zapne pokud je na výšku */
+      display: none; 
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
       background: var(--wood-dark);
@@ -102,40 +104,32 @@
       padding: 20px;
     }
     #orientation-warning svg {
-      width: 80px;
-      height: 80px;
-      fill: var(--text-color);
-      margin-bottom: 20px;
+      width: 80px; height: 80px; fill: var(--text-color); margin-bottom: 20px;
       animation: rotate-phone 2s infinite linear;
     }
-    @keyframes rotate-phone {
-      0% { transform: rotate(0deg); }
-      50% { transform: rotate(90deg); }
-      100% { transform: rotate(90deg); }
-    }
+    @keyframes rotate-phone { 0% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } 100% { transform: rotate(90deg); } }
 
-    /* HLAVNÍ KONTAJNER PRO LAYOUT */
-    /* Zarovná obsah doleva a dolů */
+    /* HLAVNÍ LAYOUT */
     .app-container {
-      display: flex;
+      display: none; /* Skryto, dokud JS nepovolí landscape */
       flex-direction: column;
-      justify-content: flex-end; /* Dolů */
-      align-items: flex-start;   /* Doleva */
+      justify-content: flex-end; /* Obsah dolů */
+      align-items: flex-start;   /* Obsah vlevo */
       height: 100%;
       width: 100%;
       padding-bottom: var(--safe-bottom);
       padding-left: var(--safe-left);
     }
 
-    /* HEADER - NAD SOROBANEM, VLEVO */
+    /* HEADER */
     .header {
       display: flex;
-      justify-content: flex-start; /* Tlačítka vlevo */
+      justify-content: flex-start;
       align-items: center;
       z-index: 100;
-      background: transparent; /* Průhledné pozadí, aby byl vidět prostor */
+      background: transparent; 
       padding: 5px 10px;
-      width: auto; /* Šířka podle obsahu, ne přes celou obrazovku */
+      width: auto; 
       flex-shrink: 0;
     }
     
@@ -143,7 +137,7 @@
       font-size: 24px; font-weight: bold;
       background: rgba(0,0,0,0.1); padding: 4px 12px; border-radius: 20px;
       min-width: 80px; text-align: center; font-variant-numeric: tabular-nums;
-      margin-right: 10px; /* Mezera před tlačítky */
+      margin-right: 10px;
     }
     .btn-icon { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-color); padding: 5px; }
 
@@ -154,21 +148,25 @@
       border: 6px solid var(--bar-color);
       border-radius: 8px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-      padding: 0 10px;
-      /* Důležité: Šířka podle obsahu, ne fullscreen */
+      padding: 0 10px; /* Vnitřní padding pro tyče */
+      
+      /* Důležité: Šířka podle obsahu, zarovnáno vlevo */
       width: auto; 
-      max-width: calc(100vw - var(--safe-left) - 20px); /* Omezení na šířku obrazovky */
       height: auto; /* Výška podle obsahu */
+      max-height: calc(100vh - 60px); /* Bezpečnostní limit */
+      
       position: relative; 
       touch-action: none;
-      /* Již není centerován na střed */
-      margin-left: 10px; /* Malá rezerva od okraje */
-      margin-bottom: 10px; /* Malá rezerva od spodu (nad safe-area) */
+      margin-left: 10px; 
+      margin-bottom: 10px;
+      
+      /* KLÍČOVÉ: Ořízne lištu, aby nepřetékala */
+      overflow: hidden; 
     }
 
     .rods-container {
       display: flex; 
-      justify-content: flex-start; /* Tyče zleva */
+      justify-content: flex-start;
       gap: 4px; 
       z-index: 10;
       align-items: center;
@@ -176,8 +174,8 @@
 
     /* TYČ */
     .rod {
-      /* Šířka tyče se nastavuje JS podle velikosti kuličky */
-      width: calc(var(--bead-size) + 10px);
+      /* Šířka tyče odvozena od kuličky + padding */
+      width: calc(var(--bead-size) + 10px); 
       display: flex; flex-direction: column; 
       background: transparent; position: relative; 
       height: calc(var(--heaven-height) + var(--bar-height) + var(--earth-height));
@@ -200,7 +198,10 @@
     .heaven .bead {
       position: absolute;
       top: var(--tiny-gap); 
-      left: 5%; width: 90%;
+      /* Čtvercové kuličky: šířka i výška ze stejné proměnné */
+      left: 50%; 
+      transform: translateX(-50%);
+      width: var(--bead-size);
       height: var(--bead-size);
       background: var(--bead-unit);
       border-radius: 6px;
@@ -218,7 +219,7 @@
     .rod.blue-rod .heaven .bead { background: var(--blue-bead); }
     .rod.blue-rod .heaven .bead.active { background: var(--blue-bead-active); }
 
-    /* STŘEDOVÁ LIŠTA (BAR) */
+    /* STŘEDOVÁ LIŠTA */
     .reckoning-bar {
       position: relative;
       width: 100%;
@@ -227,10 +228,11 @@
       flex-shrink: 0;
     }
     
+    /* Lišta se roztáhne, ale díky overflow:hidden na frame se ořízne */
     .reckoning-bar::after {
       content: '';
       position: absolute;
-      top: 0; left: -500px; right: -500px; 
+      top: 0; left: -1000px; right: -1000px; 
       height: 100%;
       background: var(--bar-color);
       z-index: 1; 
@@ -247,33 +249,35 @@
     
     .earth .bead {
       position: absolute;
-      bottom: var(--tiny-gap); 
-      left: 5%; width: 90%;
+      left: 50%; 
+      transform: translateX(-50%);
+      width: var(--bead-size);
       height: var(--bead-size);
       background: var(--bead-unit);
       border-radius: 6px;
       border: 1px solid rgba(0,0,0,0.2);
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      transition: bottom 0.15s ease-out, top 0.15s ease-out, background-color 0.3s;
+      transition: bottom 0.15s ease-out, background-color 0.3s;
       cursor: pointer;
       z-index: 5;
     }
     
+    /* Pozice v nule */
     .earth .bead:nth-child(1) { bottom: var(--tiny-gap); }
     .earth .bead:nth-child(2) { bottom: calc(var(--tiny-gap) + var(--bead-size) + var(--bead-gap)); }
     .earth .bead:nth-child(3) { bottom: calc(var(--tiny-gap) + var(--bead-size) * 2 + var(--bead-gap) * 2); }
     .earth .bead:nth-child(4) { bottom: calc(var(--tiny-gap) + var(--bead-size) * 3 + var(--bead-gap) * 3); }
 
+    /* Aktivní */
     .earth .bead.active {
       background: var(--bead-earth-active); 
       box-shadow: inset 0 0 5px rgba(255,255,255,0.3);
-      bottom: auto;
     }
     
-    .earth .bead:nth-child(4).active { top: 0; }
-    .earth .bead:nth-child(3).active { top: calc(var(--bead-size) + var(--bead-gap)); }
-    .earth .bead:nth-child(2).active { top: calc(var(--bead-size) * 2 + var(--bead-gap) * 2); }
-    .earth .bead:nth-child(1).active { top: calc(var(--bead-size) * 3 + var(--bead-gap) * 3); }
+    .earth .bead:nth-child(4).active { bottom: auto; top: 0; }
+    .earth .bead:nth-child(3).active { bottom: auto; top: calc(var(--bead-size) + var(--bead-gap)); }
+    .earth .bead:nth-child(2).active { bottom: auto; top: calc(var(--bead-size) * 2 + var(--bead-gap) * 2); }
+    .earth .bead:nth-child(1).active { bottom: auto; top: calc(var(--bead-size) * 3 + var(--bead-gap) * 3); }
 
     .rod.blue-rod .earth .bead { background: var(--blue-bead); }
     .rod.blue-rod .earth .bead.active { background: var(--blue-bead-active); }
@@ -286,19 +290,17 @@
     .setting-row { margin: 15px 0; display: flex; flex-direction: column; gap: 5px; text-align: left; }
     .btn-row { display: flex; gap: 10px; margin-top: 15px; }
     .btn-row button { flex: 1; }
-    .toast { position: fixed; bottom: calc(20px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
     .toast.show { opacity: 1; }
 
-    /* Skrytí čehokoli jiného než varování na výšku */
-    @media (orientation: portrait) {
-      /* JS ovládá zobrazení, ale pro jistotu CSS pro PWA */
-      .app-container { display: none; }
-      #orientation-warning { display: flex !important; }
-    }
-    
+    /* Landscape kontrola */
     @media (orientation: landscape) {
       #orientation-warning { display: none !important; }
       .app-container { display: flex; }
+    }
+    @media (orientation: portrait) {
+      .app-container { display: none !important; }
+      #orientation-warning { display: flex !important; }
     }
   </style>
 </head>
@@ -335,9 +337,7 @@
       <h2>Nastavení</h2>
       <div class="setting-row">
         <label>Počet tyčí:</label>
-        <select id="rod-count-select">
-          <!-- Generováno JS 2-13 -->
-        </select>
+        <select id="rod-count-select"></select>
       </div>
       <div class="setting-row">
         <label>Jednotky (od pravého):</label>
@@ -361,16 +361,17 @@
     const $ = id => document.getElementById(id);
     let rods = [];
     
-    // Inicializace při startu
     function init() {
       populateSettings();
       loadTheme();
-      checkOrientation(); // Zkontroluj orientaci hned na začátku
-      window.addEventListener('resize', checkOrientation);
+      checkOrientation(); 
+      window.addEventListener('resize', () => {
+        checkOrientation();
+        updateBeadSize();
+      });
       buildSoroban();
     }
 
-    // Generování options pro nastavení (2 až 13)
     function populateSettings() {
       const select = $('rod-count-select');
       select.innerHTML = '';
@@ -383,7 +384,6 @@
       }
     }
 
-    // Kontrola orientace
     function checkOrientation() {
       const isPortrait = window.innerHeight > window.innerWidth;
       const warning = $('orientation-warning');
@@ -395,27 +395,26 @@
       } else {
         warning.style.display = 'none';
         app.style.display = 'flex';
-        // Přepočet velikosti po změně orientace
-        updateBeadSize();
       }
     }
 
     function updateBeadSize() {
-      // Velikost kuličky odvozena od výšky obrazovky (v landscape módu)
-      // Cílem: využít dostupnou výšku, ale neroztahovat zbytečně
-      const availableHeight = window.innerHeight - 60; // Rezerva pro header
-      // Výška sorobanu = 5 kuliček (1+4) + mezery + lišta
-      // 1 bead + 4 beads + gaps ~ 5.5 bead heights visually + bar
-      const targetBeadHeight = availableHeight / 6.5; 
+      if (window.innerHeight > window.innerWidth) return; // Skip if portrait
       
-      // Limit pro šířku tyče
-      const rodWidth = Math.min(targetBeadHeight + 10, 50); // Max 50px šířka tyče
+      // Vypočítáme velikost kuličky tak, aby se soroban vešel na výšku
+      // Výška sorobanu je cca: 5.5 kuličky (1 heaven + 4 earth + půlky mezer) + lišta
+      const headerHeight = 50; // Odhad výšky headeru
+      const framePadding = 20; // Padding + border frame
+      const availableHeight = window.innerHeight - headerHeight - framePadding;
       
-      document.documentElement.style.setProperty('--bead-size', targetBeadHeight + 'px');
-      document.documentElement.style.setProperty('--bead-gap', '4px');
+      // Magické číslo 5.5 reprezentuje vizuální výšku v "kuličkách"
+      // (1 nahoře + 4 dole + mezery)
+      const targetSize = Math.floor(availableHeight / 5.5);
       
-      // Nastavení šířky tyče pevně, aby se neroztahovala
-      document.querySelectorAll('.rod').forEach(r => r.style.width = rodWidth + 'px');
+      // Minimální a maximální limit pro rozumný vzhled
+      const finalSize = Math.max(20, Math.min(targetSize, 60));
+      
+      document.documentElement.style.setProperty('--bead-size', finalSize + 'px');
     }
 
     function buildSoroban() {
@@ -423,20 +422,12 @@
       container.innerHTML = '';
       rods = [];
       
-      // Modré tyče pro orientaci (každé 3. od pravé)
-      // Pozn: indexujeme od 1 zleva doprava, ale logicky zprava
-      // Pro 13 tyčí: modré na 13, 10, 7, 4 (zleva indexy: 13, 10, 7, 4)
-      // Vizuálně v kódu: poslední přidaná je vlevo.
-      
       for (let i = 1; i <= NUM_RODS; i++) {
         const rod = document.createElement('div');
         rod.className = 'rod';
-        rod.dataset.index = i; // 1 = úplně vlevo, NUM_RODS = vpravo
+        rod.dataset.index = i;
         
-        // Logika pro modrou tyč: zprava počítáno (jednotky, tisíce...)
-        // V loopu jde i zleva doprava.
-        // Pro 13 tyčí: pozice zprava: 1, 2, 3(Blue), 4, 5, 6, 7(Blue)...
-        // Pozice zprava = NUM_RODS - i + 1
+        // Modré tyče: každou 3. zprava
         const posFromRight = NUM_RODS - i + 1;
         if (posFromRight % 3 === 0) {
            rod.classList.add('blue-rod');
@@ -458,7 +449,6 @@
         rods.push({ heaven: 0, earth: 0, element: rod });
       }
       
-      // Po sestavení aktualizujeme velikost
       updateBeadSize();
       updateDisplay();
     }
@@ -471,8 +461,6 @@
     }
 
     function handleHeavenClick(index) {
-      // Index 1 = vlevo, NUM_RODS = vpravo
-      // rods pole: index 0 = vlevo
       const rodData = rods[index - 1];
       rodData.heaven = rodData.heaven === 0 ? 5 : 0;
       updateRodsVisuals(); 
@@ -520,12 +508,10 @@
     function updateDisplay() {
       let totalValue = 0n;
       rods.forEach((rod, arrayIndex) => {
-        // arrayIndex 0 = vlevo (nejvyšší řád)
-        // colIndex zprava: NUM_RODS - arrayIndex
         const colIndex = NUM_RODS - arrayIndex;
         const exponent = colIndex - UNIT_INDEX;
         
-        if (exponent < 0) return; // Desetinná místa zatím neřešíme
+        if (exponent < 0) return;
         
         totalValue += BigInt(rod.heaven + rod.earth) * (10n ** BigInt(exponent));
       });
@@ -538,7 +524,6 @@
     }
 
     function openSettings() { 
-      // Aktualizace výběru podle aktuálního stavu
       $('rod-count-select').value = NUM_RODS;
       $('unit-pos-select').value = UNIT_INDEX;
       $('settings-modal').classList.add('visible'); 
