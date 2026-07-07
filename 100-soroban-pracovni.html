@@ -45,9 +45,9 @@
       --blue-bead: #ADD8E6;
       --blue-bead-active: #5DADE2;
       
-      /* NOVÉ POMĚRY */
-      --heaven-ratio: 16.5%; /* Necelá 1/6 pro horní část */
-      --earth-ratio: 83.5%; /* Zbytek pro dolní část */
+      /* Poměry */
+      --heaven-ratio: 16.5%; 
+      --earth-ratio: 83.5%;
       
       --bar-offset: 0px;
       --safe-top: env(safe-area-inset-top, 0px);
@@ -133,10 +133,8 @@
       position: relative; touch-action: none; flex-grow: 1;
     }
 
-    /* DĚLÍCÍ LIŠTA - POSUNUTÁ DOLŮ */
     .reckoning-bar {
       position: absolute;
-      /* Pozice: Horní část (16.5%) + posun uživatele */
       top: calc(var(--heaven-ratio) - var(--bar-offset));
       left: 0; right: 0;
       height: 15px;
@@ -169,37 +167,65 @@
       position: absolute; left: 5%; z-index: 5; pointer-events: auto; 
     }
 
-    /* HORNÍ ČÁST (NEBESKÁ) - ZMENŠENÁ */
+    /* --- NOVÁ LOGIKA POZIC --- */
+
+    /* HORNÍ ČÁST (HEAVEN) */
     .heaven {
       position: absolute; top: 0; left: 0; right: 0;
-      height: var(--heaven-ratio); /* ~16.5% */
-      cursor: pointer; z-index: 1;
-    }
-    .heaven .bead { top: 5%; }
-    .heaven .bead.active {
-      top: auto; bottom: calc(0px + var(--bead-gap)); background: var(--bead-heaven-active);
-    }
-
-    /* SPODNÍ ČÁST (ZEMSKÁ) - ZVĚTŠENÁ */
-    .earth {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      height: var(--earth-ratio); /* ~83.5% */
+      height: var(--heaven-ratio);
       cursor: pointer; z-index: 1;
     }
     
+    /* Výchozí stav (Nula): Nahoře pod horní lištou */
+    .heaven .bead { 
+      top: 5%; 
+      bottom: auto;
+    }
+    
+    /* Aktivní stav (Hodnota 5): Dolů ke střední liště */
+    .heaven .bead.active {
+      top: auto; 
+      bottom: 5%; /* Přilepeno ke střední liště */
+      background: var(--bead-heaven-active);
+    }
+
+    /* SPODNÍ ČÁST (EARTH) */
+    .earth {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      height: var(--earth-ratio);
+      cursor: pointer; z-index: 1;
+    }
+    
+    /* Výchozí stav (Nula): Dole nad spodní lištou. 
+       Jsou seskupeny těsně nad sebou od spodu. */
     .earth .bead:nth-child(1) { bottom: 5%; }
     .earth .bead:nth-child(2) { bottom: calc(5% + var(--bead-size) + var(--bead-gap)); }
     .earth .bead:nth-child(3) { bottom: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
     .earth .bead:nth-child(4) { bottom: calc(5% + (var(--bead-size) * 3) + (var(--bead-gap) * 3)); }
 
-    .earth .bead.active { background: var(--bead-earth-active); box-shadow: inset 0 0 5px rgba(255,255,255,0.3); }
+    /* Aktivní stav (Hodnota): Nahoru ke střední liště.
+       Posouváme 'top' pozici, aby se přilepily ke stropu (střední liště). */
+    .earth .bead.active { 
+      background: var(--bead-earth-active); 
+      box-shadow: inset 0 0 5px rgba(255,255,255,0.3); 
+    }
+    
+    /* Pozice aktivních spodních kostiček - odshora dolů */
+    .earth .bead:nth-child(4).active { 
+      bottom: auto; top: 5%; 
+    }
+    .earth .bead:nth-child(3).active { 
+      bottom: auto; top: calc(5% + var(--bead-size) + var(--bead-gap)); 
+    }
+    .earth .bead:nth-child(2).active { 
+      bottom: auto; top: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); 
+    }
+    .earth .bead:nth-child(1).active { 
+      bottom: auto; top: calc(5% + (var(--bead-size) * 3) + (var(--bead-gap) * 3)); 
+    }
+
     .rod.blue-rod .earth .bead { background: var(--blue-bead); }
     .rod.blue-rod .earth .bead.active { background: var(--blue-bead-active); }
-    
-    .earth .bead:nth-child(4).active { bottom: auto; top: 5%; }
-    .earth .bead:nth-child(3).active { bottom: auto; top: calc(5% + var(--bead-size) + var(--bead-gap)); }
-    .earth .bead:nth-child(2).active { bottom: auto; top: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
-    .earth .bead:nth-child(1).active { bottom: auto; top: calc(5% + (var(--bead-size) * 3) + (var(--bead-gap) * 3)); }
 
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center; }
     .modal.visible { display: flex; }
@@ -362,46 +388,73 @@
 
     function handleHeavenClick(index) {
       const rodData = rods[NUM_RODS - index];
+      // Toggle: Pokud je nahoře (0), posun dolů (5). Pokud je dole (5), posun nahoru (0).
       rodData.heaven = rodData.heaven === 0 ? 5 : 0;
       updateRodsVisuals(); updateDisplay();
     }
 
     function handleEarthClick(e, index) {
       const rodData = rods[NUM_RODS - index];
-      let clickedBeadIndex = -1;
       const beads = rodData.element.querySelectorAll('.earth .bead');
+      let clickedBeadIndex = -1;
+      
       beads.forEach((bead, i) => { if (bead === e.target) clickedBeadIndex = i; });
 
-      // Detekce kliknutí podle pozice (pro nový poměr 16.5% vs 83.5%)
+      // Detekce kliknutí na pozadí (volný prostor)
       if (clickedBeadIndex === -1) {
           const rect = e.currentTarget.getBoundingClientRect();
           const clickY = e.clientY - rect.top;
           const height = rect.height;
           const relativePos = clickY / height;
-          // Spodní část je větší, musíme nastavit hranice blíže k sobě
-          // Přepočet pro 4 kuličky v prostoru 83.5%
-          if (relativePos > 0.80) clickedBeadIndex = 0;      // Dole
-          else if (relativePos > 0.60) clickedBeadIndex = 1;
-          else if (relativePos > 0.40) clickedBeadIndex = 2;
-          else if (relativePos > 0.20) clickedBeadIndex = 3; // Nahoře
+          // Spodní část je 83.5%, číslujeme od spodu (0 = dole, 3 = nahoře)
+          // Pokud klikneme do spodní třetiny (kde jsou nulové kostky)
+          if (relativePos > 0.66) clickedBeadIndex = 0; 
+          else if (relativePos > 0.33) clickedBeadIndex = 1;
+          else if (relativePos > 0.10) clickedBeadIndex = 2; 
+          else clickedBeadIndex = 3; // Horní část blíže liště
       }
 
+      // Logika aktivace:
+      // Nyní: active = nahoru (hodnota). Inactive = dole (nula).
+      
+      // Zjistíme, zda kliknutá kostka je aktivní (je nahoře)
+      // Kostičky se číslují od spodu 0,1,2,3.
       const clickedBeadFromBottom = clickedBeadIndex + 1;
       const totalBeads = 4;
-      const currentActive = rodData.earth;
+      const currentActive = rodData.earth; // Počet aktivních (nahoře)
+      
+      // Aktivní kostky jsou v poli beads ty s indexy (4 - currentActive) až 3.
+      // Např. pro currentActive=2 jsou to indexy 2 a 3.
       const isActive = clickedBeadIndex >= (totalBeads - currentActive);
 
-      if (isActive) { rodData.earth = totalBeads - clickedBeadFromBottom; } 
-      else { rodData.earth = (totalBeads - clickedBeadFromBottom) + 1; }
+      if (isActive) {
+        // Pokud je aktivní (nahoře), chceme ji deaktivovat (posunout dolů)
+        // a s ní i všechny nad ní.
+        // Kliknutí na nižší index (např. 2) znamená, že výše (3) už nejsou aktivní.
+        // Všechny od kliknutého nahoru deaktivujeme.
+        // Počet aktivních po kliknutí = index kliknuté (0,1,2,3)
+        rodData.earth = clickedBeadIndex; 
+      } else {
+        // Pokud není aktivní (dole), chceme ji aktivovat (posunout nahoru)
+        // a s ní i všechny pod ní.
+        rodData.earth = clickedBeadFromBottom;
+      }
 
       updateRodsVisuals(); updateDisplay();
     }
 
     function updateRodsVisuals() {
       rods.forEach(rod => {
+        // Nebeská: active = dolů (hodnota)
         rod.element.querySelector('.heaven .bead').classList.toggle('active', rod.heaven === 5);
+        
+        // Pozemské: active = nahoru (hodnota)
         const eBeads = rod.element.querySelectorAll('.earth .bead');
-        eBeads.forEach((bead, i) => bead.classList.toggle('active', i >= 4 - rod.earth));
+        eBeads.forEach((bead, i) => {
+          // Má být tato kostka aktivní?
+          // Aktivních je 'rod.earth' kousků odshora (indexy 3, 2, 1, 0)
+          bead.classList.toggle('active', i >= 4 - rod.earth);
+        });
       });
     }
 
@@ -416,7 +469,10 @@
       $('display').innerText = totalValue.toLocaleString('cs-CZ');
     }
 
-    function resetSoroban() { rods.forEach(rod => { rod.heaven = 0; rod.earth = 0; }); updateRodsVisuals(); updateDisplay(); }
+    function resetSoroban() { 
+      rods.forEach(rod => { rod.heaven = 0; rod.earth = 0; }); 
+      updateRodsVisuals(); updateDisplay(); 
+    }
 
     function loadSettings() {
       const savedOffset = localStorage.getItem('barOffset');
