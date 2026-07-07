@@ -49,11 +49,11 @@
       --bar-height: 15px;
       --tiny-gap: 2px; /* Nepatrná mezera u rámu */
       
-      /* NOVÉ VÝŠKY SEKCÍ */
-      /* Heaven: 1 kostka + 0.5 kostky (volný prostor) + tiny_gap */
+      /* VÝŠKY SEKCÍ */
+      /* Heaven: 1 kostka + 0.5 kostky (volný prostor nad lištou) + tiny_gap */
       --heaven-height: calc(var(--bead-size) * 1.5 + var(--tiny-gap));
       
-      /* Earth: 4 kostky + 3 mezery + 0.5 kostky (volný prostor) + tiny_gap */
+      /* Earth: 4 kostky + 3 mezery + 0.5 kostky (volný prostor pod lištou) + tiny_gap */
       --earth-height: calc(var(--bead-size) * 4 + var(--bead-gap) * 3 + var(--bead-size) * 0.5 + var(--tiny-gap));
       
       --safe-top: env(safe-area-inset-top, 0px);
@@ -128,6 +128,7 @@
     }
     .btn-icon { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-color); padding: 5px; }
 
+    /* RÁM SOROABNU */
     .soroban-frame {
       display: flex; flex-direction: column;
       background: var(--wood-dark);
@@ -138,6 +139,9 @@
       height: 60%; max-height: 400px; width: 95%; max-width: 900px;
       position: relative; touch-action: none; flex-grow: 1;
       justify-content: center; align-items: center;
+      
+      /* FIX: Overflow hidden usekne vizuální lištu na hranici rámu */
+      overflow: hidden; 
     }
 
     .rods-container {
@@ -146,6 +150,7 @@
       align-items: center;
     }
 
+    /* TYČ */
     .rod {
       flex: 1; max-width: 50px; 
       display: flex; flex-direction: column; 
@@ -154,6 +159,7 @@
       align-items: center;
     }
     
+    /* Samotná tyčka (stick) */
     .rod::before {
       content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px;
       background: var(--rod-color); transform: translateX(-50%); z-index: 0;
@@ -164,13 +170,13 @@
       position: relative;
       width: 100%;
       height: var(--heaven-height);
-      z-index: 1; order: 1;
+      order: 1;
       display: flex; flex-direction: column;
     }
     
     .heaven .bead {
       position: absolute;
-      /* Vynulované (Zero): Nepatrná mezera od horního rámu */
+      /* Zero: Nepatrná mezera od horního rámu */
       top: var(--tiny-gap); 
       left: 5%; width: 90%;
       height: var(--bead-size);
@@ -180,10 +186,13 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
       transition: top 0.15s ease-out, background-color 0.3s;
       cursor: pointer;
+      z-index: 5; /* Kostka je nad tyčkou */
     }
     
-    /* Aktivní: Spadne dolů, zarazí se na středové liště */
-    /* Pozice: Výška sekce - velikost kostky (spodní hrana kostky = 0 relative to bar) */
+    /* Aktivní: Spadne dolů. 
+       Pozice: Výška sekce - 1 kostka. 
+       Tím vzniká mezi ní a rámem nahoře volný prostor 0.5 kostky + tiny.
+       A dotýká se spodní hrany sekce (lišty). */
     .heaven .bead.active {
       top: calc(var(--heaven-height) - var(--bead-size));
       background: var(--bead-heaven-active);
@@ -193,25 +202,23 @@
     .rod.blue-rod .heaven .bead { background: var(--blue-bead); }
     .rod.blue-rod .heaven .bead.active { background: var(--blue-bead-active); }
 
-    /* STŘEDOVÁ LIŠTA (BAR) - JEDNOTNÁ */
+    /* STŘEDOVÁ LIŠTA (BAR) */
     .reckoning-bar {
       position: relative;
       width: 100%;
       height: var(--bar-height);
-      background: transparent; /* Prvek v layoutu je transparentní */
       order: 2; 
-      z-index: 20;
       flex-shrink: 0;
     }
     
-    /* Vizuální lišta přesahující přes mezery tyčí */
+    /* Vizuální lišta - Roztáhne se a díky overflow:hidden na frame se usekne */
     .reckoning-bar::after {
       content: '';
       position: absolute;
-      top: 0; left: -500px; right: -500px; /* Velký přesah */
+      top: 0; left: -500px; right: -500px; 
       height: 100%;
       background: var(--bar-color);
-      z-index: 20;
+      z-index: 1; 
       box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
 
@@ -220,13 +227,13 @@
       position: relative;
       width: 100%;
       height: var(--earth-height);
-      z-index: 1; order: 3;
+      order: 3;
       display: flex; flex-direction: column;
     }
     
     .earth .bead {
       position: absolute;
-      /* Vynulované (Zero): Nepatrná mezera od spodního rámu */
+      /* Zero: Nepatrná mezera od spodního rámu */
       bottom: var(--tiny-gap); 
       left: 5%; width: 90%;
       height: var(--bead-size);
@@ -236,25 +243,26 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
       transition: bottom 0.15s ease-out, top 0.15s ease-out, background-color 0.3s;
       cursor: pointer;
+      z-index: 5;
     }
     
-    /* Pozice v nule (seskupené dole, mezeru 0.5 kostky nad nimi) */
-    /* Bottom pozice odspodu */
+    /* Pozice v nule (seskupené dole) */
     .earth .bead:nth-child(1) { bottom: var(--tiny-gap); }
     .earth .bead:nth-child(2) { bottom: calc(var(--tiny-gap) + var(--bead-size) + var(--bead-gap)); }
     .earth .bead:nth-child(3) { bottom: calc(var(--tiny-gap) + var(--bead-size) * 2 + var(--bead-gap) * 2); }
     .earth .bead:nth-child(4) { bottom: calc(var(--tiny-gap) + var(--bead-size) * 3 + var(--bead-gap) * 3); }
 
-    /* Aktivní: Vystoupají nahoru, zarazí se na liště */
-    /* Mezera 0.5 kostky se vyplní. Top pozice odshora. */
+    /* Aktivní: Vystoupají nahoru.
+       Top 0 znamená dotyk s horní hranou Earth sekce (spodní hrana lišty).
+       Mezera nad nimi (k lište) je 0.
+       Mezera pod nimi (k rámu) je 0.5 kostky + tiny. */
     .earth .bead.active {
       background: var(--bead-earth-active); 
       box-shadow: inset 0 0 5px rgba(255,255,255,0.3);
       bottom: auto;
     }
     
-    /* Top pozice aktivních (odshora) */
-    .earth .bead:nth-child(4).active { top: 0; } /* Nejvyšší u lišty */
+    .earth .bead:nth-child(4).active { top: 0; }
     .earth .bead:nth-child(3).active { top: calc(var(--bead-size) + var(--bead-gap)); }
     .earth .bead:nth-child(2).active { top: calc(var(--bead-size) * 2 + var(--bead-gap) * 2); }
     .earth .bead:nth-child(1).active { top: calc(var(--bead-size) * 3 + var(--bead-gap) * 3); }
@@ -263,7 +271,7 @@
     .rod.blue-rod .earth .bead { background: var(--blue-bead); }
     .rod.blue-rod .earth .bead.active { background: var(--blue-bead-active); }
 
-    /* UI Elements ... */
+    /* UI Elements */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center; }
     .modal.visible { display: flex; }
     .modal-content { background: var(--wood-light); padding: 20px; border-radius: 12px; width: 90%; max-width: 300px; text-align: center; color: var(--text-color); z-index: 210; }
@@ -372,7 +380,6 @@
         rod.dataset.index = i;
         if (i === 4 || i === 7 || i === 10 || i === 13) rod.classList.add('blue-rod');
         
-        // Struktura: Heaven -> Bar -> Earth
         rod.innerHTML = `
           <div class="heaven" onclick="handleHeavenClick(${i})">
             <div class="bead"></div>
