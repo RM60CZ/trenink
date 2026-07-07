@@ -45,11 +45,14 @@
       --blue-bead: #ADD8E6;
       --blue-bead-active: #5DADE2;
       
-      /* Dynamické velikosti */
-      --bead-size: 40px; /* Default, přepisuje JS */
+      --bead-size: 40px; 
+      --bar-height: 15px;
       
-      /* Výšky sekcí přesně podle požadavku (Volný prostor = 1 kostka) */
-      --heaven-height: calc(var(--bead-size) * 2); 
+      /* Výšky sekcí v Flexboxu */
+      /* Heaven: 1 kostka (nula) + 1 kostka (volný prostor) */
+      --heaven-height: calc(var(--bead-size) * 2);
+      
+      /* Earth: 4 kostky (nula) + 1 kostka (volný prostor) + 3 mezery */
       --earth-height: calc(var(--bead-size) * 5 + var(--bead-gap) * 3);
       
       --safe-top: env(safe-area-inset-top, 0px);
@@ -136,111 +139,118 @@
       justify-content: center; align-items: center;
     }
 
-    /* Středová lišta - umístěna přesně na hranici Heaven/Earth */
-    .reckoning-bar {
-      position: absolute;
-      /* Poloha: Top je konec Heaven sekce (za 2 kostkami) */
-      top: var(--heaven-height); 
-      left: 0; right: 0;
-      height: 15px;
-      background: var(--bar-color);
-      transform: translateY(-50%); /* Střed lišty na hranici */
-      z-index: 20;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-    }
-
     .rods-container {
       position: absolute; top: 0; left: 10px; right: 10px; bottom: 0;
       display: flex; justify-content: center; gap: 4px; z-index: 10;
       align-items: center;
     }
 
+    /* NOVÁ STRUKTURA TYČE: FLEXBOX */
     .rod {
       flex: 1; max-width: 50px; 
-      display: flex; flex-direction: column;
+      display: flex; flex-direction: column; /* Sekce jsou řazeny vertikálně */
       background: transparent; position: relative; 
-      height: calc(var(--heaven-height) + var(--earth-height));
+      /* Celková výška je součet částí */
+      height: calc(var(--heaven-height) + var(--bar-height) + var(--earth-height));
       align-items: center;
     }
+    
+    /* Tyč (stick) propojí všechny části */
     .rod::before {
       content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px;
       background: var(--rod-color); transform: translateX(-50%); z-index: 0;
     }
 
-    .bead {
-      width: 90%; background: var(--bead-unit);
-      border-radius: 6px; border: 1px solid rgba(0,0,0,0.2);
-      transition: transform 0.15s ease-out, background-color 0.3s, box-shadow 0.15s;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      position: absolute; left: 5%; z-index: 5; cursor: pointer;
-      height: var(--bead-size);
-    }
-
-    /* --- STANDARDNÍ SOROBAN LOGIKA --- */
-
-    /* HORNI ČÁST (HEAVEN) - 1 Kostka */
+    /* SEKCE HORNI (HEAVEN) */
     .heaven {
       position: relative;
       width: 100%;
-      height: var(--heaven-height);
-      z-index: 1;
+      height: var(--heaven-height); /* 2 kostky */
+      z-index: 1; order: 1; /* První v flex containeru */
+      display: flex; flex-direction: column;
     }
     
-    /* Nula: Nahoře (Top: 0) */
-    .heaven .bead { 
-      top: 0px; 
-      bottom: auto;
+    /* Horní kostka */
+    .heaven .bead {
+      position: absolute;
+      top: 0; /* Výchozí: Nahoře */
+      left: 5%; width: 90%;
+      height: var(--bead-size);
+      background: var(--bead-unit);
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.2);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: top 0.15s ease-out, background-color 0.3s;
+      cursor: pointer;
     }
     
-    /* Hodnota (5): Dole, přilepená ke středové liště (Bottom: 0) */
+    /* Aktivní: Spadne dolů, Zarazí se na liště (která je pod touto sekcí) */
     .heaven .bead.active {
-      top: auto; 
-      bottom: 0px; 
+      top: calc(var(--heaven-height) - var(--bead-size)); /* Posun na spodní hranu sekce */
       background: var(--bead-heaven-active);
     }
 
-    /* SPODNÍ ČÁST (EARTH) - 4 Kostky */
+    /* SEKCE STŘEDOVÁ LIŠTA (BAR) */
+    .reckoning-bar {
+      position: relative;
+      width: 100%;
+      height: var(--bar-height);
+      background: var(--bar-color);
+      order: 2; /* Druhá v flex containeru */
+      z-index: 20;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      flex-shrink: 0;
+    }
+
+    /* SEKCE SPODNÍ (EARTH) */
     .earth {
       position: relative;
       width: 100%;
-      height: var(--earth-height);
-      z-index: 1;
+      height: var(--earth-height); /* 5 kostek + mezery */
+      z-index: 1; order: 3; /* Třetí v flex containeru */
+      display: flex; flex-direction: column;
     }
     
-    /* 
-       Indexování DOM:
-       nth-child(1) = Index 0 (Fyzicky nejspodnější)
-       nth-child(4) = Index 3 (Fyzicky nejvyšší)
-       
-       Nula: Dole (Bottom).
-       Stack: 0, 1, 2, 3 odspodu.
-       Nejvyšší (3) je blíže k liště.
-    */
+    /* Spodní kostky */
+    .earth .bead {
+      position: absolute;
+      bottom: 0; /* Výchozí: Dole */
+      left: 5%; width: 90%;
+      height: var(--bead-size);
+      background: var(--bead-unit);
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.2);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: bottom 0.15s ease-out, top 0.15s ease-out, background-color 0.3s;
+      cursor: pointer;
+    }
     
-    /* Stav 0: Dole */
-    .earth .bead:nth-child(1) { bottom: 0; } /* Index 0 */
-    .earth .bead:nth-child(2) { bottom: calc(var(--bead-size) + var(--bead-gap)); } /* Index 1 */
-    .earth .bead:nth-child(3) { bottom: calc(var(--bead-size) * 2 + var(--bead-gap) * 2); } /* Index 2 */
-    .earth .bead:nth-child(4) { bottom: calc(var(--bead-size) * 3 + var(--bead-gap) * 3); } /* Index 3 */
+    /* Pozice ve spodní části (Nula - seskupeny dole) */
+    /* Indexy DOM: 1=nejspodnější, 4=nejvyšší */
+    .earth .bead:nth-child(1) { bottom: 0; }
+    .earth .bead:nth-child(2) { bottom: calc(var(--bead-size) + var(--bead-gap)); }
+    .earth .bead:nth-child(3) { bottom: calc(var(--bead-size) * 2 + var(--bead-gap) * 2); }
+    .earth .bead:nth-child(4) { bottom: calc(var(--bead-size) * 3 + var(--bead-gap) * 3); }
 
-    /* Stav Hodnota: Nahoře (Top) */
-    /* Stack: 3, 2, 1, 0 odshora (přilepené k liště). */
-    /* Index 3 (nejvyšší) je nejblíže liště -> jde na Top: 0 */
-    
-    .earth .bead.active { 
+    /* Aktivní: Vystoupají nahoru, Zarazí se na liště (která je nad touto sekcí) */
+    /* Musíme přepnout z 'bottom' na 'top', aby se zarazily o horní hranu sekce Earth */
+    .earth .bead.active {
       background: var(--bead-earth-active); 
-      box-shadow: inset 0 0 5px rgba(255,255,255,0.3); 
+      box-shadow: inset 0 0 5px rgba(255,255,255,0.3);
+      bottom: auto; /* Reset bottom */
     }
     
-    .earth .bead:nth-child(4).active { bottom: auto; top: 0; } /* Index 3 */
-    .earth .bead:nth-child(3).active { bottom: auto; top: calc(var(--bead-size) + var(--bead-gap)); } /* Index 2 */
-    .earth .bead:nth-child(2).active { bottom: auto; top: calc(var(--bead-size) * 2 + var(--bead-gap) * 2); } /* Index 1 */
-    .earth .bead:nth-child(1).active { bottom: auto; top: calc(var(--bead-size) * 3 + var(--bead-gap) * 3); } /* Index 0 */
+    /* Pozice aktivních (odshora) */
+    .earth .bead:nth-child(4).active { top: 0; } /* Nejvyšší kostka hned pod lištou */
+    .earth .bead:nth-child(3).active { top: calc(var(--bead-size) + var(--bead-gap)); }
+    .earth .bead:nth-child(2).active { top: calc(var(--bead-size) * 2 + var(--bead-gap) * 2); }
+    .earth .bead:nth-child(1).active { top: calc(var(--bead-size) * 3 + var(--bead-gap) * 3); }
 
+    /* Blue Rod */
     .rod.blue-rod .earth .bead { background: var(--blue-bead); }
     .rod.blue-rod .earth .bead.active { background: var(--blue-bead-active); }
 
-    /* Modals & UI ... (zkráceno pro čitelnost, v kódu je plné) */
+    /* UI Elements ... */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center; }
     .modal.visible { display: flex; }
     .modal-content { background: var(--wood-light); padding: 20px; border-radius: 12px; width: 90%; max-width: 300px; text-align: center; color: var(--text-color); z-index: 210; }
@@ -272,7 +282,7 @@
   </div>
 
   <div class="soroban-frame" id="frame">
-    <div class="reckoning-bar"></div>
+    <!-- Bar není zde, je v každé tyči pro flex layout -->
     <div class="rods-container" id="soroban"></div>
   </div>
 
@@ -338,6 +348,7 @@
       document.documentElement.style.setProperty('--bead-size', size + 'px');
       document.documentElement.style.setProperty('--bead-gap', gap + 'px');
       
+      // Nastavíme height explicitně, aby transition fungovala správně
       document.querySelectorAll('.bead').forEach(bead => bead.style.height = size + 'px');
     }
 
@@ -350,11 +361,20 @@
         rod.className = 'rod';
         rod.dataset.index = i;
         if (i === 4 || i === 7 || i === 10 || i === 13) rod.classList.add('blue-rod');
+        
+        // HTML Struktura: Heaven -> Bar -> Earth (Flex column)
         rod.innerHTML = `
-          <div class="heaven" onclick="handleHeavenClick(${i})"><div class="bead"></div></div>
+          <div class="heaven" onclick="handleHeavenClick(${i})">
+            <div class="bead"></div>
+          </div>
+          <div class="reckoning-bar"></div>
           <div class="earth" onclick="handleEarthClick(event, ${i})">
-            <div class="bead"></div><div class="bead"></div><div class="bead"></div><div class="bead"></div>
+            <div class="bead"></div>
+            <div class="bead"></div>
+            <div class="bead"></div>
+            <div class="bead"></div>
           </div>`;
+        
         container.prepend(rod);
         rods.unshift({ heaven: 0, earth: 0, element: rod });
       }
@@ -408,15 +428,13 @@
       
       beads.forEach((bead, i) => { if (bead === e.target) clickedBeadIndex = i; });
 
-      // Pokud klikneme na pozadí (volný prostor)
+      // Kliknutí na pozadí sekce Earth
       if (clickedBeadIndex === -1) {
           const rect = e.currentTarget.getBoundingClientRect();
           const clickY = e.clientY - rect.top;
           const height = rect.height;
-          // Rozdělíme prostor na polovinu. 
-          // Kliknutí nahoře (blíže liště) = chování jako klik na Index 3 (Top bead)
-          // Kliknutí dole (blíže spodu) = chování jako klik na Index 0 (Bottom bead)
-          // Toto umožňuje manipulovat i přes volný prostor.
+          // Kliknutí nahoru (blíže liště) -> chování jako 4. kostka
+          // Kliknutí dolu -> chování jako 1. kostka
           if (clickY < height / 2) clickedBeadIndex = 3;
           else clickedBeadIndex = 0;
       }
@@ -424,37 +442,40 @@
       const totalBeads = 4;
       const currentActive = rodData.earth;
       
-      // Indexy:
-      // 0 = Fyzicky nejspodnější (ve Zero stavu dole, v Active stavu nejvíc od lišty)
-      // 3 = Fyzicky nejvyšší (ve Zero stavu blíže liště, v Active stavu u lišty)
-      
-      // Logika:
-      // Active beads = Indexy >= (4 - currentActive).
-      // Příklad: Value 2 -> Active jsou 2, 3. (>= 2).
-      // Příklad: Value 1 -> Active je 3. (>= 3).
-      
+      // DOM Index: 0=Spodní (nejdále od lišty), 3=Horní (nejblíže lište)
       const isActive = clickedBeadIndex >= (totalBeads - currentActive);
 
       if (isActive) {
-        // ODSTRANENÍ HODNOTY (Pohyb dolů)
-        // Kliknutí na aktivní kostku.
-        // Index 3 (u lišty) -> resetuje vše (Value 0).
-        // Index 0 (nejdále od lišty) -> sníží hodnotu na 3 (odstraní jednu nejvzdálenější).
-        // Formula: newVal = clickedBeadIndex. 
-        // Ověření:
-        // Click 3 (Active) -> newVal 3? NE. Chceme 0.
-        // Protože Index 3 je nejblíže liště. Kliknutí na ni shodí všechny.
-        // Musíme otočit počítání: newVal = (3 - clickedBeadIndex).
-        // Click 3 -> 0. Correct.
-        // Click 0 -> 3. Correct.
+        // Deaktivace: "Shodíme" kostky odshora.
+        // Kliknutí na index 3 (u lišty) -> reset na 0.
+        // Kliknutí na index 0 (dole, ale active) -> reset na 0? Ne, standardní chování sorobanu je:
+        // Pokud klikneme na aktivní "nejvyšší" (u lišty), odpojíme všechny -> 0.
+        // Pokud klikneme na aktivní "nižší" (dále od lišty), odpojíme jen ty nad ní -> zůstane hodnota odpovídající indexu+1?
+        // Ve Sorobanu se obvykle "odtrhává" od lišty. 
+        // Klik na aktivní kostku znamená: "Tato a všechny nad ní (dále od lišty) se oddělí".
+        // Ve našem layoutu: Aktivní jsou nahoře.
+        // Index 3 je nejblíže liště. Index 0 je nejdále (ale pořád v aktivním balíku).
+        // Kliknutí na 3 -> odtrhne 3. (zůstane hodnota active-1).
+        // Kliknutí na 0 -> odtrhne 0,1,2,3? Ne, odtrhne všechny "nad" ní? Ne, odtrhne všechny "dál" od lišty.
+        // Ale aktivní jsou spojené. Kliknutí rozdělí balík.
+        // Pokud klikneme na nejnižší aktivní, shodíme všechny níž? Ale ty jsou už nahoře.
+        // Standardní logika: Kliknutí na aktivní kostku nastaví hodnotu na počet kostek POD ní (velek k liště).
+        // Index 3 (u lišty): Pod ní (směrem k liště) není nic. -> Hodnota 0.
+        // Index 2: Pod ní je jedna (Index 3). -> Hodnota 1.
+        // Index 0: Pod ní jsou 3. -> Hodnota 3.
+        
+        // Takže newVal = totalBeads - 1 - clickedBeadIndex. 
+        // Pro 4 kostky: 
+        // Click 3 -> newVal = 0. Correct.
+        // Click 2 -> newVal = 1. Correct.
         
         rodData.earth = (totalBeads - 1) - clickedBeadIndex;
       } else {
-        // PŘIDÁNÍ HODNOTY (Pohyb nahoru)
+        // Aktivace: "Přilepíme" kostky směrem nahoru.
         // Kliknutí na neaktivní kostku (dole).
-        // Index 3 (blíže liště) -> Přidá 1 (Value 1).
-        // Index 0 (nejdále) -> Přidá 4 (Value 4).
-        // Formula: newVal = 4 - clickedBeadIndex.
+        // Index 3 (blíže liště, ale neaktivní) -> Přilepíme ji. Hodnota 1.
+        // Index 0 (dole) -> Přilepíme ji a všechny nad ní (směrem k liště). Hodnota 4.
+        // newVal = totalBeads - clickedBeadIndex.
         // Click 3 -> 1. Correct.
         // Click 0 -> 4. Correct.
         
@@ -466,10 +487,13 @@
 
     function updateRodsVisuals() {
       rods.forEach(rod => {
+        // Heaven: Active pokud hodnota 5
         rod.element.querySelector('.heaven .bead').classList.toggle('active', rod.heaven === 5);
+        
+        // Earth: Aktivních je 'rod.earth' kousků.
+        // Aktivní jsou vždy ty s nejvyšším indexem (DOM 0,1,2,3 -> Active jsou 3, 2...).
         const eBeads = rod.element.querySelectorAll('.earth .bead');
         eBeads.forEach((bead, i) => {
-          // Active jsou vždy ty s nejvyšším indexem (blíže liště).
           bead.classList.toggle('active', i >= 4 - rod.earth);
         });
       });
