@@ -45,13 +45,12 @@
       --blue-bead: #ADD8E6;
       --blue-bead-active: #5DADE2;
       
-      /* Důležité: Velikost kostičky bude dynamicky dopočítána v JS */
-      --bead-size: 40px; 
+      --bead-size: 40px; /* Výchozí, přepisuje JS */
       
-      --heaven-ratio: 16.5%; 
-      --earth-ratio: 83.5%;
+      /* Dynamické výšky sekcí */
+      --heaven-height: calc(var(--bead-size) * 2); /* Kostka + Volný prostor */
+      --earth-height: calc((var(--bead-size) * 5) + (var(--bead-gap) * 3)); /* 4 Kostky + 1 Volný prostor */
       
-      --bar-offset: 0px;
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
       --header-height: 60px;
@@ -133,15 +132,19 @@
       padding: 0 10px;
       height: 60%; max-height: 400px; width: 95%; max-width: 900px;
       position: relative; touch-action: none; flex-grow: 1;
+      /* Důležité: Zarovnání na střed, pokud je místa nazbyt */
+      justify-content: center; 
     }
 
+    /* Středová lišta - nyní absolutně v rámci kontejneru, ale CSS proměnné nám pomohou */
     .reckoning-bar {
       position: absolute;
-      top: calc(var(--heaven-ratio) - var(--bar-offset));
+      /* Lišta je na hranici Heaven a Earth */
+      top: var(--heaven-height); 
       left: 0; right: 0;
       height: 15px;
       background: var(--bar-color);
-      transform: translateY(-50%);
+      transform: translateY(-50%); /* Střed lišty na hranici */
       z-index: 20;
       box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
@@ -149,12 +152,15 @@
     .rods-container {
       position: absolute; top: 0; left: 10px; right: 10px; bottom: 0;
       display: flex; justify-content: center; gap: 4px; z-index: 10;
+      align-items: center; /* Centrované, pokud je rám větší */
     }
 
     .rod {
       flex: 1; max-width: 50px; 
       display: flex; flex-direction: column;
-      background: transparent; position: relative; height: 100%;
+      background: transparent; position: relative; 
+      /* Výška tyče se řídí obsahem (Heaven + Earth) */
+      height: calc(var(--heaven-height) + var(--earth-height));
     }
     .rod::before {
       content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px;
@@ -167,40 +173,27 @@
       transition: top 0.15s ease-out, bottom 0.15s ease-out, background-color 0.3s, box-shadow 0.15s;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
       position: absolute; left: 5%; z-index: 5; pointer-events: auto; 
-      height: var(--bead-size); /* Použití proměnné */
+      height: var(--bead-size);
     }
 
-    /* --- OPRAVENÁ LOGIKA S MEZERAMI --- */
+    /* --- LOGIKA POHYBU A MEZER --- */
 
     /* HORNI ČÁST (HEAVEN) */
     .heaven {
-      position: absolute; top: 0; left: 0; right: 0;
-      height: var(--heaven-ratio);
+      position: relative; /* Změna: už není absolute v rámci rodice s %, ale má pevnou výšku */
+      width: 100%;
+      height: var(--heaven-height);
       cursor: pointer; z-index: 1;
     }
     
-    /* Výchozí (Nula): Nahoře u rámu. 
-       Mezera pod ní (až k liště) se řeší v .active stavu opačným směrem.
-       Zde musíme zajistit, aby v .active (dole) byla kostka u lišty.
-       
-       Výpočet:
-       Výška Heaven je cca 16.5%. Kostka má velikost X.
-       V nule je nahoře: top = 0 (nebo malý padding).
-       V hodnotě je dole: bottom = 0 (u lišty).
-       
-       Aby byl volný prostor velikosti kostky:
-       Pokud je NULA nahoře: top = 0.
-       Pokud je HODNOTA dole: bottom = 0.
-       
-       To vytvoří pohyb.
-    */
-    
+    /* Stav 0: Nahoře u rámu */
     .heaven .bead { 
       top: 0px; 
       bottom: auto;
     }
     
-    /* Aktivní (Hodnota 5): Dole, těsně nad středovou lištou */
+    /* Stav Hodnota (5): Dole, těsně nad středovou lištou */
+    /* Posun dolů o velikost volného prostoru (což je 1 kostka) */
     .heaven .bead.active {
       top: auto; 
       bottom: 0px; 
@@ -209,47 +202,28 @@
 
     /* SPODNÍ ČÁST (EARTH) */
     .earth {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      height: var(--earth-ratio);
+      position: relative;
+      width: 100%;
+      height: var(--earth-height);
       cursor: pointer; z-index: 1;
     }
     
-    /* Logika volného prostoru pro Zemi:
-       Máme 4 kostky. Výška Earth je cca 83.5%.
-       V nule: 4 kostky jsou dole u spodního okraje.
-       Volný prostor: Nad 4. kostkou musí být místo pro 1 kostku (pro pohyb nahoru).
-       
-       To znamená, že prostor, který zabírají "nulové" kostky + 1 volná = 5 kostek výšky.
-       Musíme tedy přepočítat velikost kostky (bead-size), aby se tam vešly.
-       
-       Nebo, jednodušeji:
-       Pozice 4. (nejvyšší) kostky v nule musí být o "velikost kostky" níže, než je horní hranice pohybu.
-       
-       Pro zjednodušení použijeme fixed percentuální pozice, které vyjdou pro mobilní zobrazení.
-       Zde použijeme calc() pro pozicování od spoda.
-    */
+    /* Stav 0: Dole u rámu */
+    /* 4 kostky seskupené dole. Nad nimi zůstává volný prostor. */
+    .earth .bead:nth-child(1) { bottom: 0px; }
+    .earth .bead:nth-child(2) { bottom: calc(var(--bead-size) + var(--bead-gap)); }
+    .earth .bead:nth-child(3) { bottom: calc((var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
+    .earth .bead:nth-child(4) { bottom: calc((var(--bead-size) * 3) + (var(--bead-gap) * 3)); }
 
-    /* Výchozí (Nula): Dole u rámu */
-    .earth .bead:nth-child(1) { bottom: 5%; } /* 1. odspodu */
-    .earth .bead:nth-child(2) { bottom: calc(5% + var(--bead-size) + var(--bead-gap)); }
-    .earth .bead:nth-child(3) { bottom: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
-    .earth .bead:nth-child(4) { bottom: calc(5% + (var(--bead-size) * 3) + (var(--bead-gap) * 3)); }
-    
-    /* DŮLEŽITÉ: 4. kostka (nejvyšší) má nad sebou mezeru. 
-       Když se aktivuje, posune se nahoru o tuto mezeru. */
-
-    /* Aktivní (Hodnota): Nahoru, těsně pod středovou lištu */
+    /* Stav Hodnota: Nahoru, vyplní volný prostor u středové lišty */
     .earth .bead.active { 
       background: var(--bead-earth-active); 
       box-shadow: inset 0 0 5px rgba(255,255,255,0.3); 
     }
     
-    /* Pozice aktivních (odshora).
-       4. kostka (nejvyšší) jde úplně nahoru (top: 0).
-       Tím se "překlopí" z bottom pozice do top pozice.
-    */
+    /* Pozice aktivních: Přilepeny ke stropu (k liště) */
     .earth .bead:nth-child(4).active { 
-      bottom: auto; top: 0%; /* Těsně pod lištou */
+      bottom: auto; top: 0px; 
     }
     .earth .bead:nth-child(3).active { 
       bottom: auto; top: calc(var(--bead-size) + var(--bead-gap)); 
@@ -268,7 +242,7 @@
     .modal.visible { display: flex; }
     .modal-content { background: var(--wood-light); padding: 20px; border-radius: 12px; width: 90%; max-width: 300px; text-align: center; color: var(--text-color); z-index: 210; }
     select, input, button { padding: 8px; border-radius: 6px; border: 1px solid var(--bar-color); background: white; color: black; font-size: 16px; width: 100%; }
-    .setting-row { margin: 15px 0; display: flex; flex-direction: column; gap: 5px; text-text-align: left; }
+    .setting-row { margin: 15px 0; display: flex; flex-direction: column; gap: 5px; text-align: left; }
     .btn-row { display: flex; gap: 10px; margin-top: 15px; }
     .btn-row button { flex: 1; }
 
@@ -336,7 +310,6 @@
   <script>
     let NUM_RODS = 13;
     let UNIT_INDEX = 1; 
-    let BAR_OFFSET = 0; 
     
     const $ = id => document.getElementById(id);
     let rods = [];
@@ -351,27 +324,33 @@
 
     function init() {
       loadTheme();
-      loadSettings();
+      // Bez loadSettings pro posun lišty, protože nyní je automatická
       buildSoroban();
       setupLongPress();
       window.addEventListener('resize', updateBeadSize);
       setTimeout(updateBeadSize, 50);
     }
 
-    // Důležité: Aktualizace velikosti kostičky v CSS proměnné
+    // Klíčová funkce: Nastaví velikost kostky a přepočítá výšky sekcí
     function updateBeadSize() {
       const rod = document.querySelector('.rod');
       if (!rod) return;
       const width = rod.offsetWidth;
       const gap = window.innerWidth < 600 ? 2 : 4;
+      
+      // Velikost kostky odvozena ze šířky (90%)
+      const size = Math.floor(width * 0.9); 
+      
+      document.documentElement.style.setProperty('--bead-size', size + 'px');
       document.documentElement.style.setProperty('--bead-gap', gap + 'px');
       
-      // Nastavení velikosti kostky
-      const size = width * 0.9; 
-      document.documentElement.style.setProperty('--bead-size', size + 'px');
+      // Nastavení výšek sekcí v JS pro jistotu (ikdyž to zvládne CSS)
+      // Zde se děje magie: Heaven height = 2 * size, Earth height = 5 * size + gaps
+      // Ale necháme to na CSS calc, které je deklarované výše.
       
+      // Aplikace velikosti na elementy
       document.querySelectorAll('.bead').forEach(bead => {
-        bead.style.height = size + 'px'; // Fallback pro staré prohlížeče
+        bead.style.height = size + 'px';
       });
     }
 
@@ -442,24 +421,42 @@
       
       beads.forEach((bead, i) => { if (bead === e.target) clickedBeadIndex = i; });
 
+      // Pokud klikneme na pozadí, najdeme index podle relativní pozice Y
       if (clickedBeadIndex === -1) {
           const rect = e.currentTarget.getBoundingClientRect();
           const clickY = e.clientY - rect.top;
           const height = rect.height;
-          const relativePos = clickY / height;
-          if (relativePos > 0.70) clickedBeadIndex = 0; 
-          else if (relativePos > 0.40) clickedBeadIndex = 1;
-          else if (relativePos > 0.20) clickedBeadIndex = 2; 
-          else clickedBeadIndex = 3; 
+          // Spodní kostky jsou v nule dole. 
+          // Počítáme od spodu (0 je nejspodnější).
+          // Pro jednoduchost bereme procenta.
+          const rel = clickY / height;
+          if (rel > 0.8) clickedBeadIndex = 0;
+          else if (rel > 0.6) clickedBeadIndex = 1;
+          else if (rel > 0.4) clickedBeadIndex = 2;
+          else if (rel > 0.2) clickedBeadIndex = 3;
+          else clickedBeadIndex = 3; // Kliknutí úplně nahoře (do volného prostoru) bere horní
       }
 
       const totalBeads = 4;
       const currentActiveCount = rodData.earth;
+      
+      // Zjistíme, zda kliknutá kostka je aktivní (je u lišty nahoře)
+      // Aktivních je 'currentActiveCount' kousků odshora.
+      // V poli (0,1,2,3 odspodu) jsou aktivní ty s indexy >= (4 - currentActiveCount).
       const isActive = clickedBeadIndex >= (totalBeads - currentActiveCount);
 
       if (isActive) {
+        // Deaktivujeme: Odebereme od počtu aktivních.
+        // Pokud klikneme na 3. (odspodu), znamená to, že počet klesne na 3 (indexy 0,1,2 zůstanou).
+        // Protože aktivní jsou vždy horní řada, kliknutí na aktivní znamená, že ty nad ní se deaktivují.
+        // Ale v našem modelu kliknutí na aktivní znamená "odtržení".
+        // Takže nastavíme počet na index kliknuté (počítáno od spodu).
+        // Např. index 2 (3. odspodu) -> zůstane aktivních 2 (indexy 0,1).
         rodData.earth = clickedBeadIndex; 
       } else {
+        // Aktivujeme: Přidáme k počtu.
+        // Kliknutí na neaktivní znamená, že tato a všechny pod ní jdou nahoru.
+        // Takže nový počet = index + 1.
         rodData.earth = clickedBeadIndex + 1;
       }
 
@@ -471,6 +468,7 @@
         rod.element.querySelector('.heaven .bead').classList.toggle('active', rod.heaven === 5);
         const eBeads = rod.element.querySelectorAll('.earth .bead');
         eBeads.forEach((bead, i) => {
+          // Aktivní jsou ty s nejvyššími indexy
           bead.classList.toggle('active', i >= 4 - rod.earth);
         });
       });
@@ -492,25 +490,16 @@
       updateRodsVisuals(); updateDisplay(); 
     }
 
-    function loadSettings() {
-      const savedOffset = localStorage.getItem('barOffset');
-      if (savedOffset) BAR_OFFSET = parseInt(savedOffset);
-      document.documentElement.style.setProperty('--bar-offset', BAR_OFFSET + 'px');
-      if ($('bar-offset-input')) $('bar-offset-input').value = BAR_OFFSET;
-    }
     function openSettings() { 
       $('rod-count-select').value = NUM_RODS;
       $('unit-pos-select').value = UNIT_INDEX;
-      $('bar-offset-input').value = BAR_OFFSET;
+      // Bar offset input odstraněn, řeší CSS
       $('settings-modal').classList.add('visible'); 
     }
     function closeSettings() { $('settings-modal').classList.remove('visible'); }
     function applySettings() {
       NUM_RODS = parseInt($('rod-count-select').value);
       UNIT_INDEX = parseInt($('unit-pos-select').value);
-      BAR_OFFSET = parseInt($('bar-offset-input').value) || 0;
-      localStorage.setItem('barOffset', BAR_OFFSET);
-      document.documentElement.style.setProperty('--bar-offset', BAR_OFFSET + 'px');
       buildSoroban(); closeSettings();
     }
 
