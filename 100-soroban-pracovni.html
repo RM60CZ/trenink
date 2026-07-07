@@ -45,7 +45,6 @@
       --blue-bead: #ADD8E6;
       --blue-bead-active: #5DADE2;
       
-      /* Poměry */
       --heaven-ratio: 16.5%; 
       --earth-ratio: 83.5%;
       
@@ -167,25 +166,25 @@
       position: absolute; left: 5%; z-index: 5; pointer-events: auto; 
     }
 
-    /* --- NOVÁ LOGIKA POZIC --- */
+    /* --- NOVÁ LOGIKA: HODNOTA = U LIŠTY, NULA = NA OKRAJI --- */
 
-    /* HORNÍ ČÁST (HEAVEN) */
+    /* HORNI ČÁST (HEAVEN) */
     .heaven {
       position: absolute; top: 0; left: 0; right: 0;
       height: var(--heaven-ratio);
       cursor: pointer; z-index: 1;
     }
     
-    /* Výchozí stav (Nula): Nahoře pod horní lištou */
+    /* Výchozí (Nula): Nahoře u rámu */
     .heaven .bead { 
       top: 5%; 
       bottom: auto;
     }
     
-    /* Aktivní stav (Hodnota 5): Dolů ke střední liště */
+    /* Aktivní (Hodnota 5): Dole u střední lišty */
     .heaven .bead.active {
       top: auto; 
-      bottom: 5%; /* Přilepeno ke střední liště */
+      bottom: 5%; 
       background: var(--bead-heaven-active);
     }
 
@@ -196,21 +195,19 @@
       cursor: pointer; z-index: 1;
     }
     
-    /* Výchozí stav (Nula): Dole nad spodní lištou. 
-       Jsou seskupeny těsně nad sebou od spodu. */
+    /* Výchozí (Nula): Dole u rámu, seskupené od spodu */
     .earth .bead:nth-child(1) { bottom: 5%; }
     .earth .bead:nth-child(2) { bottom: calc(5% + var(--bead-size) + var(--bead-gap)); }
     .earth .bead:nth-child(3) { bottom: calc(5% + (var(--bead-size) * 2) + (var(--bead-gap) * 2)); }
     .earth .bead:nth-child(4) { bottom: calc(5% + (var(--bead-size) * 3) + (var(--bead-gap) * 3)); }
 
-    /* Aktivní stav (Hodnota): Nahoru ke střední liště.
-       Posouváme 'top' pozici, aby se přilepily ke stropu (střední liště). */
+    /* Aktivní (Hodnota): Nahoru, přilepené ke střední liště */
     .earth .bead.active { 
       background: var(--bead-earth-active); 
       box-shadow: inset 0 0 5px rgba(255,255,255,0.3); 
     }
     
-    /* Pozice aktivních spodních kostiček - odshora dolů */
+    /* Pozice aktivních (odshora dolů) */
     .earth .bead:nth-child(4).active { 
       bottom: auto; top: 5%; 
     }
@@ -388,7 +385,7 @@
 
     function handleHeavenClick(index) {
       const rodData = rods[NUM_RODS - index];
-      // Toggle: Pokud je nahoře (0), posun dolů (5). Pokud je dole (5), posun nahoru (0).
+      // Toggle: Nahoře (0) <-> Dole u lišty (5)
       rodData.heaven = rodData.heaven === 0 ? 5 : 0;
       updateRodsVisuals(); updateDisplay();
     }
@@ -400,44 +397,57 @@
       
       beads.forEach((bead, i) => { if (bead === e.target) clickedBeadIndex = i; });
 
-      // Detekce kliknutí na pozadí (volný prostor)
+      // Detekce kliknutí na pozadí
       if (clickedBeadIndex === -1) {
           const rect = e.currentTarget.getBoundingClientRect();
           const clickY = e.clientY - rect.top;
           const height = rect.height;
           const relativePos = clickY / height;
-          // Spodní část je 83.5%, číslujeme od spodu (0 = dole, 3 = nahoře)
-          // Pokud klikneme do spodní třetiny (kde jsou nulové kostky)
-          if (relativePos > 0.66) clickedBeadIndex = 0; 
-          else if (relativePos > 0.33) clickedBeadIndex = 1;
-          else if (relativePos > 0.10) clickedBeadIndex = 2; 
-          else clickedBeadIndex = 3; // Horní část blíže liště
+          // Spodní část (nula)
+          if (relativePos > 0.70) clickedBeadIndex = 0; 
+          else if (relativePos > 0.40) clickedBeadIndex = 1;
+          else if (relativePos > 0.20) clickedBeadIndex = 2; 
+          else clickedBeadIndex = 3; 
       }
 
-      // Logika aktivace:
-      // Nyní: active = nahoru (hodnota). Inactive = dole (nula).
-      
-      // Zjistíme, zda kliknutá kostka je aktivní (je nahoře)
-      // Kostičky se číslují od spodu 0,1,2,3.
-      const clickedBeadFromBottom = clickedBeadIndex + 1;
+      /* LOGIKA NOVÉHO ZPŮSOBU OVLÁDÁNÍ
+         Cíl: Nastavit počet kostek, které mají být "nahoře" u lišty (aktivních).
+         clickedBeadIndex: 0=dolní, 3=horní (podle DOM pořadí v HTML).
+         Chování:
+         1. Pokud kliknu na neaktivní kostku (dole), chci ji zaktivovat (posunout nahoru).
+            - Tím se zaktivují i všechny pod ní (standardní chování sorobanu).
+         2. Pokud kliknu na aktivní kostku (nahoře u lišty), chci ji deaktivovat (posunout dolů).
+            - Tím se deaktivují i všechny nad ní.
+      */
+
       const totalBeads = 4;
-      const currentActive = rodData.earth; // Počet aktivních (nahoře)
+      const currentActiveCount = rodData.earth; // Kolik je jich aktuálně nahoře (0-4)
       
-      // Aktivní kostky jsou v poli beads ty s indexy (4 - currentActive) až 3.
-      // Např. pro currentActive=2 jsou to indexy 2 a 3.
-      const isActive = clickedBeadIndex >= (totalBeads - currentActive);
+      // Zjistíme, zda je kliknutá kostka aktivní.
+      // Protože aktivní jsou vždy ty "nahoru" u lišty, 
+      // v poli beads (indexy 0-3 od spodu) to jsou ty s nejvyššími indexy.
+      // Např. pokud je activeCount=2, jsou aktivní indexy 2 a 3.
+      // Mezní hodnota = totalBeads - currentActiveCount.
+      
+      const isActive = clickedBeadIndex >= (totalBeads - currentActiveCount);
 
       if (isActive) {
-        // Pokud je aktivní (nahoře), chceme ji deaktivovat (posunout dolů)
-        // a s ní i všechny nad ní.
-        // Kliknutí na nižší index (např. 2) znamená, že výše (3) už nejsou aktivní.
-        // Všechny od kliknutého nahoru deaktivujeme.
-        // Počet aktivních po kliknutí = index kliknuté (0,1,2,3)
+        // Chci deaktivovat. 
+        // Počet nových aktivních bude odpovídat indexu kliknuté (podle počtu pod ní).
+        // Ale musíme to převést na "kolik zbude nahoře".
+        // Pokud kliknu na index 3 (nejvyšší), zůstane 0 aktivních.
+        // Pokud kliknu na index 2, zůstanou aktivní jen ty pod ní? Ne, standardně:
+        // Kliknutí na aktivní znamená "odtrhni od lišty".
+        // Pokud je aktivních 4 (indexy 0,1,2,3 nahoře) a kliknu na index 2 (což je v pořadí odshora 2.),
+        // tak se oddělí 3. a 4. (index 2 a 3) a zůstane 2 (index 0 a 1).
+        // Takže: Nový počet = (celkový počet - 1) - clickedBeadIndex.
+        
         rodData.earth = clickedBeadIndex; 
       } else {
-        // Pokud není aktivní (dole), chceme ji aktivovat (posunout nahoru)
-        // a s ní i všechny pod ní.
-        rodData.earth = clickedBeadFromBottom;
+        // Chci aktivovat (přidat k hodnotě).
+        // Kliknutá kostka a všechny pod ní jdou nahoru.
+        // Počet nových aktivních = clickedBeadIndex + 1.
+        rodData.earth = clickedBeadIndex + 1;
       }
 
       updateRodsVisuals(); updateDisplay();
@@ -451,8 +461,7 @@
         // Pozemské: active = nahoru (hodnota)
         const eBeads = rod.element.querySelectorAll('.earth .bead');
         eBeads.forEach((bead, i) => {
-          // Má být tato kostka aktivní?
-          // Aktivních je 'rod.earth' kousků odshora (indexy 3, 2, 1, 0)
+          // Aktivních je rod.earth kousků. Aktivují se odshora (nejvyšší indexy).
           bead.classList.toggle('active', i >= 4 - rod.earth);
         });
       });
