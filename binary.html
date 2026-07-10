@@ -56,13 +56,22 @@
     .clear-btn{padding:0 16px;}
     .back-btn:active,.clear-btn:active{background:var(--btnh);}
 
+    /* Keypad pro Binární (0, 1) */
     .keypad-bin{
       display:none; gap:8px; width:100%; justify-content:center; 
       grid-template-columns:repeat(2, 1fr); grid-auto-flow:column;
       max-width:300px;
     }
+    /* Keypad pro Decimální (1-9, 0) */
+    .keypad-dec{
+      display:none; gap:8px; width:100%; justify-content:center; 
+      grid-template-columns:repeat(3, 1fr); 
+      max-width:300px;
+    }
+
     @media (min-width: 521px) {
       .keypad-bin.visible-desktop { display: grid; }
+      .keypad-dec.visible-desktop { display: grid; }
     }
     
     .key-btn{
@@ -129,11 +138,26 @@
       <button class="clear-btn" id="clear-btn-dec" onclick="clearAll()" style="display:none;">C</button>
     </div>
 
+    <!-- Binární klávesnice -->
     <div class="keypad-bin" id="keypad-bin">
       <button class="key-btn" onclick="typeVal('0')">0</button>
       <button class="key-btn" onclick="typeVal('1')">1</button>
     </div>
     
+    <!-- Decimální klávesnice -->
+    <div class="keypad-dec" id="keypad-dec">
+      <button class="key-btn" onclick="typeVal('1')">1</button>
+      <button class="key-btn" onclick="typeVal('2')">2</button>
+      <button class="key-btn" onclick="typeVal('3')">3</button>
+      <button class="key-btn" onclick="typeVal('4')">4</button>
+      <button class="key-btn" onclick="typeVal('5')">5</button>
+      <button class="key-btn" onclick="typeVal('6')">6</button>
+      <button class="key-btn" onclick="typeVal('7')">7</button>
+      <button class="key-btn" onclick="typeVal('8')">8</button>
+      <button class="key-btn" onclick="typeVal('9')">9</button>
+      <button class="key-btn" onclick="typeVal('0')" style="grid-column: 2;">0</button>
+    </div>
+
     <div class="ctrl-buttons" id="ctrl-buttons-bin">
         <button class="back-btn" onclick="deleteLeft()">⌫</button>
         <button class="clear-btn" onclick="clearAll()">C</button>
@@ -276,6 +300,7 @@
       $('theme-btn').style.display='none';
       $('single-input').style.display='none';
       $('keypad-bin').classList.remove('visible-desktop');
+      $('keypad-dec').classList.remove('visible-desktop');
       $('ctrl-buttons-bin').classList.remove('visible-desktop');
       $('back-btn-dec').style.display='none';
       $('clear-btn-dec').style.display='none';
@@ -299,6 +324,7 @@
            if(state === 'evaluated'){
              $('single-input').readOnly = true;
              $('keypad-bin').classList.remove('visible-desktop');
+             $('keypad-dec').classList.remove('visible-desktop');
              $('ctrl-buttons-bin').classList.remove('visible-desktop');
              $('back-btn-dec').style.display='none';
              $('clear-btn-dec').style.display='none';
@@ -404,20 +430,19 @@
     $('single-input').className = '';
     
     if(dir === 'dec2bin'){
-      // Pro DEC->BIN nechceme mobilní klávesnici, máme tlačítka 0,1
       $('single-input').inputMode = 'none';
 
       if(fingerPanelVisible){
         $('single-input').readOnly = true;
         $('single-input').placeholder = "";
         $('keypad-bin').classList.remove('visible-desktop');
-        $('ctrl-buttons-bin').classList.remove('visible-desktop');
+        $('keypad-dec').classList.remove('visible-desktop');
         $('back-btn-dec').style.display='none';
         $('clear-btn-dec').style.display='none';
       } else {
         $('single-input').readOnly = false;
         $('keypad-bin').classList.add('visible-desktop');
-        $('ctrl-buttons-bin').classList.remove('visible-desktop');
+        $('keypad-dec').classList.remove('visible-desktop');
         $('back-btn-dec').style.display='flex';
         $('clear-btn-dec').style.display='flex';
         $('single-input').focus();
@@ -428,12 +453,12 @@
       expectedLength=bits;
 
     }else{ // BIN -> DEC
-      // Pro BIN->DEC chceme numerickou klávesnici
-      $('single-input').inputMode = 'numeric';
-      
+      $('single-input').inputMode = 'none'; // Skrytí klávesnice
       $('single-input').readOnly = false;
+      
       $('keypad-bin').classList.remove('visible-desktop');
-      $('ctrl-buttons-bin').classList.remove('visible-desktop');
+      $('keypad-dec').classList.add('visible-desktop'); // Zobrazení dec klávesnice
+      
       $('back-btn-dec').style.display='flex';
       $('clear-btn-dec').style.display='flex';
       $('single-input').focus();
@@ -489,29 +514,54 @@
   function typeVal(val){
     if(state!=='playing') return;
     const input=$('single-input');
+    const dir = $('direction').value;
     
     const start=input.selectionStart, end=input.selectionEnd;
     const value=input.value;
     const hasSelection=start!==end;
 
-    if(!['0','1'].includes(val)) return;
+    // Logika pro DEC -> BIN (0 a 1)
+    if(dir === 'dec2bin'){
+      if(!['0','1'].includes(val)) return;
+      if(!hasSelection && value.replace(/\s/g,'').length>=15){
+        alert("Maximální počet 0 a 1 je 15, překročili jste limit, opravte!");
+        return;
+      }
+      let newValue=value.slice(0,start)+val+value.slice(end);
+      let clean=newValue.replace(/\s/g,'');
+      if(clean.length>15) clean=clean.slice(0,15);
 
-    if(!hasSelection && value.replace(/\s/g,'').length>=15){
-      alert("Maximální počet 0 a 1 je 15, překročili jste limit, opravte!");
-      return;
+      let formatted='',count=0;
+      for(let i=clean.length-1;i>=0;i--){
+        formatted=clean[i]+formatted;
+        if(++count%5===0 && i>0) formatted=' '+formatted;
+      }
+      input.value=formatted;
+      input.selectionStart=input.selectionEnd=formatted.length;
+    } 
+    // Logika pro BIN -> DEC (0-9)
+    else {
+      if(!/^\d$/.test(val)) return; // Povolíme jen číslice
+      
+      // Jednoduché přidání číslice a naformátování
+      // Odstraníme mezery, přidáme číslo, zformátujeme
+      let clean = value.replace(/\s/g, '');
+      
+      // Pokud je výběr, smažeme ho
+      if(hasSelection) {
+        clean = value.slice(0, start) + value.slice(end);
+        clean = clean.replace(/\s/g, '');
+      }
+      
+      // Přidáme číslici
+      clean += val;
+      
+      // Limit pro decimální vstup? 2^15 = 32768 (5 číslic). Necháme bezpečnou rezervu.
+      // Formátování
+      const formatted = formatDecimalInput(clean);
+      input.value = formatted;
+      input.selectionStart = input.selectionEnd = formatted.length;
     }
-
-    let newValue=value.slice(0,start)+val+value.slice(end);
-    let clean=newValue.replace(/\s/g,'');
-    if(clean.length>15) clean=clean.slice(0,15);
-
-    let formatted='',count=0;
-    for(let i=clean.length-1;i>=0;i--){
-      formatted=clean[i]+formatted;
-      if(++count%5===0 && i>0) formatted=' '+formatted;
-    }
-    input.value=formatted;
-    input.selectionStart=input.selectionEnd=formatted.length;
   }
 
   function checkAnswer(){
@@ -522,6 +572,7 @@
     let correctFormattedAnswer='';
     
     $('keypad-bin').classList.remove('visible-desktop');
+    $('keypad-dec').classList.remove('visible-desktop');
     $('ctrl-buttons-bin').classList.remove('visible-desktop');
     $('back-btn-dec').style.display='none';
     $('clear-btn-dec').style.display='none';
@@ -660,6 +711,7 @@
     $('question-display').style.display='none';
     $('single-input').style.display='none';
     $('keypad-bin').classList.remove('visible-desktop');
+    $('keypad-dec').classList.remove('visible-desktop');
     $('ctrl-buttons-bin').classList.remove('visible-desktop');
     $('back-btn-dec').style.display='none';
     $('clear-btn-dec').style.display='none';
