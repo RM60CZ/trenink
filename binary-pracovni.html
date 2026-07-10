@@ -39,10 +39,7 @@
 
     .input-with-back{display:flex;align-items:center;gap:8px;width:100%;justify-content:center;}
     #single-input{
-      /* ZMĚNA: Input se roztáhne na dostupný prostor */
-      flex-grow: 1;
-      min-width: 0;
-      /* Původní styly */
+      flex-grow: 1; min-width: 0;
       padding:10px; border-radius:8px; text-align:center; 
       border:2px solid var(--b); background:var(--c); color:var(--t); 
       font-size:20px; font-weight:bold; outline:none; height:48px; display:none;
@@ -66,7 +63,7 @@
     }
     @media (min-width: 521px) {
       .keypad-bin.visible-desktop { display: grid; }
-      .ctrl-buttons-bin.visible-desktop { display: flex; }
+      /* Ctrl-buttons-bin už nepotřebujeme zobrazovat na desktopu, máme tlačítka u inputu */
     }
     
     .key-btn{
@@ -138,6 +135,7 @@
       <button class="key-btn" onclick="typeVal('1')">1</button>
     </div>
     
+    <!-- Ctrl-buttons-bin necháme v HTML, ale v JS ho nebudeme používat pro DEC-BIN bez P, abychom měli tlačítka u inputu -->
     <div class="ctrl-buttons" id="ctrl-buttons-bin">
         <button class="back-btn" onclick="deleteLeft()">⌫</button>
         <button class="clear-btn" onclick="clearAll()">C</button>
@@ -230,6 +228,7 @@
             const vv=Number(sq.dataset.value);
             sq.classList.toggle('on',(currentFingerSum & vv)===vv);
           });
+          // POZOR: Zde odstraněno aktualizování inputu podle požadavku (nic se nevypisuje, dokud není kontrola)
         });
         grid.appendChild(el);
       }
@@ -253,31 +252,10 @@
     $('finger-panel').classList.toggle('visible', fingerPanelVisible);
     syncFingerPanelClass();
 
-    if($('direction').value === 'dec2bin'){
-      if(fingerPanelVisible){
-        $('single-input').value='';
-        $('single-input').className='';
-        $('single-input').readOnly = true;
-        
-        if(state === 'playing') {
-          startGame();
-        } else if(state === 'evaluated') {
-           $('single-input').readOnly = true;
-           document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
-             const vv=Number(sq.dataset.value);
-             sq.classList.toggle('on',(currentFingerSum & vv)===vv);
-           });
-        } else {
-           $('single-input').readOnly = true;
-           currentFingerSum = 0;
-           document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
-        }
-      } else {
-        handleMainAction();
-      }
+    // Požadavek: Přepnutí P resetuje hru (nový příklad)
+    if(state !== 'init') {
+      startGame();
     }
-    if(!fingerPanelVisible) return;
-    updateFingerDisplay();
   }
 
   function toggleTheme(){
@@ -317,52 +295,22 @@
       if(changed){
         startGame();
       } else {
-        if(state === 'playing'){
+        // Obnova stavu po zavření nastavení (bez změny)
+        if(state === 'playing' || state === 'evaluated'){
            $('finger-toggle-btn').style.display='block';
            $('question-display').style.display='block'; 
            $('single-input').style.display='block';
-           if(fingerPanelVisible) $('finger-panel').classList.add('visible');
            
-           if($('direction').value==='dec2bin') {
-             if(!fingerPanelVisible) {
-               $('single-input').readOnly = true;
-               $('keypad-bin').classList.add('visible-desktop');
-               $('ctrl-buttons-bin').classList.add('visible-desktop');
-               $('back-btn-dec').style.display='none';
-               $('clear-btn-dec').style.display='none';
-             } else {
-               $('single-input').readOnly = true;
-               $('keypad-bin').classList.remove('visible-desktop');
-               $('ctrl-buttons-bin').classList.remove('visible-desktop');
-               document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
-                 const vv=Number(sq.dataset.value);
-                 sq.classList.toggle('on',(currentFingerSum & vv)===vv);
-               });
-             }
-           } else {
-             $('single-input').readOnly = false;
+           if(state === 'evaluated'){
+             $('single-input').readOnly = true;
              $('keypad-bin').classList.remove('visible-desktop');
              $('ctrl-buttons-bin').classList.remove('visible-desktop');
-             $('back-btn-dec').style.display='flex';
-             $('clear-btn-dec').style.display='flex';
-             $('single-input').focus();
+             $('back-btn-dec').style.display='none';
+             $('clear-btn-dec').style.display='none';
+           } else {
+             // Hrací stav - obnovíme UI podle režimu
+             startGame(); // Pro zjednodušení a jistotu správného UI znovu spustíme startGame
            }
-        } else if(state === 'evaluated') {
-          $('question-display').style.display='block'; 
-          $('single-input').style.display='block';
-          $('finger-toggle-btn').style.display='block';
-          $('single-input').readOnly = true;
-          $('keypad-bin').classList.remove('visible-desktop');
-          $('ctrl-buttons-bin').classList.remove('visible-desktop');
-          $('back-btn-dec').style.display='none';
-          $('clear-btn-dec').style.display='none';
-          if(fingerPanelVisible) $('finger-panel').classList.add('visible');
-          if($('direction').value==='dec2bin' && fingerPanelVisible) {
-             document.querySelectorAll('#finger-grid .finger-sq').forEach(sq=>{
-               const vv=Number(sq.dataset.value);
-               sq.classList.toggle('on',(currentFingerSum & vv)===vv);
-             });
-          }
         }
       }
     }
@@ -418,12 +366,19 @@
     const cursorPosition=input.selectionStart;
     const originalValue=input.value;
 
-    if(/[^\d\s]/.test(input.value)){
-      input.value=input.value.replace(/[^\d\s]/g,'');
+    if(dir==='dec2bin'){
+      const clean=input.value.replace(/[^01]/g,'').slice(0, 15);
+      const formatted=formatBinary(clean);
+      input.value=formatted;
+      input.selectionStart=input.selectionEnd=computeCursorForDigits(formatted,originalValue,cursorPosition,'dec2bin');
+    } else {
+      if(/[^\d\s]/.test(input.value)){
+        input.value=input.value.replace(/[^\d\s]/g,'');
+      }
+      const formatted=formatDecimalInput(input.value);
+      input.value=formatted;
+      input.selectionStart=input.selectionEnd=computeCursorForDigits(formatted,originalValue,cursorPosition,'bin2dec');
     }
-    const formatted=formatDecimalInput(input.value);
-    input.value=formatted;
-    input.selectionStart=input.selectionEnd=computeCursorForDigits(formatted,originalValue,cursorPosition,'bin2dec');
   });
 
   function startGame(){
@@ -433,10 +388,9 @@
     
     $('finger-toggle-btn').style.display='block';
 
-    if(fingerPanelVisible && $('direction').value==='dec2bin') {
-      currentFingerSum = 0;
-      document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
-    }
+    // Reset prstů
+    currentFingerSum = 0;
+    document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
     
     $('finger-panel').classList.toggle('visible', fingerPanelVisible);
     syncFingerPanelClass();
@@ -453,34 +407,39 @@
 
     $('question-display').style.display='block';
     $('single-input').style.display='block';
+    $('single-input').value = ''; // Vždy vymazat input na začátku
+    $('single-input').className = '';
     
     if(dir === 'dec2bin'){
-      $('single-input').value='';
-      $('single-input').className='';
-      $('single-input').readOnly = true;
-      
       if(fingerPanelVisible){
+        // REŽIM P AKTIVNÍ
+        $('single-input').readOnly = true;
+        $('single-input').placeholder = ""; // Může být prázdné
         $('keypad-bin').classList.remove('visible-desktop');
         $('ctrl-buttons-bin').classList.remove('visible-desktop');
         $('back-btn-dec').style.display='none';
         $('clear-btn-dec').style.display='none';
       } else {
-        $('keypad-bin').classList.add('visible-desktop');
-        $('ctrl-buttons-bin').classList.add('visible-desktop');
-        $('back-btn-dec').style.display='none';
-        $('clear-btn-dec').style.display='none';
+        // REŽIM P NEAKTIVNÍ (Standardní vstup + klávesnice)
+        $('single-input').readOnly = false;
+        $('keypad-bin').classList.add('visible-desktop'); // Zobrazit 0, 1
+        $('ctrl-buttons-bin').classList.remove('visible-desktop'); // Skrýt spodní mazací tlačítka
+        
+        // Zobrazit mazací tlačítka u inputu
+        $('back-btn-dec').style.display='flex';
+        $('clear-btn-dec').style.display='flex';
+        $('single-input').focus();
       }
       
       $('question-display').innerText=formatDecimal(currentDecValue);
       expectedAnswer=binString;
       expectedLength=bits;
 
-    }else{
+    }else{ // BIN -> DEC
       $('single-input').readOnly = false;
-      $('single-input').value='';
-      $('single-input').className='';
       $('keypad-bin').classList.remove('visible-desktop');
       $('ctrl-buttons-bin').classList.remove('visible-desktop');
+      // Mazací tlačítka u inputu
       $('back-btn-dec').style.display='flex';
       $('clear-btn-dec').style.display='flex';
       $('single-input').focus();
@@ -496,8 +455,6 @@
 
   function deleteLeft(){
     if(state!=='playing') return;
-    if($('single-input').readOnly && $('direction').value!=='dec2bin') return; 
-    
     const input=$('single-input'), dir=$('direction').value;
     const cursorPos=input.selectionStart;
     if(cursorPos===0) return;
@@ -566,37 +523,29 @@
   function checkAnswer(){
     const dir=$('direction').value;
     const input=$('single-input');
-    const rawValue=input.value.trim();
-
+    // Použijeme rawValue z inputu, pokud není aktivní P, jinak bereme z prstů
+    let rawValue = input.value.trim();
+    let isCorrect=false;
+    let correctFormattedAnswer='';
+    
+    // UI cleanup
     $('keypad-bin').classList.remove('visible-desktop');
     $('ctrl-buttons-bin').classList.remove('visible-desktop');
     $('back-btn-dec').style.display='none';
     $('clear-btn-dec').style.display='none';
 
-    let isCorrect=false;
-    let correctFormattedAnswer='';
-
     if(dir==='dec2bin' && fingerPanelVisible){
       const sum=currentFingerSum;
       
-      // OPRAVA: Pokud není nic zadáno (sum === 0), zobrazí se správný výsledek bez barvy a neukládá se do historie.
-      if(sum === 0){
-        state='evaluated';
-        $('main-btn').innerText='START';
-        input.value = formatBinary(expectedAnswer);
-        input.className = ''; // Bez barvy
-        input.readOnly = true;
-        return;
-      }
-
+      // Vyhodnocení z prstů
       isCorrect=(sum===currentDecValue);
-      correctFormattedAnswer=formatBinary(expectedAnswer);
+      correctFormattedAnswer=formatBinary(expectedAnswer); // expectedAnswer je binární string
       
-      // Pokud je špatně, v inputu zůstane uživatelova chyba. Pokud dobře, správný výsledek.
+      // Zobrazení výsledku do inputu
       if(isCorrect) {
         input.value = correctFormattedAnswer;
       } else {
-        input.value = formatBinary(sum.toString(2));
+        input.value = formatBinary(sum.toString(2)); // Zobrazíme co zadal
       }
       
       input.className=isCorrect?'success':'error';
@@ -608,18 +557,20 @@
       return;
     }
 
+    // BIN -> DEC a DEC -> BIN bez P
     if(dir==='bin2dec'){
       if(rawValue===''){
-        state='evaluated';
-        $('main-btn').innerText='START';
-        input.readOnly = true;
-        input.value=formatDecimal(parseInt(expectedAnswer,10));
-        input.className='';
-        updateFingerDisplay();
-        return;
+         // Prázdný input -> ukázat správnou odpověď
+         state='evaluated';
+         $('main-btn').innerText='START';
+         input.readOnly = true;
+         input.value=formatDecimal(parseInt(expectedAnswer,10));
+         input.className='';
+         updateFingerDisplay();
+         return;
       }
       const cleanUser=removeLeadingZeros(rawValue);
-      const cleanExpected=removeLeadingZeros(expectedAnswer);
+      const cleanExpected=removeLeadingZero(expectedAnswer);
       isCorrect=cleanUser===cleanExpected;
       correctFormattedAnswer=formatDecimal(parseInt(cleanExpected,10));
 
@@ -662,6 +613,9 @@
     saveToHistory(`${formatDecimal(currentDecValue)} = ${correctFormattedAnswer}`,isCorrect);
     updateFingerDisplay();
   }
+  
+  // Pomocná funkce pro odstranění leading zeros, vrací alespoň '0'
+  const removeLeadingZero = str => str.replace(/^0+(?!$)/, '');
 
   function saveToHistory(text,isCorrect){
     const history=[{text,isCorrect}];
