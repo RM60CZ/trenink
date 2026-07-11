@@ -107,14 +107,14 @@
     .app-container {
       display: none; 
       flex-direction: column;
-      justify-content: flex-end; /* Obsah dolů -> vzniká místo nahoře */
-      align-items: flex-start;   /* Obsah vlevo -> vzniká místo vpravo */
+      justify-content: flex-end; /* Mobil: Obsah dolů */
+      align-items: flex-start;   /* Mobil: Obsah vlevo */
       height: 100%;
       width: 100%;
       position: relative;
     }
 
-    /* HEADER */
+    /* HEADER (Pouze pro mobil) */
     .header {
       display: flex;
       justify-content: flex-start;
@@ -124,6 +124,7 @@
       padding: 10px;
       width: auto; 
       flex-shrink: 0;
+      order: 1; 
     }
     
     .value-display {
@@ -134,13 +135,17 @@
     }
     .btn-icon { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-color); padding: 5px; }
 
+    /* BOČNÍ PANEL (Skrytý na mobilu, zobrazen na desktopu) */
+    .sidebar-right {
+      display: none; /* Skryto na mobilu */
+    }
+
     /* PWA STANDALONE REŽIM */
     @media all and (display-mode: standalone) {
       .app-container {
         padding-top: var(--safe-top);
         padding-bottom: var(--safe-bottom);
         padding-left: var(--safe-left);
-        justify-content: center; /* V PWA centrujeme vertálně, margin-left zajistí pozici */
       }
       .header {
         position: fixed;
@@ -152,8 +157,6 @@
         border-radius: 0 0 10px 10px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.2);
       }
-      .header .btn-icon { display: none; }
-      .header .value-display { font-size: 28px; background: transparent; }
     }
 
     /* RÁM SOROBANU */
@@ -171,10 +174,11 @@
       
       position: relative; 
       touch-action: none;
-      margin-left: 20px;  /* Větší okraj zleva */
-      margin-bottom: 20px; /* Větší okraj zdola */
+      margin-left: 20px;  /* Mobil: okraj zleva */
+      margin-bottom: 20px; /* Mobil: okraj zdola */
       
-      overflow: hidden; 
+      overflow: hidden;
+      order: 2; 
     }
 
     .rods-container {
@@ -227,7 +231,6 @@
       top: calc(var(--heaven-height) - var(--bead-size));
       background: var(--bead-heaven-active);
     }
-    /* BARVY HORNI ČÁST: Modré zůstávají, kromě specifických tyčí (řešeno v JS) */
     .rod.blue-rod .heaven .bead { background: var(--blue-bead); }
     .rod.blue-rod .heaven .bead.active { background: var(--blue-bead-active); }
 
@@ -288,12 +291,6 @@
     .earth .bead:nth-child(2).active { bottom: auto; top: calc(var(--bead-size) * 2 + var(--bead-gap) * 2); }
     .earth .bead:nth-child(1).active { bottom: auto; top: calc(var(--bead-size) * 3 + var(--bead-gap) * 3); }
 
-    /* ZDE BYLO ODSTRANĚNO BARVENÍ SPODNÍ ČÁSTI (EARTH) - NYNÍ JSOU VŠECHNY NEUTRÁLNÍ */
-    /* Původní:
-    .rod.blue-rod .earth .bead { background: var(--blue-bead); }
-    .rod.blue-rod .earth .bead.active { background: var(--blue-bead-active); }
-    */
-
     /* UI Elements */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center; }
     .modal.visible { display: flex; }
@@ -305,6 +302,7 @@
     .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
     .toast.show { opacity: 1; }
 
+    /* MOBILNÍ ZOBRAZENÍ */
     @media screen and (orientation: landscape) {
       .app-container { display: flex; }
       #orientation-warning { display: none !important; }
@@ -313,6 +311,67 @@
       @media all and (display-mode: browser) {
         .app-container { display: none !important; }
         #orientation-warning { display: flex !important; }
+      }
+    }
+
+    /* ==========================================
+       DESKTOP LAYOUT (POČÍTAČ)
+       ========================================== */
+    @media screen and (min-width: 1024px) {
+      .app-container {
+        justify-content: center; /* Vertikálně na střed */
+        align-items: center;     /* Horizontálně na střed */
+      }
+
+      /* Skrytí mobilního headeru */
+      .header {
+        display: none;
+      }
+
+      /* Soroban */
+      .soroban-frame {
+        margin: 0; /* Reset okrajů pro centrování */
+        max-height: 80vh; /* Trochu více prostoru */
+      }
+
+      /* Zobrazení hodnoty (Vlevo dole) */
+      .value-display {
+        position: fixed;
+        bottom: 30px;
+        left: 30px;
+        margin: 0;
+        font-size: 32px;
+        background: rgba(0,0,0,0.15);
+        padding: 8px 20px;
+        z-index: 50;
+      }
+
+      /* Boční panel (Vpravo) */
+      .sidebar-right {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        right: 30px;
+        top: 30px; /* Umístění nahoru vpravo */
+        gap: 15px;
+        z-index: 100;
+      }
+
+      .sidebar-right .btn-icon {
+        font-size: 24px;
+        padding: 8px;
+        background: rgba(0,0,0,0.1);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+      }
+      
+      .sidebar-right .btn-icon:hover {
+        background: rgba(0,0,0,0.2);
       }
     }
   </style>
@@ -327,18 +386,29 @@
   </div>
 
   <div class="app-container" id="app">
+    <!-- Zobrazení hodnoty (na mobilu v headeru, na PC fixní vlevo dole) -->
+    <div class="value-display" id="display">0</div>
+
+    <!-- Mobilní Header (na PC skryt) -->
     <div class="header" id="header">
-      <div class="value-display" id="display">0</div>
       <div style="display:flex; gap:5px;" id="btn-group">
-        <button class="btn-icon" onclick="newChallenge()" title="Nová hádanka">❓</button>
+        <!-- Reset a Téma jsou v headeru pro mobil, na PC se skryjí a použijí se ty ze sidebaru -->
         <button class="btn-icon" onclick="resetSoroban()" title="Vynulovat">↺</button>
+        <button class="btn-icon" id="theme-btn-mobile" onclick="toggleTheme()" title="Téma">🌙</button>
         <button class="btn-icon" onclick="openSettings()" title="Nastavení">⚙️</button>
-        <button class="btn-icon" id="theme-btn" onclick="toggleTheme()" title="Téma">🌙</button>
       </div>
     </div>
 
+    <!-- Soroban -->
     <div class="soroban-frame" id="frame">
       <div class="rods-container" id="soroban"></div>
+    </div>
+
+    <!-- Desktop Sidebar (na mobilu skryt) -->
+    <div class="sidebar-right">
+      <button class="btn-icon" onclick="resetSoroban()" title="Vynulovat">↺</button>
+      <button class="btn-icon" id="theme-btn-desktop" onclick="toggleTheme()" title="Téma">🌙</button>
+      <button class="btn-icon" onclick="openSettings()" title="Nastavení">⚙️</button>
     </div>
   </div>
 
@@ -418,20 +488,33 @@
 
     function updateBeadSize() {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      const isDesktop = window.innerWidth >= 1024;
       
       let availableHeight = window.innerHeight;
-      if (!isStandalone) availableHeight -= 60; 
+      if (!isStandalone && !isDesktop) availableHeight -= 60; 
       
       const safeBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')) || 0;
       availableHeight -= safeBottom;
       
-      const maxBeadHeight = Math.floor((availableHeight - 60) / 5.5); 
+      let maxBeadHeight;
+      if (isDesktop) {
+         // Na desktopu více prostoru pro centrování
+         maxBeadHeight = Math.floor((availableHeight * 0.8) / 5.5); 
+      } else {
+         maxBeadHeight = Math.floor((availableHeight - 60) / 5.5); 
+      }
 
       let availableWidth = window.innerWidth;
       const safeLeft = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-left')) || 0;
       availableWidth -= safeLeft;
       
-      const rightSpace = Math.max(150, availableWidth * 0.25); 
+      let rightSpace;
+      if (isDesktop) {
+        rightSpace = 100; // Méně místa vpravo, sidebar je fixed
+      } else {
+        rightSpace = Math.max(150, availableWidth * 0.25);
+      }
+      
       const usableWidth = availableWidth - rightSpace - 50; 
       
       const widthPerRod = usableWidth / NUM_RODS;
@@ -455,12 +538,7 @@
         rod.dataset.index = i; 
         
         const posFromRight = NUM_RODS - i + 1;
-
-        // UPRAVENÁ LOGIKA BARVENÍ:
-        // 1. Spodní část (Earth) už nemá v CSS pravidla pro blue-rod, takže je vždy neutrální.
-        // 2. Horní část (Heaven): Barvíme modře, pokud je to "blue-rod", ALE vynecháme 1. tyč zprava (jednotky).
-        // Původní podmínka: if ((posFromRight - 1) % 3 === 0)
-        // Nová podmínka: Přidáno && posFromRight !== 1
+        
         if ((posFromRight - 1) % 3 === 0 && posFromRight !== 1) {
            rod.classList.add('blue-rod');
         }
@@ -573,18 +651,24 @@
       const body = document.body; 
       body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark'; 
       saveTheme(); 
+      updateThemeIcons();
     }
+    
+    function updateThemeIcons() {
+      const icon = document.body.dataset.theme === 'dark' ? '☀️' : '🌙';
+      const btnDesktop = $('theme-btn-desktop');
+      const btnMobile = $('theme-btn-mobile');
+      if(btnDesktop) btnDesktop.innerText = icon;
+      if(btnMobile) btnMobile.innerText = icon;
+    }
+
     function saveTheme() { localStorage.setItem('sorobanTheme', document.body.dataset.theme); }
     function loadTheme() { 
       const t = localStorage.getItem('sorobanTheme') || 'light'; 
       document.body.dataset.theme = t; 
+      updateThemeIcons();
     }
     
-    function newChallenge() { 
-      resetSoroban(); 
-      showToast("Režim: Volné počítání"); 
-    }
-
     window.onload = init;
   </script>
 </body>
