@@ -103,7 +103,7 @@
     #orientation-warning svg { width: 80px; height: 80px; fill: var(--text-color); margin-bottom: 20px; animation: rotate-phone 2s infinite linear; }
     @keyframes rotate-phone { 0% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } 100% { transform: rotate(90deg); } }
 
-    /* HLAVNÍ LAYOUT */
+    /* HLAVNÍ LAYOUT (VÝCHOZÍ PRO MOBIL) */
     .app-container {
       display: none; 
       flex-direction: column;
@@ -135,9 +135,9 @@
     }
     .btn-icon { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-color); padding: 5px; }
 
-    /* BOČNÍ PANEL (Skrytý na mobilu, zobrazen na desktopu) */
+    /* BOČNÍ PANEL (Skrytý na mobilu) */
     .sidebar-right {
-      display: none; /* Skryto na mobilu */
+      display: none; 
     }
 
     /* PWA STANDALONE REŽIM */
@@ -315,9 +315,11 @@
     }
 
     /* ==========================================
-       DESKTOP LAYOUT (POČÍTAČ)
+       DESKTOP LAYOUT (DETEKCE MYŠI/HOVER)
+       Toto pravidlo se aplikuje POUZE na zařízeních s myší (počítač),
+       bez ohledu na šířku okna.
        ========================================== */
-    @media screen and (min-width: 1024px) {
+    @media (hover: hover) and (pointer: fine) {
       .app-container {
         justify-content: center; /* Vertikálně na střed */
         align-items: center;     /* Horizontálně na střed */
@@ -331,7 +333,7 @@
       /* Soroban */
       .soroban-frame {
         margin: 0; /* Reset okrajů pro centrování */
-        max-height: 80vh; /* Trochu více prostoru */
+        max-height: 85vh; /* Dynamická výška */
       }
 
       /* Zobrazení hodnoty (Vlevo dole) */
@@ -352,7 +354,7 @@
         flex-direction: column;
         position: fixed;
         right: 30px;
-        top: 30px; /* Umístění nahoru vpravo */
+        top: 30px;
         gap: 15px;
         z-index: 100;
       }
@@ -386,13 +388,12 @@
   </div>
 
   <div class="app-container" id="app">
-    <!-- Zobrazení hodnoty (na mobilu v headeru, na PC fixní vlevo dole) -->
+    <!-- Zobrazení hodnoty -->
     <div class="value-display" id="display">0</div>
 
-    <!-- Mobilní Header (na PC skryt) -->
+    <!-- Mobilní Header -->
     <div class="header" id="header">
       <div style="display:flex; gap:5px;" id="btn-group">
-        <!-- Reset a Téma jsou v headeru pro mobil, na PC se skryjí a použijí se ty ze sidebaru -->
         <button class="btn-icon" onclick="resetSoroban()" title="Vynulovat">↺</button>
         <button class="btn-icon" id="theme-btn-mobile" onclick="toggleTheme()" title="Téma">🌙</button>
         <button class="btn-icon" onclick="openSettings()" title="Nastavení">⚙️</button>
@@ -404,7 +405,7 @@
       <div class="rods-container" id="soroban"></div>
     </div>
 
-    <!-- Desktop Sidebar (na mobilu skryt) -->
+    <!-- Desktop Sidebar -->
     <div class="sidebar-right">
       <button class="btn-icon" onclick="resetSoroban()" title="Vynulovat">↺</button>
       <button class="btn-icon" id="theme-btn-desktop" onclick="toggleTheme()" title="Téma">🌙</button>
@@ -487,10 +488,12 @@
     }
 
     function updateBeadSize() {
+      // Detekce desktopu v JS pomocí schopnosti hover (shodné s CSS)
+      const isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-      const isDesktop = window.innerWidth >= 1024;
       
       let availableHeight = window.innerHeight;
+      // Na mobilu odečítáme místo pro header, na desktopu ne (header je skrytý/fixed)
       if (!isStandalone && !isDesktop) availableHeight -= 60; 
       
       const safeBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')) || 0;
