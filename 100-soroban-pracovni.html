@@ -103,46 +103,39 @@
     #orientation-warning svg { width: 80px; height: 80px; fill: var(--text-color); margin-bottom: 20px; animation: rotate-phone 2s infinite linear; }
     @keyframes rotate-phone { 0% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } 100% { transform: rotate(90deg); } }
 
-    /* HLAVNÍ LAYOUT */
+    /* HLAVNÍ LAYOUT - MOBIL (VÝCHOZÍ) */
     .app-container {
       display: none; 
       flex-direction: column;
-      justify-content: center; /* Vertikálně na střed */
-      align-items: center;     /* Horizontálně na střed */
+      justify-content: flex-end;
+      align-items: flex-start;
       height: 100%;
       width: 100%;
       position: relative;
     }
 
-    /* HEADER - Pouze pro zobrazení hodnoty */
+    /* Header pro zobrazeni hodnoty */
     .header {
-      display: flex;
-      justify-content: flex-start;
-      align-items: center;
-      z-index: 100;
-      background: transparent; 
-      padding: 10px;
-      width: auto; 
-      flex-shrink: 0;
-      order: 1; 
       position: fixed;
       top: 10px;
       left: 10px;
+      z-index: 100;
+      background: transparent; 
+      padding: 10px;
     }
     
     .value-display {
       font-size: 24px; font-weight: bold;
       background: rgba(0,0,0,0.1); padding: 4px 12px; border-radius: 20px;
       min-width: 80px; text-align: center; font-variant-numeric: tabular-nums;
-      margin-right: 10px;
     }
 
-    /* NOVÝ WRAPPER PRO SOROBAN A TLAČÍTKA */
+    /* Wrapper drží Soroban + Tlačítka */
     .soroban-wrapper {
       display: flex;
-      align-items: flex-start; /* Zarovnání nahoru */
-      justify-content: center;
-      gap: 10px; /* Menší mezera pro flex chyby */
+      align-items: flex-start;
+      margin-left: 20px;
+      margin-bottom: 20px;
     }
 
     /* RÁM SOROBANU */
@@ -155,11 +148,10 @@
       padding: 0 10px; 
       width: auto; 
       height: auto; 
-      max-height: 85vh;
+      max-height: calc(100vh - 60px);
       position: relative; 
       touch-action: none;
       overflow: hidden;
-      /* Odstraníme margin, řeší to wrapper */
     }
 
     .rods-container {
@@ -272,29 +264,27 @@
     .earth .bead:nth-child(2).active { bottom: auto; top: calc(var(--bead-size) * 2 + var(--bead-gap) * 2); }
     .earth .bead:nth-child(1).active { bottom: auto; top: calc(var(--bead-size) * 3 + var(--bead-gap) * 3); }
 
-    /* PANEL TLAČÍTEK VEDLE SOROBANU */
+    /* TLAČÍTKA - SPOLEČNÉ */
     .control-panel {
       display: flex;
       flex-direction: column;
-      gap: 15px;
-      /* Posun tak, aby byla svisle zarovnána s horní lištou */
-      margin-top: calc(var(--heaven-height) - var(--bead-size)); 
-      /* Mezera 1/2 korálku od rámu */
-      margin-left: calc(var(--bead-size) * 0.5); 
-      z-index: 50;
+      gap: 10px;
+      margin-left: 8px;
+      margin-top: 10px; 
+      z-index: 205; /* OPRAVA: Musí být vyšší než modal (200) */
     }
 
     .control-btn {
-      width: calc(var(--bead-size) * 1.2);
-      height: calc(var(--bead-size) * 1.2);
+      width: calc(var(--bead-size) * 0.9);
+      height: calc(var(--bead-size) * 0.9);
       border-radius: 50%;
-      background: #333; /* Tmavé pozadí */
-      color: #fff; /* Světlé ikony */
+      background: #333;
+      color: #fff;
       border: 2px solid #555;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: calc(var(--bead-size) * 0.6);
+      font-size: calc(var(--bead-size) * 0.5);
       cursor: pointer;
       box-shadow: 0 4px 8px rgba(0,0,0,0.4);
       transition: transform 0.1s, background 0.2s;
@@ -326,7 +316,6 @@
     @media screen and (orientation: landscape) {
       .app-container { display: flex; }
       #orientation-warning { display: none !important; }
-      .header { position: fixed; top: 10px; left: 10px; }
     }
     
     @media screen and (orientation: portrait) {
@@ -336,15 +325,15 @@
       }
     }
 
-    /* DESKTOP a PWA specifika */
-    @media all and (display-mode: standalone) {
-      .header {
-        top: var(--safe-top);
-        left: var(--safe-left);
-      }
-    }
-
+    /* DESKTOP LAYOUT (MYŠ) */
     @media (hover: hover) and (pointer: fine) {
+      .app-container {
+        justify-content: center;
+        align-items: center;
+      }
+      .soroban-wrapper {
+        margin: 0;
+      }
       .control-btn:hover {
         background: #555;
       }
@@ -367,19 +356,15 @@
   </div>
 
   <div class="app-container" id="app">
-    <!-- Zobrazení hodnoty zůstává odděleně -->
     <div class="header" id="header">
       <div class="value-display" id="display">0</div>
     </div>
 
-    <!-- Nový společný wrapper -->
     <div class="soroban-wrapper">
-      <!-- Soroban -->
       <div class="soroban-frame" id="frame">
         <div class="rods-container" id="soroban"></div>
       </div>
 
-      <!-- Tlačítka vedle sorobanu -->
       <div class="control-panel">
         <button class="control-btn" onclick="resetSoroban()" title="Vynulovat">↺</button>
         <button class="control-btn" id="theme-btn" onclick="toggleTheme()" title="Téma">🌙</button>
@@ -450,30 +435,22 @@
     }
 
     function updateBeadSize() {
-      // Detekce desktopu v JS
       const isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       
       let availableHeight = window.innerHeight;
-      
-      // Na mobilu a tabletu neodečítáme header (je fixed), ale necháme okraj
       if (!isDesktop) availableHeight -= 40; 
       
       const safeBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')) || 0;
       availableHeight -= safeBottom;
       
-      // Výpočet výšky
-      // Výška sorobanu je: heaven(1.5) + bar(0.375 approx) + earth(4.5 approx) = cca 6.3 unit
-      // Připočítáme okraj pro tlačítka a bezpečné okraje
       let maxBeadHeight = Math.floor((availableHeight * 0.95) / 6.3); 
 
       let availableWidth = window.innerWidth;
       const safeLeft = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-left')) || 0;
       availableWidth -= safeLeft;
       
-      // Výpočet šířky
-      // Musí se vejít: N tyčí + mezera pro tlačítka (cca 1.5 korálku)
-      const spaceForButtons = 1.7; 
+      const spaceForButtons = 1.2;
       const widthUnit = availableWidth / (NUM_RODS + spaceForButtons);
       let maxBeadWidth = Math.floor(widthUnit * 0.9); 
 
