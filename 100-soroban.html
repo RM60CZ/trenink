@@ -1,1 +1,678 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#d4c49c">
+  
+  <title>Soroban</title>
+  
+  <script>
+    const manifest = {
+      "name": "Soroban",
+      "short_name": "Soroban",
+      "display": "standalone",
+      "orientation": "landscape",
+      "background_color": "#d4c49c",
+      "theme_color": "#d4c49c",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23d4c49c' width='100' height='100'/><rect x='45' y='10' width='10' height='80' rx='5' fill='%235d4037'/><circle cx='50' cy='35' r='10' fill='%23333'/></svg>",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    };
+    const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+    const manifestURL = URL.createObjectURL(manifestBlob);
+    document.write(`<link rel="manifest" href="${manifestURL}">`);
+  </script>
 
+  <style>
+    :root {
+      --bg: #e0e0e0;
+      --wood-light: #f4e4bc;
+      --wood-dark: #d4c49c;
+      --bead-unit: #888;
+      --bead-heaven-active: #555;
+      --bead-earth-active: #333;
+      --rod-color: #8b4513;
+      --bar-color: #5d4037;
+      --text-color: #333;
+      --bead-gap: 4px; 
+      --blue-bead: #ADD8E6;
+      --blue-bead-active: #5DADE2;
+      
+      --bead-size: 40px; 
+      --bar-height: 15px;
+      --tiny-gap: 2px; 
+      
+      --heaven-height: calc(var(--bead-size) * 1.5 + var(--tiny-gap));
+      --earth-height: calc(var(--bead-size) * 4 + var(--bead-gap) * 3 + var(--bead-size) * 0.5 + var(--tiny-gap));
+      
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+    }
+
+    [data-theme="dark"] {
+      --bg: #121212;
+      --wood-light: #2c2c2c;
+      --wood-dark: #1a1a1a;
+      --bead-unit: #666;
+      --bead-heaven-active: #aaa;
+      --bead-earth-active: #ccc;
+      --rod-color: #3e2723;
+      --bar-color: #4e342e;
+      --text-color: #ddd;
+      --blue-bead: #5F9EA0;
+      --blue-bead-active: #4682B4;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+    
+    html, body {
+      margin: 0; padding: 0; 
+      height: 100%; width: 100%;
+      background: var(--wood-dark); 
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text-color);
+      touch-action: manipulation;
+    }
+
+    /* ORIENTAČNÍ VAROVÁNÍ */
+    #orientation-warning {
+      display: none; 
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--wood-dark);
+      color: var(--text-color);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      text-align: center;
+      font-size: 1.5em;
+      padding: 20px;
+    }
+    #orientation-warning svg { width: 80px; height: 80px; fill: var(--text-color); margin-bottom: 20px; animation: rotate-phone 2s infinite linear; }
+    @keyframes rotate-phone { 0% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } 100% { transform: rotate(90deg); } }
+
+    /* HLAVNÍ LAYOUT (VÝCHOZÍ PRO MOBIL) */
+    .app-container {
+      display: none; 
+      flex-direction: column;
+      justify-content: flex-end; /* Mobil: Obsah dolů */
+      align-items: flex-start;   /* Mobil: Obsah vlevo */
+      height: 100%;
+      width: 100%;
+      position: relative;
+    }
+
+    /* HEADER (Pouze pro mobil) */
+    .header {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      z-index: 100;
+      background: transparent; 
+      padding: 10px;
+      width: auto; 
+      flex-shrink: 0;
+      order: 1; 
+    }
+    
+    .value-display {
+      font-size: 24px; font-weight: bold;
+      background: rgba(0,0,0,0.1); padding: 4px 12px; border-radius: 20px;
+      min-width: 80px; text-align: center; font-variant-numeric: tabular-nums;
+      margin-right: 10px;
+    }
+    .btn-icon { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-color); padding: 5px; }
+
+    /* BOČNÍ PANEL (Skrytý na mobilu) */
+    .sidebar-right {
+      display: none; 
+    }
+
+    /* PWA STANDALONE REŽIM */
+    @media all and (display-mode: standalone) {
+      .app-container {
+        padding-top: var(--safe-top);
+        padding-bottom: var(--safe-bottom);
+        padding-left: var(--safe-left);
+      }
+      .header {
+        position: fixed;
+        top: var(--safe-top);
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--wood-dark);
+        padding: 5px 15px;
+        border-radius: 0 0 10px 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      }
+    }
+
+    /* RÁM SOROBANU */
+    .soroban-frame {
+      display: flex;
+      background: var(--wood-dark);
+      border: 6px solid var(--bar-color);
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      padding: 0 10px; 
+      
+      width: auto; 
+      height: auto; 
+      max-height: calc(100vh - 60px);
+      
+      position: relative; 
+      touch-action: none;
+      margin-left: 20px;  /* Mobil: okraj zleva */
+      margin-bottom: 20px; /* Mobil: okraj zdola */
+      
+      overflow: hidden;
+      order: 2; 
+    }
+
+    .rods-container {
+      display: flex; 
+      justify-content: flex-start;
+      gap: 4px; 
+      z-index: 10;
+      align-items: center;
+    }
+
+    /* TYČ */
+    .rod {
+      width: calc(var(--bead-size) + 10px);
+      display: flex; flex-direction: column; 
+      background: transparent; position: relative; 
+      height: calc(var(--heaven-height) + var(--bar-height) + var(--earth-height));
+      align-items: center;
+    }
+    
+    .rod::before {
+      content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px;
+      background: var(--rod-color); transform: translateX(-50%); z-index: 0;
+    }
+
+    /* HORNI ČÁST (HEAVEN) */
+    .heaven {
+      position: relative;
+      width: 100%;
+      height: var(--heaven-height);
+      order: 1;
+    }
+    
+    .heaven .bead {
+      position: absolute;
+      top: var(--tiny-gap); 
+      left: 50%; 
+      transform: translateX(-50%);
+      width: var(--bead-size);
+      height: var(--bead-size);
+      background: var(--bead-unit);
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.2);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: top 0.15s ease-out, background-color 0.3s;
+      cursor: pointer;
+      z-index: 5; 
+    }
+    
+    .heaven .bead.active {
+      top: calc(var(--heaven-height) - var(--bead-size));
+      background: var(--bead-heaven-active);
+    }
+    .rod.blue-rod .heaven .bead { background: var(--blue-bead); }
+    .rod.blue-rod .heaven .bead.active { background: var(--blue-bead-active); }
+
+    /* STŘEDOVÁ LIŠTA */
+    .reckoning-bar {
+      position: relative;
+      width: 100%;
+      height: var(--bar-height);
+      order: 2; 
+      flex-shrink: 0;
+    }
+    
+    .reckoning-bar::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -1000px; right: -1000px; 
+      height: 100%;
+      background: var(--bar-color);
+      z-index: 1; 
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+
+    /* SPODNÍ ČÁST (EARTH) */
+    .earth {
+      position: relative;
+      width: 100%;
+      height: var(--earth-height);
+      order: 3;
+    }
+    
+    .earth .bead {
+      position: absolute;
+      left: 50%; 
+      transform: translateX(-50%);
+      width: var(--bead-size);
+      height: var(--bead-size);
+      background: var(--bead-unit);
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.2);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: bottom 0.15s ease-out, background-color 0.3s;
+      cursor: pointer;
+      z-index: 5;
+    }
+    
+    .earth .bead:nth-child(1) { bottom: var(--tiny-gap); }
+    .earth .bead:nth-child(2) { bottom: calc(var(--tiny-gap) + var(--bead-size) + var(--bead-gap)); }
+    .earth .bead:nth-child(3) { bottom: calc(var(--tiny-gap) + var(--bead-size) * 2 + var(--bead-gap) * 2); }
+    .earth .bead:nth-child(4) { bottom: calc(var(--tiny-gap) + var(--bead-size) * 3 + var(--bead-gap) * 3); }
+
+    .earth .bead.active {
+      background: var(--bead-earth-active); 
+      box-shadow: inset 0 0 5px rgba(255,255,255,0.3);
+    }
+    
+    .earth .bead:nth-child(4).active { bottom: auto; top: 0; }
+    .earth .bead:nth-child(3).active { bottom: auto; top: calc(var(--bead-size) + var(--bead-gap)); }
+    .earth .bead:nth-child(2).active { bottom: auto; top: calc(var(--bead-size) * 2 + var(--bead-gap) * 2); }
+    .earth .bead:nth-child(1).active { bottom: auto; top: calc(var(--bead-size) * 3 + var(--bead-gap) * 3); }
+
+    /* UI Elements */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center; }
+    .modal.visible { display: flex; }
+    .modal-content { background: var(--wood-light); padding: 20px; border-radius: 12px; width: 90%; max-width: 300px; text-align: center; color: var(--text-color); z-index: 210; }
+    select, input, button { padding: 8px; border-radius: 6px; border: 1px solid var(--bar-color); background: white; color: black; font-size: 16px; width: 100%; }
+    .setting-row { margin: 15px 0; display: flex; flex-direction: column; gap: 5px; text-align: left; }
+    .btn-row { display: flex; gap: 10px; margin-top: 15px; }
+    .btn-row button { flex: 1; }
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+    .toast.show { opacity: 1; }
+
+    /* MOBILNÍ ZOBRAZENÍ */
+    @media screen and (orientation: landscape) {
+      .app-container { display: flex; }
+      #orientation-warning { display: none !important; }
+    }
+    @media screen and (orientation: portrait) {
+      @media all and (display-mode: browser) {
+        .app-container { display: none !important; }
+        #orientation-warning { display: flex !important; }
+      }
+    }
+
+    /* ==========================================
+       DESKTOP LAYOUT (DETEKCE MYŠI/HOVER)
+       Toto pravidlo se aplikuje POUZE na zařízeních s myší (počítač),
+       bez ohledu na šířku okna.
+       ========================================== */
+    @media (hover: hover) and (pointer: fine) {
+      .app-container {
+        justify-content: center; /* Vertikálně na střed */
+        align-items: center;     /* Horizontálně na střed */
+      }
+
+      /* Skrytí mobilního headeru */
+      .header {
+        display: none;
+      }
+
+      /* Soroban */
+      .soroban-frame {
+        margin: 0; /* Reset okrajů pro centrování */
+        max-height: 85vh; /* Dynamická výška */
+      }
+
+      /* Zobrazení hodnoty (Vlevo dole) */
+      .value-display {
+        position: fixed;
+        bottom: 30px;
+        left: 30px;
+        margin: 0;
+        font-size: 32px;
+        background: rgba(0,0,0,0.15);
+        padding: 8px 20px;
+        z-index: 50;
+      }
+
+      /* Boční panel (Vpravo) */
+      .sidebar-right {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        right: 30px;
+        top: 30px;
+        gap: 15px;
+        z-index: 100;
+      }
+
+      .sidebar-right .btn-icon {
+        font-size: 24px;
+        padding: 8px;
+        background: rgba(0,0,0,0.1);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+      }
+      
+      .sidebar-right .btn-icon:hover {
+        background: rgba(0,0,0,0.2);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="orientation-warning">
+    <svg viewBox="0 0 24 24">
+      <path d="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h1.5C23.44 4.84 18.29 0 12 0l-.66.03 3.81 3.81 1.33-1.32zm-6.25-.77c-.59-.59-1.54-.59-2.12 0L1.75 8.11c-.59.59-.59 1.54 0 2.12l12.02 12.02c.59.59 1.54.59 2.12 0l6.36-6.36c.59-.59.59-1.54 0-2.12L10.23 1.75zm4.6 19.44L2.81 9.17l6.36-6.36 12.02 12.02-6.36 6.36zm-7.31.29C4.25 19.94 1.91 16.76 1.55 13H.05C.56 19.16 5.71 24 12 24l.66-.03-3.81-3.81-1.33 1.32z"/>
+    </svg>
+    <div>Prosím otočte zařízení na šířku</div>
+  </div>
+
+  <div class="app-container" id="app">
+    <!-- Zobrazení hodnoty -->
+    <div class="value-display" id="display">0</div>
+
+    <!-- Mobilní Header -->
+    <div class="header" id="header">
+      <div style="display:flex; gap:5px;" id="btn-group">
+        <button class="btn-icon" onclick="resetSoroban()" title="Vynulovat">↺</button>
+        <button class="btn-icon" id="theme-btn-mobile" onclick="toggleTheme()" title="Téma">🌙</button>
+        <button class="btn-icon" onclick="openSettings()" title="Nastavení">⚙️</button>
+      </div>
+    </div>
+
+    <!-- Soroban -->
+    <div class="soroban-frame" id="frame">
+      <div class="rods-container" id="soroban"></div>
+    </div>
+
+    <!-- Desktop Sidebar -->
+    <div class="sidebar-right">
+      <button class="btn-icon" onclick="resetSoroban()" title="Vynulovat">↺</button>
+      <button class="btn-icon" id="theme-btn-desktop" onclick="toggleTheme()" title="Téma">🌙</button>
+      <button class="btn-icon" onclick="openSettings()" title="Nastavení">⚙️</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="modal" id="settings-modal">
+    <div class="modal-content">
+      <h2>Nastavení</h2>
+      <div class="setting-row">
+        <label>Počet tyčí:</label>
+        <select id="rod-count-select"></select>
+      </div>
+      <div class="setting-row">
+        <label>Jednotky (od pravého):</label>
+        <select id="unit-pos-select">
+          <option value="1" selected>1. vpravo</option>
+          <option value="2">2. vpravo</option>
+          <option value="3">3. vpravo</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <button onclick="closeSettings()">Zrušit</button>
+        <button style="background: #4caf50; color: white;" onclick="applySettings()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let NUM_RODS = 13;
+    let UNIT_INDEX = 1; 
+    
+    const $ = id => document.getElementById(id);
+    let rods = [];
+    
+    function init() {
+      populateSettings();
+      loadTheme();
+      checkOrientation(); 
+      window.addEventListener('resize', () => {
+        checkOrientation();
+        updateBeadSize();
+      });
+      buildSoroban();
+    }
+
+    function populateSettings() {
+      const select = $('rod-count-select');
+      select.innerHTML = '';
+      for(let i=2; i<=13; i++) {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.innerText = i;
+        if(i === NUM_RODS) opt.selected = true;
+        select.appendChild(opt);
+      }
+    }
+
+    function checkOrientation() {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      const isPortrait = window.innerHeight > window.innerWidth;
+      const warning = $('orientation-warning');
+      const app = $('app');
+      
+      if (isStandalone) {
+        warning.style.display = 'none';
+        app.style.display = 'flex';
+      } else {
+        if (isPortrait) {
+          warning.style.display = 'flex';
+          app.style.display = 'none';
+        } else {
+          warning.style.display = 'none';
+          app.style.display = 'flex';
+        }
+      }
+    }
+
+    function updateBeadSize() {
+      // Detekce desktopu v JS pomocí schopnosti hover (shodné s CSS)
+      const isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      
+      let availableHeight = window.innerHeight;
+      // Na mobilu odečítáme místo pro header, na desktopu ne (header je skrytý/fixed)
+      if (!isStandalone && !isDesktop) availableHeight -= 60; 
+      
+      const safeBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')) || 0;
+      availableHeight -= safeBottom;
+      
+      let maxBeadHeight;
+      if (isDesktop) {
+         // Na desktopu více prostoru pro centrování
+         maxBeadHeight = Math.floor((availableHeight * 0.8) / 5.5); 
+      } else {
+         maxBeadHeight = Math.floor((availableHeight - 60) / 5.5); 
+      }
+
+      let availableWidth = window.innerWidth;
+      const safeLeft = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-left')) || 0;
+      availableWidth -= safeLeft;
+      
+      let rightSpace;
+      if (isDesktop) {
+        rightSpace = 100; // Méně místa vpravo, sidebar je fixed
+      } else {
+        rightSpace = Math.max(150, availableWidth * 0.25);
+      }
+      
+      const usableWidth = availableWidth - rightSpace - 50; 
+      
+      const widthPerRod = usableWidth / NUM_RODS;
+      const maxBeadWidth = Math.floor(widthPerRod * 0.85); 
+
+      let finalSize = Math.min(maxBeadHeight, maxBeadWidth);
+      
+      finalSize = Math.max(20, Math.min(finalSize, 60));
+
+      document.documentElement.style.setProperty('--bead-size', finalSize + 'px');
+    }
+
+    function buildSoroban() {
+      const container = $('soroban');
+      container.innerHTML = '';
+      rods = [];
+      
+      for (let i = 1; i <= NUM_RODS; i++) {
+        const rod = document.createElement('div');
+        rod.className = 'rod';
+        rod.dataset.index = i; 
+        
+        const posFromRight = NUM_RODS - i + 1;
+        
+        if ((posFromRight - 1) % 3 === 0 && posFromRight !== 1) {
+           rod.classList.add('blue-rod');
+        }
+        
+        rod.innerHTML = `
+          <div class="heaven" onclick="handleHeavenClick(${i})">
+            <div class="bead"></div>
+          </div>
+          <div class="reckoning-bar"></div>
+          <div class="earth" onclick="handleEarthClick(event, ${i})">
+            <div class="bead"></div>
+            <div class="bead"></div>
+            <div class="bead"></div>
+            <div class="bead"></div>
+          </div>`;
+        
+        container.appendChild(rod);
+        rods.push({ heaven: 0, earth: 0, element: rod });
+      }
+      
+      updateBeadSize();
+      updateDisplay();
+    }
+
+    function showToast(msg) { 
+      const t = $('toast'); 
+      t.innerText = msg; 
+      t.classList.add('show'); 
+      setTimeout(() => t.classList.remove('show'), 2000); 
+    }
+
+    function handleHeavenClick(index) {
+      const rodData = rods[index - 1];
+      rodData.heaven = rodData.heaven === 0 ? 5 : 0;
+      updateRodsVisuals(); 
+      updateDisplay();
+    }
+
+    function handleEarthClick(e, index) {
+      const rodData = rods[index - 1];
+      const beads = rodData.element.querySelectorAll('.earth .bead');
+      let clickedBeadIndex = -1;
+      
+      beads.forEach((bead, i) => { if (bead === e.target) clickedBeadIndex = i; });
+
+      if (clickedBeadIndex === -1) {
+          const rect = e.currentTarget.getBoundingClientRect();
+          const clickY = e.clientY - rect.top;
+          const height = rect.height;
+          if (clickY < height / 2) clickedBeadIndex = 3;
+          else clickedBeadIndex = 0;
+      }
+
+      const totalBeads = 4;
+      const currentActive = rodData.earth;
+      const isActive = clickedBeadIndex >= (totalBeads - currentActive);
+
+      if (isActive) {
+        rodData.earth = (totalBeads - 1) - clickedBeadIndex;
+      } else {
+        rodData.earth = totalBeads - clickedBeadIndex;
+      }
+
+      updateRodsVisuals(); updateDisplay();
+    }
+
+    function updateRodsVisuals() {
+      rods.forEach(rod => {
+        rod.element.querySelector('.heaven .bead').classList.toggle('active', rod.heaven === 5);
+        const eBeads = rod.element.querySelectorAll('.earth .bead');
+        eBeads.forEach((bead, i) => {
+          bead.classList.toggle('active', i >= 4 - rod.earth);
+        });
+      });
+    }
+
+    function updateDisplay() {
+      let totalValue = 0n;
+      rods.forEach((rod, arrayIndex) => {
+        const colIndex = NUM_RODS - arrayIndex;
+        const exponent = colIndex - UNIT_INDEX;
+        
+        if (exponent < 0) return;
+        
+        totalValue += BigInt(rod.heaven + rod.earth) * (10n ** BigInt(exponent));
+      });
+      $('display').innerText = totalValue.toLocaleString('cs-CZ');
+    }
+
+    function resetSoroban() { 
+      rods.forEach(rod => { rod.heaven = 0; rod.earth = 0; }); 
+      updateRodsVisuals(); updateDisplay(); 
+    }
+
+    function openSettings() { 
+      $('rod-count-select').value = NUM_RODS;
+      $('unit-pos-select').value = UNIT_INDEX;
+      $('settings-modal').classList.add('visible'); 
+    }
+    function closeSettings() { $('settings-modal').classList.remove('visible'); }
+    
+    function applySettings() {
+      NUM_RODS = parseInt($('rod-count-select').value);
+      UNIT_INDEX = parseInt($('unit-pos-select').value);
+      buildSoroban(); 
+      closeSettings();
+    }
+
+    function toggleTheme() { 
+      const body = document.body; 
+      body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark'; 
+      saveTheme(); 
+      updateThemeIcons();
+    }
+    
+    function updateThemeIcons() {
+      const icon = document.body.dataset.theme === 'dark' ? '☀️' : '🌙';
+      const btnDesktop = $('theme-btn-desktop');
+      const btnMobile = $('theme-btn-mobile');
+      if(btnDesktop) btnDesktop.innerText = icon;
+      if(btnMobile) btnMobile.innerText = icon;
+    }
+
+    function saveTheme() { localStorage.setItem('sorobanTheme', document.body.dataset.theme); }
+    function loadTheme() { 
+      const t = localStorage.getItem('sorobanTheme') || 'light'; 
+      document.body.dataset.theme = t; 
+      updateThemeIcons();
+    }
+    
+    window.onload = init;
+  </script>
+</body>
+</html>
