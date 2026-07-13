@@ -85,7 +85,6 @@
       touch-action: manipulation;
     }
 
-    /* ORIENTAČNÍ VAROVÁNÍ */
     #orientation-warning {
       display: none; 
       position: fixed;
@@ -103,42 +102,44 @@
     #orientation-warning svg { width: 80px; height: 80px; fill: var(--text-color); margin-bottom: 20px; animation: rotate-phone 2s infinite linear; }
     @keyframes rotate-phone { 0% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } 100% { transform: rotate(90deg); } }
 
-    /* HLAVNÍ LAYOUT - MOBIL (VÝCHOZÍ) */
     .app-container {
       display: none; 
       flex-direction: column;
       justify-content: flex-end;
-      align-items: flex-start;
+      align-items: center;
       height: 100%;
       width: 100%;
       position: relative;
+      padding-bottom: env(safe-area-inset-bottom);
     }
 
-    /* Header pro zobrazeni hodnoty */
-    .header {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      z-index: 100;
-      background: transparent; 
-      padding: 10px;
-    }
-    
-    .value-display {
-      font-size: 24px; font-weight: bold;
-      background: rgba(0,0,0,0.1); padding: 4px 12px; border-radius: 20px;
-      min-width: 80px; text-align: center; font-variant-numeric: tabular-nums;
-    }
-
-    /* Wrapper drží Soroban + Tlačítka */
+    /* NOVÁ STRUKTURA */
     .soroban-wrapper {
       display: flex;
-      align-items: flex-start;
-      margin-left: 20px;
-      margin-bottom: 20px;
+      flex-direction: row; /* Sloupec sorobanu a tlačítka vedle sebe */
+      align-items: flex-start; /* Zarovnání shora */
+      justify-content: center; /* Centrované na obrazovce */
     }
 
-    /* RÁM SOROBANU */
+    /* Sloupec pro číslo a soroban - to zajistí jejich společné centrování */
+    .soroban-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center; /* Číslo se vycentruje na šířku sorobanu */
+    }
+
+    /* Číslo příkladu */
+    .problem-display {
+      font-size: 28px; 
+      font-weight: bold;
+      padding: 8px 10px; 
+      text-align: center;
+      min-width: 150px;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 1px;
+      /* Díky align-items: center v parentu je centrované na soroban */
+    }
+
     .soroban-frame {
       display: flex;
       background: var(--wood-dark);
@@ -147,11 +148,10 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.4);
       padding: 0 10px; 
       width: auto; 
-      height: auto; 
-      max-height: calc(100vh - 60px);
       position: relative; 
       touch-action: none;
       overflow: hidden;
+      /*justify-content: center; /* Pokud je širší než tyče, vycentruje je */
     }
 
     .rods-container {
@@ -162,7 +162,6 @@
       align-items: center;
     }
 
-    /* TYČ */
     .rod {
       width: calc(var(--bead-size) + 10px);
       display: flex; flex-direction: column; 
@@ -176,7 +175,6 @@
       background: var(--rod-color); transform: translateX(-50%); z-index: 0;
     }
 
-    /* HORNI ČÁST (HEAVEN) */
     .heaven {
       position: relative;
       width: 100%;
@@ -207,7 +205,6 @@
     .rod.blue-rod .heaven .bead { background: var(--blue-bead); }
     .rod.blue-rod .heaven .bead.active { background: var(--blue-bead-active); }
 
-    /* STŘEDOVÁ LIŠTA */
     .reckoning-bar {
       position: relative;
       width: 100%;
@@ -226,7 +223,6 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
 
-    /* SPODNÍ ČÁST (EARTH) */
     .earth {
       position: relative;
       width: 100%;
@@ -264,14 +260,15 @@
     .earth .bead:nth-child(2).active { bottom: auto; top: calc(var(--bead-size) * 2 + var(--bead-gap) * 2); }
     .earth .bead:nth-child(1).active { bottom: auto; top: calc(var(--bead-size) * 3 + var(--bead-gap) * 3); }
 
-    /* TLAČÍTKA - SPOLEČNÉ */
     .control-panel {
       display: flex;
       flex-direction: column;
       gap: 10px;
       margin-left: 8px;
-      margin-top: 10px; 
       z-index: 205;
+      /* Posun tak, aby horní tlačítko bylo ve výšce horní řady kostek */
+      /* Výpočet: Výška čísla (cca 44px) + okraj rámu nahoře (border-top: 6px) + mezera do první kostky (tiny-gap: 2px) */
+      margin-top: 52px; 
     }
 
     .control-btn {
@@ -302,14 +299,12 @@
       box-shadow: 0 0 10px rgba(211, 47, 47, 0.5);
     }
 
-    /* UI Elements */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center; }
     .modal.visible { display: flex; }
     .modal-content { background: var(--wood-light); padding: 20px; border-radius: 12px; width: 90%; max-width: 300px; text-align: center; color: var(--text-color); z-index: 210; }
     
     select, input, button { padding: 8px; border-radius: 6px; border: 1px solid var(--bar-color); background: white; color: black; font-size: 16px; width: 100%; }
     
-    /* ÚPRAVA: Tučné písmo pro labely a položky */
     .setting-row { margin: 15px 0; display: flex; flex-direction: column; gap: 5px; text-align: left; }
     .setting-row label { font-weight: bold; }
     select option { font-weight: bold; }
@@ -317,7 +312,6 @@
     .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
     .toast.show { opacity: 1; }
 
-    /* MOBILNÍ ZOBRAZENÍ */
     @media screen and (orientation: landscape) {
       .app-container { display: flex; }
       #orientation-warning { display: none !important; }
@@ -330,23 +324,16 @@
       }
     }
 
-    /* DESKTOP LAYOUT (MYŠ) */
     @media (hover: hover) and (pointer: fine) {
       .app-container {
         justify-content: center;
-        align-items: center;
       }
       .soroban-wrapper {
         margin: 0;
+        align-items: flex-start;
       }
       .control-btn:hover {
         background: #555;
-      }
-      .header {
-        position: fixed;
-        bottom: 30px;
-        top: auto;
-        left: 30px;
       }
     }
   </style>
@@ -361,13 +348,15 @@
   </div>
 
   <div class="app-container" id="app">
-    <div class="header" id="header">
-      <div class="value-display" id="display">0</div>
-    </div>
-
+    
     <div class="soroban-wrapper">
-      <div class="soroban-frame" id="frame">
-        <div class="rods-container" id="soroban"></div>
+      <!-- Nový sloupec: Číslo nad Sorobanem -->
+      <div class="soroban-column">
+        <div class="problem-display" id="problem-display">Vyhrajte!</div>
+        
+        <div class="soroban-frame" id="frame">
+          <div class="rods-container" id="soroban"></div>
+        </div>
       </div>
 
       <div class="control-panel">
@@ -387,10 +376,9 @@
         <select id="rod-count-select" onchange="applyImmediate()"></select>
       </div>
       
-      <!-- NOVÝ SEZNAM OPERACE -->
       <div class="setting-row">
         <label>Operace:</label>
-        <select id="operation-select">
+        <select id="operation-select" onchange="generateNewProblem()">
           <option value="+">+</option>
           <option value="-">-</option>
           <option value="*">x</option>
@@ -405,6 +393,7 @@
     
     const $ = id => document.getElementById(id);
     let rods = [];
+    let currentProblem = { target: 0, text: "Start" };
     
     function init() {
       populateSettings();
@@ -415,6 +404,11 @@
         updateBeadSize();
       });
       buildSoroban();
+    }
+
+    // Funkce pro formátování čísel s mezerami (oddělovače tisíců)
+    function formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
     }
 
     function populateSettings() {
@@ -450,16 +444,14 @@
     }
 
     function updateBeadSize() {
-      const isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-      
       let availableHeight = window.innerHeight;
-      if (!isDesktop) availableHeight -= 40; 
       
       const safeBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')) || 0;
       availableHeight -= safeBottom;
       
-      let maxBeadHeight = Math.floor((availableHeight * 0.95) / 6.3); 
+      // Přičteme prostor pro číslo příkladu a okraje (cca 80px)
+      let headerSpace = 80; 
+      let maxBeadHeight = Math.floor(((availableHeight - headerSpace) * 0.95) / 6.3); 
 
       let availableWidth = window.innerWidth;
       const safeLeft = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-left')) || 0;
@@ -509,7 +501,8 @@
       }
       
       updateBeadSize();
-      updateDisplay();
+      generateNewProblem();
+      updateRodsVisuals();
     }
 
     function showToast(msg) { 
@@ -523,7 +516,7 @@
       const rodData = rods[index - 1];
       rodData.heaven = rodData.heaven === 0 ? 5 : 0;
       updateRodsVisuals(); 
-      updateDisplay();
+      checkResult();
     }
 
     function handleEarthClick(e, index) {
@@ -551,7 +544,7 @@
         rodData.earth = totalBeads - clickedBeadIndex;
       }
 
-      updateRodsVisuals(); updateDisplay();
+      updateRodsVisuals(); checkResult();
     }
 
     function updateRodsVisuals() {
@@ -564,7 +557,7 @@
       });
     }
 
-    function updateDisplay() {
+    function getCurrentValue() {
       let totalValue = 0n;
       rods.forEach((rod, arrayIndex) => {
         const colIndex = NUM_RODS - arrayIndex;
@@ -574,12 +567,94 @@
         
         totalValue += BigInt(rod.heaven + rod.earth) * (10n ** BigInt(exponent));
       });
-      $('display').innerText = totalValue.toLocaleString('cs-CZ');
+      return Number(totalValue);
     }
 
-    function resetSoroban() { 
+    // --- LOGIKA GENEROVÁNÍ PŘÍKLADŮ ---
+
+    function generateNewProblem() {
+      const op = $('operation-select').value;
+      const minFill = Math.pow(10, NUM_RODS - 1);
+      const maxVal = Math.pow(10, NUM_RODS) - 1;
+      
+      let a, b, c, result, text;
+
+      if (op === '+') {
+        result = randomInt(minFill, maxVal);
+        let parts = splitNumber(result, 3);
+        text = parts.map(p => formatNumber(p)).join(' + ');
+        
+      } else if (op === '-') {
+        a = randomInt(minFill, maxVal);
+        let remainder = a - 1;
+        let subParts = splitNumber(remainder, 2);
+        text = `${formatNumber(a)} - ${subParts.map(p => formatNumber(p)).join(' - ')}`;
+        result = a - subParts[0] - subParts[1];
+        
+      } else if (op === '*') {
+        result = randomInt(minFill, maxVal);
+        let factors = findFactors(result);
+        a = factors[0];
+        b = factors[1];
+        text = `${formatNumber(a)} × ${formatNumber(b)}`;
+      }
+
+      currentProblem.target = result;
+      currentProblem.text = text;
+      
+      $('problem-display').innerText = text;
+    }
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function splitNumber(num, partsCount) {
+        let arr = [];
+        let remaining = num;
+        for (let i = 0; i < partsCount - 1; i++) {
+            let maxPart = remaining - (partsCount - 1 - i);
+            if (maxPart < 1) maxPart = 1;
+            let val = randomInt(1, maxPart);
+            arr.push(val);
+            remaining -= val;
+        }
+        arr.push(remaining);
+        if(arr.length > 1) arr.sort(() => Math.random() - 0.5); 
+        return arr;
+    }
+
+    function findFactors(num) {
+        let start = Math.floor(Math.sqrt(num));
+        for (let i = start; i >= 2; i--) {
+            if (num % i === 0) {
+                let f1 = i;
+                let f2 = num / i;
+                if (Math.random() > 0.5) return [f1, f2];
+                else return [f2, f1];
+            }
+        }
+        return [1, num];
+    }
+
+    // --- KONTROLA VÝSLEDKU ---
+
+    function checkResult() {
+      const currentVal = getCurrentValue();
+      
+      if (currentVal === currentProblem.target) {
+        showToast("Správně! 🎉");
+        setTimeout(() => {
+          resetSoroban(true);
+          generateNewProblem();
+        }, 500);
+      }
+    }
+
+    function resetSoroban(silent = false) { 
       rods.forEach(rod => { rod.heaven = 0; rod.earth = 0; }); 
-      updateRodsVisuals(); updateDisplay(); 
+      updateRodsVisuals(); 
+      if(!silent) generateNewProblem();
     }
 
     function toggleSettings() {
