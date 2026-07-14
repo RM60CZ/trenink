@@ -136,7 +136,6 @@
       letter-spacing: 1px;
     }
 
-    /* Styl pro podtrženou část příkladu */
     .problem-part.underlined {
         border-bottom: 3px solid #d32f2f;
         padding-bottom: 2px;
@@ -371,10 +370,10 @@
         <label>Operace:</label>
         <select id="operation-select" onchange="applySettingsAndSave()">
           <option value="+">+</option>
+          <!-- ZDE JE UPRAVENÉ POŘADÍ -->
+          <option value="+-">+ -</option>
           <option value="-">-</option>
           <option value="*">x</option>
-          <!-- NOVĚ PŘIDÁNA OPERACE + - -->
-          <option value="+-">+ -</option>
         </select>
       </div>
     </div>
@@ -559,8 +558,6 @@
       return Number(totalValue);
     }
 
-    // --- LOGIKA GENEROVÁNÍ ---
-
     function generateNewProblem() {
       underlinedState = { active: false, value: 0, firstClickDone: false };
       const op = currentProblem.operation;
@@ -589,55 +586,28 @@
         currentProblem.parts = factors;
         currentProblem.target = result;
       
-      // NOVÁ LOGIKA PRO + -
       } else if (op === '+-') {
-        // Náhodný výběr typu příkladu: A+B-C nebo A-B+C
         let type = Math.random() < 0.5 ? 1 : 2;
         
-        // Definice rozsahů pro generování
-        // A musí být kladné (zajištěno minFill)
-        // Výsledek musí být > 0
-        // A+B nebo A-B musí dávat smysl (neoverflowovat tyče)
-        
         if (type === 1) {
-            // TYP 1: A + B - C
-            // A kladné, B kladné, C kladné (ale odečítáme)
-            // Výsledek: A + B - C > 0
-            
             a = randomInt(minFill, maxVal);
-            // Aby se vešlo do tyčí: A+B <= maxVal
             let maxB = maxVal - a;
-            if (maxB < 1) maxB = 1; // bezpečnostní pojistka
+            if (maxB < 1) maxB = 1;
             b = randomInt(1, maxB);
-            
             let sumAB = a + b;
-            // C musí být menší než sumAB, aby výsledek byl > 0
             let maxC = sumAB - 1;
             c = randomInt(1, maxC);
-            
-            // Parts uložíme se znaménky: [A, B, -C]
             currentProblem.parts = [a, b, -c];
             currentProblem.target = sumAB - c;
         } else {
-            // TYP 2: A - B + C
-            // A kladné, B kladné (ale odečítáme), C kladné
-            // Výsledek: A - B + C > 0
-            // Zároveň chceme, aby A-B nebylo záporné (standard Sorobanu)
-            
             a = randomInt(minFill, maxVal);
-            // B musí být menší než A
             let maxB = a - 1;
             if (maxB < 1) maxB = 1;
             b = randomInt(1, maxB);
-            
             let diffAB = a - b;
-            // C může být libovolné, ale nechceme overflow nad maxVal
-            // A-B+C <= maxVal => C <= maxVal - (A-B)
             let maxC = maxVal - diffAB;
             if (maxC < 1) maxC = 1;
             c = randomInt(1, maxC);
-            
-            // Parts uložíme se znaménki: [A, -B, C]
             currentProblem.parts = [a, -b, c];
             currentProblem.target = diffAB + c;
         }
@@ -651,17 +621,13 @@
         const parts = currentProblem.parts;
         let html = '';
 
-        // Pomocná funkce pro formátování čísla se znaménkem
-        // Pro první číslo vypíšeme jen číslo, pro další znaménko a číslo
         const formatPart = (p, isFirst) => {
             let val = Math.abs(p);
             let sign = p >= 0 ? '+' : '-';
-            // Mezera kolem operátoru
             return (isFirst ? '' : ' ' + sign + ' ') + formatNumber(val);
         };
 
         if (op === '+') {
-            let sep = ' + ';
             if (isUnderlined) {
                 html = `<span class="problem-part underlined">${formatNumber(parts[0])} + ${formatNumber(parts[1])}</span> + ${formatNumber(parts[2])}`;
             } else {
@@ -676,18 +642,10 @@
         } else if (op === '*') {
             html = `${formatNumber(parts[0])} × ${formatNumber(parts[1])}`;
         } else if (op === '+-') {
-            // Generická logika pro znaménka
-            // parts je pole [A, B, -C] nebo [A, -B, C]
-            
-            let p0 = formatNumber(parts[0]); // První je vždy kladná
-            
-            // Druhá část (včetně znaménka)
+            let p0 = formatNumber(parts[0]);
             let p1Val = Math.abs(parts[1]);
             let p1Sign = parts[1] >= 0 ? '+' : '-';
-            // Formátování: pokud je podtržená část, obalit prvních dvě čísla
             let part1Str = ` ${p1Sign} ${formatNumber(p1Val)}`;
-            
-            // Třetí část
             let p2Val = Math.abs(parts[2]);
             let p2Sign = parts[2] >= 0 ? '+' : '-';
             let part2Str = ` ${p2Sign} ${formatNumber(p2Val)}`;
@@ -733,8 +691,6 @@
         return arr;
     }
 
-    // --- KONTROLA VÝSLEDKŮ ---
-
     function checkResult() {
       const currentVal = getCurrentValue();
       const op = currentProblem.operation;
@@ -744,14 +700,8 @@
         return;
       }
 
-      // Logika pro +, -, a +-
-      // Funguje jednotně díky tomu, že parts obsahují znaménka
-      
       if (!underlinedState.active) {
-          // Fáze 1: Kontrola prvních dvou členů
-          // parts[0] a parts[1] (kde parts[1] může být i záporné u +-, ale to je správně)
           let intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1];
-
           if (currentVal === intermediateTarget) {
               underlinedState.active = true;
               underlinedState.value = currentVal;
@@ -761,13 +711,11 @@
           }
       } 
       else {
-          // Fáze 2: Kontrola celkového výsledku
           if(currentVal === underlinedState.value) {
               renderProblemDisplay(true);
           } else {
               renderProblemDisplay(false);
           }
-
           if (currentVal === currentProblem.target) {
               handleSuccess();
           }
