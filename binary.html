@@ -2,7 +2,6 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <!-- 1. Zůstává zákaz zmenšení/zvětšení -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Bináry</title>
   <style>
@@ -10,34 +9,33 @@
     [data-theme="dark"]{--bg:#000;--t:#f5f5f7;--c:#1c1c1e;--b:#38383a;--btn:#2c2c2e;--btnh:#3a3a3c;}
     *{box-sizing:border-box;font-family:-apple-system,sans-serif;margin:0;padding:0;}
     
-    /* 2. Změna: body má přesnou výšku displeje (100dvh) a zakázané vnější scrollování */
     body{
       background:var(--bg);
       color:var(--t);
       display:flex;
       justify-content:center;
-      height: 100dvh; /* Dynamic Viewport Height - řeší problém s adresním řádkem prohlížeče */
-      overflow: hidden; /* Zákaz scrollování celé stránky */
-      padding: 0; /* Odstraněno padding, řešíme uvnitř kontejneru */
+      height: 100dvh;
+      overflow: hidden;
+      padding: 0;
     }
 
+    /* Mobilní vzhled: Plná šířka, přilepené k okrajům */
     .app-container{
       background:var(--c);
-      /* Na mobilu nebude rámeček a stín, aby byl celý široký */
       border-radius: 0; 
       box-shadow: none;
-      padding: 10px;
-      width:100%;
-      max-width:500px; /* Trochu širší maximum pro tablety */
+      padding: 12px;
+      width: 100%;
+      max-width: none;
       height: 100%;
       display:flex;
       flex-direction:column;
-      gap:10px;
-      overflow-y: auto; /* Scrollování uvnitř aplikace, ne celé stránky */
-      overscroll-behavior: contain; /* Zabrání "bouncing" efektu */
+      gap:12px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
     }
 
-    /* 3. Změna: Sticky hlavička - zůstane vždy nahoře */
+    /* Hlavička fixovaná nahoře */
     .header{
       display:flex;
       justify-content:space-between;
@@ -46,72 +44,59 @@
       top: 0;
       background-color: var(--c);
       z-index: 100;
-      padding: 5px 0;
-      margin: -10px -10px 0 -10px; /* Roztažení na okraje kontejneru */
-      padding: 10px; /* Vnitřní padding */
-      border-bottom: 1px solid var(--b); /* Oddělovací čára */
+      margin: -12px -12px 0 -12px;
+      padding: 12px;
+      border-bottom: 1px solid var(--b);
     }
 
-    .header h1{font-size:20px;white-space:pre-wrap;} /* Trochu větší název */
+    .header h1{font-size:20px;white-space:pre-wrap;}
     .header-icons{display:flex;gap:12px;align-items:center;}
-    .icon-btn{background:none;border:none;font-size:24px;cursor:pointer;color:var(--t);} /* Větší ikony */
+    .icon-btn{background:none;border:none;font-size:24px;cursor:pointer;color:var(--t);}
     .finger-toggle-btn{background:none;border:none;font-size:28px;font-weight:bold;cursor:pointer;line-height:1;padding:0;color:var(--t);}
 
-    .settings-group{display:none;flex-direction:column;gap:8px;margin-top:10px;}
-    select{width:100%;padding:10px;border-radius:8px;border:1px solid var(--b);background:var(--c);color:var(--t);font-size:16px;}
-    .info-text{font-size:14px;color:#86868b;text-align:center;display:none;}
+    .settings-group{display:none;flex-direction:column;gap:8px;margin-top:12px;}
+    select{width:100%;padding:12px;border-radius:8px;border:1px solid var(--b);background:var(--c);color:var(--t);font-size:16px;}
+    .info-text{font-size:14px;color:#86868b;text-align:center;display:none;margin-top:8px;}
 
-    .finger-panel{display:none;justify-content:center;overflow:hidden;flex-shrink: 0;}
+    .finger-panel{display:none;justify-content:center;overflow:hidden;flex-shrink: 0; padding: 10px 0;}
     .finger-panel.visible{display:flex;}
     .finger-panel.dec-mode .finger-sq{pointer-events:auto;}
     
-    /* Úprava mřížky pro mobily - větší touch area */
     .finger-grid{
       display:grid;
-      grid-template-columns:repeat(5, 1fr); /* Flexibilní šířka */
+      grid-template-columns:repeat(5, 1fr);
       grid-template-rows:repeat(3, calc(40px * 2));
-      column-gap:8px;row-gap:20px;
-      justify-content:center;
-      align-content:center;
+      column-gap:10px;row-gap:24px;
       width: 100%;
-      padding: 10px 0;
       touch-action:manipulation;
     }
     
     .finger-sq{
-      /* Nastavení rozměrů přes CSS pro responsivitu */
-      width: 100%; 
-      min-width: 40px;
-      max-width: 60px; 
-      height: 40px; 
-      background:#d6d6db;
-      border:none;border-radius:12px;
-      user-select:none;
-      -webkit-tap-highlight-color:transparent;
-      align-self:end;
-      transform-origin:bottom center;
-      transition:transform .18s ease,background-color .18s ease,box-shadow .18s ease;
+      width: 100%; height: 40px; 
+      background:#d6d6db;border:none;border-radius:12px;
+      user-select:none;-webkit-tap-highlight-color:transparent;align-self:end;
+      transform-origin:bottom center;transition:transform .18s ease,background-color .18s ease,box-shadow .18s ease;
       box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 3px 10px rgba(0,0,0,.28);
       pointer-events:none;
-      margin: 0 auto; /* Centrované čtverečky */
     }
     .finger-sq.on{background:#8fa39a;transform:scaleY(2);box-shadow:0 1px 0 rgba(255,255,255,.15) inset,0 8px 18px rgba(0,0,0,.35);}
 
     .game-area{
-      flex-grow: 1; /* Zabere zbytek místa */
-      display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:12px;
+      flex-grow: 1;
+      display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:16px;
       padding-top: 10px;
     }
     
-    .question{font-size:32px;font-weight:bold;display:none;text-align:center;} /* Větší otázka */
+    .question{font-size:36px;font-weight:bold;display:none;text-align:center;}
 
-    .input-with-back{display:flex;align-items:center;gap:8px;width:100%;justify-content:center;max-width: 400px;}
+    .input-with-back{display:flex;align-items:center;gap:8px;width:100%;justify-content:center;}
+    
     #single-input{
       flex-grow: 1; min-width: 0;
       padding:12px; border-radius:8px; text-align:center; 
       border:2px solid var(--b); background:var(--c); color:var(--t); 
-      font-size:24px; font-weight:bold; outline:none; height:56px; display:none; /* Větší input */
-      -webkit-appearance: none; appearance: none;
+      font-size:24px; font-weight:bold; outline:none; height:56px; display:none;
+      -webkit-appearance: none; appearance: none; width: 100%;
     }
     #single-input:disabled{background:#eee;color:#aaa;border-color:#ccc;}
     #single-input.success{color:var(--ok);border-color:var(--ok);}
@@ -123,10 +108,8 @@
     .clear-btn{width: auto; padding: 0 20px;}
     .back-btn:active,.clear-btn:active{background:var(--btnh);}
 
-    /* Klávesnice */
     .keypad-bin, .keypad-dec{
-      display:none; gap:8px; width:100%; justify-content:center; 
-      max-width:400px; padding: 0 10px;
+      display:none; gap:10px; width:100%; justify-content:center;
     }
     .keypad-bin{ grid-template-columns:repeat(2, 1fr); grid-auto-flow:column; }
     .keypad-dec{ grid-template-columns:repeat(3, 1fr); }
@@ -134,20 +117,20 @@
     .keypad-bin.visible, .keypad-dec.visible-desktop { display: grid; }
     
     .key-btn{
-      background:var(--btn);color:var(--t);border:none;padding:14px;border-radius:8px;font-size:22px;font-weight:bold;cursor:pointer;
-      user-select:none; -webkit-tap-highlight-color:transparent;
+      background:var(--btn);color:var(--t);border:none;padding:14px;border-radius:8px;font-size:24px;font-weight:bold;cursor:pointer;
+      user-select:none; -webkit-tap-highlight-color:transparent; width: 100%;
     }
     .key-btn:active{background:var(--btnh);}
     
-    .ctrl-buttons{display:none;gap:8px;width:100%;justify-content:center;max-width:400px;}
+    .ctrl-buttons{display:none;gap:8px;width:100%;justify-content:center;}
 
     .main-action{
-      width:100%;max-width:400px;padding:16px;border-radius:8px;background:var(--p);color:var(--pt);border:none;font-size:18px;font-weight:bold;cursor:pointer;
-      flex-shrink: 0; /* Tlačítko se nesmačkne */
-      margin-bottom: 10px;
+      width:100%;padding:18px;border-radius:8px;background:var(--p);color:var(--pt);border:none;font-size:20px;font-weight:bold;cursor:pointer;
+      flex-shrink: 0; 
+      margin-top: auto;
     }
     
-    .history-container{border-top:1px solid var(--b);padding-top:10px;margin-top: auto;}
+    .history-container{border-top:1px solid var(--b);padding-top:10px;margin-top: 16px;}
     .history-title{font-size:16px;font-weight:bold;margin-bottom:8px;}
     .history-list{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:8px;}
     .history-item{
@@ -157,20 +140,21 @@
     .history-item.correct{color:var(--ok);border-color:var(--ok);}
     .history-item.error{color:var(--er);border-color:var(--er);}
 
-    /* Desktopový vzhled - vrátíme zaoblení a stín */
+    /* Desktopový vzhled */
     @media (min-width: 521px) {
-      body { padding: 10px; background: var(--bg); }
+      body { padding: 20px; background: var(--bg); }
       .app-container {
-        border-radius: 12px;
+        border-radius: 16px;
         box-shadow: 0 4px 12px rgba(0,0,0,.1);
-        margin-top: 0; 
+        max-width: 500px; 
         height: auto;
-        min-height: 100dvh;
-        max-height: 800px; /* Omezení výšky na PC */
+        min-height: 100dvh; 
+        max-height: 800px; 
       }
       .header {
-        margin: 0; /* Reset marginu pro desktop layout */
+        margin: 0; 
         border-bottom: none;
+        position: relative;
       }
       .keypad-dec.visible-desktop { display: grid; }
     }
@@ -197,9 +181,8 @@
       <option value="bin2dec">Binární na Decimální</option>
     </select>
     <select id="bits" onchange="updateInfo()"></select>
+    <div class="info-text" id="info"></div>
   </div>
-
-  <div class="info-text" id="info"></div>
 
   <div class="game-area">
     <div class="question" id="question-display"></div>
@@ -233,7 +216,6 @@
         <button class="back-btn" onclick="deleteLeft()">⌫</button>
         <button class="clear-btn" onclick="clearAll()">C</button>
     </div>
-
   </div>
 
   <button class="main-action" id="main-btn" onclick="handleMainAction()">START</button>
@@ -343,10 +325,7 @@
     fingerPanelVisible = !fingerPanelVisible;
     $('finger-panel').classList.toggle('visible', fingerPanelVisible);
     syncFingerPanelClass();
-
-    if(state !== 'init') {
-      startGame();
-    }
+    if(state !== 'init') startGame();
   }
 
   function toggleTheme(){
@@ -419,10 +398,7 @@
   }
 
   function handleMainAction(){
-    if(state==='init'){
-      startGame();
-      return;
-    }
+    if(state==='init'){ startGame(); return; }
     if(state==='playing') checkAnswer();
     else if(state==='evaluated') startGame();
   }
@@ -451,21 +427,17 @@
 
   $('single-input').addEventListener('input',function(){
     if(this.readOnly) return;
-
     const dir=$('direction').value;
     const input=this;
     const cursorPosition=input.selectionStart;
     const originalValue=input.value;
-
     if(dir==='dec2bin'){
       const clean=input.value.replace(/[^01]/g,'').slice(0, 15);
       const formatted=formatBinary(clean);
       input.value=formatted;
       input.selectionStart=input.selectionEnd=computeCursorForDigits(formatted,originalValue,cursorPosition,'dec2bin');
     } else {
-      if(/[^\d\s]/.test(input.value)){
-        input.value=input.value.replace(/[^\d\s]/g,'');
-      }
+      if(/[^\d\s]/.test(input.value)){ input.value=input.value.replace(/[^\d\s]/g,''); }
       const formatted=formatDecimalInput(input.value);
       input.value=formatted;
       input.selectionStart=input.selectionEnd=computeCursorForDigits(formatted,originalValue,cursorPosition,'bin2dec');
@@ -478,7 +450,6 @@
     $('main-btn').style.display='block'; 
     
     $('finger-toggle-btn').style.display='block';
-
     currentFingerSum = 0;
     document.querySelectorAll('#finger-grid .finger-sq').forEach(el=>el.classList.remove('on'));
     
@@ -523,7 +494,7 @@
       expectedAnswer=binString;
       expectedLength=bits;
 
-    }else{
+    }else{ // BIN -> DEC
       $('single-input').inputMode = 'numeric';
       $('single-input').readOnly = false;
       $('keypad-bin').classList.remove('visible');
