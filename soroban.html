@@ -1,1 +1,802 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#d4c49c">
+  
+  <title>Soroban</title>
+  
+  <script>
+    const manifest = {
+      "name": "Soroban",
+      "short_name": "Soroban",
+      "display": "standalone",
+      "orientation": "landscape",
+      "background_color": "#d4c49c",
+      "theme_color": "#d4c49c",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23d4c49c' width='100' height='100'/><rect x='45' y='10' width='10' height='80' rx='5' fill='%235d4037'/><circle cx='50' cy='35' r='10' fill='%23333'/></svg>",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    };
+    const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+    const manifestURL = URL.createObjectURL(manifestBlob);
+    document.write(`<link rel="manifest" href="${manifestURL}">`);
+  </script>
 
+  <style>
+    :root {
+      --bg: #e0e0e0;
+      --wood-light: #f4e4bc;
+      --wood-dark: #d4c49c;
+      --bead-unit: #888;
+      --bead-heaven-active: #555;
+      --bead-earth-active: #333;
+      --rod-color: #8b4513;
+      --bar-color: #5d4037;
+      --text-color: #333;
+      --bead-gap: 4px; 
+      --blue-bead: #ADD8E6;
+      --blue-bead-active: #5DADE2;
+      
+      --bead-size: 40px; 
+      --bar-height: 15px;
+      --tiny-gap: 2px; 
+      
+      --heaven-height: calc(var(--bead-size) * 1.5 + var(--tiny-gap));
+      --earth-height: calc(var(--bead-size) * 4 + var(--bead-gap) * 3 + var(--bead-size) * 0.5 + var(--tiny-gap));
+      
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+    }
+
+    [data-theme="dark"] {
+      --bg: #121212;
+      --wood-light: #2c2c2c;
+      --wood-dark: #1a1a1a;
+      --bead-unit: #666;
+      --bead-heaven-active: #aaa;
+      --bead-earth-active: #ccc;
+      --rod-color: #3e2723;
+      --bar-color: #4e342e;
+      --text-color: #ddd;
+      --blue-bead: #5F9EA0;
+      --blue-bead-active: #4682B4;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+    
+    html, body {
+      margin: 0; padding: 0; 
+      height: 100%; width: 100%;
+      background: var(--wood-dark); 
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text-color);
+      touch-action: manipulation;
+    }
+
+    #orientation-warning {
+      display: none; 
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--wood-dark);
+      color: var(--text-color);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      text-align: center;
+      font-size: 1.5em;
+      padding: 20px;
+    }
+    #orientation-warning svg { width: 80px; height: 80px; fill: var(--text-color); margin-bottom: 20px; animation: rotate-phone 2s infinite linear; }
+    @keyframes rotate-phone { 0% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } 100% { transform: rotate(90deg); } }
+
+    .app-container {
+      display: none; 
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      height: 100%;
+      width: 100%;
+      position: relative;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .soroban-wrapper {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .soroban-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .problem-display {
+      font-size: 28px; 
+      font-weight: bold;
+      padding: 8px 10px; 
+      text-align: center;
+      min-width: 150px;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 1px;
+    }
+
+    .problem-part.underlined {
+        border-bottom: 3px solid #d32f2f;
+        padding-bottom: 2px;
+    }
+
+    .soroban-frame {
+      display: flex;
+      background: var(--wood-dark);
+      border: 6px solid var(--bar-color);
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      padding: 0 10px; 
+      width: auto; 
+      position: relative; 
+      touch-action: none;
+      overflow: hidden;
+    }
+
+    .rods-container {
+      display: flex; 
+      justify-content: flex-start;
+      gap: 4px; 
+      z-index: 10;
+      align-items: center;
+    }
+
+    .rod {
+      width: calc(var(--bead-size) + 10px);
+      display: flex; flex-direction: column; 
+      background: transparent; position: relative; 
+      height: calc(var(--heaven-height) + var(--bar-height) + var(--earth-height));
+      align-items: center;
+    }
+    
+    .rod::before {
+      content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px;
+      background: var(--rod-color); transform: translateX(-50%); z-index: 0;
+    }
+
+    .heaven {
+      position: relative;
+      width: 100%;
+      height: var(--heaven-height);
+      order: 1;
+    }
+    
+    .heaven .bead {
+      position: absolute;
+      top: var(--tiny-gap); 
+      left: 50%; 
+      transform: translateX(-50%);
+      width: var(--bead-size);
+      height: var(--bead-size);
+      background: var(--bead-unit);
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.2);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: top 0.15s ease-out, background-color 0.3s;
+      cursor: pointer;
+      z-index: 5; 
+    }
+    
+    .heaven .bead.active {
+      top: calc(var(--heaven-height) - var(--bead-size));
+      background: var(--bead-heaven-active);
+    }
+    .rod.blue-rod .heaven .bead { background: var(--blue-bead); }
+    .rod.blue-rod .heaven .bead.active { background: var(--blue-bead-active); }
+
+    .reckoning-bar {
+      position: relative;
+      width: 100%;
+      height: var(--bar-height);
+      order: 2; 
+      flex-shrink: 0;
+    }
+    
+    .reckoning-bar::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -1000px; right: -1000px; 
+      height: 100%;
+      background: var(--bar-color);
+      z-index: 1; 
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+
+    .earth {
+      position: relative;
+      width: 100%;
+      height: var(--earth-height);
+      order: 3;
+    }
+    
+    .earth .bead {
+      position: absolute;
+      left: 50%; 
+      transform: translateX(-50%);
+      width: var(--bead-size);
+      height: var(--bead-size);
+      background: var(--bead-unit);
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.2);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: bottom 0.15s ease-out, background-color 0.3s;
+      cursor: pointer;
+      z-index: 5;
+    }
+    
+    .earth .bead:nth-child(1) { bottom: var(--tiny-gap); }
+    .earth .bead:nth-child(2) { bottom: calc(var(--tiny-gap) + var(--bead-size) + var(--bead-gap)); }
+    .earth .bead:nth-child(3) { bottom: calc(var(--tiny-gap) + var(--bead-size) * 2 + var(--bead-gap) * 2); }
+    .earth .bead:nth-child(4) { bottom: calc(var(--tiny-gap) + var(--bead-size) * 3 + var(--bead-gap) * 3); }
+
+    .earth .bead.active {
+      background: var(--bead-earth-active); 
+      box-shadow: inset 0 0 5px rgba(255,255,255,0.3);
+    }
+    
+    .earth .bead:nth-child(4).active { bottom: auto; top: 0; }
+    .earth .bead:nth-child(3).active { bottom: auto; top: calc(var(--bead-size) + var(--bead-gap)); }
+    .earth .bead:nth-child(2).active { bottom: auto; top: calc(var(--bead-size) * 2 + var(--bead-gap) * 2); }
+    .earth .bead:nth-child(1).active { bottom: auto; top: calc(var(--bead-size) * 3 + var(--bead-gap) * 3); }
+
+    .control-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-left: 8px;
+      z-index: 205;
+      margin-top: 52px; 
+    }
+
+    .control-btn {
+      width: calc(var(--bead-size) * 0.9);
+      height: calc(var(--bead-size) * 0.9);
+      border-radius: 50%;
+      background: #333;
+      color: #fff;
+      border: 2px solid #555;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: calc(var(--bead-size) * 0.5);
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+      transition: transform 0.1s, background 0.2s;
+      padding: 0;
+      font-family: inherit;
+    }
+
+    .control-btn:active {
+      transform: scale(0.95);
+      background: #555;
+    }
+
+    .control-btn.active {
+      border-color: #d32f2f;
+      box-shadow: 0 0 10px rgba(211, 47, 47, 0.5);
+    }
+
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center; }
+    .modal.visible { display: flex; }
+    .modal-content { background: var(--wood-light); padding: 20px; border-radius: 12px; width: 90%; max-width: 300px; text-align: center; color: var(--text-color); z-index: 210; }
+    
+    select, input, button { padding: 8px; border-radius: 6px; border: 1px solid var(--bar-color); background: white; color: black; font-size: 16px; width: 100%; }
+    
+    .setting-row { margin: 15px 0; display: flex; flex-direction: column; gap: 5px; text-align: left; }
+    .setting-row label { font-weight: bold; }
+    select option { font-weight: bold; }
+    
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+    .toast.show { opacity: 1; }
+
+    @media screen and (orientation: landscape) {
+      .app-container { display: flex; }
+      #orientation-warning { display: none !important; }
+    }
+    
+    @media screen and (orientation: portrait) {
+      @media all and (display-mode: browser) {
+        .app-container { display: none !important; }
+        #orientation-warning { display: flex !important; }
+      }
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .app-container { justify-content: center; }
+      .soroban-wrapper { margin: 0; align-items: flex-start; }
+      .control-btn:hover { background: #555; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="orientation-warning">
+    <svg viewBox="0 0 24 24">
+      <path d="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h1.5C23.44 4.84 18.29 0 12 0l-.66.03 3.81 3.81 1.33-1.32zm-6.25-.77c-.59-.59-1.54-.59-2.12 0L1.75 8.11c-.59.59-.59 1.54 0 2.12l12.02 12.02c.59.59 1.54.59 2.12 0l6.36-6.36c.59-.59.59-1.54 0-2.12L10.23 1.75zm4.6 19.44L2.81 9.17l6.36-6.36 12.02 12.02-6.36 6.36zm-7.31.29C4.25 19.94 1.91 16.76 1.55 13H.05C.56 19.16 5.71 24 12 24l.66-.03-3.81-3.81-1.33 1.32z"/>
+    </svg>
+    <div>Prosím otočte zařízení na šířku</div>
+  </div>
+
+  <div class="app-container" id="app">
+    
+    <div class="soroban-wrapper">
+      <div class="soroban-column">
+        <div class="problem-display" id="problem-display">Vyhrajte!</div>
+        
+        <div class="soroban-frame" id="frame">
+          <div class="rods-container" id="soroban"></div>
+        </div>
+      </div>
+
+      <div class="control-panel">
+        <button class="control-btn" onclick="handleReset()" title="Vymazat">↺</button>
+        <button class="control-btn" id="theme-btn" onclick="toggleTheme()" title="Téma">🌙</button>
+        <button class="control-btn" id="settings-btn" onclick="toggleSettings()" title="Nastavení">⚙️</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="modal" id="settings-modal">
+    <div class="modal-content">
+      <div class="setting-row">
+        <label>Počet tyčí:</label>
+        <select id="rod-count-select" onchange="applySettingsAndSave()"></select>
+      </div>
+      
+      <div class="setting-row">
+        <label>Operace:</label>
+        <select id="operation-select" onchange="applySettingsAndSave()">
+          <option value="+">+</option>
+          <!-- ZDE JE UPRAVENÉ POŘADÍ -->
+          <option value="+-">+ -</option>
+          <option value="-">-</option>
+          <option value="*">x</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let NUM_RODS = 7;
+    let UNIT_INDEX = 1; 
+    
+    const $ = id => document.getElementById(id);
+    let rods = [];
+    let currentProblem = { target: 0, parts: [], operation: '+' };
+    
+    let underlinedState = {
+        active: false, value: 0, firstClickDone: false
+    };
+
+    function init() {
+      loadSettings();
+      populateSettings();
+      loadTheme();
+      checkOrientation(); 
+      window.addEventListener('resize', () => {
+        checkOrientation();
+        updateBeadSize();
+      });
+      buildSoroban();
+    }
+
+    function formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    }
+
+    function populateSettings() {
+      const select = $('rod-count-select');
+      select.innerHTML = '';
+      for(let i=2; i<=7; i++) {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.innerText = i;
+        if(i === NUM_RODS) opt.selected = true;
+        select.appendChild(opt);
+      }
+      $('operation-select').value = currentProblem.operation;
+    }
+
+    function loadSettings() {
+        const savedRods = localStorage.getItem('sorobanRods');
+        if(savedRods) NUM_RODS = parseInt(savedRods);
+        const savedOp = localStorage.getItem('sorobanOp');
+        if(savedOp) currentProblem.operation = savedOp;
+    }
+
+    function saveSettings() {
+        localStorage.setItem('sorobanRods', NUM_RODS);
+        localStorage.setItem('sorobanOp', currentProblem.operation);
+    }
+
+    function applySettingsAndSave() {
+      NUM_RODS = parseInt($('rod-count-select').value);
+      currentProblem.operation = $('operation-select').value;
+      saveSettings();
+      buildSoroban();
+    }
+
+    function checkOrientation() {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      const isPortrait = window.innerHeight > window.innerWidth;
+      const warning = $('orientation-warning');
+      const app = $('app');
+      
+      if (isStandalone) {
+        warning.style.display = 'none';
+        app.style.display = 'flex';
+      } else {
+        if (isPortrait) {
+          warning.style.display = 'flex';
+          app.style.display = 'none';
+        } else {
+          warning.style.display = 'none';
+          app.style.display = 'flex';
+        }
+      }
+    }
+
+    function updateBeadSize() {
+      let availableHeight = window.innerHeight;
+      const safeBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')) || 0;
+      availableHeight -= safeBottom;
+      let headerSpace = 80; 
+      let maxBeadHeight = Math.floor(((availableHeight - headerSpace) * 0.95) / 6.3); 
+      let availableWidth = window.innerWidth;
+      const safeLeft = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-left')) || 0;
+      availableWidth -= safeLeft;
+      const spaceForButtons = 1.2;
+      const widthUnit = availableWidth / (NUM_RODS + spaceForButtons);
+      let maxBeadWidth = Math.floor(widthUnit * 0.9); 
+      let finalSize = Math.min(maxBeadHeight, maxBeadWidth);
+      finalSize = Math.max(20, Math.min(finalSize, 70));
+      document.documentElement.style.setProperty('--bead-size', finalSize + 'px');
+    }
+
+    function buildSoroban() {
+      const container = $('soroban');
+      container.innerHTML = '';
+      rods = [];
+      for (let i = 1; i <= NUM_RODS; i++) {
+        const rod = document.createElement('div');
+        rod.className = 'rod';
+        rod.dataset.index = i; 
+        const posFromRight = NUM_RODS - i + 1;
+        if ((posFromRight - 1) % 3 === 0 && posFromRight !== 1) rod.classList.add('blue-rod');
+        rod.innerHTML = `
+          <div class="heaven" onclick="handleHeavenClick(${i})">
+            <div class="bead"></div>
+          </div>
+          <div class="reckoning-bar"></div>
+          <div class="earth" onclick="handleEarthClick(event, ${i})">
+            <div class="bead"></div>
+            <div class="bead"></div>
+            <div class="bead"></div>
+            <div class="bead"></div>
+          </div>`;
+        container.appendChild(rod);
+        rods.push({ heaven: 0, earth: 0, element: rod });
+      }
+      updateBeadSize();
+      generateNewProblem();
+      updateRodsVisuals();
+    }
+
+    function showToast(msg) { 
+      const t = $('toast'); 
+      t.innerText = msg; 
+      t.classList.add('show'); 
+      setTimeout(() => t.classList.remove('show'), 2000); 
+    }
+
+    function handleHeavenClick(index) {
+      const rodData = rods[index - 1];
+      rodData.heaven = rodData.heaven === 0 ? 5 : 0;
+      updateRodsVisuals(); 
+      checkResult();
+    }
+
+    function handleEarthClick(e, index) {
+      const rodData = rods[index - 1];
+      const beads = rodData.element.querySelectorAll('.earth .bead');
+      let clickedBeadIndex = -1;
+      beads.forEach((bead, i) => { if (bead === e.target) clickedBeadIndex = i; });
+      if (clickedBeadIndex === -1) {
+          const rect = e.currentTarget.getBoundingClientRect();
+          const clickY = e.clientY - rect.top;
+          const height = rect.height;
+          if (clickY < height / 2) clickedBeadIndex = 3;
+          else clickedBeadIndex = 0;
+      }
+      const totalBeads = 4;
+      const currentActive = rodData.earth;
+      const isActive = clickedBeadIndex >= (totalBeads - currentActive);
+      if (isActive) rodData.earth = (totalBeads - 1) - clickedBeadIndex;
+      else rodData.earth = totalBeads - clickedBeadIndex;
+      updateRodsVisuals(); checkResult();
+    }
+
+    function updateRodsVisuals() {
+      rods.forEach(rod => {
+        rod.element.querySelector('.heaven .bead').classList.toggle('active', rod.heaven === 5);
+        const eBeads = rod.element.querySelectorAll('.earth .bead');
+        eBeads.forEach((bead, i) => bead.classList.toggle('active', i >= 4 - rod.earth));
+      });
+    }
+
+    function getCurrentValue() {
+      let totalValue = 0n;
+      rods.forEach((rod, arrayIndex) => {
+        const colIndex = NUM_RODS - arrayIndex;
+        const exponent = colIndex - UNIT_INDEX;
+        if (exponent < 0) return;
+        totalValue += BigInt(rod.heaven + rod.earth) * (10n ** BigInt(exponent));
+      });
+      return Number(totalValue);
+    }
+
+    function generateNewProblem() {
+      underlinedState = { active: false, value: 0, firstClickDone: false };
+      const op = currentProblem.operation;
+      const minFill = Math.pow(10, NUM_RODS - 1);
+      const maxVal = Math.pow(10, NUM_RODS) - 1;
+      
+      let a, b, c, result, parts;
+
+      if (op === '+') {
+        result = randomInt(minFill, maxVal);
+        parts = splitNumber(result, 3);
+        currentProblem.parts = parts;
+        currentProblem.target = parts[0] + parts[1] + parts[2]; 
+        
+      } else if (op === '-') {
+        a = randomInt(minFill, maxVal);
+        let remainder = a - 1;
+        let subParts = splitNumber(remainder, 2);
+        parts = [a, subParts[0], subParts[1]];
+        currentProblem.parts = parts;
+        currentProblem.target = a - subParts[0] - subParts[1];
+        
+      } else if (op === '*') {
+        result = randomInt(minFill, maxVal);
+        let factors = findFactorsStrict(result); 
+        currentProblem.parts = factors;
+        currentProblem.target = result;
+      
+      } else if (op === '+-') {
+        let type = Math.random() < 0.5 ? 1 : 2;
+        
+        if (type === 1) {
+            a = randomInt(minFill, maxVal);
+            let maxB = maxVal - a;
+            if (maxB < 1) maxB = 1;
+            b = randomInt(1, maxB);
+            let sumAB = a + b;
+            let maxC = sumAB - 1;
+            c = randomInt(1, maxC);
+            currentProblem.parts = [a, b, -c];
+            currentProblem.target = sumAB - c;
+        } else {
+            a = randomInt(minFill, maxVal);
+            let maxB = a - 1;
+            if (maxB < 1) maxB = 1;
+            b = randomInt(1, maxB);
+            let diffAB = a - b;
+            let maxC = maxVal - diffAB;
+            if (maxC < 1) maxC = 1;
+            c = randomInt(1, maxC);
+            currentProblem.parts = [a, -b, c];
+            currentProblem.target = diffAB + c;
+        }
+      }
+
+      renderProblemDisplay();
+    }
+
+    function renderProblemDisplay(isUnderlined = false) {
+        const op = currentProblem.operation;
+        const parts = currentProblem.parts;
+        let html = '';
+
+        const formatPart = (p, isFirst) => {
+            let val = Math.abs(p);
+            let sign = p >= 0 ? '+' : '-';
+            return (isFirst ? '' : ' ' + sign + ' ') + formatNumber(val);
+        };
+
+        if (op === '+') {
+            if (isUnderlined) {
+                html = `<span class="problem-part underlined">${formatNumber(parts[0])} + ${formatNumber(parts[1])}</span> + ${formatNumber(parts[2])}`;
+            } else {
+                html = parts.map(p => formatNumber(p)).join(' + ');
+            }
+        } else if (op === '-') {
+            if (isUnderlined) {
+                html = `<span class="problem-part underlined">${formatNumber(parts[0])} - ${formatNumber(parts[1])}</span> - ${formatNumber(parts[2])}`;
+            } else {
+                html = parts.map(p => formatNumber(p)).join(' - ');
+            }
+        } else if (op === '*') {
+            html = `${formatNumber(parts[0])} × ${formatNumber(parts[1])}`;
+        } else if (op === '+-') {
+            let p0 = formatNumber(parts[0]);
+            let p1Val = Math.abs(parts[1]);
+            let p1Sign = parts[1] >= 0 ? '+' : '-';
+            let part1Str = ` ${p1Sign} ${formatNumber(p1Val)}`;
+            let p2Val = Math.abs(parts[2]);
+            let p2Sign = parts[2] >= 0 ? '+' : '-';
+            let part2Str = ` ${p2Sign} ${formatNumber(p2Val)}`;
+
+            if (isUnderlined) {
+                html = `<span class="problem-part underlined">${p0}${part1Str}</span>${part2Str}`;
+            } else {
+                html = p0 + part1Str + part2Str;
+            }
+        }
+
+        $('problem-display').innerHTML = html;
+    }
+
+    function findFactorsStrict(num) {
+        let start = Math.floor(Math.sqrt(num));
+        for (let i = start; i >= 2; i--) {
+            if (num % i === 0) {
+                let f1 = i;
+                let f2 = num / i;
+                if (f1 > f2) { let temp = f1; f1 = f2; f2 = temp; }
+                if (f1 < 2) continue; 
+                return [f2, f1]; 
+            }
+        }
+        return findFactorsStrict(randomInt(10, 1000)); 
+    }
+
+    function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+    function splitNumber(num, partsCount) {
+        let arr = [];
+        let remaining = num;
+        for (let i = 0; i < partsCount - 1; i++) {
+            let maxPart = remaining - (partsCount - 1 - i);
+            if (maxPart < 1) maxPart = 1;
+            let val = randomInt(1, maxPart);
+            arr.push(val);
+            remaining -= val;
+        }
+        arr.push(remaining);
+        if(arr.length > 1) arr.sort(() => Math.random() - 0.5); 
+        return arr;
+    }
+
+    function checkResult() {
+      const currentVal = getCurrentValue();
+      const op = currentProblem.operation;
+
+      if (op === '*') {
+        if (currentVal === currentProblem.target) handleSuccess();
+        return;
+      }
+
+      if (!underlinedState.active) {
+          let intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1];
+          if (currentVal === intermediateTarget) {
+              underlinedState.active = true;
+              underlinedState.value = currentVal;
+              underlinedState.firstClickDone = false; 
+              renderProblemDisplay(true); 
+              showToast("Správně! Pokračujte.");
+          }
+      } 
+      else {
+          if(currentVal === underlinedState.value) {
+              renderProblemDisplay(true);
+          } else {
+              renderProblemDisplay(false);
+          }
+          if (currentVal === currentProblem.target) {
+              handleSuccess();
+          }
+      }
+    }
+
+    function handleSuccess() {
+        showToast("Skvěle! 🎉");
+        setTimeout(() => {
+          generateNewProblem();
+          rods.forEach(rod => { rod.heaven = 0; rod.earth = 0; });
+          updateRodsVisuals();
+        }, 800);
+    }
+
+    function handleReset() {
+        if (underlinedState.active) {
+            if (underlinedState.firstClickDone) {
+                generateNewProblem();
+                setSorobanValue(0);
+            } else {
+                setSorobanValue(underlinedState.value);
+                renderProblemDisplay(true);
+                underlinedState.firstClickDone = true;
+            }
+        } else {
+            generateNewProblem();
+            setSorobanValue(0);
+        }
+    }
+
+    function setSorobanValue(val) {
+        let tempVal = val;
+        for (let i = 0; i < rods.length; i++) {
+            const rod = rods[i];
+            const exponent = NUM_RODS - 1 - i; 
+            if (exponent < 0) continue;
+            const power = Math.pow(10, exponent);
+            const digit = Math.floor(tempVal / power) % 10;
+            rod.heaven = (digit >= 5) ? 5 : 0;
+            rod.earth = (digit >= 5) ? digit - 5 : digit;
+            tempVal -= digit * power; 
+        }
+        updateRodsVisuals();
+    }
+
+    function toggleSettings() {
+      const modal = $('settings-modal');
+      const btn = $('settings-btn');
+      if (modal.classList.contains('visible')) {
+        modal.classList.remove('visible');
+        btn.classList.remove('active');
+      } else {
+        $('rod-count-select').value = NUM_RODS;
+        $('operation-select').value = currentProblem.operation;
+        modal.classList.add('visible');
+        btn.classList.add('active');
+      }
+    }
+
+    function toggleTheme() { 
+      const body = document.body; 
+      body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark'; 
+      saveTheme(); 
+      updateThemeIcons();
+    }
+    
+    function updateThemeIcons() {
+      const icon = document.body.dataset.theme === 'dark' ? '☀️' : '🌙';
+      const btn = $('theme-btn');
+      if(btn) btn.innerText = icon;
+    }
+
+    function saveTheme() { localStorage.setItem('sorobanTheme', document.body.dataset.theme); }
+    function loadTheme() { 
+      const t = localStorage.getItem('sorobanTheme') || 'light'; 
+      document.body.dataset.theme = t; 
+      updateThemeIcons();
+    }
+    
+    window.onload = init;
+  </script>
+</body>
+</html>
