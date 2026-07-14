@@ -2,14 +2,27 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Bináry</title>
   <style>
     :root{--bg:#f5f5f7;--t:#1d1d1f;--c:#fff;--b:#d2d2d7;--btn:#e8e8ed;--btnh:#d2d2d7;--p:#0071e3;--pt:#fff;--ok:#34c759;--er:#ff3b30;}
     [data-theme="dark"]{--bg:#000;--t:#f5f5f7;--c:#1c1c1e;--b:#38383a;--btn:#2c2c2e;--btnh:#3a3a3c;}
     *{box-sizing:border-box;font-family:-apple-system,sans-serif;margin:0;padding:0;}
-    body{background:var(--bg);color:var(--t);display:flex;justify-content:center;padding:10px;min-height:100vh;}
-    .app-container{background:var(--c);border-radius:12px;padding:16px;width:100%;max-width:400px;box-shadow:0 4px 12px rgba(0,0,0,.1);display:flex;flex-direction:column;gap:12px;}
+    
+    /* ZMĚNA: Pozadí stránky (body) odpovídá barvě aplikace, aby nebyl vidět rozdíl */
+    body{background:var(--c);color:var(--t);display:flex;justify-content:center;min-height:100vh;}
+    
+    /* ZMĚNA: Na mobilu plná šířka, bez stínů a zaoblení */
+    .app-container{
+      background:var(--c);
+      padding:16px;
+      width:100%;
+      /* max-width odstraněno pro mobil */
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    
     .header{display:flex;justify-content:space-between;align-items:center;}
     .header h1{font-size:18px;white-space:pre-wrap;}
     .header-icons{display:flex;gap:12px;align-items:center;}
@@ -23,6 +36,8 @@
     .finger-panel{display:none;justify-content:center;overflow:hidden;}
     .finger-panel.visible{display:flex;}
     .finger-panel.dec-mode .finger-sq{pointer-events:auto;}
+    
+    /* Mřížka prstů - ponecháno centrování, vypadá dobře i na šířce */
     .finger-grid{display:grid;grid-template-columns:repeat(5,56px);grid-template-rows:repeat(3,calc(40px * 2));column-gap:14px;row-gap:26px;justify-content:center;align-content:center;max-width:100%;touch-action:manipulation;}
     .finger-sq{
       width:56px;height:40px;background:#d6d6db;border:none;border-radius:12px;
@@ -56,24 +71,17 @@
     .clear-btn{padding:0 16px;}
     .back-btn:active,.clear-btn:active{background:var(--btnh);}
 
-    /* Binární klávesnice (0, 1) - Viditelná na Desktopu i Mobilu */
     .keypad-bin{
       display:none; gap:8px; width:100%; justify-content:center; 
       grid-template-columns:repeat(2, 1fr); grid-auto-flow:column;
       max-width:300px;
     }
-    /* Třída .visible pro keypad-bin - bez media query, platí všude */
     .keypad-bin.visible { display: grid; }
 
-    /* Decimální klávesnice (0-9) - Viditelná POUZE na Desktopu */
     .keypad-dec{
       display:none; gap:8px; width:100%; justify-content:center; 
       grid-template-columns:repeat(3, 1fr); 
       max-width:300px;
-    }
-    /* Media query pro keypad-dec - zachováno pro Desktop */
-    @media (min-width: 521px) {
-      .keypad-dec.visible-desktop { display: grid; }
     }
     
     .key-btn{
@@ -95,6 +103,7 @@
     .history-item.correct{color:var(--ok);border-color:var(--ok);}
     .history-item.error{color:var(--er);border-color:var(--er);}
 
+    /* Responzivita pro menší mobily - zachováno */
     @media (max-width:520px){
       .finger-grid{grid-template-columns:repeat(5,48px);grid-template-rows:repeat(3,calc(36px * 2));column-gap:10px;row-gap:22px;}
       .finger-sq{width:48px;height:36px;}
@@ -102,6 +111,18 @@
     @media (max-width:390px){
       .finger-grid{grid-template-columns:repeat(5,42px);grid-template-rows:repeat(3,calc(34px * 2));column-gap:8px;row-gap:20px;}
       .finger-sq{width:42px;height:34px;}
+    }
+
+    /* NOVÉ: Nastavení pro Desktop - zde se vrátí "kartička" do středu a stín */
+    @media (min-width: 521px) {
+      body { background: var(--bg); padding: 10px; } /* Na desktopu šedé pozadí okolo */
+      .app-container {
+        max-width: 400px; /* Na desktopu omezená šířka */
+        border-radius: 12px; /* Na desktopu zaoblené */
+        box-shadow: 0 4px 12px rgba(0,0,0,.1); /* Na desktopu stín */
+        min-height: auto; /* Výška podle obsahu */
+      }
+      .keypad-dec.visible-desktop { display: grid; }
     }
   </style>
 </head>
@@ -430,28 +451,19 @@
     $('single-input').className = '';
     
     if(dir === 'dec2bin'){
-      // DEC -> BIN: Mobilní klávesnice VYPNUTA (inputMode none)
       $('single-input').inputMode = 'none';
 
       if(fingerPanelVisible){
-        // Režim P (prsty)
         $('single-input').readOnly = true;
         $('single-input').placeholder = "";
-        
-        // Skrýt vlastní klávesnice (ovládání přes dlaždice)
         $('keypad-bin').classList.remove('visible');
         $('keypad-dec').classList.remove('visible-desktop');
-        
         $('back-btn-dec').style.display='none';
         $('clear-btn-dec').style.display='none';
       } else {
-        // Režim bez P (tlačítka)
         $('single-input').readOnly = false;
-        
-        // Zobrazit binární klávesnici (0,1) - Třída .visible (bez media query => viditelné i na mobilu)
         $('keypad-bin').classList.add('visible');
         $('keypad-dec').classList.remove('visible-desktop');
-        
         $('back-btn-dec').style.display='flex';
         $('clear-btn-dec').style.display='flex';
         $('single-input').focus();
@@ -461,17 +473,11 @@
       expectedAnswer=binString;
       expectedLength=bits;
 
-    }else{ // BIN -> DEC
-      // BIN -> DEC: Mobilní klávesnice ZAPNUTA (standardní numeric)
+    }else{
       $('single-input').inputMode = 'numeric';
       $('single-input').readOnly = false;
-      
-      // Skrýt binární klávesnici (0,1)
       $('keypad-bin').classList.remove('visible');
-      
-      // Zobrazit decimální klávesnici (0-9) - Třída .visible-desktop (platí jen > 521px => desktop)
       $('keypad-dec').classList.add('visible-desktop');
-      
       $('back-btn-dec').style.display='flex';
       $('clear-btn-dec').style.display='flex';
       $('single-input').focus();
@@ -553,16 +559,12 @@
     } 
     else {
       if(!/^\d$/.test(val)) return;
-      
       let clean = value.replace(/\s/g, '');
-      
       if(hasSelection) {
         clean = value.slice(0, start) + value.slice(end);
         clean = clean.replace(/\s/g, '');
       }
-      
       clean += val;
-      
       const formatted = formatDecimalInput(clean);
       input.value = formatted;
       input.selectionStart = input.selectionEnd = formatted.length;
@@ -584,19 +586,11 @@
 
     if(dir==='dec2bin' && fingerPanelVisible){
       const sum=currentFingerSum;
-      
       isCorrect=(sum===currentDecValue);
       correctFormattedAnswer=formatBinary(expectedAnswer);
-      
-      if(isCorrect) {
-        input.value = correctFormattedAnswer;
-      } else {
-        input.value = formatBinary(sum.toString(2));
-      }
-      
+      if(isCorrect) { input.value = correctFormattedAnswer; } else { input.value = formatBinary(sum.toString(2)); }
       input.className=isCorrect?'success':'error';
       input.readOnly = true; 
-
       state='evaluated';
       $('main-btn').innerText='START';
       saveToHistory(`${formatDecimal(currentDecValue)} = ${correctFormattedAnswer}`,isCorrect);
@@ -622,9 +616,7 @@
       $('main-btn').innerText='START';
       input.readOnly = true;
       input.className=isCorrect?'success':'error';
-      
       if(isCorrect) input.value=correctFormattedAnswer;
-
       const binForHistory=formatBinary(currentDecValue.toString(2));
       saveToHistory(`${binForHistory} = ${correctFormattedAnswer}`,isCorrect);
       updateFingerDisplay();
@@ -650,9 +642,7 @@
     $('main-btn').innerText='START';
     input.readOnly = true;
     input.className=isCorrect?'success':'error';
-
     if(isCorrect) input.value=correctFormattedAnswer;
-
     saveToHistory(`${formatDecimal(currentDecValue)} = ${correctFormattedAnswer}`,isCorrect);
     updateFingerDisplay();
   }
