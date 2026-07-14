@@ -5,94 +5,45 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>TEST prsty</title>
   <style>
+    /* ... (tvoje původní CSS zůstává beze změny) ... */
     :root{
-      --sq-w: 56px;       /* větší kostičky */
-      --sq-h: 40px;
-      --col-gap: 14px;    /* mezera mezi sloupci */
-      --row-gap: 26px;    /* větší mezera mezi řadami */
-      --grow: 2;          /* 2x vyšší po kliknutí */
-      --white: #ffffff;
-      --green: #41d887;
-      --bg: #0b1020;
-      --text: #d7defa;
+      --sq-w: 56px; --sq-h: 40px;
+      --col-gap: 14px; --row-gap: 26px;
+      --grow: 2; --white: #ffffff; --green: #41d887;
+      --bg: #0b1020; --text: #d7defa;
     }
-
     *{ box-sizing:border-box; }
-
     body{
-      margin:0;
-      min-height:100dvh;
-      background:var(--bg);
-      color:var(--text);
+      margin:0; min-height:100dvh;
+      background:var(--bg); color:var(--text);
       font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      align-items:center;
+      display:flex; flex-direction:column;
+      justify-content:center; align-items:center;
       padding:16px;
     }
-
-    h1{
-      margin:0 0 18px;
-      font-size:clamp(20px,4.8vw,30px);
-      text-align:center;
-    }
-
-    /* 5 sloupců × 3 řady */
+    h1{ margin:0 0 18px; font-size:clamp(20px,4.8vw,30px); text-align:center; }
     .grid{
-      display:grid;
-      grid-template-columns:repeat(5, var(--sq-w));
-      /* rezervace na zvětšení nahoru = 2x výška */
+      display:grid; grid-template-columns:repeat(5, var(--sq-w));
       grid-template-rows:repeat(3, calc(var(--sq-h) * 2));
-      column-gap:var(--col-gap);
-      row-gap:var(--row-gap);
-      justify-content:center;
-      align-content:center;
-      max-width:100%;
-      touch-action:manipulation;
+      column-gap:var(--col-gap); row-gap:var(--row-gap);
+      justify-content:center; align-content:center;
+      max-width:100%; touch-action:manipulation;
     }
-
     .sq{
-      width:var(--sq-w);
-      height:var(--sq-h);
-      background:var(--white);
-      border:none;
-      border-radius:12px;
-      cursor:pointer;
-      user-select:none;
+      width:var(--sq-w); height:var(--sq-h);
+      background:var(--white); border:none; border-radius:12px;
+      cursor:pointer; user-select:none;
       -webkit-tap-highlight-color:transparent;
-
-      /* důležité: základna drží dole, růst jen nahoru */
-      align-self:end;
-      transform-origin:bottom center;
+      align-self:end; transform-origin:bottom center;
       transition:transform .18s ease, background-color .18s ease, box-shadow .18s ease;
       box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 3px 10px rgba(0,0,0,.28);
     }
-
     .sq.on{
-      background:var(--green);
-      transform:scaleY(var(--grow));
+      background:var(--green); transform:scaleY(var(--grow));
       box-shadow:0 1px 0 rgba(255,255,255,.15) inset, 0 8px 18px rgba(0,0,0,.35);
     }
-
-    /* Mobil */
-    @media (max-width: 520px){
-      :root{
-        --sq-w: 48px;
-        --sq-h: 36px;
-        --col-gap: 10px;
-        --row-gap: 22px;
-      }
-    }
-
-    @media (max-width: 390px){
-      :root{
-        --sq-w: 42px;
-        --sq-h: 34px;
-        --col-gap: 8px;
-        --row-gap: 20px;
-      }
-    }
+    @media (max-width: 520px){ :root{ --sq-w: 48px; --sq-h: 36px; --col-gap: 10px; --row-gap: 22px; } }
+    @media (max-width: 390px){ :root{ --sq-w: 42px; --sq-h: 34px; --col-gap: 8px; --row-gap: 20px; } }
   </style>
 </head>
 <body>
@@ -102,15 +53,45 @@
   <script>
     const grid = document.getElementById('grid');
     const N = 15; // 5x3
+    const STORAGE_KEY = 'finger-test-layout';
 
+    // 1. Načtení uloženého stavu (pole boolean hodnot)
+    // Pokud nic není uloženo, vrací null, takže použijeme pole samých false.
+    let savedState = JSON.parse(localStorage.getItem(STORAGE_KEY)) || new Array(N).fill(false);
+
+    // 2. Vytvoření mřížky a aplikace stavu
     for (let i = 0; i < N; i++){
       const el = document.createElement('button');
       el.className = 'sq';
       el.type = 'button';
       el.title = 'i=' + i;
       el.setAttribute('aria-label', 'Prst ' + (i + 1));
-      el.addEventListener('click', () => el.classList.toggle('on'));
+      
+      // Pokud byl tento index uložen jako aktivní (true), přidáme třídu hned
+      if (savedState[i]) {
+        el.classList.add('on');
+      }
+
+      // Při kliknutí: přepnout třídu a okamžitě uložit nový stav
+      el.addEventListener('click', () => {
+        el.classList.toggle('on');
+        saveState();
+      });
+
       grid.appendChild(el);
+    }
+
+    // Funkce pro uložení aktuálního stavu do localStorage
+    function saveState() {
+      const buttons = grid.querySelectorAll('.sq');
+      const currentState = [];
+      
+      // Projdeme všechny tlačítka a uložíme, zda mají třídu 'on'
+      buttons.forEach(btn => {
+        currentState.push(btn.classList.contains('on'));
+      });
+      
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentState));
     }
   </script>
 </body>
