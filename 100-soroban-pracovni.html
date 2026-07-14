@@ -136,7 +136,6 @@
       letter-spacing: 1px;
     }
 
-    /* Styl pro podtrženou část příkladu */
     .problem-part.underlined {
         border-bottom: 3px solid #d32f2f;
         padding-bottom: 2px;
@@ -343,7 +342,6 @@
     
     <div class="soroban-wrapper">
       <div class="soroban-column">
-        <!-- Zde se bude generovat HTML příkladu s podtržením -->
         <div class="problem-display" id="problem-display">Vyhrajte!</div>
         
         <div class="soroban-frame" id="frame">
@@ -352,7 +350,6 @@
       </div>
 
       <div class="control-panel">
-        <!-- Tlačítko Reset nyní má složitější logiku -->
         <button class="control-btn" onclick="handleReset()" title="Vymazat">↺</button>
         <button class="control-btn" id="theme-btn" onclick="toggleTheme()" title="Téma">🌙</button>
         <button class="control-btn" id="settings-btn" onclick="toggleSettings()" title="Nastavení">⚙️</button>
@@ -373,6 +370,8 @@
         <label>Operace:</label>
         <select id="operation-select" onchange="applySettingsAndSave()">
           <option value="+">+</option>
+          <!-- ZDE JE UPRAVENÉ POŘADÍ -->
+          <option value="+-">+ -</option>
           <option value="-">-</option>
           <option value="*">x</option>
         </select>
@@ -388,15 +387,12 @@
     let rods = [];
     let currentProblem = { target: 0, parts: [], operation: '+' };
     
-    // Stav pro logiku podtržení a resetu
     let underlinedState = {
-        active: false,      // Je true, pokud uživatel úspěšně spočítal první část
-        value: 0,           // Hodnota mezivýsledku (např. A+B)
-        firstClickDone: false // Pro logiku dvojitého kliknutí resetu
+        active: false, value: 0, firstClickDone: false
     };
 
     function init() {
-      loadSettings(); // Načtení nastavení z paměti
+      loadSettings();
       populateSettings();
       loadTheme();
       checkOrientation(); 
@@ -421,16 +417,12 @@
         if(i === NUM_RODS) opt.selected = true;
         select.appendChild(opt);
       }
-      
-      // Nastavení operace podle načtené hodnoty
       $('operation-select').value = currentProblem.operation;
     }
 
-    // --- SYSTÉM ULOŽENÍ NASTAVENÍ ---
     function loadSettings() {
         const savedRods = localStorage.getItem('sorobanRods');
         if(savedRods) NUM_RODS = parseInt(savedRods);
-        
         const savedOp = localStorage.getItem('sorobanOp');
         if(savedOp) currentProblem.operation = savedOp;
     }
@@ -444,7 +436,7 @@
       NUM_RODS = parseInt($('rod-count-select').value);
       currentProblem.operation = $('operation-select').value;
       saveSettings();
-      buildSoroban(); // Znovu postavit s novými tyčemi a příkladem
+      buildSoroban();
     }
 
     function checkOrientation() {
@@ -471,21 +463,16 @@
       let availableHeight = window.innerHeight;
       const safeBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')) || 0;
       availableHeight -= safeBottom;
-      
       let headerSpace = 80; 
       let maxBeadHeight = Math.floor(((availableHeight - headerSpace) * 0.95) / 6.3); 
-
       let availableWidth = window.innerWidth;
       const safeLeft = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-left')) || 0;
       availableWidth -= safeLeft;
-      
       const spaceForButtons = 1.2;
       const widthUnit = availableWidth / (NUM_RODS + spaceForButtons);
       let maxBeadWidth = Math.floor(widthUnit * 0.9); 
-
       let finalSize = Math.min(maxBeadHeight, maxBeadWidth);
       finalSize = Math.max(20, Math.min(finalSize, 70));
-
       document.documentElement.style.setProperty('--bead-size', finalSize + 'px');
     }
 
@@ -493,17 +480,12 @@
       const container = $('soroban');
       container.innerHTML = '';
       rods = [];
-      
       for (let i = 1; i <= NUM_RODS; i++) {
         const rod = document.createElement('div');
         rod.className = 'rod';
         rod.dataset.index = i; 
-        
         const posFromRight = NUM_RODS - i + 1;
-        if ((posFromRight - 1) % 3 === 0 && posFromRight !== 1) {
-           rod.classList.add('blue-rod');
-        }
-        
+        if ((posFromRight - 1) % 3 === 0 && posFromRight !== 1) rod.classList.add('blue-rod');
         rod.innerHTML = `
           <div class="heaven" onclick="handleHeavenClick(${i})">
             <div class="bead"></div>
@@ -515,11 +497,9 @@
             <div class="bead"></div>
             <div class="bead"></div>
           </div>`;
-        
         container.appendChild(rod);
         rods.push({ heaven: 0, earth: 0, element: rod });
       }
-      
       updateBeadSize();
       generateNewProblem();
       updateRodsVisuals();
@@ -543,9 +523,7 @@
       const rodData = rods[index - 1];
       const beads = rodData.element.querySelectorAll('.earth .bead');
       let clickedBeadIndex = -1;
-      
       beads.forEach((bead, i) => { if (bead === e.target) clickedBeadIndex = i; });
-
       if (clickedBeadIndex === -1) {
           const rect = e.currentTarget.getBoundingClientRect();
           const clickY = e.clientY - rect.top;
@@ -553,17 +531,11 @@
           if (clickY < height / 2) clickedBeadIndex = 3;
           else clickedBeadIndex = 0;
       }
-
       const totalBeads = 4;
       const currentActive = rodData.earth;
       const isActive = clickedBeadIndex >= (totalBeads - currentActive);
-
-      if (isActive) {
-        rodData.earth = (totalBeads - 1) - clickedBeadIndex;
-      } else {
-        rodData.earth = totalBeads - clickedBeadIndex;
-      }
-
+      if (isActive) rodData.earth = (totalBeads - 1) - clickedBeadIndex;
+      else rodData.earth = totalBeads - clickedBeadIndex;
       updateRodsVisuals(); checkResult();
     }
 
@@ -571,9 +543,7 @@
       rods.forEach(rod => {
         rod.element.querySelector('.heaven .bead').classList.toggle('active', rod.heaven === 5);
         const eBeads = rod.element.querySelectorAll('.earth .bead');
-        eBeads.forEach((bead, i) => {
-          bead.classList.toggle('active', i >= 4 - rod.earth);
-        });
+        eBeads.forEach((bead, i) => bead.classList.toggle('active', i >= 4 - rod.earth));
       });
     }
 
@@ -588,11 +558,8 @@
       return Number(totalValue);
     }
 
-    // --- LOGIKA GENEROVÁNÍ A KONTROLY ---
-
     function generateNewProblem() {
-      underlinedState = { active: false, value: 0, firstClickDone: false }; // Reset stavu
-      
+      underlinedState = { active: false, value: 0, firstClickDone: false };
       const op = currentProblem.operation;
       const minFill = Math.pow(10, NUM_RODS - 1);
       const maxVal = Math.pow(10, NUM_RODS) - 1;
@@ -603,7 +570,7 @@
         result = randomInt(minFill, maxVal);
         parts = splitNumber(result, 3);
         currentProblem.parts = parts;
-        currentProblem.target = parts[0] + parts[1] + parts[2]; // Finální cíl
+        currentProblem.target = parts[0] + parts[1] + parts[2]; 
         
       } else if (op === '-') {
         a = randomInt(minFill, maxVal);
@@ -614,11 +581,36 @@
         currentProblem.target = a - subParts[0] - subParts[1];
         
       } else if (op === '*') {
-        // Násobení: A >= B, B >= 2
         result = randomInt(minFill, maxVal);
-        let factors = findFactorsStrict(result); // Nova funkce
+        let factors = findFactorsStrict(result); 
         currentProblem.parts = factors;
         currentProblem.target = result;
+      
+      } else if (op === '+-') {
+        let type = Math.random() < 0.5 ? 1 : 2;
+        
+        if (type === 1) {
+            a = randomInt(minFill, maxVal);
+            let maxB = maxVal - a;
+            if (maxB < 1) maxB = 1;
+            b = randomInt(1, maxB);
+            let sumAB = a + b;
+            let maxC = sumAB - 1;
+            c = randomInt(1, maxC);
+            currentProblem.parts = [a, b, -c];
+            currentProblem.target = sumAB - c;
+        } else {
+            a = randomInt(minFill, maxVal);
+            let maxB = a - 1;
+            if (maxB < 1) maxB = 1;
+            b = randomInt(1, maxB);
+            let diffAB = a - b;
+            let maxC = maxVal - diffAB;
+            if (maxC < 1) maxC = 1;
+            c = randomInt(1, maxC);
+            currentProblem.parts = [a, -b, c];
+            currentProblem.target = diffAB + c;
+        }
       }
 
       renderProblemDisplay();
@@ -629,9 +621,13 @@
         const parts = currentProblem.parts;
         let html = '';
 
+        const formatPart = (p, isFirst) => {
+            let val = Math.abs(p);
+            let sign = p >= 0 ? '+' : '-';
+            return (isFirst ? '' : ' ' + sign + ' ') + formatNumber(val);
+        };
+
         if (op === '+') {
-            let sep = ' + ';
-            // Pokud je podtrženo, obalíme první dvě čísla do spanu
             if (isUnderlined) {
                 html = `<span class="problem-part underlined">${formatNumber(parts[0])} + ${formatNumber(parts[1])}</span> + ${formatNumber(parts[2])}`;
             } else {
@@ -644,45 +640,37 @@
                 html = parts.map(p => formatNumber(p)).join(' - ');
             }
         } else if (op === '*') {
-            // U násobení nepodtrhujeme, jen zobrazujeme
             html = `${formatNumber(parts[0])} × ${formatNumber(parts[1])}`;
+        } else if (op === '+-') {
+            let p0 = formatNumber(parts[0]);
+            let p1Val = Math.abs(parts[1]);
+            let p1Sign = parts[1] >= 0 ? '+' : '-';
+            let part1Str = ` ${p1Sign} ${formatNumber(p1Val)}`;
+            let p2Val = Math.abs(parts[2]);
+            let p2Sign = parts[2] >= 0 ? '+' : '-';
+            let part2Str = ` ${p2Sign} ${formatNumber(p2Val)}`;
+
+            if (isUnderlined) {
+                html = `<span class="problem-part underlined">${p0}${part1Str}</span>${part2Str}`;
+            } else {
+                html = p0 + part1Str + part2Str;
+            }
         }
 
         $('problem-display').innerHTML = html;
     }
 
-    // Nová funkce pro násobení s podmínkami
     function findFactorsStrict(num) {
         let start = Math.floor(Math.sqrt(num));
-        // Najít největší dělitel <= sqrt(num)
-        // Musíme zajistit, aby druhý činitel byl >= 2.
-        // Pokud je num sude, 2 je vzdy mozne.
-        
         for (let i = start; i >= 2; i--) {
             if (num % i === 0) {
                 let f1 = i;
                 let f2 = num / i;
-                
-                // Podmínka: oba musí být >= 2 (f1 >= 2 zaručeno cyklem, f2 musí být >= 2)
-                // Pokud je num prvočíslo nebo num = k*1, musíme to ošetřit.
-                // Pokud je f2 < 2 (num < 2), to se nestane (num >= 10).
-                
-                // Zajištění A >= B
                 if (f1 > f2) { let temp = f1; f1 = f2; f2 = temp; }
-                
-                // Pokud je f1 < 2, musíme najít jiný rozklad nebo použít fallback
                 if (f1 < 2) continue; 
-
-                // Náhodné prohození? Ne, chceme A >= B, takže f2 je A.
-                return [f2, f1]; // Vrací [Větší, Menší]
+                return [f2, f1]; 
             }
         }
-        
-        // Fallback pro prvočísla: num = num * 1 nechceme.
-        // Pokud je to prvočíslo, musíme vygenerovat jiné číslo?
-        // Nebo jednoduše: num = (num/2) * 2 zaokrouhleno? To by nevyšlo.
-        // Nejlepší řešení: vygenerovat nové číslo, pokud nevyhovuje.
-        // Rekurze pro jednoduchost:
         return findFactorsStrict(randomInt(10, 1000)); 
     }
 
@@ -703,49 +691,31 @@
         return arr;
     }
 
-    // --- KONTROLA VÝSLEDKŮ ---
-
     function checkResult() {
       const currentVal = getCurrentValue();
       const op = currentProblem.operation;
 
-      // Logika pro násobení (jen A*B)
       if (op === '*') {
-        if (currentVal === currentProblem.target) {
-            handleSuccess();
-        }
+        if (currentVal === currentProblem.target) handleSuccess();
         return;
       }
 
-      // Logika pro + a -
-      // Fáze 1: Kontrola prvních dvou čísel
       if (!underlinedState.active) {
-          let intermediateTarget;
-          if (op === '+') intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1];
-          else intermediateTarget = currentProblem.parts[0] - currentProblem.parts[1];
-
+          let intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1];
           if (currentVal === intermediateTarget) {
-              // ÚSPĚCH PRVNÍ FÁZE
               underlinedState.active = true;
               underlinedState.value = currentVal;
-              underlinedState.firstClickDone = false; // Reset pro logiku tlačítka
-              
-              renderProblemDisplay(true); // Zobrazí podtržení
+              underlinedState.firstClickDone = false; 
+              renderProblemDisplay(true); 
               showToast("Správně! Pokračujte.");
           }
       } 
-      // Fáze 2: Kontrola finálního výsledku (pouze pokud je already underlined)
       else {
-          // Pokud se uživatel vrátil k podtrženému stavu a hledá další číslo
-          // Znovu vykreslíme podtržení, pokud uživatel správně "resetoval" na mezivýsledek
           if(currentVal === underlinedState.value) {
               renderProblemDisplay(true);
           } else {
-              // Pokud počítá dál, podtržení zmizí
               renderProblemDisplay(false);
           }
-
-          // Konečná kontrola
           if (currentVal === currentProblem.target) {
               handleSuccess();
           }
@@ -761,31 +731,17 @@
         }, 800);
     }
 
-    // --- LOGIKA RESETU ---
-
     function handleReset() {
-        // Pokud JE aktivní podtržení (mezivýsledek)
         if (underlinedState.active) {
-            
-            // Pokud jsme už jednou klikli (jsme ve stavu "čekání na druhé kliknutí")
             if (underlinedState.firstClickDone) {
-                // Druhé kliknutí: Plný reset
                 generateNewProblem();
                 setSorobanValue(0);
-            } 
-            // První kliknutí po dosažení mezivýsledku
-            else {
-                // Nastavit soroban na mezivýsledek
+            } else {
                 setSorobanValue(underlinedState.value);
-                renderProblemDisplay(true); // Obnovit podtržení
-                underlinedState.firstClickDone = true; // Nastavit příznak
+                renderProblemDisplay(true);
+                underlinedState.firstClickDone = true;
             }
-        } 
-        // Pokud NENÍ aktivní podtržení (běžný stav)
-        else {
-            // Jednoduchý reset na 0 a nový příklad (podle zadání "pokud nebylo podtrženo... 2x kliknutí... se vymaže zcela")
-            // Ale logika "vymaže zcela" pro nestate mi připadá jako "jen nový příklad".
-            // Implementováno: Pokud nebylo podtrženo, reset vymaže kostky a dá nový příklad.
+        } else {
             generateNewProblem();
             setSorobanValue(0);
         }
@@ -793,26 +749,15 @@
 
     function setSorobanValue(val) {
         let tempVal = val;
-        // Procházíme tyče od nejvyššího řádu (zleva v poli rods)
         for (let i = 0; i < rods.length; i++) {
             const rod = rods[i];
-            // Výpočet hodnoty pro tuto tyč
-            // Počet tyčí: NUM_RODS. Index v poli: i (0..NUM_RODS-1)
-            // Řád: 10^(NUM_RODS - 1 - i)
-            // Ale musíme brát v úvahu UNIT_INDEX, pokud by byl jiný.
-            // Pro zjednodušení: předpokládáme klasické rozmístění.
-            
-            const exponent = NUM_RODS - 1 - i; // 0 = jednotky vpravo, nejvyšší vlevo
-            
-            if (exponent < 0) continue; // bezpečnost
-            
+            const exponent = NUM_RODS - 1 - i; 
+            if (exponent < 0) continue;
             const power = Math.pow(10, exponent);
             const digit = Math.floor(tempVal / power) % 10;
-            
             rod.heaven = (digit >= 5) ? 5 : 0;
             rod.earth = (digit >= 5) ? digit - 5 : digit;
-            
-            tempVal -= digit * power; // Zbytek pro nižší řády (zde spíše teoreticky)
+            tempVal -= digit * power; 
         }
         updateRodsVisuals();
     }
@@ -820,7 +765,6 @@
     function toggleSettings() {
       const modal = $('settings-modal');
       const btn = $('settings-btn');
-      
       if (modal.classList.contains('visible')) {
         modal.classList.remove('visible');
         btn.classList.remove('active');
