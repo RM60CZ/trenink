@@ -369,11 +369,11 @@
       <div class="setting-row">
         <label>Operace:</label>
         <select id="operation-select" onchange="applySettingsAndSave()">
-          <option value="+">+</option>
-          <!-- ZDE JE UPRAVENÉ POŘADÍ -->
-          <option value="+-">+ -</option>
-          <option value="-">-</option>
-          <option value="*">x</option>
+          <option value="+">Sčítání</option>
+          <option value="-">Odčítání</option>
+          <option value="+-">Sčítání + odčítání</option>
+          <option value="*1">Násobení 1</option>
+          <option value="*2">Násobení 2</option>
         </select>
       </div>
     </div>
@@ -561,14 +561,15 @@
     function generateNewProblem() {
       underlinedState = { active: false, value: 0, firstClickDone: false };
       const op = currentProblem.operation;
-      const minFill = Math.pow(10, NUM_RODS - 1);
+      // Dynamicky nastavené maximum podle počtu tyčí
       const maxVal = Math.pow(10, NUM_RODS) - 1;
+      const minFill = Math.pow(10, NUM_RODS - 1);
       
-      let a, b, c, result, parts;
+      let a, b, c, result;
 
       if (op === '+') {
         result = randomInt(minFill, maxVal);
-        parts = splitNumber(result, 3);
+        let parts = splitNumber(result, 3);
         currentProblem.parts = parts;
         currentProblem.target = parts[0] + parts[1] + parts[2]; 
         
@@ -576,15 +577,52 @@
         a = randomInt(minFill, maxVal);
         let remainder = a - 1;
         let subParts = splitNumber(remainder, 2);
-        parts = [a, subParts[0], subParts[1]];
-        currentProblem.parts = parts;
+        currentProblem.parts = [a, subParts[0], subParts[1]];
         currentProblem.target = a - subParts[0] - subParts[1];
         
-      } else if (op === '*') {
-        result = randomInt(minFill, maxVal);
-        let factors = findFactorsStrict(result); 
-        currentProblem.parts = factors;
-        currentProblem.target = result;
+      } else if (op === '*1') {
+        // Násobení 1: druhé číslo jednociferné (2-9)
+        b = randomInt(2, 9);
+        
+        // Maximální A, aby A*B sedělo do tyčí. Min A je 2.
+        let maxA = Math.floor(maxVal / b);
+        if (maxA < 2) maxA = 2; // Bezpečnostní fix
+        
+        // Pokud je maxA menší než minFill, prostě generujeme co největší číslo do limitu (např. u 2 tyčí)
+        let minA = 2;
+        if (maxA > minFill) minA = minFill; 
+
+        a = randomInt(minA, maxA);
+        currentProblem.parts = [a, b];
+        currentProblem.target = a * b;
+      
+      } else if (op === '*2') {
+        // Násobení 2: druhé číslo dvojciferné (11-99)
+        
+        // Aby šlo o násobení s výsledkem do maxVal a A>=2, musí platit B <= maxVal/2.
+        let maxBallowed = Math.floor(maxVal / 2);
+        
+        // Pokud je maxBallowed menší než 11 (tj. maxVal je menší než 22 - velmi malý počet tyčí),
+        // musíme generovat B tak, aby šlo vůbec vypočítat s A>=2.
+        // Tedy B může být max maxVal/2. Pokud maxVal=99 (2 tyče), maxBallowed=49.
+        // Generujeme B v rozsahu 11 až min(99, maxBallowed).
+        
+        let minB = 11;
+        let maxB = Math.min(99, maxBallowed);
+        
+        // Ošetření extrémního případu, kdy by maxB bylo menší než 11 (pro 1 tyč, což nepovolujeme)
+        if (maxB < 11) maxB = 11; // Technicky u 2 tyčí (max 99) je maxB 49, takže ok.
+        
+        b = randomInt(minB, maxB);
+        
+        // Nyní určíme A. Min A = 2. Max A = floor(maxVal / B).
+        let maxA = Math.floor(maxVal / b);
+        if (maxA < 2) maxA = 2;
+        
+        a = randomInt(2, maxA);
+        
+        currentProblem.parts = [a, b];
+        currentProblem.target = a * b;
       
       } else if (op === '+-') {
         let type = Math.random() < 0.5 ? 1 : 2;
@@ -639,7 +677,7 @@
             } else {
                 html = parts.map(p => formatNumber(p)).join(' - ');
             }
-        } else if (op === '*') {
+        } else if (op === '*1' || op === '*2') {
             html = `${formatNumber(parts[0])} × ${formatNumber(parts[1])}`;
         } else if (op === '+-') {
             let p0 = formatNumber(parts[0]);
@@ -660,48 +698,46 @@
         $('problem-display').innerHTML = html;
     }
 
-    function findFactorsStrict(num) {
-        let start = Math.floor(Math.sqrt(num));
-        for (let i = start; i >= 2; i--) {
-            if (num % i === 0) {
-                let f1 = i;
-                let f2 = num / i;
-                if (f1 > f2) { let temp = f1; f1 = f2; f2 = temp; }
-                if (f1 < 2) continue; 
-                return [f2, f1]; 
-            }
-        }
-        return findFactorsStrict(randomInt(10, 1000)); 
+    function randomInt(min, max) { 
+      // Pokud je min > max (např. při extrémně malých tyčích), prohodíme je
+      if (min > max) { let temp = min; min = max; max = temp; }
+      return Math.floor(Math.random() * (max - min + 1)) + min; 
     }
 
-    function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-
     function splitNumber(num, partsCount) {
-        let arr = [];
-        let remaining = num;
-        for (let i = 0; i < partsCount - 1; i++) {
-            let maxPart = remaining - (partsCount - 1 - i);
-            if (maxPart < 1) maxPart = 1;
-            let val = randomInt(1, maxPart);
-            arr.push(val);
-            remaining -= val;
-        }
-        arr.push(remaining);
-        if(arr.length > 1) arr.sort(() => Math.random() - 0.5); 
-        return arr;
+      let arr = [];
+      let remaining = num;
+      for (let i = 0; i < partsCount - 1; i++) {
+        let maxPart = remaining - (partsCount - 1 - i);
+        if (maxPart < 1) maxPart = 1;
+        let val = randomInt(1, maxPart);
+        arr.push(val);
+        remaining -= val;
+      }
+      arr.push(remaining);
+      if(arr.length > 1) arr.sort(() => Math.random() - 0.5); 
+      return arr;
     }
 
     function checkResult() {
       const currentVal = getCurrentValue();
       const op = currentProblem.operation;
 
-      if (op === '*') {
+      // U násobení kontrolujeme jen výsledek
+      if (op === '*1' || op === '*2') {
         if (currentVal === currentProblem.target) handleSuccess();
         return;
       }
 
       if (!underlinedState.active) {
-          let intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1];
+          let intermediateTarget;
+          if (op === '-') {
+              // Oprava odčítání: mezičlánek je A - B
+              intermediateTarget = currentProblem.parts[0] - currentProblem.parts[1];
+          } else {
+              intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1];
+          }
+
           if (currentVal === intermediateTarget) {
               underlinedState.active = true;
               underlinedState.value = currentVal;
