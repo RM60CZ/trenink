@@ -127,11 +127,19 @@
       position: relative; 
     }
 
+    /* --- HLAVNÍ KONTEJNER PRO DISPLEJ --- */
+    .problem-display-container {
+      position: relative;
+      min-height: 50px;
+      margin-bottom: 8px;
+      padding: 8px 15px; 
+    }
+
+    /* --- TLAČÍTKO A DISPLEJ --- */
     .problem-display {
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 50px;
       
       font-size: 28px; 
       font-weight: bold;
@@ -143,32 +151,81 @@
       cursor: default;
       transition: all 0.3s ease;
       
-      /* Mezera mezi tlačítkem a sorobanem */
-      margin-bottom: 8px; 
+      border-radius: 30px;
+      border: 2px solid transparent;
+      background: transparent;
     }
 
-    /* --- TLAČÍTKO START --- */
-    .problem-display.start-mode {
+    /* --- ČASY VLEVO A VPRAVO --- */
+    .time-display {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+      font-weight: bold;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 5;
+    }
+    
+    .time-left {
+      right: 100%;
+      margin-right: 15px;
+      text-align: right;
+    }
+    
+    .time-right {
+      left: 100%;
+      margin-left: 15px;
+      text-align: left;
+    }
+    
+    .medal-icon { 
+      font-size: 22px; margin-right: 4px; 
+      display: inline-block;
+      transition: transform 0.1s;
+    }
+    
+    /* Animace medaile */
+    .medal-flutter {
+      animation: medal-shake 0.5s ease-in-out;
+    }
+    @keyframes medal-shake {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      25% { transform: rotate(-15deg) scale(1.3); }
+      50% { transform: rotate(15deg) scale(1.3); }
+      75% { transform: rotate(-10deg) scale(1.2); }
+    }
+
+    /* --- VIDITELNOST POUZE VE START MODU --- */
+    .problem-display-container.start-mode .time-display {
+      opacity: 1;
+    }
+
+    /* --- STYL TLAČÍTKA START --- */
+    .problem-display-container.start-mode .problem-display {
         background: var(--wood-light);
         color: var(--bar-color);
         border: 2px solid var(--bar-color);
-        border-radius: 30px;
-        padding: 10px 30px;
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         cursor: pointer;
         font-size: 32px;
         letter-spacing: 3px;
     }
-    [data-theme="dark"] .problem-display.start-mode { 
+    [data-theme="dark"] .problem-display-container.start-mode .problem-display { 
         background: rgba(255,255,255,0.1);
         color: #ffccbc; 
         border-color: #8e6d4f;
     }
-    .problem-display.start-mode:hover {
+    .problem-display-container.start-mode .problem-display:hover {
         transform: scale(1.02);
         opacity: 0.9;
     }
-    .problem-display.running-mode {
+
+    /* --- STYL BĚHU (RUNNING) --- */
+    .problem-display-container.running-mode .problem-display {
         background: transparent;
         border: none;
         padding: 8px 10px;
@@ -178,7 +235,6 @@
     /* --- POČÍTADLO SÉRIE --- */
     .series-counter {
       position: absolute;
-      /* Posun dolů pro zarovnání s čísly */
       top: 16px; 
       left: 0;
       width: 100%;
@@ -332,9 +388,7 @@
       position: relative;
     }
 
-    /* Tlačítko Reset - dynamická pozice */
     .control-btn.reset-btn {
-        /* Výpočet: 50px (displej) + 8px (mezera) + 6px (border) + střed nebes - polovina tlačítka */
         margin-top: calc(64px + 0.3 * var(--bead-size));
     }
 
@@ -376,6 +430,7 @@
     .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
     .toast.show { opacity: 1; }
 
+    /* Fireworks */
     .firework-container {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -394,6 +449,18 @@
     @keyframes firework-explode {
       0% { transform: translate(0, 0) scale(1); opacity: 1; }
       100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+    }
+
+    /* Flying Time Animation */
+    .flying-time {
+      position: fixed; /* Používáme fixed pro přesné pozicování nad vším */
+      font-weight: bold;
+      white-space: nowrap;
+      z-index: 2000;
+      color: #FFD700; /* Zlatá barva */
+      text-shadow: 0 0 10px rgba(0,0,0,0.8);
+      pointer-events: none;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
     @media screen and (orientation: landscape) {
@@ -419,7 +486,7 @@
 
   <div id="orientation-warning">
     <svg viewBox="0 0 24 24">
-      <path d="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h1.5C23.44 4.84 18.29 0 12 0l-.66.03 3.81 3.81 1.33-1.32zm-6.25-.77c-.59-.59-1.54-.59-2.12 0L1.75 8.11c-.59.59-.59 1.54 0 2.12l12.02 12.02c.59.59 1.54.59 2.12 0l6.36-6.36c.59-.59.59-1.54 0-2.12L10.23 1.75zm4.6 19.44L2.81 9.17l6.36-6.36 12.02 12.02-6.36 6.36zm-7.31.29C4.25 19.94 1.91 16.76 1.55 13H.05C.56 19.16 5.71 24 12 24l.66-.03-3.81-3.81-1.33 1.32z"/>
+      <path d="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h1.5C23.44 4.84 18.29 0 12 0l-.66.03 3.81 3.81 1.33-1.32zm-6.25-.77c-.59-.59-1.54-.59-2.12 0L1.75 8.11c-.59.59-.59 1.54 0 2.12l12.02 12.02c.59.59 1.54.59 2.12 0l6.36-6.36c.59-.59.59-1.54 0-2.12L10.23 1.75zm4.6 19.44L2.81 9.17l6.36-6.36 12.02 12.02-6.36 6.36zm-7.31.29C4.25 19.94 1.91 16.76 1.55 13H.05C.56 19.16 5.71 24 12 24l-.66-.03-3.81-3.81-1.33 1.32z"/>
     </svg>
     <div>Prosím otočte zařízení na šířku</div>
   </div>
@@ -428,7 +495,24 @@
     
     <div class="soroban-wrapper">
       <div class="soroban-column">
-        <div class="problem-display start-mode" id="problem-display" onclick="handleStartClick()">S T A R T</div>
+        
+        <div class="problem-display-container start-mode" id="problem-container" onclick="handleStartClick()">
+          
+          <!-- Čas vlevo (Medaile + Nejlepší čas) -->
+          <div class="time-display time-left" id="time-left-wrapper">
+            <span class="medal-icon" id="medal-icon">🥇</span>
+            <span id="best-time">00:00</span>
+          </div>
+          
+          <!-- Samotný text displeje -->
+          <div class="problem-display" id="problem-text">S T A R T</div>
+          
+          <!-- Čas vpravo (Poslední čas) -->
+          <div class="time-display time-right" id="time-right-wrapper">
+            <span id="current-time">00:00</span>
+          </div>
+          
+        </div>
         
         <div class="soroban-frame" id="frame">
           <div class="rods-container" id="soroban"></div>
@@ -460,7 +544,7 @@
           <option value="-">Odčítání</option>
           <option value="+-">Sčítání + odčítání</option>
           <option value="*1">Násobení 1</option>
-          <option value="*2">Násobení 2</option>
+          <option value="*2">Násobenie 2</option>
         </select>
       </div>
 
@@ -493,14 +577,16 @@
     let currentProblem = { target: 0, parts: [], operation: '+' };
     
     let seriesState = 'idle'; 
-    let taskCounter = 0;      
+    let taskCounter = 0;
+    
+    let seriesStartTime = 0; 
 
     let underlinedState = {
         active: false, value: 0, firstClickDone: false
     };
 
     function init() {
-      loadSettings(); // Načte nastavení z paměti
+      loadSettings();
       populateSettings();
       loadTheme();
       checkOrientation(); 
@@ -514,6 +600,34 @@
 
     function formatNumber(num) {
         return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    }
+
+    function formatDuration(ms) {
+        if(ms < 0) ms = 0;
+        let totalSeconds = Math.floor(ms / 1000);
+        let minutes = Math.floor(totalSeconds / 60);
+        let seconds = totalSeconds % 60;
+        
+        let minStr = minutes < 10 ? '0' + minutes : minutes;
+        let secStr = seconds < 10 ? '0' + seconds : seconds;
+        
+        return minStr + ':' + secStr;
+    }
+
+    // --- Storage Keys Logic ---
+    function getStorageKey() {
+        return `soroban_best_${NUM_RODS}_${currentProblem.operation}_${SERIES_LENGTH}`;
+    }
+
+    function loadBestTime() {
+        const key = getStorageKey();
+        const val = localStorage.getItem(key);
+        return val ? val : "00:00";
+    }
+
+    function saveBestTime(timeStr) {
+        const key = getStorageKey();
+        localStorage.setItem(key, timeStr);
     }
 
     function populateSettings() {
@@ -554,8 +668,11 @@
       currentProblem.operation = $('operation-select').value;
       SERIES_LENGTH = parseInt($('series-length-select').value);
       
-      saveSettings(); // Uloží nastavení do paměti
+      saveSettings();
       buildSoroban();
+      
+      $('best-time').innerText = loadBestTime();
+      $('current-time').innerText = "00:00"; 
       resetToStartState();
     }
 
@@ -637,11 +754,14 @@
       seriesState = 'idle';
       taskCounter = 0;
       
-      const display = $('problem-display');
-      display.innerText = "S T A R T";
-      display.classList.remove('running-mode');
-      display.classList.add('start-mode');
-      display.onclick = handleStartClick;
+      $('problem-text').innerText = "S T A R T";
+      
+      const container = $('problem-container');
+      container.classList.remove('running-mode');
+      container.classList.add('start-mode');
+      container.onclick = handleStartClick;
+      
+      $('best-time').innerText = loadBestTime();
       
       $('series-counter').style.display = 'none';
       
@@ -659,10 +779,13 @@
       seriesState = 'running';
       taskCounter = 1;
       
-      const display = $('problem-display');
-      display.classList.remove('start-mode');
-      display.classList.add('running-mode');
-      display.onclick = null; 
+      seriesStartTime = Date.now();
+      $('current-time').innerText = "00:00";
+      
+      const container = $('problem-container');
+      container.classList.remove('start-mode');
+      container.classList.add('running-mode');
+      container.onclick = null; 
       
       $('series-counter').style.display = 'block';
       $('series-counter').innerText = `${taskCounter}/${SERIES_LENGTH}`;
@@ -678,6 +801,8 @@
     }
 
     function endSeries() {
+        $('current-time').innerText = "00:00";
+        
         $('settings-modal').classList.remove('visible');
         resetToStartState();
         showToast("Série ukončena");
@@ -686,13 +811,17 @@
     // --- LOGIKA OPERACÍ ---
 
     function handleHeavenClick(index) {
+      if(seriesState !== 'running') return;
+
       const rodData = rods[index - 1];
       rodData.heaven = rodData.heaven === 0 ? 5 : 0;
       updateRodsVisuals(); 
-      if(seriesState === 'running') checkResult();
+      checkResult();
     }
 
     function handleEarthClick(e, index) {
+      if(seriesState !== 'running') return;
+
       const rodData = rods[index - 1];
       const beads = rodData.element.querySelectorAll('.earth .bead');
       let clickedBeadIndex = -1;
@@ -710,7 +839,7 @@
       if (isActive) rodData.earth = (totalBeads - 1) - clickedBeadIndex;
       else rodData.earth = totalBeads - clickedBeadIndex;
       updateRodsVisuals(); 
-      if(seriesState === 'running') checkResult();
+      checkResult();
     }
 
     function updateRodsVisuals() {
@@ -842,7 +971,7 @@
             }
         }
 
-        $('problem-display').innerHTML = html;
+        $('problem-text').innerHTML = html;
     }
 
     function randomInt(min, max) { 
@@ -912,10 +1041,39 @@
         taskCounter++;
         
         if(taskCounter > SERIES_LENGTH) {
+            seriesState = 'finished';
+            
+            let endTime = Date.now();
+            let duration = endTime - seriesStartTime;
+            let formattedTime = formatDuration(duration);
+            
+            // Aktualizace času vpravo
+            $('current-time').innerText = formattedTime;
+            
+            // Logika pro rekord
+            let currentBestStr = loadBestTime();
+            let currentBestSeconds = 0;
+            if(currentBestStr !== "00:00") {
+                let parts = currentBestStr.split(':');
+                currentBestSeconds = parseInt(parts[0])*60 + parseInt(parts[1]);
+            }
+            
+            let newTimeSeconds = Math.floor(duration / 1000);
+            
+            // 1. Spustíme ohňostroj
             triggerFireworks();
+            
+            // 2. Resetujeme do start módu (zobrazí se S T A R T a časy)
+            // ale ještě neukládáme nový rekord
             setTimeout(() => {
                 resetToStartState();
-            }, 2500); 
+                
+                // 3. Pokud je to nový rekord, spustíme animaci přenosu
+                if(currentBestSeconds === 0 || newTimeSeconds < currentBestSeconds) {
+                    animateNewRecord(formattedTime);
+                }
+            }, 1500); 
+            
         } else {
             setTimeout(() => {
                 $('series-counter').innerText = `${taskCounter}/${SERIES_LENGTH}`;
@@ -923,6 +1081,83 @@
                 generateNewProblem();
             }, 800);
         }
+    }
+
+    // --- ANIMACE NOVÉHO REKORDU (Cik-Cak) ---
+    function animateNewRecord(timeString) {
+        const rightElem = $('time-right-wrapper'); 
+        const leftElem = $('time-left-wrapper');   
+        const medalIcon = $('medal-icon');
+        
+        const startRect = rightElem.getBoundingClientRect();
+        const endRect = leftElem.getBoundingClientRect();
+        
+        // Vytvoření létajícího elementu
+        const flyingDiv = document.createElement('div');
+        flyingDiv.className = 'flying-time';
+        flyingDiv.innerText = timeString;
+        document.body.appendChild(flyingDiv);
+        
+        // Startovní pozice
+        flyingDiv.style.left = startRect.left + 'px';
+        flyingDiv.style.top = startRect.top + 'px';
+        flyingDiv.style.fontSize = '20px';
+        
+        // Animace medaile
+        medalIcon.classList.add('medal-flutter');
+        
+        let startTimeAnim = null;
+        let durationAnim = 5000; // 5 sekund
+        
+        function step(timestamp) {
+            if (!startTimeAnim) startTimeAnim = timestamp;
+            let progress = (timestamp - startTimeAnim) / durationAnim;
+            
+            if (progress >= 1) {
+                // KONEC ANIMACE
+                flyingDiv.remove();
+                $('best-time').innerText = timeString;
+                saveBestTime(timeString);
+                medalIcon.classList.remove('medal-flutter');
+                return;
+            }
+            
+            // 1. X Pozice (Lineární pohyb zprava doleva)
+            let currentX = startRect.left + (endRect.left - startRect.left) * progress;
+            
+            // 2. Velikost (1 -> 2 -> 1)
+            let scale;
+            if (progress < 0.5) {
+                scale = 1 + (progress * 2); 
+            } else {
+                scale = 2 - ((progress - 0.5) * 2); 
+            }
+            
+            // 3. Y Pozice (Cik-Cak efekt)
+            // Vertikální drift: První polovina dolů (50px), druhá polovina nahoru
+            let yDrift;
+            if(progress < 0.5) {
+                yDrift = progress * 2 * 50; // 0 -> 50
+            } else {
+                yDrift = (1 - progress) * 2 * 50; // 50 -> 0
+            }
+            
+            // Kmitání (wiggling) - 4 cykly celkem
+            let yWiggle = Math.sin(progress * Math.PI * 4) * 25; 
+            
+            let yOffset = yDrift + yWiggle;
+            
+            let currentY = startRect.top + yOffset;
+            
+            // Aplikace stylů
+            flyingDiv.style.left = currentX + 'px';
+            flyingDiv.style.top = currentY + 'px';
+            flyingDiv.style.fontSize = (20 * scale) + 'px';
+            
+            requestAnimationFrame(step);
+        }
+        
+        requestAnimationFrame(step);
     }
 
     function handleReset() {
