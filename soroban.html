@@ -116,7 +116,7 @@
     .soroban-wrapper {
       display: flex;
       flex-direction: row;
-      align-items: flex-start;
+      align-items: flex-start; /* Zarovnání nahoru */
       justify-content: center;
     }
 
@@ -124,17 +124,76 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      position: relative; 
     }
 
     .problem-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 50px;
+      
       font-size: 28px; 
       font-weight: bold;
-      padding: 8px 10px; 
+      padding: 8px 15px; 
       text-align: center;
       min-width: 150px;
       font-variant-numeric: tabular-nums;
       letter-spacing: 1px;
+      cursor: default;
+      transition: all 0.3s ease;
     }
+
+    /* --- TLAČÍTKO START --- */
+    .problem-display.start-mode {
+        background: var(--wood-light);
+        color: var(--bar-color);
+        border: 2px solid var(--bar-color);
+        border-radius: 30px;
+        padding: 10px 30px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        cursor: pointer;
+        font-size: 32px;
+        letter-spacing: 3px;
+    }
+    [data-theme="dark"] .problem-display.start-mode { 
+        background: rgba(255,255,255,0.1);
+        color: #ffccbc; 
+        border-color: #8e6d4f;
+    }
+    .problem-display.start-mode:hover {
+        transform: scale(1.02);
+        opacity: 0.9;
+    }
+    .problem-display.running-mode {
+        background: transparent;
+        border: none;
+        padding: 8px 10px;
+        box-shadow: none;
+    }
+
+    /* --- POČÍTADLO SÉRIE --- */
+    .series-counter {
+      position: absolute;
+      /* Posun dolů o padding displaye (8px) + malá korekce pro vertikální středu -> 12px */
+      top: 12px; 
+      left: 0;
+      width: 100%;
+      margin-bottom: 10px;
+      text-align: center;
+      
+      background: #d32f2f;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      padding: 4px 0;
+      border-radius: 12px;
+      display: none;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      z-index: 10;
+    }
+    .series-counter:hover { background: #b71c1c; }
 
     .problem-part.underlined {
         border-bottom: 3px solid #d32f2f;
@@ -266,7 +325,14 @@
       gap: 10px;
       margin-left: 8px;
       z-index: 205;
-      margin-top: 52px; 
+      align-items: center;
+      position: relative;
+    }
+
+    /* Tlačítko Reset - dynamická pozice dle velikosti kostek */
+    .control-btn.reset-btn {
+        /* Výpočet: 50px (displej) + 6px (border rámu) + polovina nebes (0.75 * bead) - polovina tlačítka (0.45 * bead) */
+        margin-top: calc(56px + 0.3 * var(--bead-size));
     }
 
     .control-btn {
@@ -282,24 +348,19 @@
       font-size: calc(var(--bead-size) * 0.5);
       cursor: pointer;
       box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-      transition: transform 0.1s, background 0.2s;
+      transition: transform 0.1s, background 0.2s, opacity 0.2s;
       padding: 0;
       font-family: inherit;
+      flex-shrink: 0;
     }
 
-    .control-btn:active {
-      transform: scale(0.95);
-      background: #555;
-    }
-
-    .control-btn.active {
-      border-color: #d32f2f;
-      box-shadow: 0 0 10px rgba(211, 47, 47, 0.5);
-    }
+    .control-btn:active { transform: scale(0.95); background: #555; }
+    .control-btn.active { border-color: #d32f2f; box-shadow: 0 0 10px rgba(211, 47, 47, 0.5); }
+    .control-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; background: #333; }
 
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center; }
     .modal.visible { display: flex; }
-    .modal-content { background: var(--wood-light); padding: 20px; border-radius: 12px; width: 90%; max-width: 300px; text-align: center; color: var(--text-color); z-index: 210; }
+    .modal-content { background: var(--wood-light); padding: 20px; border-radius: 12px; width: 90%; max-width: 300px; text-align: center; color: var(--text-color); z-index: 210; display: flex; flex-direction: column; }
     
     select, input, button { padding: 8px; border-radius: 6px; border: 1px solid var(--bar-color); background: white; color: black; font-size: 16px; width: 100%; }
     
@@ -307,8 +368,30 @@
     .setting-row label { font-weight: bold; }
     select option { font-weight: bold; }
     
+    select:disabled { opacity: 0.5; background: #eee; }
+
     .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
     .toast.show { opacity: 1; }
+
+    .firework-container {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .firework-particle {
+      position: absolute;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      animation: firework-explode 1s ease-out forwards;
+    }
+    @keyframes firework-explode {
+      0% { transform: translate(0, 0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+    }
 
     @media screen and (orientation: landscape) {
       .app-container { display: flex; }
@@ -342,7 +425,7 @@
     
     <div class="soroban-wrapper">
       <div class="soroban-column">
-        <div class="problem-display" id="problem-display">Vyhrajte!</div>
+        <div class="problem-display start-mode" id="problem-display" onclick="handleStartClick()">S T A R T</div>
         
         <div class="soroban-frame" id="frame">
           <div class="rods-container" id="soroban"></div>
@@ -350,7 +433,8 @@
       </div>
 
       <div class="control-panel">
-        <button class="control-btn" onclick="handleReset()" title="Vymazat">↺</button>
+        <div class="series-counter" id="series-counter" onclick="endSeries()" title="Kliknutím ukončíte sérii">1/5</div>
+        <button class="control-btn reset-btn" onclick="handleReset()" title="Vymazat">↺</button>
         <button class="control-btn" id="theme-btn" onclick="toggleTheme()" title="Téma">🌙</button>
         <button class="control-btn" id="settings-btn" onclick="toggleSettings()" title="Nastavení">⚙️</button>
       </div>
@@ -376,17 +460,38 @@
           <option value="*2">Násobení 2</option>
         </select>
       </div>
+
+      <div class="setting-row">
+        <label>Série (počet příkladů):</label>
+        <select id="series-length-select" onchange="applySettingsAndSave()">
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5" selected>5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+        </select>
+      </div>
     </div>
   </div>
+
+  <div class="firework-container" id="fireworks"></div>
 
   <script>
     let NUM_RODS = 7;
     let UNIT_INDEX = 1; 
+    let SERIES_LENGTH = 5;
     
     const $ = id => document.getElementById(id);
     let rods = [];
     let currentProblem = { target: 0, parts: [], operation: '+' };
     
+    let seriesState = 'idle'; 
+    let taskCounter = 0;      
+
     let underlinedState = {
         active: false, value: 0, firstClickDone: false
     };
@@ -401,6 +506,7 @@
         updateBeadSize();
       });
       buildSoroban();
+      resetToStartState(); 
     }
 
     function formatNumber(num) {
@@ -418,6 +524,7 @@
         select.appendChild(opt);
       }
       $('operation-select').value = currentProblem.operation;
+      $('series-length-select').value = SERIES_LENGTH;
     }
 
     function loadSettings() {
@@ -425,18 +532,26 @@
         if(savedRods) NUM_RODS = parseInt(savedRods);
         const savedOp = localStorage.getItem('sorobanOp');
         if(savedOp) currentProblem.operation = savedOp;
+        const savedSeries = localStorage.getItem('sorobanSeries');
+        if(savedSeries) SERIES_LENGTH = parseInt(savedSeries);
     }
 
     function saveSettings() {
         localStorage.setItem('sorobanRods', NUM_RODS);
         localStorage.setItem('sorobanOp', currentProblem.operation);
+        localStorage.setItem('sorobanSeries', SERIES_LENGTH);
     }
 
     function applySettingsAndSave() {
+      if(seriesState === 'running') return;
+
       NUM_RODS = parseInt($('rod-count-select').value);
       currentProblem.operation = $('operation-select').value;
+      SERIES_LENGTH = parseInt($('series-length-select').value);
+      
       saveSettings();
       buildSoroban();
+      resetToStartState();
     }
 
     function checkOrientation() {
@@ -501,8 +616,7 @@
         rods.push({ heaven: 0, earth: 0, element: rod });
       }
       updateBeadSize();
-      generateNewProblem();
-      updateRodsVisuals();
+      setSorobanValue(0); 
     }
 
     function showToast(msg) { 
@@ -512,11 +626,65 @@
       setTimeout(() => t.classList.remove('show'), 2000); 
     }
 
+    // --- LOGIKA SÉRIE ---
+
+    function resetToStartState() {
+      seriesState = 'idle';
+      taskCounter = 0;
+      
+      const display = $('problem-display');
+      display.innerText = "S T A R T";
+      display.classList.remove('running-mode');
+      display.classList.add('start-mode');
+      display.onclick = handleStartClick;
+      
+      $('series-counter').style.display = 'none';
+      
+      $('rod-count-select').disabled = false;
+      $('operation-select').disabled = false;
+      $('series-length-select').disabled = false;
+      $('settings-btn').disabled = false;
+      
+      setSorobanValue(0);
+    }
+
+    function handleStartClick() {
+      if(seriesState === 'running') return;
+      
+      seriesState = 'running';
+      taskCounter = 1;
+      
+      const display = $('problem-display');
+      display.classList.remove('start-mode');
+      display.classList.add('running-mode');
+      display.onclick = null; 
+      
+      $('series-counter').style.display = 'block';
+      $('series-counter').innerText = `${taskCounter}/${SERIES_LENGTH}`;
+      
+      $('rod-count-select').disabled = true;
+      $('operation-select').disabled = true;
+      $('series-length-select').disabled = true;
+      
+      $('settings-btn').disabled = true;
+
+      setSorobanValue(0);
+      generateNewProblem(); 
+    }
+
+    function endSeries() {
+        $('settings-modal').classList.remove('visible');
+        resetToStartState();
+        showToast("Série ukončena");
+    }
+
+    // --- LOGIKA OPERACÍ ---
+
     function handleHeavenClick(index) {
       const rodData = rods[index - 1];
       rodData.heaven = rodData.heaven === 0 ? 5 : 0;
       updateRodsVisuals(); 
-      checkResult();
+      if(seriesState === 'running') checkResult();
     }
 
     function handleEarthClick(e, index) {
@@ -536,7 +704,8 @@
       const isActive = clickedBeadIndex >= (totalBeads - currentActive);
       if (isActive) rodData.earth = (totalBeads - 1) - clickedBeadIndex;
       else rodData.earth = totalBeads - clickedBeadIndex;
-      updateRodsVisuals(); checkResult();
+      updateRodsVisuals(); 
+      if(seriesState === 'running') checkResult();
     }
 
     function updateRodsVisuals() {
@@ -561,7 +730,6 @@
     function generateNewProblem() {
       underlinedState = { active: false, value: 0, firstClickDone: false };
       const op = currentProblem.operation;
-      // Dynamicky nastavené maximum podle počtu tyčí
       const maxVal = Math.pow(10, NUM_RODS) - 1;
       const minFill = Math.pow(10, NUM_RODS - 1);
       
@@ -581,70 +749,44 @@
         currentProblem.target = a - subParts[0] - subParts[1];
         
       } else if (op === '*1') {
-        // Násobení 1: druhé číslo jednociferné (2-9)
         b = randomInt(2, 9);
-        
-        // Maximální A, aby A*B sedělo do tyčí. Min A je 2.
         let maxA = Math.floor(maxVal / b);
-        if (maxA < 2) maxA = 2; // Bezpečnostní fix
-        
-        // Pokud je maxA menší než minFill, prostě generujeme co největší číslo do limitu (např. u 2 tyčí)
+        if (maxA < 2) maxA = 2; 
         let minA = 2;
         if (maxA > minFill) minA = minFill; 
-
         a = randomInt(minA, maxA);
         currentProblem.parts = [a, b];
         currentProblem.target = a * b;
       
       } else if (op === '*2') {
-        // Násobení 2: druhé číslo dvojciferné (11-99)
-        
-        // Aby šlo o násobení s výsledkem do maxVal a A>=2, musí platit B <= maxVal/2.
         let maxBallowed = Math.floor(maxVal / 2);
-        
-        // Pokud je maxBallowed menší než 11 (tj. maxVal je menší než 22 - velmi malý počet tyčí),
-        // musíme generovat B tak, aby šlo vůbec vypočítat s A>=2.
-        // Tedy B může být max maxVal/2. Pokud maxVal=99 (2 tyče), maxBallowed=49.
-        // Generujeme B v rozsahu 11 až min(99, maxBallowed).
-        
         let minB = 11;
         let maxB = Math.min(99, maxBallowed);
-        
-        // Ošetření extrémního případu, kdy by maxB bylo menší než 11 (pro 1 tyč, což nepovolujeme)
-        if (maxB < 11) maxB = 11; // Technicky u 2 tyčí (max 99) je maxB 49, takže ok.
-        
+        if (maxB < 11) maxB = 11; 
         b = randomInt(minB, maxB);
-        
-        // Nyní určíme A. Min A = 2. Max A = floor(maxVal / B).
         let maxA = Math.floor(maxVal / b);
         if (maxA < 2) maxA = 2;
-        
         a = randomInt(2, maxA);
-        
         currentProblem.parts = [a, b];
         currentProblem.target = a * b;
       
       } else if (op === '+-') {
         let type = Math.random() < 0.5 ? 1 : 2;
-        
         if (type === 1) {
             a = randomInt(minFill, maxVal);
-            let maxB = maxVal - a;
-            if (maxB < 1) maxB = 1;
+            let maxB = maxVal - a; if (maxB < 1) maxB = 1;
             b = randomInt(1, maxB);
             let sumAB = a + b;
-            let maxC = sumAB - 1;
+            let maxC = sumAB - 1; if (maxC < 1) maxC = 1;
             c = randomInt(1, maxC);
             currentProblem.parts = [a, b, -c];
             currentProblem.target = sumAB - c;
         } else {
             a = randomInt(minFill, maxVal);
-            let maxB = a - 1;
-            if (maxB < 1) maxB = 1;
+            let maxB = a - 1; if (maxB < 1) maxB = 1;
             b = randomInt(1, maxB);
             let diffAB = a - b;
-            let maxC = maxVal - diffAB;
-            if (maxC < 1) maxC = 1;
+            let maxC = maxVal - diffAB; if (maxC < 1) maxC = 1;
             c = randomInt(1, maxC);
             currentProblem.parts = [a, -b, c];
             currentProblem.target = diffAB + c;
@@ -669,7 +811,7 @@
             if (isUnderlined) {
                 html = `<span class="problem-part underlined">${formatNumber(parts[0])} + ${formatNumber(parts[1])}</span> + ${formatNumber(parts[2])}`;
             } else {
-                html = parts.map(p => formatNumber(p)).join(' + ');
+                html = parts.map(p => formatPart(p, parts.indexOf(p) === 0)).join('');
             }
         } else if (op === '-') {
             if (isUnderlined) {
@@ -699,7 +841,6 @@
     }
 
     function randomInt(min, max) { 
-      // Pokud je min > max (např. při extrémně malých tyčích), prohodíme je
       if (min > max) { let temp = min; min = max; max = temp; }
       return Math.floor(Math.random() * (max - min + 1)) + min; 
     }
@@ -720,10 +861,11 @@
     }
 
     function checkResult() {
+      if(seriesState !== 'running') return;
+
       const currentVal = getCurrentValue();
       const op = currentProblem.operation;
 
-      // U násobení kontrolujeme jen výsledek
       if (op === '*1' || op === '*2') {
         if (currentVal === currentProblem.target) handleSuccess();
         return;
@@ -732,7 +874,6 @@
       if (!underlinedState.active) {
           let intermediateTarget;
           if (op === '-') {
-              // Oprava odčítání: mezičlánek je A - B
               intermediateTarget = currentProblem.parts[0] - currentProblem.parts[1];
           } else {
               intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1];
@@ -759,26 +900,41 @@
     }
 
     function handleSuccess() {
-        showToast("Skvěle! 🎉");
-        setTimeout(() => {
-          generateNewProblem();
-          rods.forEach(rod => { rod.heaven = 0; rod.earth = 0; });
-          updateRodsVisuals();
-        }, 800);
+        if(seriesState !== 'running') return;
+
+        showToast("Správně! 👍");
+        
+        taskCounter++;
+        
+        if(taskCounter > SERIES_LENGTH) {
+            triggerFireworks();
+            setTimeout(() => {
+                resetToStartState();
+            }, 2500); 
+        } else {
+            setTimeout(() => {
+                $('series-counter').innerText = `${taskCounter}/${SERIES_LENGTH}`;
+                setSorobanValue(0);
+                generateNewProblem();
+            }, 800);
+        }
     }
 
     function handleReset() {
+        if(seriesState !== 'running') {
+            setSorobanValue(0);
+            return;
+        }
+
         if (underlinedState.active) {
             if (underlinedState.firstClickDone) {
-                generateNewProblem();
-                setSorobanValue(0);
+                setSorobanValue(0); 
             } else {
                 setSorobanValue(underlinedState.value);
                 renderProblemDisplay(true);
                 underlinedState.firstClickDone = true;
             }
         } else {
-            generateNewProblem();
             setSorobanValue(0);
         }
     }
@@ -799,14 +955,17 @@
     }
 
     function toggleSettings() {
+      if(seriesState === 'running') {
+          return;
+      }
+
       const modal = $('settings-modal');
       const btn = $('settings-btn');
+      
       if (modal.classList.contains('visible')) {
         modal.classList.remove('visible');
         btn.classList.remove('active');
       } else {
-        $('rod-count-select').value = NUM_RODS;
-        $('operation-select').value = currentProblem.operation;
         modal.classList.add('visible');
         btn.classList.add('active');
       }
@@ -830,6 +989,33 @@
       const t = localStorage.getItem('sorobanTheme') || 'light'; 
       document.body.dataset.theme = t; 
       updateThemeIcons();
+    }
+
+    function triggerFireworks() {
+        const container = $('fireworks');
+        container.innerHTML = ''; 
+        
+        for(let i=0; i<40; i++) {
+            setTimeout(() => {
+                const particle = document.createElement('div');
+                particle.className = 'firework-particle';
+                
+                const colors = ['#ff0044', '#ffe400', '#4dff00', '#0099ff', '#ff00e6', '#ffffff'];
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 150 + Math.random() * 200;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+                
+                particle.style.setProperty('--tx', tx + 'px');
+                particle.style.setProperty('--ty', ty + 'px');
+                
+                container.appendChild(particle);
+                
+                setTimeout(() => particle.remove(), 1000);
+            }, i * 30);
+        }
     }
     
     window.onload = init;
