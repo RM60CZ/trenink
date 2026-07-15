@@ -128,11 +128,10 @@
     }
 
     .problem-display {
-      /* Stabilizovaná výška a zarovnání */
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 50px; /* Fixní výška pro stabilní pozici rámu */
+      min-height: 50px;
       
       font-size: 28px; 
       font-weight: bold;
@@ -147,30 +146,25 @@
 
     /* --- TLAČÍTKO START --- */
     .problem-display.start-mode {
-        /* Vzhled tlačítka */
         background: var(--wood-light);
         color: var(--bar-color);
         border: 2px solid var(--bar-color);
-        border-radius: 30px; /* Ovál */
+        border-radius: 30px;
         padding: 10px 30px;
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         cursor: pointer;
         font-size: 32px;
         letter-spacing: 3px;
     }
-    /* Dark mode pro tlačítko */
     [data-theme="dark"] .problem-display.start-mode { 
         background: rgba(255,255,255,0.1);
         color: #ffccbc; 
         border-color: #8e6d4f;
     }
-
     .problem-display.start-mode:hover {
         transform: scale(1.02);
         opacity: 0.9;
     }
-    
-    /* Styl pro text během výpočtu (bez rámečku) */
     .problem-display.running-mode {
         background: transparent;
         border: none;
@@ -180,9 +174,9 @@
 
     /* --- POČÍTADLO SÉRIE --- */
     .series-counter {
-      /* Absolutní pozice v control-panelu */
       position: absolute;
-      top: 0;
+      /* Posun dolů o padding displaye (8px) + malá korekce pro vertikální středu -> 12px */
+      top: 12px; 
       left: 0;
       width: 100%;
       margin-bottom: 10px;
@@ -194,14 +188,12 @@
       font-weight: bold;
       padding: 4px 0;
       border-radius: 12px;
-      display: none; /* Skryto, dokud neběží série */
+      display: none;
       cursor: pointer;
       box-shadow: 0 2px 5px rgba(0,0,0,0.3);
       z-index: 10;
     }
-    .series-counter:hover {
-        background: #b71c1c;
-    }
+    .series-counter:hover { background: #b71c1c; }
 
     .problem-part.underlined {
         border-bottom: 3px solid #d32f2f;
@@ -333,16 +325,14 @@
       gap: 10px;
       margin-left: 8px;
       z-index: 205;
-      /* Zarovnání nahoru */
       align-items: center;
-      position: relative; /* Kotva pro počítadlo */
+      position: relative;
     }
 
-    /* Tlačítko Reset - pevná pozice */
+    /* Tlačítko Reset - dynamická pozice dle velikosti kostek */
     .control-btn.reset-btn {
-        /* Margin zarovná střed tlačítka se středem horních kostiček */
-        /* Výpočet: 50px (displej) + 6px (border) + 22px (střed nebes) - 18px (polovina tlačítka) = 60px */
-        margin-top: 60px; 
+        /* Výpočet: 50px (displej) + 6px (border rámu) + polovina nebes (0.75 * bead) - polovina tlačítka (0.45 * bead) */
+        margin-top: calc(56px + 0.3 * var(--bead-size));
     }
 
     .control-btn {
@@ -364,22 +354,9 @@
       flex-shrink: 0;
     }
 
-    .control-btn:active {
-      transform: scale(0.95);
-      background: #555;
-    }
-
-    .control-btn.active {
-      border-color: #d32f2f;
-      box-shadow: 0 0 10px rgba(211, 47, 47, 0.5);
-    }
-
-    .control-btn:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-        transform: none !important;
-        background: #333;
-    }
+    .control-btn:active { transform: scale(0.95); background: #555; }
+    .control-btn.active { border-color: #d32f2f; box-shadow: 0 0 10px rgba(211, 47, 47, 0.5); }
+    .control-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; background: #333; }
 
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center; }
     .modal.visible { display: flex; }
@@ -456,10 +433,7 @@
       </div>
 
       <div class="control-panel">
-        <!-- Počítadlo absolutně nahoru -->
         <div class="series-counter" id="series-counter" onclick="endSeries()" title="Kliknutím ukončíte sérii">1/5</div>
-        
-        <!-- Reset s třídou pro margin -->
         <button class="control-btn reset-btn" onclick="handleReset()" title="Vymazat">↺</button>
         <button class="control-btn" id="theme-btn" onclick="toggleTheme()" title="Téma">🌙</button>
         <button class="control-btn" id="settings-btn" onclick="toggleSettings()" title="Nastavení">⚙️</button>
@@ -682,7 +656,7 @@
       
       const display = $('problem-display');
       display.classList.remove('start-mode');
-      display.classList.add('running-mode'); // Přidán styl pro běžící režim
+      display.classList.add('running-mode');
       display.onclick = null; 
       
       $('series-counter').style.display = 'block';
