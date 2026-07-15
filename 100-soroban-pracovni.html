@@ -116,7 +116,7 @@
     .soroban-wrapper {
       display: flex;
       flex-direction: row;
-      align-items: flex-start; /* Zarovnání nahoru */
+      align-items: flex-start;
       justify-content: center;
     }
 
@@ -142,6 +142,9 @@
       letter-spacing: 1px;
       cursor: default;
       transition: all 0.3s ease;
+      
+      /* Mezera mezi tlačítkem a sorobanem */
+      margin-bottom: 8px; 
     }
 
     /* --- TLAČÍTKO START --- */
@@ -175,8 +178,8 @@
     /* --- POČÍTADLO SÉRIE --- */
     .series-counter {
       position: absolute;
-      /* Posun dolů o padding displaye (8px) + malá korekce pro vertikální středu -> 12px */
-      top: 12px; 
+      /* Posun dolů pro zarovnání s čísly */
+      top: 16px; 
       left: 0;
       width: 100%;
       margin-bottom: 10px;
@@ -329,10 +332,10 @@
       position: relative;
     }
 
-    /* Tlačítko Reset - dynamická pozice dle velikosti kostek */
+    /* Tlačítko Reset - dynamická pozice */
     .control-btn.reset-btn {
-        /* Výpočet: 50px (displej) + 6px (border rámu) + polovina nebes (0.75 * bead) - polovina tlačítka (0.45 * bead) */
-        margin-top: calc(56px + 0.3 * var(--bead-size));
+        /* Výpočet: 50px (displej) + 8px (mezera) + 6px (border) + střed nebes - polovina tlačítka */
+        margin-top: calc(64px + 0.3 * var(--bead-size));
     }
 
     .control-btn {
@@ -497,7 +500,7 @@
     };
 
     function init() {
-      loadSettings();
+      loadSettings(); // Načte nastavení z paměti
       populateSettings();
       loadTheme();
       checkOrientation(); 
@@ -530,8 +533,10 @@
     function loadSettings() {
         const savedRods = localStorage.getItem('sorobanRods');
         if(savedRods) NUM_RODS = parseInt(savedRods);
+        
         const savedOp = localStorage.getItem('sorobanOp');
         if(savedOp) currentProblem.operation = savedOp;
+        
         const savedSeries = localStorage.getItem('sorobanSeries');
         if(savedSeries) SERIES_LENGTH = parseInt(savedSeries);
     }
@@ -549,7 +554,7 @@
       currentProblem.operation = $('operation-select').value;
       SERIES_LENGTH = parseInt($('series-length-select').value);
       
-      saveSettings();
+      saveSettings(); // Uloží nastavení do paměti
       buildSoroban();
       resetToStartState();
     }
