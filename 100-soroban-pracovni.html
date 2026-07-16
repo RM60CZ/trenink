@@ -264,7 +264,6 @@
     .earth .bead:nth-child(2).active { bottom: auto; top: calc(var(--bead-size) * 2 + var(--bead-gap) * 2); }
     .earth .bead:nth-child(1).active { bottom: auto; top: calc(var(--bead-size) * 3 + var(--bead-gap) * 3); }
 
-    /* ZDE JE OPRAVA: Z-index zvýšen na 1005, aby byl nad pozadím modalu */
     .control-panel { display: flex; flex-direction: column; gap: 10px; margin-left: 8px; z-index: 1005; align-items: center; position: relative; }
 
     .current-user-display {
@@ -376,15 +375,16 @@
       <div class="setting-row"><label>Jméno (max 10 znaků):</label><input type="text" id="user-name-input" maxlength="10" oninput="handleNameChange()"></div>
       <div class="setting-row"><label>Heslo:</label><input type="password" id="user-pass-input" placeholder="volitelné"></div>
       <hr style="width:100%; border-color:var(--bar-color); margin: 10px 0;">
-      <div class="setting-row"><label>Počet tyčí:</label><select id="rod-count-select" onchange="applySettingsAndSave()"></select></div>
+      <!-- Odstraněno onchange="applySettingsAndSave()" -->
+      <div class="setting-row"><label>Počet tyčí:</label><select id="rod-count-select"></select></div>
       <div class="setting-row"><label>Operace:</label>
-        <select id="operation-select" onchange="applySettingsAndSave()">
+        <select id="operation-select">
           <option value="+">Sčítání</option><option value="-">Odčítání</option><option value="+-">Sčítání + odčítání</option>
           <option value="*1">Násobení 1</option><option value="*2">Násobení 2</option>
         </select>
       </div>
       <div class="setting-row"><label>Série (počet příkladů):</label>
-        <select id="series-length-select" onchange="applySettingsAndSave()">
+        <select id="series-length-select">
           <option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5" selected>5</option>
           <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
         </select>
@@ -471,6 +471,22 @@
         const newIdx = parseInt($('user-select').value);
         $('user-name-input').value = users[newIdx].name;
         $('user-pass-input').value = "";
+        
+        // Načtení nastavení pro vybraného uživatele do UI (aby bylo vidět, co má nastavené)
+        if (newIdx === TRIAL_INDEX) {
+            $('rod-count-select').value = 7;
+            $('operation-select').value = '+';
+            $('series-length-select').value = 5;
+        } else {
+            const prefix = `soroban_u${newIdx}_`;
+            const rods = localStorage.getItem(prefix + 'settings_rods') || 7;
+            const op = localStorage.getItem(prefix + 'settings_op') || '+';
+            const series = localStorage.getItem(prefix + 'settings_series') || 5;
+            
+            $('rod-count-select').value = parseInt(rods);
+            $('operation-select').value = op;
+            $('series-length-select').value = parseInt(series);
+        }
     }
 
     function handleNameChange() {
@@ -517,7 +533,7 @@
         $('user-name-input').disabled = (currentUserIndex === TRIAL_INDEX);
 
         loadSettings();
-        populateSettings();   // OPRAVA: naplní prázdný select "Počet tyčí" položkami 2–7
+        populateSettings();   
         applySettingsToUI();
 
         $('best-time').innerText = loadBestTime();
@@ -701,7 +717,6 @@
         result = randomInt(minFill, maxVal); let parts = splitNumber(result, 3);
         currentProblem.parts = parts; currentProblem.target = parts[0] + parts[1] + parts[2];
       } else if (op === '-') {
-        // OPRAVA: Části ukládáme jako záporné, aby se správně zobrazovaly
         a = randomInt(minFill, maxVal); let remainder = a - 1; let subParts = splitNumber(remainder, 2);
         currentProblem.parts = [a, -subParts[0], -subParts[1]]; currentProblem.target = a - subParts[0] - subParts[1];
       } else if (op === '*1') {
@@ -748,7 +763,6 @@
                 html = `<span class="problem-part underlined-first">${p0}</span>${p1Str}${p2Str}`;
             } else if (underlineMode === 'two') {
                 if (op === '+') { html = `<span class="problem-part underlined">${p0} + ${formatNumber(parts[1])}</span> + ${formatNumber(parts[2])}`; }
-                // OPRAVA: Použití Math.abs pro zobraení záporných čísel v podtrženém řádku
                 else if (op === '-') { html = `<span class="problem-part underlined">${p0} - ${formatNumber(Math.abs(parts[1]))}</span> - ${formatNumber(Math.abs(parts[2]))}`; }
                 else if (op === '+-') { html = `<span class="problem-part underlined">${p0}${p1Str}</span>${p2Str}`; }
             } else {
@@ -779,7 +793,6 @@
 
       const firstTarget = currentProblem.parts[0];
       let intermediateTarget;
-      // OPRAVA: Práce se zápornými čísly pro odčítání
       if (op === '-') { intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1]; }
       else { intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1]; }
       const finalTarget = currentProblem.target;
@@ -860,7 +873,6 @@
 
         const firstTarget = currentProblem.parts[0];
         let intermediateTarget;
-        // OPRAVA: Práce se zápornými čísly pro odčítání
         if (op === '-') { intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1]; }
         else { intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1]; }
 
@@ -900,7 +912,7 @@
         const enteredPass = $('user-pass-input').value;
         const enteredName = $('user-name-input').value;
 
-        // Check Reset Command
+        // 1. Check Reset Command
         const isResetCmd = enteredPass.trim().toLowerCase().endsWith("reset");
         if (isResetCmd) {
              const parts = enteredPass.trim().split(/\s+/);
@@ -925,13 +937,13 @@
              return;
         }
 
-        // Check Forbidden Password
+        // 2. Check Forbidden Password
         if (enteredPass.trim().toLowerCase() === "reset") {
              showToast("Heslo nemůže být 'reset'");
              return;
         }
 
-        // User Switch Logic
+        // 3. Authentication for Switching User
         if (selectedIdx !== currentUserIndex) {
             const targetUser = users[selectedIdx];
             if (targetUser.password && targetUser.password !== enteredPass && enteredPass !== universalPassword) {
@@ -939,40 +951,62 @@
                 $('user-pass-input').focus();
                 return;
             }
-            if (enteredPass === universalPassword) {
-                users[selectedIdx].password = "";
-                saveUsers();
-                showToast("Heslo zrušeno");
-            }
-            currentUserIndex = selectedIdx;
-            users[currentUserIndex].name = enteredName;
-            saveUsers();
-            localStorage.setItem('soroban_last_user', currentUserIndex);
-        } else {
-            if (enteredPass === universalPassword) {
-                users[currentUserIndex].password = "";
-                saveUsers();
-                showToast("Heslo zrušeno");
-            } else if (enteredPass !== "" && enteredPass !== users[currentUserIndex].password) {
-                users[currentUserIndex].password = enteredPass;
-                saveUsers();
-                showToast("Heslo nastaveno");
-            }
-            if (currentUserIndex !== TRIAL_INDEX) {
-                users[currentUserIndex].name = enteredName;
-                saveUsers();
-            }
         }
 
+        // 4. Save User Details (Name/Pass)
+        if (enteredPass === universalPassword) {
+            users[selectedIdx].password = "";
+            saveUsers();
+            showToast("Heslo zrušeno");
+        } else if (enteredPass !== "" && enteredPass !== users[selectedIdx].password) {
+            users[selectedIdx].password = enteredPass;
+            saveUsers();
+            showToast("Heslo nastaveno");
+        }
+        
+        users[selectedIdx].name = enteredName;
+        saveUsers();
+        
+        // 5. Switch User
+        currentUserIndex = selectedIdx;
+        localStorage.setItem('soroban_last_user', currentUserIndex);
+
+        // 6. Save Settings (APPLY ON CLOSE)
+        NUM_RODS = parseInt($('rod-count-select').value);
+        currentProblem.operation = $('operation-select').value;
+        SERIES_LENGTH = parseInt($('series-length-select').value);
+        saveSettings();
+
+        // 7. Finalize UI
         modal.classList.remove('visible'); btn.classList.remove('active');
-        updateUIForCurrentUser();
+        
+        $('current-user-display').innerText = users[currentUserIndex].name;
+        $('user-name-input').disabled = (currentUserIndex === TRIAL_INDEX);
+        $('best-time').innerText = loadBestTime();
+        
         buildSoroban();
+        resetToStartState();
 
       } else {
         // --- OPENING LOGIC ---
         $('user-select').value = currentUserIndex;
         $('user-name-input').value = users[currentUserIndex].name;
         $('user-pass-input').value = "";
+        
+        // Načtení aktuálního nastavení do UI při otevření
+        if (currentUserIndex === TRIAL_INDEX) {
+            $('rod-count-select').value = 7; // Trial má fixní nebo výchozí
+            // Ale pokud jsme změnili globál, bereme z globálu:
+            $('rod-count-select').value = NUM_RODS; 
+            $('operation-select').value = currentProblem.operation;
+            $('series-length-select').value = SERIES_LENGTH;
+        } else {
+             // Pro běžné uživatele načteme z globálu (což odpovídá načtenému stavu)
+             $('rod-count-select').value = NUM_RODS;
+             $('operation-select').value = currentProblem.operation;
+             $('series-length-select').value = SERIES_LENGTH;
+        }
+
         modal.classList.add('visible'); btn.classList.add('active');
       }
     }
