@@ -289,15 +289,6 @@
         right: 0;
     }
 
-    .current-user-display.blinking {
-        animation: blink-anim 1s infinite;
-    }
-
-    @keyframes blink-anim {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.3; }
-    }
-
     .control-btn.reset-btn { margin-top: calc(64px + 0.3 * var(--bead-size)); }
     .control-btn {
       width: calc(var(--bead-size) * 0.9); height: calc(var(--bead-size) * 0.9); border-radius: 50%;
@@ -318,7 +309,7 @@
     .setting-row { margin: 15px 0; display: flex; flex-direction: column; gap: 5px; text-align: left; }
     .setting-row label { font-weight: bold; }
     select option { font-weight: bold; }
-    select:disabled, input:disabled { opacity: 0.5; background: #eee; }
+    select:disabled, input:disabled { opacity: 0.6; background: #eee; cursor: not-allowed; }
 
     .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 3000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
     .toast.show { opacity: 1; }
@@ -358,7 +349,7 @@
       <div class="control-panel">
         <div class="series-counter" id="series-counter" onclick="endSeries()" title="Kliknutím ukončíte sérii">1/5</div>
 
-        <div class="current-user-display blinking" id="current-user-display">Zkušební</div>
+        <div class="current-user-display" id="current-user-display">Zkušební</div>
 
         <button class="control-btn reset-btn" onclick="handleReset()" title="Vynulovat / Krok zpět">↺</button>
         <button class="control-btn" id="theme-btn" onclick="toggleTheme()" title="Téma">🌙</button>
@@ -371,10 +362,13 @@
   
   <div class="modal" id="settings-modal" onclick="handleModalBackgroundClick(event)">
     <div class="modal-content">
-      <div class="setting-row"><label>Uživatel:</label><select id="user-select" onchange="handleUserChange()"></select></div>
-      <div class="setting-row"><label>Jméno (max 10 znaků):</label><input type="text" id="user-name-input" maxlength="10"></div>
-      <div class="setting-row"><label>Heslo:</label><input type="password" id="user-pass-input" placeholder="volitelné"></div>
+      <!-- Seznam uživatelů: Nepřístupný (disabled), vždy Zkušební -->
+      <div class="setting-row"><label>Uživatel:</label><select id="user-select" disabled></select></div>
+      <!-- Pole jsou viditelná, ale neaktivní (disabled) -->
+      <div class="setting-row"><label>Jméno:</label><input type="text" id="user-name-input" disabled></div>
+      <div class="setting-row"><label>Heslo:</label><input type="password" id="user-pass-input" disabled placeholder="---"></div>
       <hr style="width:100%; border-color:var(--bar-color); margin: 10px 0;">
+      <!-- Nastavení se ukládá až stiskem kolečka (při zavření okna) -->
       <div class="setting-row"><label>Počet tyčí:</label><select id="rod-count-select"></select></div>
       <div class="setting-row"><label>Operace:</label>
         <select id="operation-select">
@@ -401,34 +395,50 @@
 
     // --- USER MANAGEMENT ---
     const TRIAL_INDEX = 0;
-    let currentUserIndex = TRIAL_INDEX;
+    let currentUserIndex = TRIAL_INDEX; // Vynuceně Zkušební
     let users = [];
-    let sessionRecords = {};
-    let universalPassword = "RM60";
-
+    
     function initUserManager() {
         loadUsers();
+        checkAndClearDailyRecords(); // Kontrola denních rekordů
+        
+        // Naplnění seznamu (i když je neaktivní, data tam musí být)
         populateUserSelect();
-        loadLastActiveUser();
+        
+        // Uzamčení UI na Zkušební
+        const select = $('user-select');
+        select.value = TRIAL_INDEX;
+        select.disabled = true; // Seznam nepřístupný
+        
+        $('user-name-input').value = users[TRIAL_INDEX].name;
+        $('user-name-input').disabled = true;
+        $('user-pass-input').disabled = true;
+
         updateUIForCurrentUser();
     }
 
     function loadUsers() {
-        const saved = localStorage.getItem('soroban_users');
-        if (saved) {
-            users = JSON.parse(saved);
-        } else {
-            users = [];
-            users.push({name: "Zkušební", password: ""});
-            for(let i=1; i<=10; i++) {
-                users.push({name: `Osoba ${i}`, password: ""});
-            }
-            saveUsers();
+        // Pevný seznam uživatelů
+        users = [];
+        users.push({name: "Zkušební"});
+        for(let i=1; i<=10; i++) {
+            users.push({name: `Osoba ${i}`});
         }
     }
 
-    function saveUsers() {
-        localStorage.setItem('soroban_users', JSON.stringify(users));
+    function checkAndClearDailyRecords() {
+        const today = new Date().toDateString();
+        const lastDate = localStorage.getItem('soroban_record_date');
+        
+        if (lastDate !== today) {
+            // Nový den -> smazat všechny rekordy (best_*)
+            Object.keys(localStorage).forEach(key => {
+                if (key.includes('best_')) {
+                    localStorage.removeItem(key);
+                }
+            });
+            localStorage.setItem('soroban_record_date', today);
+        }
     }
 
     function populateUserSelect() {
@@ -442,105 +452,27 @@
         });
     }
 
-    function loadLastActiveUser() {
-        const last = localStorage.getItem('soroban_last_user');
-        if (last !== null) {
-            currentUserIndex = parseInt(last);
-        }
-
-        if (currentUserIndex !== TRIAL_INDEX && users[currentUserIndex].password) {
-            $('user-select').value = currentUserIndex;
-            $('user-name-input').value = users[currentUserIndex].name;
-            $('user-pass-input').value = "";
-
-            $('settings-modal').classList.add('visible');
-            $('user-pass-input').focus();
-            showToast("Zadejte heslo pro " + users[currentUserIndex].name);
-
-            currentUserIndex = TRIAL_INDEX;
-            updateUIForCurrentUser();
-        } else {
-            $('user-select').value = currentUserIndex;
-            $('user-name-input').value = users[currentUserIndex].name;
-            $('user-pass-input').value = "";
-        }
-    }
-
-    function handleUserChange() {
-        const newIdx = parseInt($('user-select').value);
-        $('user-name-input').value = users[newIdx].name;
-        $('user-pass-input').value = "";
-
-        // ZAKÁZÁNÍ POLE PRO ZKUŠEBNÍHO UŽIVATELE
-        if (newIdx === TRIAL_INDEX) {
-            $('user-name-input').disabled = true;
-            $('user-pass-input').disabled = true;
-            $('user-pass-input').placeholder = "";
-        } else {
-            $('user-name-input').disabled = false;
-            $('user-pass-input').disabled = false;
-            $('user-pass-input').placeholder = "volitelné";
-            
-            // Načtení nastavení pro náhled
-            const prefix = `soroban_u${newIdx}_`;
-            const rods = localStorage.getItem(prefix + 'settings_rods') || 7;
-            const op = localStorage.getItem(prefix + 'settings_op') || '+';
-            const series = localStorage.getItem(prefix + 'settings_series') || 5;
-            
-            $('rod-count-select').value = parseInt(rods);
-            $('operation-select').value = op;
-            $('series-length-select').value = parseInt(series);
-        }
-    }
+    // Funkce pro změnu uživatele odstraněna/vypnuta - vždy je TRIAL_INDEX
 
     function getStorageKey(suffix) {
-        if (currentUserIndex === TRIAL_INDEX) return null;
-        return `soroban_u${currentUserIndex}_${suffix}`;
+        // Zkušební uživatel má svůj klíč
+        return `soroban_trial_${suffix}`;
     }
 
     function loadBestTime() {
-        if (currentUserIndex === TRIAL_INDEX) return sessionRecords.bestTime || "00:00";
         const key = getStorageKey(`best_${NUM_RODS}_${currentProblem.operation}_${SERIES_LENGTH}`);
         return localStorage.getItem(key) || "00:00";
     }
 
     function saveBestTime(timeStr) {
-        if (currentUserIndex === TRIAL_INDEX) { sessionRecords.bestTime = timeStr; return; }
         const key = getStorageKey(`best_${NUM_RODS}_${currentProblem.operation}_${SERIES_LENGTH}`);
         localStorage.setItem(key, timeStr);
     }
 
-    function clearRecordsForCurrentUser() {
-        if (currentUserIndex === TRIAL_INDEX) {
-            sessionRecords = {};
-            showToast("Rekordy vynulovány (Zkušební)");
-        } else {
-            const prefix = `soroban_u${currentUserIndex}_`;
-            Object.keys(localStorage).forEach(key => {
-                if (key.startsWith(prefix)) localStorage.removeItem(key);
-            });
-            showToast("Rekordy vynulovány");
-        }
-        $('best-time').innerText = "00:00";
-    }
-
     function updateUIForCurrentUser() {
         $('current-user-display').innerText = users[currentUserIndex].name;
-        $('user-select').value = currentUserIndex;
-        $('user-name-input').value = users[currentUserIndex].name;
-        $('user-pass-input').value = "";
-
-        // Nastavení disabled stavu podle uživatele
-        if (currentUserIndex === TRIAL_INDEX) {
-            $('user-name-input').disabled = true;
-            $('user-pass-input').disabled = true;
-            $('user-pass-input').placeholder = "";
-        } else {
-            $('user-name-input').disabled = false;
-            $('user-pass-input').disabled = false;
-            $('user-pass-input').placeholder = "volitelné";
-        }
-
+        // Select je už nastaven a disabled v initUserManager
+        
         loadSettings();
         populateSettings();   
         applySettingsToUI();
@@ -572,41 +504,25 @@
     }
 
     function loadSettings() {
-        if (currentUserIndex === TRIAL_INDEX) {
-            NUM_RODS = 7; currentProblem.operation = '+'; SERIES_LENGTH = 5;
-        }
-
         const keyRods = getStorageKey('settings_rods');
         const keyOp = getStorageKey('settings_op');
         const keySeries = getStorageKey('settings_series');
 
-        if (currentUserIndex !== TRIAL_INDEX) {
-            if(localStorage.getItem(keyRods)) NUM_RODS = parseInt(localStorage.getItem(keyRods));
-            if(localStorage.getItem(keyOp)) currentProblem.operation = localStorage.getItem(keyOp);
-            if(localStorage.getItem(keySeries)) SERIES_LENGTH = parseInt(localStorage.getItem(keySeries));
-        }
+        if(localStorage.getItem(keyRods)) NUM_RODS = parseInt(localStorage.getItem(keyRods));
+        if(localStorage.getItem(keyOp)) currentProblem.operation = localStorage.getItem(keyOp);
+        if(localStorage.getItem(keySeries)) SERIES_LENGTH = parseInt(localStorage.getItem(keySeries));
     }
 
     function saveSettings() {
-        if (currentUserIndex !== TRIAL_INDEX) {
-            localStorage.setItem(getStorageKey('settings_rods'), NUM_RODS);
-            localStorage.setItem(getStorageKey('settings_op'), currentProblem.operation);
-            localStorage.setItem(getStorageKey('settings_series'), SERIES_LENGTH);
-        }
+        localStorage.setItem(getStorageKey('settings_rods'), NUM_RODS);
+        localStorage.setItem(getStorageKey('settings_op'), currentProblem.operation);
+        localStorage.setItem(getStorageKey('settings_series'), SERIES_LENGTH);
     }
 
     function applySettingsToUI() {
         $('rod-count-select').value = NUM_RODS;
         $('operation-select').value = currentProblem.operation;
         $('series-length-select').value = SERIES_LENGTH;
-    }
-
-    function applySettingsAndSave() {
-      if(seriesState === 'running') return;
-      NUM_RODS = parseInt($('rod-count-select').value); currentProblem.operation = $('operation-select').value; SERIES_LENGTH = parseInt($('series-length-select').value);
-      saveSettings(); buildSoroban();
-      $('best-time').innerText = loadBestTime(); $('current-time').innerText = "00:00";
-      resetToStartState();
     }
 
     function checkOrientation() {
@@ -659,9 +575,6 @@
 
     function handleStartClick() {
       if(seriesState === 'running') return;
-
-      $('current-user-display').classList.remove('blinking');
-
       seriesState = 'running'; taskCounter = 1;
       seriesStartTime = Date.now();
       $('current-time').innerText = "00:00";
@@ -917,124 +830,31 @@
 
       if (modal.classList.contains('visible')) {
         // --- CLOSING LOGIC ---
-        const selectedIdx = parseInt($('user-select').value);
-        const enteredPass = $('user-pass-input').value;
-        const enteredName = $('user-name-input').value;
+        // Uživatel se neukládá, je vždy Zkušební.
+        // Ukládáme pouze nastavení (tyče, operace...)
+        
+        // Save Settings
+        NUM_RODS = parseInt($('rod-count-select').value);
+        currentProblem.operation = $('operation-select').value;
+        SERIES_LENGTH = parseInt($('series-length-select').value);
+        saveSettings();
 
-        // 1. Check Reset Command
-        const isResetCmd = enteredPass.trim().toLowerCase().endsWith("reset");
-        if (isResetCmd) {
-             const parts = enteredPass.trim().split(/\s+/);
-             let passPart = parts.length === 2 ? parts[0] : "";
-             if (parts.length === 1 && parts[0].toLowerCase() === "reset") passPart = "";
-
-             const targetUser = users[selectedIdx];
-             let allowed = false;
-             
-             // ZKUŠEBNÍ UŽIVATEL RESET: Povoleno bez hesla
-             if (selectedIdx === TRIAL_INDEX && passPart === "") allowed = true;
-             // OSTATNÍ: přes univerzální nebo vlastní heslo
-             else if (passPart === universalPassword) allowed = true;
-             else if (targetUser.password && passPart === targetUser.password) allowed = true;
-             else if (!targetUser.password && passPart === "") allowed = true;
-
-             if (allowed) {
-                 const oldIdx = currentUserIndex;
-                 currentUserIndex = selectedIdx;
-                 clearRecordsForCurrentUser();
-                 currentUserIndex = oldIdx;
-                 $('user-pass-input').value = "";
-             } else {
-                 showToast("Špatné heslo pro reset");
-             }
-             return;
-        }
-
-        // 2. Check Forbidden Password
-        if (enteredPass.trim().toLowerCase() === "reset") {
-             showToast("Heslo nemůže být 'reset'");
-             return;
-        }
-
-        // 3. Handle Switching/Saving based on user type
-        if (selectedIdx === TRIAL_INDEX) {
-            // ZKUŠEBNÍ UŽIVATEL: Ignorujeme jméno a heslo, pouze přepneme a uložíme nastavení
-            currentUserIndex = selectedIdx;
-            localStorage.setItem('soroban_last_user', currentUserIndex);
-            
-            // Save Settings
-            NUM_RODS = parseInt($('rod-count-select').value);
-            currentProblem.operation = $('operation-select').value;
-            SERIES_LENGTH = parseInt($('series-length-select').value);
-            saveSettings();
-
-            modal.classList.remove('visible'); btn.classList.remove('active');
-            updateUIForCurrentUser();
-            buildSoroban();
-            resetToStartState();
-            
-        } else {
-            // BĚŽNÝ UŽIVATEL: Autentizace a ukládání
-            
-            // Authentication for Switching User
-            if (selectedIdx !== currentUserIndex) {
-                const targetUser = users[selectedIdx];
-                if (targetUser.password && targetUser.password !== enteredPass && enteredPass !== universalPassword) {
-                    if (enteredPass !== "") showToast("Špatné heslo!");
-                    $('user-pass-input').focus();
-                    return;
-                }
-            }
-
-            // Save User Details (Name/Pass)
-            if (enteredPass === universalPassword) {
-                users[selectedIdx].password = "";
-                saveUsers();
-                showToast("Heslo zrušeno");
-            } else if (enteredPass !== "" && enteredPass !== users[selectedIdx].password) {
-                users[selectedIdx].password = enteredPass;
-                saveUsers();
-                showToast("Heslo nastaveno");
-            }
-            
-            users[selectedIdx].name = enteredName;
-            saveUsers();
-            
-            // Switch User
-            currentUserIndex = selectedIdx;
-            localStorage.setItem('soroban_last_user', currentUserIndex);
-
-            // Save Settings
-            NUM_RODS = parseInt($('rod-count-select').value);
-            currentProblem.operation = $('operation-select').value;
-            SERIES_LENGTH = parseInt($('series-length-select').value);
-            saveSettings();
-
-            // Finalize UI
-            modal.classList.remove('visible'); btn.classList.remove('active');
-            updateUIForCurrentUser();
-            buildSoroban();
-            resetToStartState();
-        }
+        modal.classList.remove('visible'); btn.classList.remove('active');
+        updateUIForCurrentUser();
+        buildSoroban();
+        resetToStartState();
 
       } else {
         // --- OPENING LOGIC ---
-        $('user-select').value = currentUserIndex;
-        $('user-name-input').value = users[currentUserIndex].name;
-        $('user-pass-input').value = "";
+        // Zajištění, že seznam je zamčený na Zkušební
+        $('user-select').value = TRIAL_INDEX;
+        $('user-select').disabled = true; 
         
-        // Nastavení disabled stavu při otevření
-        if (currentUserIndex === TRIAL_INDEX) {
-            $('user-name-input').disabled = true;
-            $('user-pass-input').disabled = true;
-            $('user-pass-input').placeholder = "";
-        } else {
-            $('user-name-input').disabled = false;
-            $('user-pass-input').disabled = false;
-            $('user-pass-input').placeholder = "volitelné";
-        }
+        $('user-name-input').value = users[TRIAL_INDEX].name;
+        $('user-name-input').disabled = true;
+        $('user-pass-input').disabled = true;
 
-        // Načtení aktuálního nastavení do UI při otevření
+        // Načtení aktuálního nastavení do UI
         $('rod-count-select').value = NUM_RODS;
         $('operation-select').value = currentProblem.operation;
         $('series-length-select').value = SERIES_LENGTH;
