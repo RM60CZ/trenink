@@ -7,9 +7,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#d4c49c">
-  
+
   <title>Soroban</title>
-  
+
   <script>
     const manifest = {
       "name": "Soroban",
@@ -42,17 +42,17 @@
       --rod-color: #8b4513;
       --bar-color: #5d4037;
       --text-color: #333;
-      --bead-gap: 4px; 
+      --bead-gap: 4px;
       --blue-bead: #ADD8E6;
       --blue-bead-active: #5DADE2;
-      
-      --bead-size: 40px; 
+
+      --bead-size: 40px;
       --bar-height: 15px;
-      --tiny-gap: 2px; 
-      
+      --tiny-gap: 2px;
+
       --heaven-height: calc(var(--bead-size) * 1.5 + var(--tiny-gap));
       --earth-height: calc(var(--bead-size) * 4 + var(--bead-gap) * 3 + var(--bead-size) * 0.5 + var(--tiny-gap));
-      
+
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
       --safe-left: env(safe-area-inset-left, 0px);
@@ -74,22 +74,20 @@
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    
-    /* User-select nastaven jen tam, kde je potřeba, aby se neoznačovalo */
+
     .soroban-frame, .rod, .bead, .problem-display, .control-panel, .series-counter {
         user-select: none;
         -webkit-user-select: none;
     }
-    /* Formuláře a modal musí mít výchozí chování, aby šly ovládat */
     .modal-content, .modal-content select, .modal-content input {
         user-select: text;
         -webkit-user-select: text;
     }
 
     html, body {
-      margin: 0; padding: 0; 
+      margin: 0; padding: 0;
       height: 100%; width: 100%;
-      background: var(--wood-dark); 
+      background: var(--wood-dark);
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       color: var(--text-color);
@@ -97,7 +95,7 @@
     }
 
     #orientation-warning {
-      display: none; 
+      display: none;
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
       background: var(--wood-dark);
@@ -114,7 +112,7 @@
     @keyframes rotate-phone { 0% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } 100% { transform: rotate(90deg); } }
 
     .app-container {
-      display: none; 
+      display: none;
       flex-direction: column;
       justify-content: flex-end;
       align-items: center;
@@ -135,23 +133,23 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      position: relative; 
+      position: relative;
     }
 
     .problem-display-container {
       position: relative;
       min-height: 50px;
       margin-bottom: 8px;
-      padding: 8px 15px; 
+      padding: 8px 15px;
     }
 
     .problem-display {
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 28px; 
+      font-size: 28px;
       font-weight: bold;
-      padding: 8px 15px; 
+      padding: 8px 15px;
       text-align: center;
       min-width: 150px;
       font-variant-numeric: tabular-nums;
@@ -175,12 +173,12 @@
       pointer-events: none;
       z-index: 5;
     }
-    
+
     .time-left { right: 100%; margin-right: 15px; text-align: right; }
     .time-right { left: 100%; margin-left: 15px; text-align: left; }
-    
+
     .medal-icon { font-size: 22px; margin-right: 4px; display: inline-block; transition: transform 0.1s; }
-    
+
     .medal-flutter { animation: medal-shake 0.5s ease-in-out; }
     @keyframes medal-shake {
       0%, 100% { transform: rotate(0deg) scale(1); }
@@ -195,7 +193,7 @@
         background: var(--wood-light); color: var(--bar-color); border: 2px solid var(--bar-color);
         box-shadow: 0 4px 8px rgba(0,0,0,0.2); cursor: pointer; font-size: 32px; letter-spacing: 3px;
     }
-    [data-theme="dark"] .problem-display-container.start-mode .problem-display { 
+    [data-theme="dark"] .problem-display-container.start-mode .problem-display {
         background: rgba(255,255,255,0.1); color: #ffccbc; border-color: #8e6d4f;
     }
     .problem-display-container.start-mode .problem-display:hover { transform: scale(1.02); opacity: 0.9; }
@@ -216,7 +214,7 @@
 
     .soroban-frame {
       display: flex; background: var(--wood-dark); border: 6px solid var(--bar-color); border-radius: 8px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4); padding: 0 10px; width: auto; position: relative; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4); padding: 0 10px; width: auto; position: relative;
       touch-action: none; overflow: hidden;
     }
 
@@ -236,7 +234,7 @@
       position: absolute; top: var(--tiny-gap); left: 50%; transform: translateX(-50%);
       width: var(--bead-size); height: var(--bead-size); background: var(--bead-unit); border-radius: 6px;
       border: 1px solid rgba(0,0,0,0.2); box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      transition: top 0.15s ease-out, background-color 0.3s; cursor: pointer; z-index: 5; 
+      transition: top 0.15s ease-out, background-color 0.3s; cursor: pointer; z-index: 5;
     }
     .heaven .bead.active { top: calc(var(--heaven-height) - var(--bead-size)); background: var(--bead-heaven-active); }
     .rod.blue-rod .heaven .bead { background: var(--blue-bead); }
@@ -266,22 +264,23 @@
     .earth .bead:nth-child(2).active { bottom: auto; top: calc(var(--bead-size) * 2 + var(--bead-gap) * 2); }
     .earth .bead:nth-child(1).active { bottom: auto; top: calc(var(--bead-size) * 3 + var(--bead-gap) * 3); }
 
-    .control-panel { display: flex; flex-direction: column; gap: 10px; margin-left: 8px; z-index: 205; align-items: center; position: relative; }
-    
+    /* ZDE JE OPRAVA: Z-index zvýšen na 1005, aby byl nad pozadím modalu */
+    .control-panel { display: flex; flex-direction: column; gap: 10px; margin-left: 8px; z-index: 1005; align-items: center; position: relative; }
+
     .current-user-display {
         position: absolute;
-        bottom: calc(64px + 0.3 * var(--bead-size) + 50px); 
+        bottom: calc(64px + 0.3 * var(--bead-size) + 50px);
         width: 100%;
         text-align: center;
         font-size: 12px;
         font-weight: bold;
         color: var(--bar-color);
-        writing-mode: vertical-rl; 
+        writing-mode: vertical-rl;
         text-orientation: mixed;
-        transform: rotate(180deg); 
+        transform: rotate(180deg);
         letter-spacing: 1px;
         pointer-events: none;
-        height: 100px; 
+        height: 100px;
         display: flex;
         align-items: center;
         justify-content: flex-end;
@@ -311,16 +310,12 @@
     .control-btn.active { border-color: #d32f2f; box-shadow: 0 0 10px rgba(211, 47, 47, 0.5); }
     .control-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; background: #333; }
 
-    /* --- DŮLEŽITÁ OPRAVA Z-INDEXU MODALU --- */
-    /* Z-index musí být vyšší než u .control-panel (205) */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
-    /* ------------------------------------------------ */
-    
     .modal.visible { display: flex; }
     .modal-content { background: var(--wood-light); padding: 20px; border-radius: 12px; width: 90%; max-width: 300px; text-align: center; color: var(--text-color); z-index: 1001; display: flex; flex-direction: column; }
     select, input, button { padding: 8px; border-radius: 6px; border: 1px solid var(--bar-color); background: white; color: black; font-size: 16px; width: 100%; }
     input[type=password] { font-family: monospace; letter-spacing: 2px; }
-    
+
     .setting-row { margin: 15px 0; display: flex; flex-direction: column; gap: 5px; text-align: left; }
     .setting-row label { font-weight: bold; }
     select option { font-weight: bold; }
@@ -363,9 +358,9 @@
       </div>
       <div class="control-panel">
         <div class="series-counter" id="series-counter" onclick="endSeries()" title="Kliknutím ukončíte sérii">1/5</div>
-        
+
         <div class="current-user-display blinking" id="current-user-display">Zkušební</div>
-        
+
         <button class="control-btn reset-btn" onclick="handleReset()" title="Vynulovat / Krok zpět">↺</button>
         <button class="control-btn" id="theme-btn" onclick="toggleTheme()" title="Téma">🌙</button>
         <button class="control-btn" id="settings-btn" onclick="toggleSettings()" title="Nastavení">⚙️</button>
@@ -374,7 +369,8 @@
   </div>
 
   <div class="toast" id="toast"></div>
-  <div class="modal" id="settings-modal">
+  
+  <div class="modal" id="settings-modal" onclick="handleModalBackgroundClick(event)">
     <div class="modal-content">
       <div class="setting-row"><label>Uživatel:</label><select id="user-select" onchange="handleUserChange()"></select></div>
       <div class="setting-row"><label>Jméno (max 10 znaků):</label><input type="text" id="user-name-input" maxlength="10" oninput="handleNameChange()"></div>
@@ -384,7 +380,7 @@
       <div class="setting-row"><label>Operace:</label>
         <select id="operation-select" onchange="applySettingsAndSave()">
           <option value="+">Sčítání</option><option value="-">Odčítání</option><option value="+-">Sčítání + odčítání</option>
-          <option value="*1">Násobení 1</option><option value="*2">Násobenie 2</option>
+          <option value="*1">Násobení 1</option><option value="*2">Násobení 2</option>
         </select>
       </div>
       <div class="setting-row"><label>Série (počet příkladů):</label>
@@ -402,13 +398,13 @@
     const $ = id => document.getElementById(id);
     let rods = []; let currentProblem = { target: 0, parts: [], operation: '+' };
     let seriesState = 'idle'; let taskCounter = 0; let seriesStartTime = 0;
-    let lastCheckpointType = null; 
-    
+    let lastCheckpointType = null;
+
     // --- USER MANAGEMENT ---
     const TRIAL_INDEX = 0;
-    let currentUserIndex = TRIAL_INDEX; 
-    let users = []; 
-    let sessionRecords = {}; 
+    let currentUserIndex = TRIAL_INDEX;
+    let users = [];
+    let sessionRecords = {};
     let universalPassword = "RM60";
 
     function initUserManager() {
@@ -424,7 +420,7 @@
             users = JSON.parse(saved);
         } else {
             users = [];
-            users.push({name: "Zkušební", password: ""}); 
+            users.push({name: "Zkušební", password: ""});
             for(let i=1; i<=10; i++) {
                 users.push({name: `Osoba ${i}`, password: ""});
             }
@@ -452,17 +448,17 @@
         if (last !== null) {
             currentUserIndex = parseInt(last);
         }
-        
+
         if (currentUserIndex !== TRIAL_INDEX && users[currentUserIndex].password) {
             $('user-select').value = currentUserIndex;
             $('user-name-input').value = users[currentUserIndex].name;
             $('user-pass-input').value = "";
-            
+
             $('settings-modal').classList.add('visible');
             $('user-pass-input').focus();
             showToast("Zadejte heslo pro " + users[currentUserIndex].name);
-            
-            currentUserIndex = TRIAL_INDEX; 
+
+            currentUserIndex = TRIAL_INDEX;
             updateUIForCurrentUser();
         } else {
             $('user-select').value = currentUserIndex;
@@ -519,10 +515,11 @@
         $('user-pass-input').value = "";
 
         $('user-name-input').disabled = (currentUserIndex === TRIAL_INDEX);
-        
+
         loadSettings();
+        populateSettings();   // OPRAVA: naplní prázdný select "Počet tyčí" položkami 2–7
         applySettingsToUI();
-        
+
         $('best-time').innerText = loadBestTime();
         $('current-time').innerText = "00:00";
     }
@@ -548,12 +545,12 @@
       for(let i=2; i<=7; i++) { const opt = document.createElement('option'); opt.value = i; opt.innerText = i; if(i === NUM_RODS) opt.selected = true; select.appendChild(opt); }
       $('operation-select').value = currentProblem.operation; $('series-length-select').value = SERIES_LENGTH;
     }
-    
+
     function loadSettings() {
         if (currentUserIndex === TRIAL_INDEX) {
             NUM_RODS = 7; currentProblem.operation = '+'; SERIES_LENGTH = 5;
         }
-        
+
         const keyRods = getStorageKey('settings_rods');
         const keyOp = getStorageKey('settings_op');
         const keySeries = getStorageKey('settings_series');
@@ -572,7 +569,7 @@
             localStorage.setItem(getStorageKey('settings_series'), SERIES_LENGTH);
         }
     }
-    
+
     function applySettingsToUI() {
         $('rod-count-select').value = NUM_RODS;
         $('operation-select').value = currentProblem.operation;
@@ -591,7 +588,7 @@
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       const isPortrait = window.innerHeight > window.innerWidth;
       const warning = $('orientation-warning'); const app = $('app');
-      if (isStandalone) { warning.style.display = 'none'; app.style.display = 'flex'; } 
+      if (isStandalone) { warning.style.display = 'none'; app.style.display = 'flex'; }
       else { if (isPortrait) { warning.style.display = 'flex'; app.style.display = 'none'; } else { warning.style.display = 'none'; app.style.display = 'flex'; } }
     }
 
@@ -637,12 +634,12 @@
 
     function handleStartClick() {
       if(seriesState === 'running') return;
-      
+
       $('current-user-display').classList.remove('blinking');
-      
+
       seriesState = 'running'; taskCounter = 1;
       seriesStartTime = Date.now();
-      $('current-time').innerText = "00:00"; 
+      $('current-time').innerText = "00:00";
       const container = $('problem-container');
       container.classList.remove('start-mode'); container.classList.add('running-mode'); container.onclick = null;
       $('series-counter').style.display = 'block'; $('series-counter').innerText = `${taskCounter}/${SERIES_LENGTH}`;
@@ -652,7 +649,7 @@
     }
 
     function endSeries() {
-        $('current-time').innerText = "00:00"; 
+        $('current-time').innerText = "00:00";
         $('settings-modal').classList.remove('visible'); resetToStartState(); showToast("Série ukončena");
     }
 
@@ -695,7 +692,7 @@
     }
 
     function generateNewProblem() {
-      lastCheckpointType = null; 
+      lastCheckpointType = null;
       const op = currentProblem.operation;
       const maxVal = Math.pow(10, NUM_RODS) - 1; const minFill = Math.pow(10, NUM_RODS - 1);
       let a, b, c, result;
@@ -704,8 +701,9 @@
         result = randomInt(minFill, maxVal); let parts = splitNumber(result, 3);
         currentProblem.parts = parts; currentProblem.target = parts[0] + parts[1] + parts[2];
       } else if (op === '-') {
+        // OPRAVA: Části ukládáme jako záporné, aby se správně zobrazovaly
         a = randomInt(minFill, maxVal); let remainder = a - 1; let subParts = splitNumber(remainder, 2);
-        currentProblem.parts = [a, subParts[0], subParts[1]]; currentProblem.target = a - subParts[0] - subParts[1];
+        currentProblem.parts = [a, -subParts[0], -subParts[1]]; currentProblem.target = a - subParts[0] - subParts[1];
       } else if (op === '*1') {
         b = randomInt(2, 9); let maxA = Math.floor(maxVal / b); if (maxA < 2) maxA = 2; let minA = 2; if (maxA > minFill) minA = minFill;
         a = randomInt(minA, maxA); currentProblem.parts = [a, b]; currentProblem.target = a * b;
@@ -738,7 +736,7 @@
 
         if (op === '*1' || op === '*2') {
              html = `${formatNumber(parts[0])} × ${formatNumber(parts[1])}`;
-        } 
+        }
         else {
             let p0 = formatNumber(parts[0]);
             let p1Val = Math.abs(parts[1]); let p1Sign = parts[1] >= 0 ? '+' : '-';
@@ -750,7 +748,8 @@
                 html = `<span class="problem-part underlined-first">${p0}</span>${p1Str}${p2Str}`;
             } else if (underlineMode === 'two') {
                 if (op === '+') { html = `<span class="problem-part underlined">${p0} + ${formatNumber(parts[1])}</span> + ${formatNumber(parts[2])}`; }
-                else if (op === '-') { html = `<span class="problem-part underlined">${p0} - ${formatNumber(parts[1])}</span> - ${formatNumber(parts[2])}`; }
+                // OPRAVA: Použití Math.abs pro zobraení záporných čísel v podtrženém řádku
+                else if (op === '-') { html = `<span class="problem-part underlined">${p0} - ${formatNumber(Math.abs(parts[1]))}</span> - ${formatNumber(Math.abs(parts[2]))}`; }
                 else if (op === '+-') { html = `<span class="problem-part underlined">${p0}${p1Str}</span>${p2Str}`; }
             } else {
                 html = p0 + p1Str + p2Str;
@@ -780,25 +779,26 @@
 
       const firstTarget = currentProblem.parts[0];
       let intermediateTarget;
-      if (op === '-') { intermediateTarget = currentProblem.parts[0] - currentProblem.parts[1]; }
+      // OPRAVA: Práce se zápornými čísly pro odčítání
+      if (op === '-') { intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1]; }
       else { intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1]; }
       const finalTarget = currentProblem.target;
 
       if (currentVal === finalTarget) {
-          lastCheckpointType = null; 
+          lastCheckpointType = null;
           renderProblemDisplay('none');
           handleSuccess();
-      } 
+      }
       else if (currentVal === intermediateTarget) {
           if (lastCheckpointType !== 'intermediate') { showToast("Správně! Pokračujte."); }
           lastCheckpointType = 'intermediate';
           renderProblemDisplay('two');
-      } 
+      }
       else if (currentVal === firstTarget) {
           if (lastCheckpointType !== 'first') { showToast("První číslo OK"); }
           lastCheckpointType = 'first';
           renderProblemDisplay('first');
-      } 
+      }
       else {
           renderProblemDisplay('none');
       }
@@ -807,7 +807,7 @@
     function handleSuccess() {
         if(seriesState !== 'running') return;
         showToast("Správně! 👍"); taskCounter++;
-        
+
         if(taskCounter > SERIES_LENGTH) {
             seriesState = 'finished';
             let endTime = Date.now(); let duration = endTime - seriesStartTime; let formattedTime = formatDuration(duration);
@@ -855,12 +855,13 @@
         if(seriesState !== 'running') { setSorobanValue(0); return; }
         const currentVal = getCurrentValue();
         const op = currentProblem.operation;
-        
+
         if (op === '*1' || op === '*2') { setSorobanValue(0); return; }
 
         const firstTarget = currentProblem.parts[0];
         let intermediateTarget;
-        if (op === '-') { intermediateTarget = currentProblem.parts[0] - currentProblem.parts[1]; }
+        // OPRAVA: Práce se zápornými čísly pro odčítání
+        if (op === '-') { intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1]; }
         else { intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1]; }
 
         if (lastCheckpointType === 'intermediate' && currentVal === intermediateTarget) return;
@@ -883,39 +884,45 @@
       updateRodsVisuals();
     }
 
+    function handleModalBackgroundClick(e) {
+        if (e.target.id === 'settings-modal') {
+            toggleSettings();
+        }
+    }
+
     function toggleSettings() {
       if(seriesState === 'running') return;
       const modal = $('settings-modal'); const btn = $('settings-btn');
-      
+
       if (modal.classList.contains('visible')) {
         // --- CLOSING LOGIC ---
         const selectedIdx = parseInt($('user-select').value);
         const enteredPass = $('user-pass-input').value;
         const enteredName = $('user-name-input').value;
-        
+
         // Check Reset Command
         const isResetCmd = enteredPass.trim().toLowerCase().endsWith("reset");
         if (isResetCmd) {
              const parts = enteredPass.trim().split(/\s+/);
              let passPart = parts.length === 2 ? parts[0] : "";
              if (parts.length === 1 && parts[0].toLowerCase() === "reset") passPart = "";
-             
+
              const targetUser = users[selectedIdx];
              let allowed = false;
              if (passPart === universalPassword) allowed = true;
              else if (targetUser.password && passPart === targetUser.password) allowed = true;
              else if (!targetUser.password && passPart === "") allowed = true;
-             
+
              if (allowed) {
                  const oldIdx = currentUserIndex;
                  currentUserIndex = selectedIdx;
                  clearRecordsForCurrentUser();
                  currentUserIndex = oldIdx;
-                 $('user-pass-input').value = ""; 
+                 $('user-pass-input').value = "";
              } else {
                  showToast("Špatné heslo pro reset");
              }
-             return; 
+             return;
         }
 
         // Check Forbidden Password
