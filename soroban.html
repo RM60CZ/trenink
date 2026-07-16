@@ -7,9 +7,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#d4c49c">
-  
+
   <title>Soroban</title>
-  
+
   <script>
     const manifest = {
       "name": "Soroban",
@@ -42,17 +42,17 @@
       --rod-color: #8b4513;
       --bar-color: #5d4037;
       --text-color: #333;
-      --bead-gap: 4px; 
+      --bead-gap: 4px;
       --blue-bead: #ADD8E6;
       --blue-bead-active: #5DADE2;
-      
-      --bead-size: 40px; 
+
+      --bead-size: 40px;
       --bar-height: 15px;
-      --tiny-gap: 2px; 
-      
+      --tiny-gap: 2px;
+
       --heaven-height: calc(var(--bead-size) * 1.5 + var(--tiny-gap));
       --earth-height: calc(var(--bead-size) * 4 + var(--bead-gap) * 3 + var(--bead-size) * 0.5 + var(--tiny-gap));
-      
+
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
       --safe-left: env(safe-area-inset-left, 0px);
@@ -73,12 +73,21 @@
       --blue-bead-active: #4682B4;
     }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
-    
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    .soroban-frame, .rod, .bead, .problem-display, .control-panel, .series-counter {
+        user-select: none;
+        -webkit-user-select: none;
+    }
+    .modal-content, .modal-content select, .modal-content input {
+        user-select: text;
+        -webkit-user-select: text;
+    }
+
     html, body {
-      margin: 0; padding: 0; 
+      margin: 0; padding: 0;
       height: 100%; width: 100%;
-      background: var(--wood-dark); 
+      background: var(--wood-dark);
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       color: var(--text-color);
@@ -86,7 +95,7 @@
     }
 
     #orientation-warning {
-      display: none; 
+      display: none;
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
       background: var(--wood-dark);
@@ -103,7 +112,7 @@
     @keyframes rotate-phone { 0% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } 100% { transform: rotate(90deg); } }
 
     .app-container {
-      display: none; 
+      display: none;
       flex-direction: column;
       justify-content: flex-end;
       align-items: center;
@@ -124,23 +133,23 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      position: relative; 
+      position: relative;
     }
 
     .problem-display-container {
       position: relative;
       min-height: 50px;
       margin-bottom: 8px;
-      padding: 8px 15px; 
+      padding: 8px 15px;
     }
 
     .problem-display {
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 28px; 
+      font-size: 28px;
       font-weight: bold;
-      padding: 8px 15px; 
+      padding: 8px 15px;
       text-align: center;
       min-width: 150px;
       font-variant-numeric: tabular-nums;
@@ -164,12 +173,12 @@
       pointer-events: none;
       z-index: 5;
     }
-    
+
     .time-left { right: 100%; margin-right: 15px; text-align: right; }
     .time-right { left: 100%; margin-left: 15px; text-align: left; }
-    
+
     .medal-icon { font-size: 22px; margin-right: 4px; display: inline-block; transition: transform 0.1s; }
-    
+
     .medal-flutter { animation: medal-shake 0.5s ease-in-out; }
     @keyframes medal-shake {
       0%, 100% { transform: rotate(0deg) scale(1); }
@@ -184,7 +193,7 @@
         background: var(--wood-light); color: var(--bar-color); border: 2px solid var(--bar-color);
         box-shadow: 0 4px 8px rgba(0,0,0,0.2); cursor: pointer; font-size: 32px; letter-spacing: 3px;
     }
-    [data-theme="dark"] .problem-display-container.start-mode .problem-display { 
+    [data-theme="dark"] .problem-display-container.start-mode .problem-display {
         background: rgba(255,255,255,0.1); color: #ffccbc; border-color: #8e6d4f;
     }
     .problem-display-container.start-mode .problem-display:hover { transform: scale(1.02); opacity: 0.9; }
@@ -205,7 +214,7 @@
 
     .soroban-frame {
       display: flex; background: var(--wood-dark); border: 6px solid var(--bar-color); border-radius: 8px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4); padding: 0 10px; width: auto; position: relative; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4); padding: 0 10px; width: auto; position: relative;
       touch-action: none; overflow: hidden;
     }
 
@@ -225,7 +234,7 @@
       position: absolute; top: var(--tiny-gap); left: 50%; transform: translateX(-50%);
       width: var(--bead-size); height: var(--bead-size); background: var(--bead-unit); border-radius: 6px;
       border: 1px solid rgba(0,0,0,0.2); box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      transition: top 0.15s ease-out, background-color 0.3s; cursor: pointer; z-index: 5; 
+      transition: top 0.15s ease-out, background-color 0.3s; cursor: pointer; z-index: 5;
     }
     .heaven .bead.active { top: calc(var(--heaven-height) - var(--bead-size)); background: var(--bead-heaven-active); }
     .rod.blue-rod .heaven .bead { background: var(--blue-bead); }
@@ -255,7 +264,31 @@
     .earth .bead:nth-child(2).active { bottom: auto; top: calc(var(--bead-size) * 2 + var(--bead-gap) * 2); }
     .earth .bead:nth-child(1).active { bottom: auto; top: calc(var(--bead-size) * 3 + var(--bead-gap) * 3); }
 
-    .control-panel { display: flex; flex-direction: column; gap: 10px; margin-left: 8px; z-index: 205; align-items: center; position: relative; }
+    .control-panel { display: flex; flex-direction: column; gap: 10px; margin-left: 8px; z-index: 1005; align-items: center; position: relative; }
+
+    .current-user-display {
+        position: absolute;
+        bottom: calc(64px + 0.3 * var(--bead-size) + 50px);
+        width: 100%;
+        text-align: center;
+        font-size: 12px;
+        font-weight: bold;
+        color: var(--bar-color);
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        transform: rotate(180deg);
+        letter-spacing: 1px;
+        pointer-events: none;
+        height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        margin-left: auto;
+        margin-right: auto;
+        left: 0;
+        right: 0;
+    }
+
     .control-btn.reset-btn { margin-top: calc(64px + 0.3 * var(--bead-size)); }
     .control-btn {
       width: calc(var(--bead-size) * 0.9); height: calc(var(--bead-size) * 0.9); border-radius: 50%;
@@ -267,19 +300,21 @@
     .control-btn.active { border-color: #d32f2f; box-shadow: 0 0 10px rgba(211, 47, 47, 0.5); }
     .control-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; background: #333; }
 
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
     .modal.visible { display: flex; }
-    .modal-content { background: var(--wood-light); padding: 20px; border-radius: 12px; width: 90%; max-width: 300px; text-align: center; color: var(--text-color); z-index: 210; display: flex; flex-direction: column; }
+    .modal-content { background: var(--wood-light); padding: 20px; border-radius: 12px; width: 90%; max-width: 300px; text-align: center; color: var(--text-color); z-index: 1001; display: flex; flex-direction: column; }
     select, input, button { padding: 8px; border-radius: 6px; border: 1px solid var(--bar-color); background: white; color: black; font-size: 16px; width: 100%; }
+    input[type=password] { font-family: monospace; letter-spacing: 2px; }
+
     .setting-row { margin: 15px 0; display: flex; flex-direction: column; gap: 5px; text-align: left; }
     .setting-row label { font-weight: bold; }
     select option { font-weight: bold; }
-    select:disabled { opacity: 0.5; background: #eee; }
+    select:disabled, input:disabled { opacity: 0.6; background: #eee; cursor: not-allowed; }
 
-    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 3000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
     .toast.show { opacity: 1; }
 
-    .firework-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; display: flex; justify-content: center; align-items: center; }
+    .firework-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2000; display: flex; justify-content: center; align-items: center; }
     .firework-particle { position: absolute; width: 10px; height: 10px; border-radius: 50%; animation: firework-explode 1s ease-out forwards; }
     @keyframes firework-explode { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
 
@@ -313,6 +348,9 @@
       </div>
       <div class="control-panel">
         <div class="series-counter" id="series-counter" onclick="endSeries()" title="Kliknutím ukončíte sérii">1/5</div>
+
+        <div class="current-user-display" id="current-user-display">Zkušební</div>
+
         <button class="control-btn reset-btn" onclick="handleReset()" title="Vynulovat / Krok zpět">↺</button>
         <button class="control-btn" id="theme-btn" onclick="toggleTheme()" title="Téma">🌙</button>
         <button class="control-btn" id="settings-btn" onclick="toggleSettings()" title="Nastavení">⚙️</button>
@@ -321,17 +359,25 @@
   </div>
 
   <div class="toast" id="toast"></div>
-  <div class="modal" id="settings-modal">
+  
+  <div class="modal" id="settings-modal" onclick="handleModalBackgroundClick(event)">
     <div class="modal-content">
-      <div class="setting-row"><label>Počet tyčí:</label><select id="rod-count-select" onchange="applySettingsAndSave()"></select></div>
+      <!-- Seznam uživatelů: Nepřístupný (disabled), vždy Zkušební -->
+      <div class="setting-row"><label>Uživatel:</label><select id="user-select" disabled></select></div>
+      <!-- Pole jsou viditelná, ale neaktivní (disabled) -->
+      <div class="setting-row"><label>Jméno:</label><input type="text" id="user-name-input" disabled></div>
+      <div class="setting-row"><label>Heslo:</label><input type="password" id="user-pass-input" disabled placeholder="---"></div>
+      <hr style="width:100%; border-color:var(--bar-color); margin: 10px 0;">
+      <!-- Nastavení se ukládá až stiskem kolečka (při zavření okna) -->
+      <div class="setting-row"><label>Počet tyčí:</label><select id="rod-count-select"></select></div>
       <div class="setting-row"><label>Operace:</label>
-        <select id="operation-select" onchange="applySettingsAndSave()">
+        <select id="operation-select">
           <option value="+">Sčítání</option><option value="-">Odčítání</option><option value="+-">Sčítání + odčítání</option>
-          <option value="*1">Násobení 1</option><option value="*2">Násobenie 2</option>
+          <option value="*1">Násobení 1</option><option value="*2">Násobení 2</option>
         </select>
       </div>
       <div class="setting-row"><label>Série (počet příkladů):</label>
-        <select id="series-length-select" onchange="applySettingsAndSave()">
+        <select id="series-length-select">
           <option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5" selected>5</option>
           <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
         </select>
@@ -345,13 +391,99 @@
     const $ = id => document.getElementById(id);
     let rods = []; let currentProblem = { target: 0, parts: [], operation: '+' };
     let seriesState = 'idle'; let taskCounter = 0; let seriesStartTime = 0;
+    let lastCheckpointType = null;
+
+    // --- USER MANAGEMENT ---
+    const TRIAL_INDEX = 0;
+    let currentUserIndex = TRIAL_INDEX; // Vynuceně Zkušební
+    let users = [];
     
-    // --- STAV CHECKPOINTŮ ---
-    // Hodnota: null, 'first', 'intermediate'
-    let lastCheckpointType = null; 
+    function initUserManager() {
+        loadUsers();
+        checkAndClearDailyRecords(); // Kontrola denních rekordů
+        
+        // Naplnění seznamu (i když je neaktivní, data tam musí být)
+        populateUserSelect();
+        
+        // Uzamčení UI na Zkušební
+        const select = $('user-select');
+        select.value = TRIAL_INDEX;
+        select.disabled = true; // Seznam nepřístupný
+        
+        $('user-name-input').value = users[TRIAL_INDEX].name;
+        $('user-name-input').disabled = true;
+        $('user-pass-input').disabled = true;
+
+        updateUIForCurrentUser();
+    }
+
+    function loadUsers() {
+        // Pevný seznam uživatelů
+        users = [];
+        users.push({name: "Zkušební"});
+        for(let i=1; i<=10; i++) {
+            users.push({name: `Osoba ${i}`});
+        }
+    }
+
+    function checkAndClearDailyRecords() {
+        const today = new Date().toDateString();
+        const lastDate = localStorage.getItem('soroban_record_date');
+        
+        if (lastDate !== today) {
+            // Nový den -> smazat všechny rekordy (best_*)
+            Object.keys(localStorage).forEach(key => {
+                if (key.includes('best_')) {
+                    localStorage.removeItem(key);
+                }
+            });
+            localStorage.setItem('soroban_record_date', today);
+        }
+    }
+
+    function populateUserSelect() {
+        const select = $('user-select');
+        select.innerHTML = '';
+        users.forEach((u, i) => {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.innerText = u.name;
+            select.appendChild(opt);
+        });
+    }
+
+    // Funkce pro změnu uživatele odstraněna/vypnuta - vždy je TRIAL_INDEX
+
+    function getStorageKey(suffix) {
+        // Zkušební uživatel má svůj klíč
+        return `soroban_trial_${suffix}`;
+    }
+
+    function loadBestTime() {
+        const key = getStorageKey(`best_${NUM_RODS}_${currentProblem.operation}_${SERIES_LENGTH}`);
+        return localStorage.getItem(key) || "00:00";
+    }
+
+    function saveBestTime(timeStr) {
+        const key = getStorageKey(`best_${NUM_RODS}_${currentProblem.operation}_${SERIES_LENGTH}`);
+        localStorage.setItem(key, timeStr);
+    }
+
+    function updateUIForCurrentUser() {
+        $('current-user-display').innerText = users[currentUserIndex].name;
+        // Select je už nastaven a disabled v initUserManager
+        
+        loadSettings();
+        populateSettings();   
+        applySettingsToUI();
+
+        $('best-time').innerText = loadBestTime();
+        $('current-time').innerText = "00:00";
+    }
 
     function init() {
-      loadSettings(); populateSettings(); loadTheme(); checkOrientation();
+      initUserManager();
+      loadTheme(); checkOrientation();
       window.addEventListener('resize', () => { checkOrientation(); updateBeadSize(); });
       buildSoroban(); resetToStartState();
     }
@@ -365,34 +497,39 @@
         return minStr + ':' + secStr;
     }
 
-    function getStorageKey() { return `soroban_best_${NUM_RODS}_${currentProblem.operation}_${SERIES_LENGTH}`; }
-    function loadBestTime() { const val = localStorage.getItem(getStorageKey()); return val ? val : "00:00"; }
-    function saveBestTime(timeStr) { localStorage.setItem(getStorageKey(), timeStr); }
-
     function populateSettings() {
       const select = $('rod-count-select'); select.innerHTML = '';
       for(let i=2; i<=7; i++) { const opt = document.createElement('option'); opt.value = i; opt.innerText = i; if(i === NUM_RODS) opt.selected = true; select.appendChild(opt); }
       $('operation-select').value = currentProblem.operation; $('series-length-select').value = SERIES_LENGTH;
     }
+
     function loadSettings() {
-        const savedRods = localStorage.getItem('sorobanRods'); if(savedRods) NUM_RODS = parseInt(savedRods);
-        const savedOp = localStorage.getItem('sorobanOp'); if(savedOp) currentProblem.operation = savedOp;
-        const savedSeries = localStorage.getItem('sorobanSeries'); if(savedSeries) SERIES_LENGTH = parseInt(savedSeries);
+        const keyRods = getStorageKey('settings_rods');
+        const keyOp = getStorageKey('settings_op');
+        const keySeries = getStorageKey('settings_series');
+
+        if(localStorage.getItem(keyRods)) NUM_RODS = parseInt(localStorage.getItem(keyRods));
+        if(localStorage.getItem(keyOp)) currentProblem.operation = localStorage.getItem(keyOp);
+        if(localStorage.getItem(keySeries)) SERIES_LENGTH = parseInt(localStorage.getItem(keySeries));
     }
-    function saveSettings() { localStorage.setItem('sorobanRods', NUM_RODS); localStorage.setItem('sorobanOp', currentProblem.operation); localStorage.setItem('sorobanSeries', SERIES_LENGTH); }
-    function applySettingsAndSave() {
-      if(seriesState === 'running') return;
-      NUM_RODS = parseInt($('rod-count-select').value); currentProblem.operation = $('operation-select').value; SERIES_LENGTH = parseInt($('series-length-select').value);
-      saveSettings(); buildSoroban();
-      $('best-time').innerText = loadBestTime(); $('current-time').innerText = "00:00";
-      resetToStartState();
+
+    function saveSettings() {
+        localStorage.setItem(getStorageKey('settings_rods'), NUM_RODS);
+        localStorage.setItem(getStorageKey('settings_op'), currentProblem.operation);
+        localStorage.setItem(getStorageKey('settings_series'), SERIES_LENGTH);
+    }
+
+    function applySettingsToUI() {
+        $('rod-count-select').value = NUM_RODS;
+        $('operation-select').value = currentProblem.operation;
+        $('series-length-select').value = SERIES_LENGTH;
     }
 
     function checkOrientation() {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       const isPortrait = window.innerHeight > window.innerWidth;
       const warning = $('orientation-warning'); const app = $('app');
-      if (isStandalone) { warning.style.display = 'none'; app.style.display = 'flex'; } 
+      if (isStandalone) { warning.style.display = 'none'; app.style.display = 'flex'; }
       else { if (isPortrait) { warning.style.display = 'flex'; app.style.display = 'none'; } else { warning.style.display = 'none'; app.style.display = 'flex'; } }
     }
 
@@ -425,7 +562,6 @@
 
     function showToast(msg) { const t = $('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
 
-    // --- LOGIKA SÉRIE ---
     function resetToStartState() {
       seriesState = 'idle'; taskCounter = 0;
       $('problem-text').innerText = "S T A R T";
@@ -435,14 +571,13 @@
       $('series-counter').style.display = 'none';
       $('rod-count-select').disabled = false; $('operation-select').disabled = false; $('series-length-select').disabled = false; $('settings-btn').disabled = false;
       setSorobanValue(0);
-      // Čas vpravo se NEMAZUJE, zůstává z minulé série
     }
 
     function handleStartClick() {
       if(seriesState === 'running') return;
       seriesState = 'running'; taskCounter = 1;
       seriesStartTime = Date.now();
-      $('current-time').innerText = "00:00"; // Tady se vynuluje čas vpravo
+      $('current-time').innerText = "00:00";
       const container = $('problem-container');
       container.classList.remove('start-mode'); container.classList.add('running-mode'); container.onclick = null;
       $('series-counter').style.display = 'block'; $('series-counter').innerText = `${taskCounter}/${SERIES_LENGTH}`;
@@ -452,11 +587,10 @@
     }
 
     function endSeries() {
-        $('current-time').innerText = "00:00"; // Tady se vynuluje (to bylo v původním kódu, necháme)
+        $('current-time').innerText = "00:00";
         $('settings-modal').classList.remove('visible'); resetToStartState(); showToast("Série ukončena");
     }
 
-    // --- LOGIKA OPERACÍ ---
     function handleHeavenClick(index) {
       if(seriesState !== 'running') return;
       const rodData = rods[index - 1]; rodData.heaven = rodData.heaven === 0 ? 5 : 0;
@@ -489,14 +623,14 @@
       let totalValue = 0n;
       rods.forEach((rod, arrayIndex) => {
         const colIndex = NUM_RODS - arrayIndex; const exponent = colIndex - UNIT_INDEX;
-        if (exponent < 0) return;
+        if (exponent < 0) return; const power = Math.pow(10, exponent);
         totalValue += BigInt(rod.heaven + rod.earth) * (10n ** BigInt(exponent));
       });
       return Number(totalValue);
     }
 
     function generateNewProblem() {
-      lastCheckpointType = null; // Reset checkpointů
+      lastCheckpointType = null;
       const op = currentProblem.operation;
       const maxVal = Math.pow(10, NUM_RODS) - 1; const minFill = Math.pow(10, NUM_RODS - 1);
       let a, b, c, result;
@@ -506,7 +640,7 @@
         currentProblem.parts = parts; currentProblem.target = parts[0] + parts[1] + parts[2];
       } else if (op === '-') {
         a = randomInt(minFill, maxVal); let remainder = a - 1; let subParts = splitNumber(remainder, 2);
-        currentProblem.parts = [a, subParts[0], subParts[1]]; currentProblem.target = a - subParts[0] - subParts[1];
+        currentProblem.parts = [a, -subParts[0], -subParts[1]]; currentProblem.target = a - subParts[0] - subParts[1];
       } else if (op === '*1') {
         b = randomInt(2, 9); let maxA = Math.floor(maxVal / b); if (maxA < 2) maxA = 2; let minA = 2; if (maxA > minFill) minA = minFill;
         a = randomInt(minA, maxA); currentProblem.parts = [a, b]; currentProblem.target = a * b;
@@ -530,7 +664,6 @@
     }
 
     function renderProblemDisplay(underlineMode) {
-        // underlineMode: 'none', 'first', 'two'
         const op = currentProblem.operation; const parts = currentProblem.parts; let html = '';
 
         const formatPart = (p, isFirst) => {
@@ -538,11 +671,9 @@
             return (isFirst ? '' : ' ' + sign + ' ') + formatNumber(val);
         };
 
-        // Násobení - žádné podtrhávání
         if (op === '*1' || op === '*2') {
              html = `${formatNumber(parts[0])} × ${formatNumber(parts[1])}`;
-        } 
-        // Sčítání a Odčítání a +- : 3 čísla
+        }
         else {
             let p0 = formatNumber(parts[0]);
             let p1Val = Math.abs(parts[1]); let p1Sign = parts[1] >= 0 ? '+' : '-';
@@ -553,9 +684,8 @@
             if (underlineMode === 'first') {
                 html = `<span class="problem-part underlined-first">${p0}</span>${p1Str}${p2Str}`;
             } else if (underlineMode === 'two') {
-                // Podtržení dvou čísel:
                 if (op === '+') { html = `<span class="problem-part underlined">${p0} + ${formatNumber(parts[1])}</span> + ${formatNumber(parts[2])}`; }
-                else if (op === '-') { html = `<span class="problem-part underlined">${p0} - ${formatNumber(parts[1])}</span> - ${formatNumber(parts[2])}`; }
+                else if (op === '-') { html = `<span class="problem-part underlined">${p0} - ${formatNumber(Math.abs(parts[1]))}</span> - ${formatNumber(Math.abs(parts[2]))}`; }
                 else if (op === '+-') { html = `<span class="problem-part underlined">${p0}${p1Str}</span>${p2Str}`; }
             } else {
                 html = p0 + p1Str + p2Str;
@@ -578,45 +708,33 @@
       const currentVal = getCurrentValue();
       const op = currentProblem.operation;
 
-      // Násobení - bez checkpointů
       if (op === '*1' || op === '*2') {
         if (currentVal === currentProblem.target) handleSuccess();
         return;
       }
 
-      // Výpočet cílů pro checkpointy
       const firstTarget = currentProblem.parts[0];
       let intermediateTarget;
-      if (op === '-') {
-          intermediateTarget = currentProblem.parts[0] - currentProblem.parts[1];
-      } else {
-          intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1];
-      }
+      if (op === '-') { intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1]; }
+      else { intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1]; }
       const finalTarget = currentProblem.target;
 
-      // Logika aktualizace checkpointů a podtržení
-      // Priorita: Finál > Mezivýsledek > První > Reset
-
       if (currentVal === finalTarget) {
-          // 1. Úspěšně dokončeno
-          lastCheckpointType = null; // Reset pro další příklad
+          lastCheckpointType = null;
           renderProblemDisplay('none');
           handleSuccess();
-      } 
+      }
       else if (currentVal === intermediateTarget) {
-          // 2. Dosáhli jsme mezivýsledku
           if (lastCheckpointType !== 'intermediate') { showToast("Správně! Pokračujte."); }
           lastCheckpointType = 'intermediate';
           renderProblemDisplay('two');
-      } 
+      }
       else if (currentVal === firstTarget) {
-          // 3. Dosáhli jsme prvního čísla
           if (lastCheckpointType !== 'first') { showToast("První číslo OK"); }
           lastCheckpointType = 'first';
           renderProblemDisplay('first');
-      } 
+      }
       else {
-          // 4. Žádný checkpoint
           renderProblemDisplay('none');
       }
     }
@@ -624,7 +742,7 @@
     function handleSuccess() {
         if(seriesState !== 'running') return;
         showToast("Správně! 👍"); taskCounter++;
-        
+
         if(taskCounter > SERIES_LENGTH) {
             seriesState = 'finished';
             let endTime = Date.now(); let duration = endTime - seriesStartTime; let formattedTime = formatDuration(duration);
@@ -669,37 +787,23 @@
     }
 
     function handleReset() {
-        // 1. Pokud neběží série, resetuj na 0
         if(seriesState !== 'running') { setSorobanValue(0); return; }
-
-        // 2. Získej aktuální stav
         const currentVal = getCurrentValue();
         const op = currentProblem.operation;
-        
-        // Pokud je násobení, resetuj na 0 (žádné checkpointy)
+
         if (op === '*1' || op === '*2') { setSorobanValue(0); return; }
 
-        // Vypočti cíle
         const firstTarget = currentProblem.parts[0];
         let intermediateTarget;
-        if (op === '-') { intermediateTarget = currentProblem.parts[0] - currentProblem.parts[1]; }
+        if (op === '-') { intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1]; }
         else { intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1]; }
 
-        // 3. Podmínka: Pokud je viditelné podtržení (shoda), nedělej nic
         if (lastCheckpointType === 'intermediate' && currentVal === intermediateTarget) return;
         if (lastCheckpointType === 'first' && currentVal === firstTarget) return;
 
-        // 4. Jinak se vrať k poslednímu checkpointu
-        if (lastCheckpointType === 'intermediate') {
-            setSorobanValue(intermediateTarget);
-            renderProblemDisplay('two');
-        } else if (lastCheckpointType === 'first') {
-            setSorobanValue(firstTarget);
-            renderProblemDisplay('first');
-        } else {
-            setSorobanValue(0);
-            renderProblemDisplay('none');
-        }
+        if (lastCheckpointType === 'intermediate') { setSorobanValue(intermediateTarget); renderProblemDisplay('two'); }
+        else if (lastCheckpointType === 'first') { setSorobanValue(firstTarget); renderProblemDisplay('first'); }
+        else { setSorobanValue(0); renderProblemDisplay('none'); }
     }
 
     function setSorobanValue(val) {
@@ -714,11 +818,49 @@
       updateRodsVisuals();
     }
 
+    function handleModalBackgroundClick(e) {
+        if (e.target.id === 'settings-modal') {
+            toggleSettings();
+        }
+    }
+
     function toggleSettings() {
       if(seriesState === 'running') return;
       const modal = $('settings-modal'); const btn = $('settings-btn');
-      if (modal.classList.contains('visible')) { modal.classList.remove('visible'); btn.classList.remove('active'); }
-      else { modal.classList.add('visible'); btn.classList.add('active'); }
+
+      if (modal.classList.contains('visible')) {
+        // --- CLOSING LOGIC ---
+        // Uživatel se neukládá, je vždy Zkušební.
+        // Ukládáme pouze nastavení (tyče, operace...)
+        
+        // Save Settings
+        NUM_RODS = parseInt($('rod-count-select').value);
+        currentProblem.operation = $('operation-select').value;
+        SERIES_LENGTH = parseInt($('series-length-select').value);
+        saveSettings();
+
+        modal.classList.remove('visible'); btn.classList.remove('active');
+        updateUIForCurrentUser();
+        buildSoroban();
+        resetToStartState();
+
+      } else {
+        // --- OPENING LOGIC ---
+        // Zajištění, že seznam je zamčený na Zkušební
+        $('user-select').value = TRIAL_INDEX;
+        $('user-select').disabled = true; 
+        
+        $('user-name-input').value = users[TRIAL_INDEX].name;
+        $('user-name-input').disabled = true;
+        $('user-pass-input').disabled = true;
+
+        // Načtení aktuálního nastavení do UI
+        $('rod-count-select').value = NUM_RODS;
+        $('operation-select').value = currentProblem.operation;
+        $('series-length-select').value = SERIES_LENGTH;
+
+        modal.classList.add('visible'); btn.classList.add('active');
+      }
     }
 
     function toggleTheme() { const body = document.body; body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark'; saveTheme(); updateThemeIcons(); }
