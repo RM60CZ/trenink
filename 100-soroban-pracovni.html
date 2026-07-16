@@ -318,7 +318,7 @@
     .setting-row { margin: 15px 0; display: flex; flex-direction: column; gap: 5px; text-align: left; }
     .setting-row label { font-weight: bold; }
     select option { font-weight: bold; }
-    select:disabled { opacity: 0.5; background: #eee; }
+    select:disabled, input:disabled { opacity: 0.5; background: #eee; }
 
     .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 3000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
     .toast.show { opacity: 1; }
@@ -372,10 +372,9 @@
   <div class="modal" id="settings-modal" onclick="handleModalBackgroundClick(event)">
     <div class="modal-content">
       <div class="setting-row"><label>Uživatel:</label><select id="user-select" onchange="handleUserChange()"></select></div>
-      <div class="setting-row"><label>Jméno (max 10 znaků):</label><input type="text" id="user-name-input" maxlength="10" oninput="handleNameChange()"></div>
+      <div class="setting-row"><label>Jméno (max 10 znaků):</label><input type="text" id="user-name-input" maxlength="10"></div>
       <div class="setting-row"><label>Heslo:</label><input type="password" id="user-pass-input" placeholder="volitelné"></div>
       <hr style="width:100%; border-color:var(--bar-color); margin: 10px 0;">
-      <!-- Odstraněno onchange="applySettingsAndSave()" -->
       <div class="setting-row"><label>Počet tyčí:</label><select id="rod-count-select"></select></div>
       <div class="setting-row"><label>Operace:</label>
         <select id="operation-select">
@@ -471,13 +470,18 @@
         const newIdx = parseInt($('user-select').value);
         $('user-name-input').value = users[newIdx].name;
         $('user-pass-input').value = "";
-        
-        // Načtení nastavení pro vybraného uživatele do UI (aby bylo vidět, co má nastavené)
+
+        // ZAKÁZÁNÍ POLE PRO ZKUŠEBNÍHO UŽIVATELE
         if (newIdx === TRIAL_INDEX) {
-            $('rod-count-select').value = 7;
-            $('operation-select').value = '+';
-            $('series-length-select').value = 5;
+            $('user-name-input').disabled = true;
+            $('user-pass-input').disabled = true;
+            $('user-pass-input').placeholder = "";
         } else {
+            $('user-name-input').disabled = false;
+            $('user-pass-input').disabled = false;
+            $('user-pass-input').placeholder = "volitelné";
+            
+            // Načtení nastavení pro náhled
             const prefix = `soroban_u${newIdx}_`;
             const rods = localStorage.getItem(prefix + 'settings_rods') || 7;
             const op = localStorage.getItem(prefix + 'settings_op') || '+';
@@ -487,10 +491,6 @@
             $('operation-select').value = op;
             $('series-length-select').value = parseInt(series);
         }
-    }
-
-    function handleNameChange() {
-        if (currentUserIndex === TRIAL_INDEX) return;
     }
 
     function getStorageKey(suffix) {
@@ -530,7 +530,16 @@
         $('user-name-input').value = users[currentUserIndex].name;
         $('user-pass-input').value = "";
 
-        $('user-name-input').disabled = (currentUserIndex === TRIAL_INDEX);
+        // Nastavení disabled stavu podle uživatele
+        if (currentUserIndex === TRIAL_INDEX) {
+            $('user-name-input').disabled = true;
+            $('user-pass-input').disabled = true;
+            $('user-pass-input').placeholder = "";
+        } else {
+            $('user-name-input').disabled = false;
+            $('user-pass-input').disabled = false;
+            $('user-pass-input').placeholder = "volitelné";
+        }
 
         loadSettings();
         populateSettings();   
@@ -921,7 +930,11 @@
 
              const targetUser = users[selectedIdx];
              let allowed = false;
-             if (passPart === universalPassword) allowed = true;
+             
+             // ZKUŠEBNÍ UŽIVATEL RESET: Povoleno bez hesla
+             if (selectedIdx === TRIAL_INDEX && passPart === "") allowed = true;
+             // OSTATNÍ: přes univerzální nebo vlastní heslo
+             else if (passPart === universalPassword) allowed = true;
              else if (targetUser.password && passPart === targetUser.password) allowed = true;
              else if (!targetUser.password && passPart === "") allowed = true;
 
@@ -943,49 +956,66 @@
              return;
         }
 
-        // 3. Authentication for Switching User
-        if (selectedIdx !== currentUserIndex) {
-            const targetUser = users[selectedIdx];
-            if (targetUser.password && targetUser.password !== enteredPass && enteredPass !== universalPassword) {
-                if (enteredPass !== "") showToast("Špatné heslo!");
-                $('user-pass-input').focus();
-                return;
+        // 3. Handle Switching/Saving based on user type
+        if (selectedIdx === TRIAL_INDEX) {
+            // ZKUŠEBNÍ UŽIVATEL: Ignorujeme jméno a heslo, pouze přepneme a uložíme nastavení
+            currentUserIndex = selectedIdx;
+            localStorage.setItem('soroban_last_user', currentUserIndex);
+            
+            // Save Settings
+            NUM_RODS = parseInt($('rod-count-select').value);
+            currentProblem.operation = $('operation-select').value;
+            SERIES_LENGTH = parseInt($('series-length-select').value);
+            saveSettings();
+
+            modal.classList.remove('visible'); btn.classList.remove('active');
+            updateUIForCurrentUser();
+            buildSoroban();
+            resetToStartState();
+            
+        } else {
+            // BĚŽNÝ UŽIVATEL: Autentizace a ukládání
+            
+            // Authentication for Switching User
+            if (selectedIdx !== currentUserIndex) {
+                const targetUser = users[selectedIdx];
+                if (targetUser.password && targetUser.password !== enteredPass && enteredPass !== universalPassword) {
+                    if (enteredPass !== "") showToast("Špatné heslo!");
+                    $('user-pass-input').focus();
+                    return;
+                }
             }
-        }
 
-        // 4. Save User Details (Name/Pass)
-        if (enteredPass === universalPassword) {
-            users[selectedIdx].password = "";
+            // Save User Details (Name/Pass)
+            if (enteredPass === universalPassword) {
+                users[selectedIdx].password = "";
+                saveUsers();
+                showToast("Heslo zrušeno");
+            } else if (enteredPass !== "" && enteredPass !== users[selectedIdx].password) {
+                users[selectedIdx].password = enteredPass;
+                saveUsers();
+                showToast("Heslo nastaveno");
+            }
+            
+            users[selectedIdx].name = enteredName;
             saveUsers();
-            showToast("Heslo zrušeno");
-        } else if (enteredPass !== "" && enteredPass !== users[selectedIdx].password) {
-            users[selectedIdx].password = enteredPass;
-            saveUsers();
-            showToast("Heslo nastaveno");
+            
+            // Switch User
+            currentUserIndex = selectedIdx;
+            localStorage.setItem('soroban_last_user', currentUserIndex);
+
+            // Save Settings
+            NUM_RODS = parseInt($('rod-count-select').value);
+            currentProblem.operation = $('operation-select').value;
+            SERIES_LENGTH = parseInt($('series-length-select').value);
+            saveSettings();
+
+            // Finalize UI
+            modal.classList.remove('visible'); btn.classList.remove('active');
+            updateUIForCurrentUser();
+            buildSoroban();
+            resetToStartState();
         }
-        
-        users[selectedIdx].name = enteredName;
-        saveUsers();
-        
-        // 5. Switch User
-        currentUserIndex = selectedIdx;
-        localStorage.setItem('soroban_last_user', currentUserIndex);
-
-        // 6. Save Settings (APPLY ON CLOSE)
-        NUM_RODS = parseInt($('rod-count-select').value);
-        currentProblem.operation = $('operation-select').value;
-        SERIES_LENGTH = parseInt($('series-length-select').value);
-        saveSettings();
-
-        // 7. Finalize UI
-        modal.classList.remove('visible'); btn.classList.remove('active');
-        
-        $('current-user-display').innerText = users[currentUserIndex].name;
-        $('user-name-input').disabled = (currentUserIndex === TRIAL_INDEX);
-        $('best-time').innerText = loadBestTime();
-        
-        buildSoroban();
-        resetToStartState();
 
       } else {
         // --- OPENING LOGIC ---
@@ -993,19 +1023,21 @@
         $('user-name-input').value = users[currentUserIndex].name;
         $('user-pass-input').value = "";
         
-        // Načtení aktuálního nastavení do UI při otevření
+        // Nastavení disabled stavu při otevření
         if (currentUserIndex === TRIAL_INDEX) {
-            $('rod-count-select').value = 7; // Trial má fixní nebo výchozí
-            // Ale pokud jsme změnili globál, bereme z globálu:
-            $('rod-count-select').value = NUM_RODS; 
-            $('operation-select').value = currentProblem.operation;
-            $('series-length-select').value = SERIES_LENGTH;
+            $('user-name-input').disabled = true;
+            $('user-pass-input').disabled = true;
+            $('user-pass-input').placeholder = "";
         } else {
-             // Pro běžné uživatele načteme z globálu (což odpovídá načtenému stavu)
-             $('rod-count-select').value = NUM_RODS;
-             $('operation-select').value = currentProblem.operation;
-             $('series-length-select').value = SERIES_LENGTH;
+            $('user-name-input').disabled = false;
+            $('user-pass-input').disabled = false;
+            $('user-pass-input').placeholder = "volitelné";
         }
+
+        // Načtení aktuálního nastavení do UI při otevření
+        $('rod-count-select').value = NUM_RODS;
+        $('operation-select').value = currentProblem.operation;
+        $('series-length-select').value = SERIES_LENGTH;
 
         modal.classList.add('visible'); btn.classList.add('active');
       }
