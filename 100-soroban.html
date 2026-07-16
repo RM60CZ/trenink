@@ -127,12 +127,17 @@
       position: relative; 
     }
 
+    .problem-display-container {
+      position: relative;
+      min-height: 50px;
+      margin-bottom: 8px;
+      padding: 8px 15px; 
+    }
+
     .problem-display {
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 50px;
-      
       font-size: 28px; 
       font-weight: bold;
       padding: 8px 15px; 
@@ -142,221 +147,122 @@
       letter-spacing: 1px;
       cursor: default;
       transition: all 0.3s ease;
-      
-      /* Mezera mezi tlačítkem a sorobanem */
-      margin-bottom: 8px; 
+      border-radius: 30px;
+      border: 2px solid transparent;
+      background: transparent;
     }
 
-    /* --- TLAČÍTKO START --- */
-    .problem-display.start-mode {
-        background: var(--wood-light);
-        color: var(--bar-color);
-        border: 2px solid var(--bar-color);
-        border-radius: 30px;
-        padding: 10px 30px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        cursor: pointer;
-        font-size: 32px;
-        letter-spacing: 3px;
-    }
-    [data-theme="dark"] .problem-display.start-mode { 
-        background: rgba(255,255,255,0.1);
-        color: #ffccbc; 
-        border-color: #8e6d4f;
-    }
-    .problem-display.start-mode:hover {
-        transform: scale(1.02);
-        opacity: 0.9;
-    }
-    .problem-display.running-mode {
-        background: transparent;
-        border: none;
-        padding: 8px 10px;
-        box-shadow: none;
-    }
-
-    /* --- POČÍTADLO SÉRIE --- */
-    .series-counter {
+    .time-display {
       position: absolute;
-      /* Posun dolů pro zarovnání s čísly */
-      top: 16px; 
-      left: 0;
-      width: 100%;
-      margin-bottom: 10px;
-      text-align: center;
-      
-      background: #d32f2f;
-      color: white;
-      font-size: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
       font-weight: bold;
-      padding: 4px 0;
-      border-radius: 12px;
-      display: none;
-      cursor: pointer;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      z-index: 10;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 5;
+    }
+    
+    .time-left { right: 100%; margin-right: 15px; text-align: right; }
+    .time-right { left: 100%; margin-left: 15px; text-align: left; }
+    
+    .medal-icon { font-size: 22px; margin-right: 4px; display: inline-block; transition: transform 0.1s; }
+    
+    .medal-flutter { animation: medal-shake 0.5s ease-in-out; }
+    @keyframes medal-shake {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      25% { transform: rotate(-15deg) scale(1.3); }
+      50% { transform: rotate(15deg) scale(1.3); }
+      75% { transform: rotate(-10deg) scale(1.2); }
+    }
+
+    .problem-display-container.start-mode .time-display { opacity: 1; }
+
+    .problem-display-container.start-mode .problem-display {
+        background: var(--wood-light); color: var(--bar-color); border: 2px solid var(--bar-color);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2); cursor: pointer; font-size: 32px; letter-spacing: 3px;
+    }
+    [data-theme="dark"] .problem-display-container.start-mode .problem-display { 
+        background: rgba(255,255,255,0.1); color: #ffccbc; border-color: #8e6d4f;
+    }
+    .problem-display-container.start-mode .problem-display:hover { transform: scale(1.02); opacity: 0.9; }
+
+    .problem-display-container.running-mode .problem-display {
+        background: transparent; border: none; padding: 8px 10px; box-shadow: none;
+    }
+
+    .series-counter {
+      position: absolute; top: 16px; left: 0; width: 100%; margin-bottom: 10px; text-align: center;
+      background: #d32f2f; color: white; font-size: 14px; font-weight: bold; padding: 4px 0;
+      border-radius: 12px; display: none; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 10;
     }
     .series-counter:hover { background: #b71c1c; }
 
-    .problem-part.underlined {
-        border-bottom: 3px solid #d32f2f;
-        padding-bottom: 2px;
-    }
+    .problem-part.underlined { border-bottom: 3px solid #d32f2f; padding-bottom: 2px; }
+    .problem-part.underlined-first { border-bottom: 3px solid #d32f2f; padding-bottom: 2px; }
 
     .soroban-frame {
-      display: flex;
-      background: var(--wood-dark);
-      border: 6px solid var(--bar-color);
-      border-radius: 8px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-      padding: 0 10px; 
-      width: auto; 
-      position: relative; 
-      touch-action: none;
-      overflow: hidden;
+      display: flex; background: var(--wood-dark); border: 6px solid var(--bar-color); border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4); padding: 0 10px; width: auto; position: relative; 
+      touch-action: none; overflow: hidden;
     }
 
-    .rods-container {
-      display: flex; 
-      justify-content: flex-start;
-      gap: 4px; 
-      z-index: 10;
-      align-items: center;
-    }
+    .rods-container { display: flex; justify-content: flex-start; gap: 4px; z-index: 10; align-items: center; }
 
     .rod {
-      width: calc(var(--bead-size) + 10px);
-      display: flex; flex-direction: column; 
-      background: transparent; position: relative; 
-      height: calc(var(--heaven-height) + var(--bar-height) + var(--earth-height));
-      align-items: center;
+      width: calc(var(--bead-size) + 10px); display: flex; flex-direction: column; background: transparent;
+      position: relative; height: calc(var(--heaven-height) + var(--bar-height) + var(--earth-height)); align-items: center;
     }
-    
     .rod::before {
       content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px;
       background: var(--rod-color); transform: translateX(-50%); z-index: 0;
     }
 
-    .heaven {
-      position: relative;
-      width: 100%;
-      height: var(--heaven-height);
-      order: 1;
-    }
-    
+    .heaven { position: relative; width: 100%; height: var(--heaven-height); order: 1; }
     .heaven .bead {
-      position: absolute;
-      top: var(--tiny-gap); 
-      left: 50%; 
-      transform: translateX(-50%);
-      width: var(--bead-size);
-      height: var(--bead-size);
-      background: var(--bead-unit);
-      border-radius: 6px;
-      border: 1px solid rgba(0,0,0,0.2);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      transition: top 0.15s ease-out, background-color 0.3s;
-      cursor: pointer;
-      z-index: 5; 
+      position: absolute; top: var(--tiny-gap); left: 50%; transform: translateX(-50%);
+      width: var(--bead-size); height: var(--bead-size); background: var(--bead-unit); border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.2); box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: top 0.15s ease-out, background-color 0.3s; cursor: pointer; z-index: 5; 
     }
-    
-    .heaven .bead.active {
-      top: calc(var(--heaven-height) - var(--bead-size));
-      background: var(--bead-heaven-active);
-    }
+    .heaven .bead.active { top: calc(var(--heaven-height) - var(--bead-size)); background: var(--bead-heaven-active); }
     .rod.blue-rod .heaven .bead { background: var(--blue-bead); }
     .rod.blue-rod .heaven .bead.active { background: var(--blue-bead-active); }
 
-    .reckoning-bar {
-      position: relative;
-      width: 100%;
-      height: var(--bar-height);
-      order: 2; 
-      flex-shrink: 0;
-    }
-    
+    .reckoning-bar { position: relative; width: 100%; height: var(--bar-height); order: 2; flex-shrink: 0; }
     .reckoning-bar::after {
-      content: '';
-      position: absolute;
-      top: 0; left: -1000px; right: -1000px; 
-      height: 100%;
-      background: var(--bar-color);
-      z-index: 1; 
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      content: ''; position: absolute; top: 0; left: -1000px; right: -1000px; height: 100%;
+      background: var(--bar-color); z-index: 1; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
 
-    .earth {
-      position: relative;
-      width: 100%;
-      height: var(--earth-height);
-      order: 3;
-    }
-    
+    .earth { position: relative; width: 100%; height: var(--earth-height); order: 3; }
     .earth .bead {
-      position: absolute;
-      left: 50%; 
-      transform: translateX(-50%);
-      width: var(--bead-size);
-      height: var(--bead-size);
-      background: var(--bead-unit);
-      border-radius: 6px;
-      border: 1px solid rgba(0,0,0,0.2);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      transition: bottom 0.15s ease-out, background-color 0.3s;
-      cursor: pointer;
-      z-index: 5;
+      position: absolute; left: 50%; transform: translateX(-50%);
+      width: var(--bead-size); height: var(--bead-size); background: var(--bead-unit); border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.2); box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: bottom 0.15s ease-out, background-color 0.3s; cursor: pointer; z-index: 5;
     }
-    
     .earth .bead:nth-child(1) { bottom: var(--tiny-gap); }
     .earth .bead:nth-child(2) { bottom: calc(var(--tiny-gap) + var(--bead-size) + var(--bead-gap)); }
     .earth .bead:nth-child(3) { bottom: calc(var(--tiny-gap) + var(--bead-size) * 2 + var(--bead-gap) * 2); }
     .earth .bead:nth-child(4) { bottom: calc(var(--tiny-gap) + var(--bead-size) * 3 + var(--bead-gap) * 3); }
 
-    .earth .bead.active {
-      background: var(--bead-earth-active); 
-      box-shadow: inset 0 0 5px rgba(255,255,255,0.3);
-    }
-    
+    .earth .bead.active { background: var(--bead-earth-active); box-shadow: inset 0 0 5px rgba(255,255,255,0.3); }
     .earth .bead:nth-child(4).active { bottom: auto; top: 0; }
     .earth .bead:nth-child(3).active { bottom: auto; top: calc(var(--bead-size) + var(--bead-gap)); }
     .earth .bead:nth-child(2).active { bottom: auto; top: calc(var(--bead-size) * 2 + var(--bead-gap) * 2); }
     .earth .bead:nth-child(1).active { bottom: auto; top: calc(var(--bead-size) * 3 + var(--bead-gap) * 3); }
 
-    .control-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-left: 8px;
-      z-index: 205;
-      align-items: center;
-      position: relative;
-    }
-
-    /* Tlačítko Reset - dynamická pozice */
-    .control-btn.reset-btn {
-        /* Výpočet: 50px (displej) + 8px (mezera) + 6px (border) + střed nebes - polovina tlačítka */
-        margin-top: calc(64px + 0.3 * var(--bead-size));
-    }
-
+    .control-panel { display: flex; flex-direction: column; gap: 10px; margin-left: 8px; z-index: 205; align-items: center; position: relative; }
+    .control-btn.reset-btn { margin-top: calc(64px + 0.3 * var(--bead-size)); }
     .control-btn {
-      width: calc(var(--bead-size) * 0.9);
-      height: calc(var(--bead-size) * 0.9);
-      border-radius: 50%;
-      background: #333;
-      color: #fff;
-      border: 2px solid #555;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: calc(var(--bead-size) * 0.5);
-      cursor: pointer;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-      transition: transform 0.1s, background 0.2s, opacity 0.2s;
-      padding: 0;
-      font-family: inherit;
-      flex-shrink: 0;
+      width: calc(var(--bead-size) * 0.9); height: calc(var(--bead-size) * 0.9); border-radius: 50%;
+      background: #333; color: #fff; border: 2px solid #555; display: flex; justify-content: center; align-items: center;
+      font-size: calc(var(--bead-size) * 0.5); cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+      transition: transform 0.1s, background 0.2s, opacity 0.2s; padding: 0; font-family: inherit; flex-shrink: 0;
     }
-
     .control-btn:active { transform: scale(0.95); background: #555; }
     .control-btn.active { border-color: #d32f2f; box-shadow: 0 0 10px rgba(211, 47, 47, 0.5); }
     .control-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; background: #333; }
@@ -364,80 +270,50 @@
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center; }
     .modal.visible { display: flex; }
     .modal-content { background: var(--wood-light); padding: 20px; border-radius: 12px; width: 90%; max-width: 300px; text-align: center; color: var(--text-color); z-index: 210; display: flex; flex-direction: column; }
-    
     select, input, button { padding: 8px; border-radius: 6px; border: 1px solid var(--bar-color); background: white; color: black; font-size: 16px; width: 100%; }
-    
     .setting-row { margin: 15px 0; display: flex; flex-direction: column; gap: 5px; text-align: left; }
     .setting-row label { font-weight: bold; }
     select option { font-weight: bold; }
-    
     select:disabled { opacity: 0.5; background: #eee; }
 
     .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
     .toast.show { opacity: 1; }
 
-    .firework-container {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      pointer-events: none;
-      z-index: 1000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .firework-particle {
-      position: absolute;
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      animation: firework-explode 1s ease-out forwards;
-    }
-    @keyframes firework-explode {
-      0% { transform: translate(0, 0) scale(1); opacity: 1; }
-      100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+    .firework-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; display: flex; justify-content: center; align-items: center; }
+    .firework-particle { position: absolute; width: 10px; height: 10px; border-radius: 50%; animation: firework-explode 1s ease-out forwards; }
+    @keyframes firework-explode { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
+
+    .flying-time {
+      position: fixed; font-weight: bold; white-space: nowrap; z-index: 2000; color: #FFD700;
+      text-shadow: 0 0 10px rgba(0,0,0,0.8); pointer-events: none;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    @media screen and (orientation: landscape) {
-      .app-container { display: flex; }
-      #orientation-warning { display: none !important; }
-    }
-    
-    @media screen and (orientation: portrait) {
-      @media all and (display-mode: browser) {
-        .app-container { display: none !important; }
-        #orientation-warning { display: flex !important; }
-      }
-    }
-
-    @media (hover: hover) and (pointer: fine) {
-      .app-container { justify-content: center; }
-      .soroban-wrapper { margin: 0; align-items: flex-start; }
-      .control-btn:hover { background: #555; }
-    }
+    @media screen and (orientation: landscape) { .app-container { display: flex; } #orientation-warning { display: none !important; } }
+    @media screen and (orientation: portrait) { @media all and (display-mode: browser) { .app-container { display: none !important; } #orientation-warning { display: flex !important; } } }
+    @media (hover: hover) and (pointer: fine) { .app-container { justify-content: center; } .soroban-wrapper { margin: 0; align-items: flex-start; } .control-btn:hover { background: #555; } }
   </style>
 </head>
 <body>
 
   <div id="orientation-warning">
-    <svg viewBox="0 0 24 24">
-      <path d="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h1.5C23.44 4.84 18.29 0 12 0l-.66.03 3.81 3.81 1.33-1.32zm-6.25-.77c-.59-.59-1.54-.59-2.12 0L1.75 8.11c-.59.59-.59 1.54 0 2.12l12.02 12.02c.59.59 1.54.59 2.12 0l6.36-6.36c.59-.59.59-1.54 0-2.12L10.23 1.75zm4.6 19.44L2.81 9.17l6.36-6.36 12.02 12.02-6.36 6.36zm-7.31.29C4.25 19.94 1.91 16.76 1.55 13H.05C.56 19.16 5.71 24 12 24l.66-.03-3.81-3.81-1.33 1.32z"/>
-    </svg>
+    <svg viewBox="0 0 24 24"><path d="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h1.5C23.44 4.84 18.29 0 12 0l-.66.03 3.81 3.81 1.33-1.32zm-6.25-.77c-.59-.59-1.54-.59-2.12 0L1.75 8.11c-.59.59-.59 1.54 0 2.12l12.02 12.02c.59.59 1.54.59 2.12 0l6.36-6.36c.59-.59.59-1.54 0-2.12L10.23 1.75zm4.6 19.44L2.81 9.17l6.36-6.36 12.02 12.02-6.36 6.36zm-7.31.29C4.25 19.94 1.91 16.76 1.55 13H.05C.56 19.16 5.71 24 12 24l-.66-.03-3.81-3.81-1.33 1.32z"/></svg>
     <div>Prosím otočte zařízení na šířku</div>
   </div>
 
   <div class="app-container" id="app">
-    
     <div class="soroban-wrapper">
       <div class="soroban-column">
-        <div class="problem-display start-mode" id="problem-display" onclick="handleStartClick()">S T A R T</div>
-        
-        <div class="soroban-frame" id="frame">
-          <div class="rods-container" id="soroban"></div>
+        <div class="problem-display-container start-mode" id="problem-container" onclick="handleStartClick()">
+          <div class="time-display time-left" id="time-left-wrapper"><span class="medal-icon" id="medal-icon">🥇</span><span id="best-time">00:00</span></div>
+          <div class="problem-display" id="problem-text">S T A R T</div>
+          <div class="time-display time-right" id="time-right-wrapper"><span id="current-time">00:00</span></div>
         </div>
+        <div class="soroban-frame" id="frame"><div class="rods-container" id="soroban"></div></div>
       </div>
-
       <div class="control-panel">
         <div class="series-counter" id="series-counter" onclick="endSeries()" title="Kliknutím ukončíte sérii">1/5</div>
-        <button class="control-btn reset-btn" onclick="handleReset()" title="Vymazat">↺</button>
+        <button class="control-btn reset-btn" onclick="handleReset()" title="Vynulovat / Krok zpět">↺</button>
         <button class="control-btn" id="theme-btn" onclick="toggleTheme()" title="Téma">🌙</button>
         <button class="control-btn" id="settings-btn" onclick="toggleSettings()" title="Nastavení">⚙️</button>
       </div>
@@ -445,272 +321,160 @@
   </div>
 
   <div class="toast" id="toast"></div>
-
   <div class="modal" id="settings-modal">
     <div class="modal-content">
-      <div class="setting-row">
-        <label>Počet tyčí:</label>
-        <select id="rod-count-select" onchange="applySettingsAndSave()"></select>
-      </div>
-      
-      <div class="setting-row">
-        <label>Operace:</label>
+      <div class="setting-row"><label>Počet tyčí:</label><select id="rod-count-select" onchange="applySettingsAndSave()"></select></div>
+      <div class="setting-row"><label>Operace:</label>
         <select id="operation-select" onchange="applySettingsAndSave()">
-          <option value="+">Sčítání</option>
-          <option value="-">Odčítání</option>
-          <option value="+-">Sčítání + odčítání</option>
-          <option value="*1">Násobení 1</option>
-          <option value="*2">Násobení 2</option>
+          <option value="+">Sčítání</option><option value="-">Odčítání</option><option value="+-">Sčítání + odčítání</option>
+          <option value="*1">Násobení 1</option><option value="*2">Násobenie 2</option>
         </select>
       </div>
-
-      <div class="setting-row">
-        <label>Série (počet příkladů):</label>
+      <div class="setting-row"><label>Série (počet příkladů):</label>
         <select id="series-length-select" onchange="applySettingsAndSave()">
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="5" selected>5</option>
-          <option value="6">6</option>
-          <option value="7">7</option>
-          <option value="8">8</option>
-          <option value="9">9</option>
-          <option value="10">10</option>
+          <option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5" selected>5</option>
+          <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
         </select>
       </div>
     </div>
   </div>
-
   <div class="firework-container" id="fireworks"></div>
 
   <script>
-    let NUM_RODS = 7;
-    let UNIT_INDEX = 1; 
-    let SERIES_LENGTH = 5;
-    
+    let NUM_RODS = 7; let UNIT_INDEX = 1; let SERIES_LENGTH = 5;
     const $ = id => document.getElementById(id);
-    let rods = [];
-    let currentProblem = { target: 0, parts: [], operation: '+' };
+    let rods = []; let currentProblem = { target: 0, parts: [], operation: '+' };
+    let seriesState = 'idle'; let taskCounter = 0; let seriesStartTime = 0;
     
-    let seriesState = 'idle'; 
-    let taskCounter = 0;      
-
-    let underlinedState = {
-        active: false, value: 0, firstClickDone: false
-    };
+    // --- STAV CHECKPOINTŮ ---
+    // Hodnota: null, 'first', 'intermediate'
+    let lastCheckpointType = null; 
 
     function init() {
-      loadSettings(); // Načte nastavení z paměti
-      populateSettings();
-      loadTheme();
-      checkOrientation(); 
-      window.addEventListener('resize', () => {
-        checkOrientation();
-        updateBeadSize();
-      });
-      buildSoroban();
-      resetToStartState(); 
+      loadSettings(); populateSettings(); loadTheme(); checkOrientation();
+      window.addEventListener('resize', () => { checkOrientation(); updateBeadSize(); });
+      buildSoroban(); resetToStartState();
     }
 
-    function formatNumber(num) {
-        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    function formatNumber(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
+    function formatDuration(ms) {
+        if(ms < 0) ms = 0; let totalSeconds = Math.floor(ms / 1000);
+        let minutes = Math.floor(totalSeconds / 60); let seconds = totalSeconds % 60;
+        let minStr = minutes < 10 ? '0' + minutes : minutes;
+        let secStr = seconds < 10 ? '0' + seconds : seconds;
+        return minStr + ':' + secStr;
     }
+
+    function getStorageKey() { return `soroban_best_${NUM_RODS}_${currentProblem.operation}_${SERIES_LENGTH}`; }
+    function loadBestTime() { const val = localStorage.getItem(getStorageKey()); return val ? val : "00:00"; }
+    function saveBestTime(timeStr) { localStorage.setItem(getStorageKey(), timeStr); }
 
     function populateSettings() {
-      const select = $('rod-count-select');
-      select.innerHTML = '';
-      for(let i=2; i<=7; i++) {
-        const opt = document.createElement('option');
-        opt.value = i;
-        opt.innerText = i;
-        if(i === NUM_RODS) opt.selected = true;
-        select.appendChild(opt);
-      }
-      $('operation-select').value = currentProblem.operation;
-      $('series-length-select').value = SERIES_LENGTH;
+      const select = $('rod-count-select'); select.innerHTML = '';
+      for(let i=2; i<=7; i++) { const opt = document.createElement('option'); opt.value = i; opt.innerText = i; if(i === NUM_RODS) opt.selected = true; select.appendChild(opt); }
+      $('operation-select').value = currentProblem.operation; $('series-length-select').value = SERIES_LENGTH;
     }
-
     function loadSettings() {
-        const savedRods = localStorage.getItem('sorobanRods');
-        if(savedRods) NUM_RODS = parseInt(savedRods);
-        
-        const savedOp = localStorage.getItem('sorobanOp');
-        if(savedOp) currentProblem.operation = savedOp;
-        
-        const savedSeries = localStorage.getItem('sorobanSeries');
-        if(savedSeries) SERIES_LENGTH = parseInt(savedSeries);
+        const savedRods = localStorage.getItem('sorobanRods'); if(savedRods) NUM_RODS = parseInt(savedRods);
+        const savedOp = localStorage.getItem('sorobanOp'); if(savedOp) currentProblem.operation = savedOp;
+        const savedSeries = localStorage.getItem('sorobanSeries'); if(savedSeries) SERIES_LENGTH = parseInt(savedSeries);
     }
-
-    function saveSettings() {
-        localStorage.setItem('sorobanRods', NUM_RODS);
-        localStorage.setItem('sorobanOp', currentProblem.operation);
-        localStorage.setItem('sorobanSeries', SERIES_LENGTH);
-    }
-
+    function saveSettings() { localStorage.setItem('sorobanRods', NUM_RODS); localStorage.setItem('sorobanOp', currentProblem.operation); localStorage.setItem('sorobanSeries', SERIES_LENGTH); }
     function applySettingsAndSave() {
       if(seriesState === 'running') return;
-
-      NUM_RODS = parseInt($('rod-count-select').value);
-      currentProblem.operation = $('operation-select').value;
-      SERIES_LENGTH = parseInt($('series-length-select').value);
-      
-      saveSettings(); // Uloží nastavení do paměti
-      buildSoroban();
+      NUM_RODS = parseInt($('rod-count-select').value); currentProblem.operation = $('operation-select').value; SERIES_LENGTH = parseInt($('series-length-select').value);
+      saveSettings(); buildSoroban();
+      $('best-time').innerText = loadBestTime(); $('current-time').innerText = "00:00";
       resetToStartState();
     }
 
     function checkOrientation() {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       const isPortrait = window.innerHeight > window.innerWidth;
-      const warning = $('orientation-warning');
-      const app = $('app');
-      
-      if (isStandalone) {
-        warning.style.display = 'none';
-        app.style.display = 'flex';
-      } else {
-        if (isPortrait) {
-          warning.style.display = 'flex';
-          app.style.display = 'none';
-        } else {
-          warning.style.display = 'none';
-          app.style.display = 'flex';
-        }
-      }
+      const warning = $('orientation-warning'); const app = $('app');
+      if (isStandalone) { warning.style.display = 'none'; app.style.display = 'flex'; } 
+      else { if (isPortrait) { warning.style.display = 'flex'; app.style.display = 'none'; } else { warning.style.display = 'none'; app.style.display = 'flex'; } }
     }
 
     function updateBeadSize() {
       let availableHeight = window.innerHeight;
       const safeBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')) || 0;
       availableHeight -= safeBottom;
-      let headerSpace = 80; 
-      let maxBeadHeight = Math.floor(((availableHeight - headerSpace) * 0.95) / 6.3); 
+      let headerSpace = 80; let maxBeadHeight = Math.floor(((availableHeight - headerSpace) * 0.95) / 6.3);
       let availableWidth = window.innerWidth;
       const safeLeft = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-left')) || 0;
       availableWidth -= safeLeft;
-      const spaceForButtons = 1.2;
-      const widthUnit = availableWidth / (NUM_RODS + spaceForButtons);
-      let maxBeadWidth = Math.floor(widthUnit * 0.9); 
+      const spaceForButtons = 1.2; const widthUnit = availableWidth / (NUM_RODS + spaceForButtons);
+      let maxBeadWidth = Math.floor(widthUnit * 0.9);
       let finalSize = Math.min(maxBeadHeight, maxBeadWidth);
       finalSize = Math.max(20, Math.min(finalSize, 70));
       document.documentElement.style.setProperty('--bead-size', finalSize + 'px');
     }
 
     function buildSoroban() {
-      const container = $('soroban');
-      container.innerHTML = '';
-      rods = [];
+      const container = $('soroban'); container.innerHTML = ''; rods = [];
       for (let i = 1; i <= NUM_RODS; i++) {
-        const rod = document.createElement('div');
-        rod.className = 'rod';
-        rod.dataset.index = i; 
+        const rod = document.createElement('div'); rod.className = 'rod'; rod.dataset.index = i;
         const posFromRight = NUM_RODS - i + 1;
         if ((posFromRight - 1) % 3 === 0 && posFromRight !== 1) rod.classList.add('blue-rod');
-        rod.innerHTML = `
-          <div class="heaven" onclick="handleHeavenClick(${i})">
-            <div class="bead"></div>
-          </div>
-          <div class="reckoning-bar"></div>
-          <div class="earth" onclick="handleEarthClick(event, ${i})">
-            <div class="bead"></div>
-            <div class="bead"></div>
-            <div class="bead"></div>
-            <div class="bead"></div>
-          </div>`;
-        container.appendChild(rod);
-        rods.push({ heaven: 0, earth: 0, element: rod });
+        rod.innerHTML = `<div class="heaven" onclick="handleHeavenClick(${i})"><div class="bead"></div></div><div class="reckoning-bar"></div><div class="earth" onclick="handleEarthClick(event, ${i})"><div class="bead"></div><div class="bead"></div><div class="bead"></div><div class="bead"></div></div>`;
+        container.appendChild(rod); rods.push({ heaven: 0, earth: 0, element: rod });
       }
-      updateBeadSize();
-      setSorobanValue(0); 
+      updateBeadSize(); setSorobanValue(0);
     }
 
-    function showToast(msg) { 
-      const t = $('toast'); 
-      t.innerText = msg; 
-      t.classList.add('show'); 
-      setTimeout(() => t.classList.remove('show'), 2000); 
-    }
+    function showToast(msg) { const t = $('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
 
     // --- LOGIKA SÉRIE ---
-
     function resetToStartState() {
-      seriesState = 'idle';
-      taskCounter = 0;
-      
-      const display = $('problem-display');
-      display.innerText = "S T A R T";
-      display.classList.remove('running-mode');
-      display.classList.add('start-mode');
-      display.onclick = handleStartClick;
-      
+      seriesState = 'idle'; taskCounter = 0;
+      $('problem-text').innerText = "S T A R T";
+      const container = $('problem-container');
+      container.classList.remove('running-mode'); container.classList.add('start-mode'); container.onclick = handleStartClick;
+      $('best-time').innerText = loadBestTime();
       $('series-counter').style.display = 'none';
-      
-      $('rod-count-select').disabled = false;
-      $('operation-select').disabled = false;
-      $('series-length-select').disabled = false;
-      $('settings-btn').disabled = false;
-      
+      $('rod-count-select').disabled = false; $('operation-select').disabled = false; $('series-length-select').disabled = false; $('settings-btn').disabled = false;
       setSorobanValue(0);
+      // Čas vpravo se NEMAZUJE, zůstává z minulé série
     }
 
     function handleStartClick() {
       if(seriesState === 'running') return;
-      
-      seriesState = 'running';
-      taskCounter = 1;
-      
-      const display = $('problem-display');
-      display.classList.remove('start-mode');
-      display.classList.add('running-mode');
-      display.onclick = null; 
-      
-      $('series-counter').style.display = 'block';
-      $('series-counter').innerText = `${taskCounter}/${SERIES_LENGTH}`;
-      
-      $('rod-count-select').disabled = true;
-      $('operation-select').disabled = true;
-      $('series-length-select').disabled = true;
-      
-      $('settings-btn').disabled = true;
-
+      seriesState = 'running'; taskCounter = 1;
+      seriesStartTime = Date.now();
+      $('current-time').innerText = "00:00"; // Tady se vynuluje čas vpravo
+      const container = $('problem-container');
+      container.classList.remove('start-mode'); container.classList.add('running-mode'); container.onclick = null;
+      $('series-counter').style.display = 'block'; $('series-counter').innerText = `${taskCounter}/${SERIES_LENGTH}`;
+      $('rod-count-select').disabled = true; $('operation-select').disabled = true; $('series-length-select').disabled = true; $('settings-btn').disabled = true;
       setSorobanValue(0);
-      generateNewProblem(); 
+      generateNewProblem();
     }
 
     function endSeries() {
-        $('settings-modal').classList.remove('visible');
-        resetToStartState();
-        showToast("Série ukončena");
+        $('current-time').innerText = "00:00"; // Tady se vynuluje (to bylo v původním kódu, necháme)
+        $('settings-modal').classList.remove('visible'); resetToStartState(); showToast("Série ukončena");
     }
 
     // --- LOGIKA OPERACÍ ---
-
     function handleHeavenClick(index) {
-      const rodData = rods[index - 1];
-      rodData.heaven = rodData.heaven === 0 ? 5 : 0;
-      updateRodsVisuals(); 
-      if(seriesState === 'running') checkResult();
+      if(seriesState !== 'running') return;
+      const rodData = rods[index - 1]; rodData.heaven = rodData.heaven === 0 ? 5 : 0;
+      updateRodsVisuals(); checkResult();
     }
 
     function handleEarthClick(e, index) {
+      if(seriesState !== 'running') return;
       const rodData = rods[index - 1];
       const beads = rodData.element.querySelectorAll('.earth .bead');
       let clickedBeadIndex = -1;
       beads.forEach((bead, i) => { if (bead === e.target) clickedBeadIndex = i; });
-      if (clickedBeadIndex === -1) {
-          const rect = e.currentTarget.getBoundingClientRect();
-          const clickY = e.clientY - rect.top;
-          const height = rect.height;
-          if (clickY < height / 2) clickedBeadIndex = 3;
-          else clickedBeadIndex = 0;
-      }
-      const totalBeads = 4;
-      const currentActive = rodData.earth;
+      if (clickedBeadIndex === -1) { const rect = e.currentTarget.getBoundingClientRect(); const clickY = e.clientY - rect.top; const height = rect.height; if (clickY < height / 2) clickedBeadIndex = 3; else clickedBeadIndex = 0; }
+      const totalBeads = 4; const currentActive = rodData.earth;
       const isActive = clickedBeadIndex >= (totalBeads - currentActive);
       if (isActive) rodData.earth = (totalBeads - 1) - clickedBeadIndex;
       else rodData.earth = totalBeads - clickedBeadIndex;
-      updateRodsVisuals(); 
-      if(seriesState === 'running') checkResult();
+      updateRodsVisuals(); checkResult();
     }
 
     function updateRodsVisuals() {
@@ -724,8 +488,7 @@
     function getCurrentValue() {
       let totalValue = 0n;
       rods.forEach((rod, arrayIndex) => {
-        const colIndex = NUM_RODS - arrayIndex;
-        const exponent = colIndex - UNIT_INDEX;
+        const colIndex = NUM_RODS - arrayIndex; const exponent = colIndex - UNIT_INDEX;
         if (exponent < 0) return;
         totalValue += BigInt(rod.heaven + rod.earth) * (10n ** BigInt(exponent));
       });
@@ -733,189 +496,147 @@
     }
 
     function generateNewProblem() {
-      underlinedState = { active: false, value: 0, firstClickDone: false };
+      lastCheckpointType = null; // Reset checkpointů
       const op = currentProblem.operation;
-      const maxVal = Math.pow(10, NUM_RODS) - 1;
-      const minFill = Math.pow(10, NUM_RODS - 1);
-      
+      const maxVal = Math.pow(10, NUM_RODS) - 1; const minFill = Math.pow(10, NUM_RODS - 1);
       let a, b, c, result;
 
       if (op === '+') {
-        result = randomInt(minFill, maxVal);
-        let parts = splitNumber(result, 3);
-        currentProblem.parts = parts;
-        currentProblem.target = parts[0] + parts[1] + parts[2]; 
-        
+        result = randomInt(minFill, maxVal); let parts = splitNumber(result, 3);
+        currentProblem.parts = parts; currentProblem.target = parts[0] + parts[1] + parts[2];
       } else if (op === '-') {
-        a = randomInt(minFill, maxVal);
-        let remainder = a - 1;
-        let subParts = splitNumber(remainder, 2);
-        currentProblem.parts = [a, subParts[0], subParts[1]];
-        currentProblem.target = a - subParts[0] - subParts[1];
-        
+        a = randomInt(minFill, maxVal); let remainder = a - 1; let subParts = splitNumber(remainder, 2);
+        currentProblem.parts = [a, subParts[0], subParts[1]]; currentProblem.target = a - subParts[0] - subParts[1];
       } else if (op === '*1') {
-        b = randomInt(2, 9);
-        let maxA = Math.floor(maxVal / b);
-        if (maxA < 2) maxA = 2; 
-        let minA = 2;
-        if (maxA > minFill) minA = minFill; 
-        a = randomInt(minA, maxA);
-        currentProblem.parts = [a, b];
-        currentProblem.target = a * b;
-      
+        b = randomInt(2, 9); let maxA = Math.floor(maxVal / b); if (maxA < 2) maxA = 2; let minA = 2; if (maxA > minFill) minA = minFill;
+        a = randomInt(minA, maxA); currentProblem.parts = [a, b]; currentProblem.target = a * b;
       } else if (op === '*2') {
-        let maxBallowed = Math.floor(maxVal / 2);
-        let minB = 11;
-        let maxB = Math.min(99, maxBallowed);
-        if (maxB < 11) maxB = 11; 
-        b = randomInt(minB, maxB);
-        let maxA = Math.floor(maxVal / b);
-        if (maxA < 2) maxA = 2;
-        a = randomInt(2, maxA);
-        currentProblem.parts = [a, b];
-        currentProblem.target = a * b;
-      
+        let maxBallowed = Math.floor(maxVal / 2); let minB = 11; let maxB = Math.min(99, maxBallowed); if (maxB < 11) maxB = 11;
+        b = randomInt(minB, maxB); let maxA = Math.floor(maxVal / b); if (maxA < 2) maxA = 2;
+        a = randomInt(2, maxA); currentProblem.parts = [a, b]; currentProblem.target = a * b;
       } else if (op === '+-') {
         let type = Math.random() < 0.5 ? 1 : 2;
         if (type === 1) {
-            a = randomInt(minFill, maxVal);
-            let maxB = maxVal - a; if (maxB < 1) maxB = 1;
-            b = randomInt(1, maxB);
-            let sumAB = a + b;
-            let maxC = sumAB - 1; if (maxC < 1) maxC = 1;
-            c = randomInt(1, maxC);
-            currentProblem.parts = [a, b, -c];
-            currentProblem.target = sumAB - c;
+            a = randomInt(minFill, maxVal); let maxB = maxVal - a; if (maxB < 1) maxB = 1; b = randomInt(1, maxB);
+            let sumAB = a + b; let maxC = sumAB - 1; if (maxC < 1) maxC = 1; c = randomInt(1, maxC);
+            currentProblem.parts = [a, b, -c]; currentProblem.target = sumAB - c;
         } else {
-            a = randomInt(minFill, maxVal);
-            let maxB = a - 1; if (maxB < 1) maxB = 1;
-            b = randomInt(1, maxB);
-            let diffAB = a - b;
-            let maxC = maxVal - diffAB; if (maxC < 1) maxC = 1;
-            c = randomInt(1, maxC);
-            currentProblem.parts = [a, -b, c];
-            currentProblem.target = diffAB + c;
+            a = randomInt(minFill, maxVal); let maxB = a - 1; if (maxB < 1) maxB = 1; b = randomInt(1, maxB);
+            let diffAB = a - b; let maxC = maxVal - diffAB; if (maxC < 1) maxC = 1; c = randomInt(1, maxC);
+            currentProblem.parts = [a, -b, c]; currentProblem.target = diffAB + c;
         }
       }
-
-      renderProblemDisplay();
+      renderProblemDisplay('none');
     }
 
-    function renderProblemDisplay(isUnderlined = false) {
-        const op = currentProblem.operation;
-        const parts = currentProblem.parts;
-        let html = '';
+    function renderProblemDisplay(underlineMode) {
+        // underlineMode: 'none', 'first', 'two'
+        const op = currentProblem.operation; const parts = currentProblem.parts; let html = '';
 
         const formatPart = (p, isFirst) => {
-            let val = Math.abs(p);
-            let sign = p >= 0 ? '+' : '-';
+            let val = Math.abs(p); let sign = p >= 0 ? '+' : '-';
             return (isFirst ? '' : ' ' + sign + ' ') + formatNumber(val);
         };
 
-        if (op === '+') {
-            if (isUnderlined) {
-                html = `<span class="problem-part underlined">${formatNumber(parts[0])} + ${formatNumber(parts[1])}</span> + ${formatNumber(parts[2])}`;
-            } else {
-                html = parts.map(p => formatPart(p, parts.indexOf(p) === 0)).join('');
-            }
-        } else if (op === '-') {
-            if (isUnderlined) {
-                html = `<span class="problem-part underlined">${formatNumber(parts[0])} - ${formatNumber(parts[1])}</span> - ${formatNumber(parts[2])}`;
-            } else {
-                html = parts.map(p => formatNumber(p)).join(' - ');
-            }
-        } else if (op === '*1' || op === '*2') {
-            html = `${formatNumber(parts[0])} × ${formatNumber(parts[1])}`;
-        } else if (op === '+-') {
+        // Násobení - žádné podtrhávání
+        if (op === '*1' || op === '*2') {
+             html = `${formatNumber(parts[0])} × ${formatNumber(parts[1])}`;
+        } 
+        // Sčítání a Odčítání a +- : 3 čísla
+        else {
             let p0 = formatNumber(parts[0]);
-            let p1Val = Math.abs(parts[1]);
-            let p1Sign = parts[1] >= 0 ? '+' : '-';
-            let part1Str = ` ${p1Sign} ${formatNumber(p1Val)}`;
-            let p2Val = Math.abs(parts[2]);
-            let p2Sign = parts[2] >= 0 ? '+' : '-';
-            let part2Str = ` ${p2Sign} ${formatNumber(p2Val)}`;
+            let p1Val = Math.abs(parts[1]); let p1Sign = parts[1] >= 0 ? '+' : '-';
+            let p1Str = ` ${p1Sign} ${formatNumber(p1Val)}`;
+            let p2Val = Math.abs(parts[2]); let p2Sign = parts[2] >= 0 ? '+' : '-';
+            let p2Str = ` ${p2Sign} ${formatNumber(p2Val)}`;
 
-            if (isUnderlined) {
-                html = `<span class="problem-part underlined">${p0}${part1Str}</span>${part2Str}`;
+            if (underlineMode === 'first') {
+                html = `<span class="problem-part underlined-first">${p0}</span>${p1Str}${p2Str}`;
+            } else if (underlineMode === 'two') {
+                // Podtržení dvou čísel:
+                if (op === '+') { html = `<span class="problem-part underlined">${p0} + ${formatNumber(parts[1])}</span> + ${formatNumber(parts[2])}`; }
+                else if (op === '-') { html = `<span class="problem-part underlined">${p0} - ${formatNumber(parts[1])}</span> - ${formatNumber(parts[2])}`; }
+                else if (op === '+-') { html = `<span class="problem-part underlined">${p0}${p1Str}</span>${p2Str}`; }
             } else {
-                html = p0 + part1Str + part2Str;
+                html = p0 + p1Str + p2Str;
             }
         }
-
-        $('problem-display').innerHTML = html;
+        $('problem-text').innerHTML = html;
     }
 
-    function randomInt(min, max) { 
-      if (min > max) { let temp = min; min = max; max = temp; }
-      return Math.floor(Math.random() * (max - min + 1)) + min; 
-    }
-
+    function randomInt(min, max) { if (min > max) { let temp = min; min = max; max = temp; } return Math.floor(Math.random() * (max - min + 1)) + min; }
     function splitNumber(num, partsCount) {
-      let arr = [];
-      let remaining = num;
-      for (let i = 0; i < partsCount - 1; i++) {
-        let maxPart = remaining - (partsCount - 1 - i);
-        if (maxPart < 1) maxPart = 1;
-        let val = randomInt(1, maxPart);
-        arr.push(val);
-        remaining -= val;
-      }
+      let arr = []; let remaining = num;
+      for (let i = 0; i < partsCount - 1; i++) { let maxPart = remaining - (partsCount - 1 - i); if (maxPart < 1) maxPart = 1; let val = randomInt(1, maxPart); arr.push(val); remaining -= val; }
       arr.push(remaining);
-      if(arr.length > 1) arr.sort(() => Math.random() - 0.5); 
+      if(arr.length > 1) arr.sort(() => Math.random() - 0.5);
       return arr;
     }
 
     function checkResult() {
       if(seriesState !== 'running') return;
-
       const currentVal = getCurrentValue();
       const op = currentProblem.operation;
 
+      // Násobení - bez checkpointů
       if (op === '*1' || op === '*2') {
         if (currentVal === currentProblem.target) handleSuccess();
         return;
       }
 
-      if (!underlinedState.active) {
-          let intermediateTarget;
-          if (op === '-') {
-              intermediateTarget = currentProblem.parts[0] - currentProblem.parts[1];
-          } else {
-              intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1];
-          }
+      // Výpočet cílů pro checkpointy
+      const firstTarget = currentProblem.parts[0];
+      let intermediateTarget;
+      if (op === '-') {
+          intermediateTarget = currentProblem.parts[0] - currentProblem.parts[1];
+      } else {
+          intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1];
+      }
+      const finalTarget = currentProblem.target;
 
-          if (currentVal === intermediateTarget) {
-              underlinedState.active = true;
-              underlinedState.value = currentVal;
-              underlinedState.firstClickDone = false; 
-              renderProblemDisplay(true); 
-              showToast("Správně! Pokračujte.");
-          }
+      // Logika aktualizace checkpointů a podtržení
+      // Priorita: Finál > Mezivýsledek > První > Reset
+
+      if (currentVal === finalTarget) {
+          // 1. Úspěšně dokončeno
+          lastCheckpointType = null; // Reset pro další příklad
+          renderProblemDisplay('none');
+          handleSuccess();
+      } 
+      else if (currentVal === intermediateTarget) {
+          // 2. Dosáhli jsme mezivýsledku
+          if (lastCheckpointType !== 'intermediate') { showToast("Správně! Pokračujte."); }
+          lastCheckpointType = 'intermediate';
+          renderProblemDisplay('two');
+      } 
+      else if (currentVal === firstTarget) {
+          // 3. Dosáhli jsme prvního čísla
+          if (lastCheckpointType !== 'first') { showToast("První číslo OK"); }
+          lastCheckpointType = 'first';
+          renderProblemDisplay('first');
       } 
       else {
-          if(currentVal === underlinedState.value) {
-              renderProblemDisplay(true);
-          } else {
-              renderProblemDisplay(false);
-          }
-          if (currentVal === currentProblem.target) {
-              handleSuccess();
-          }
+          // 4. Žádný checkpoint
+          renderProblemDisplay('none');
       }
     }
 
     function handleSuccess() {
         if(seriesState !== 'running') return;
-
-        showToast("Správně! 👍");
-        
-        taskCounter++;
+        showToast("Správně! 👍"); taskCounter++;
         
         if(taskCounter > SERIES_LENGTH) {
+            seriesState = 'finished';
+            let endTime = Date.now(); let duration = endTime - seriesStartTime; let formattedTime = formatDuration(duration);
+            $('current-time').innerText = formattedTime;
+            let currentBestStr = loadBestTime(); let currentBestSeconds = 0;
+            if(currentBestStr !== "00:00") { let parts = currentBestStr.split(':'); currentBestSeconds = parseInt(parts[0])*60 + parseInt(parts[1]); }
+            let newTimeSeconds = Math.floor(duration / 1000);
             triggerFireworks();
             setTimeout(() => {
                 resetToStartState();
-            }, 2500); 
+                if(currentBestSeconds === 0 || newTimeSeconds < currentBestSeconds) { animateNewRecord(formattedTime); }
+            }, 1500);
         } else {
             setTimeout(() => {
                 $('series-counter').innerText = `${taskCounter}/${SERIES_LENGTH}`;
@@ -925,104 +646,101 @@
         }
     }
 
-    function handleReset() {
-        if(seriesState !== 'running') {
-            setSorobanValue(0);
-            return;
+    function animateNewRecord(timeString) {
+        const rightElem = $('time-right-wrapper'); const leftElem = $('time-left-wrapper'); const medalIcon = $('medal-icon');
+        const startRect = rightElem.getBoundingClientRect(); const endRect = leftElem.getBoundingClientRect();
+        const flyingDiv = document.createElement('div'); flyingDiv.className = 'flying-time'; flyingDiv.innerText = timeString;
+        document.body.appendChild(flyingDiv);
+        flyingDiv.style.left = startRect.left + 'px'; flyingDiv.style.top = startRect.top + 'px'; flyingDiv.style.fontSize = '20px';
+        medalIcon.classList.add('medal-flutter');
+        let startTimeAnim = null; let durationAnim = 5000;
+        function step(timestamp) {
+            if (!startTimeAnim) startTimeAnim = timestamp; let progress = (timestamp - startTimeAnim) / durationAnim;
+            if (progress >= 1) { flyingDiv.remove(); $('best-time').innerText = timeString; saveBestTime(timeString); medalIcon.classList.remove('medal-flutter'); return; }
+            let currentX = startRect.left + (endRect.left - startRect.left) * progress;
+            let scale; if (progress < 0.5) { scale = 1 + (progress * 2); } else { scale = 2 - ((progress - 0.5) * 2); }
+            let yDrift; if(progress < 0.5) { yDrift = progress * 2 * 50; } else { yDrift = (1 - progress) * 2 * 50; }
+            let yWiggle = Math.sin(progress * Math.PI * 4) * 25; let yOffset = yDrift + yWiggle;
+            let currentY = startRect.top + yOffset;
+            flyingDiv.style.left = currentX + 'px'; flyingDiv.style.top = currentY + 'px'; flyingDiv.style.fontSize = (20 * scale) + 'px';
+            requestAnimationFrame(step);
         }
+        requestAnimationFrame(step);
+    }
 
-        if (underlinedState.active) {
-            if (underlinedState.firstClickDone) {
-                setSorobanValue(0); 
-            } else {
-                setSorobanValue(underlinedState.value);
-                renderProblemDisplay(true);
-                underlinedState.firstClickDone = true;
-            }
+    function handleReset() {
+        // 1. Pokud neběží série, resetuj na 0
+        if(seriesState !== 'running') { setSorobanValue(0); return; }
+
+        // 2. Získej aktuální stav
+        const currentVal = getCurrentValue();
+        const op = currentProblem.operation;
+        
+        // Pokud je násobení, resetuj na 0 (žádné checkpointy)
+        if (op === '*1' || op === '*2') { setSorobanValue(0); return; }
+
+        // Vypočti cíle
+        const firstTarget = currentProblem.parts[0];
+        let intermediateTarget;
+        if (op === '-') { intermediateTarget = currentProblem.parts[0] - currentProblem.parts[1]; }
+        else { intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1]; }
+
+        // 3. Podmínka: Pokud je viditelné podtržení (shoda), nedělej nic
+        if (lastCheckpointType === 'intermediate' && currentVal === intermediateTarget) return;
+        if (lastCheckpointType === 'first' && currentVal === firstTarget) return;
+
+        // 4. Jinak se vrať k poslednímu checkpointu
+        if (lastCheckpointType === 'intermediate') {
+            setSorobanValue(intermediateTarget);
+            renderProblemDisplay('two');
+        } else if (lastCheckpointType === 'first') {
+            setSorobanValue(firstTarget);
+            renderProblemDisplay('first');
         } else {
             setSorobanValue(0);
+            renderProblemDisplay('none');
         }
     }
 
     function setSorobanValue(val) {
-        let tempVal = val;
-        for (let i = 0; i < rods.length; i++) {
-            const rod = rods[i];
-            const exponent = NUM_RODS - 1 - i; 
-            if (exponent < 0) continue;
-            const power = Math.pow(10, exponent);
-            const digit = Math.floor(tempVal / power) % 10;
-            rod.heaven = (digit >= 5) ? 5 : 0;
-            rod.earth = (digit >= 5) ? digit - 5 : digit;
-            tempVal -= digit * power; 
-        }
-        updateRodsVisuals();
+      let tempVal = val;
+      for (let i = 0; i < rods.length; i++) {
+        const rod = rods[i]; const exponent = NUM_RODS - 1 - i;
+        if (exponent < 0) continue; const power = Math.pow(10, exponent);
+        const digit = Math.floor(tempVal / power) % 10;
+        rod.heaven = (digit >= 5) ? 5 : 0; rod.earth = (digit >= 5) ? digit - 5 : digit;
+        tempVal -= digit * power;
+      }
+      updateRodsVisuals();
     }
 
     function toggleSettings() {
-      if(seriesState === 'running') {
-          return;
-      }
-
-      const modal = $('settings-modal');
-      const btn = $('settings-btn');
-      
-      if (modal.classList.contains('visible')) {
-        modal.classList.remove('visible');
-        btn.classList.remove('active');
-      } else {
-        modal.classList.add('visible');
-        btn.classList.add('active');
-      }
+      if(seriesState === 'running') return;
+      const modal = $('settings-modal'); const btn = $('settings-btn');
+      if (modal.classList.contains('visible')) { modal.classList.remove('visible'); btn.classList.remove('active'); }
+      else { modal.classList.add('visible'); btn.classList.add('active'); }
     }
 
-    function toggleTheme() { 
-      const body = document.body; 
-      body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark'; 
-      saveTheme(); 
-      updateThemeIcons();
-    }
-    
-    function updateThemeIcons() {
-      const icon = document.body.dataset.theme === 'dark' ? '☀️' : '🌙';
-      const btn = $('theme-btn');
-      if(btn) btn.innerText = icon;
-    }
-
+    function toggleTheme() { const body = document.body; body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark'; saveTheme(); updateThemeIcons(); }
+    function updateThemeIcons() { const icon = document.body.dataset.theme === 'dark' ? '☀️' : '🌙'; const btn = $('theme-btn'); if(btn) btn.innerText = icon; }
     function saveTheme() { localStorage.setItem('sorobanTheme', document.body.dataset.theme); }
-    function loadTheme() { 
-      const t = localStorage.getItem('sorobanTheme') || 'light'; 
-      document.body.dataset.theme = t; 
-      updateThemeIcons();
-    }
+    function loadTheme() { const t = localStorage.getItem('sorobanTheme') || 'light'; document.body.dataset.theme = t; updateThemeIcons(); }
 
     function triggerFireworks() {
-        const container = $('fireworks');
-        container.innerHTML = ''; 
-        
+        const container = $('fireworks'); container.innerHTML = '';
         for(let i=0; i<40; i++) {
             setTimeout(() => {
-                const particle = document.createElement('div');
-                particle.className = 'firework-particle';
-                
+                const particle = document.createElement('div'); particle.className = 'firework-particle';
                 const colors = ['#ff0044', '#ffe400', '#4dff00', '#0099ff', '#ff00e6', '#ffffff'];
                 particle.style.background = colors[Math.floor(Math.random() * colors.length)];
-                
-                const angle = Math.random() * Math.PI * 2;
-                const distance = 150 + Math.random() * 200;
-                const tx = Math.cos(angle) * distance;
-                const ty = Math.sin(angle) * distance;
-                
-                particle.style.setProperty('--tx', tx + 'px');
-                particle.style.setProperty('--ty', ty + 'px');
-                
+                const angle = Math.random() * Math.PI * 2; const distance = 150 + Math.random() * 200;
+                const tx = Math.cos(angle) * distance; const ty = Math.sin(angle) * distance;
+                particle.style.setProperty('--tx', tx + 'px'); particle.style.setProperty('--ty', ty + 'px');
                 container.appendChild(particle);
-                
                 setTimeout(() => particle.remove(), 1000);
             }, i * 30);
         }
     }
-    
     window.onload = init;
   </script>
 </body>
