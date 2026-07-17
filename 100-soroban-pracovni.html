@@ -266,37 +266,57 @@
 
     .control-panel { display: flex; flex-direction: column; gap: 10px; margin-left: 8px; z-index: 1005; align-items: center; position: relative; }
 
-    /* --- SPRÁVNÉ POZICOVÁNÍ JMÉNA --- */
+    /* --- ANIMACE BLIKÁNÍ --- */
+    @keyframes text-blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* --- POZICOVÁNÍ JMÉNA (PŘESNÉ) --- */
     .current-user-display {
         position: absolute;
-        /* Horizontálně: Střed tlačítka Nastavení */
         left: 50%;
         transform: translateX(-50%);
         
-        /* Vertikálně: Zarovnáno na Soroban */
-        /* Výpočet pro TOP (Horní hrana 2. kostičky zdola):
-           Rám nahoře (6px) + Nebe + Lišta + Země - (Spodní okraj + 1. Kostka + Mezera + 2. Kostka)
+        /* Výpočet pozice:
+           1. Border rámu (6px)
+           2. Nebe (heaven-height)
+           3. Lišta (bar-height)
+           4. Země:
+              - TinyGap (2px) - prostor pod spodní kostkou
+              - 1. Kostka (bead-size)
+              - Mezera (bead-gap)
+              - 2. Kostka (bead-size)
+              - Mezera (bead-gap)
+              - 3. Kostka (bead-size) -> HORNÍ HRANA této kostky je začátek textu
         */
-        top: calc(6px + var(--heaven-height) + var(--bar-height) + var(--earth-height) - var(--tiny-gap) - var(--bead-size) - var(--bead-gap) - var(--bead-size));
+        top: calc(6px + var(--heaven-height) + var(--bar-height) + var(--tiny-gap) + var(--bead-size) + var(--bead-gap) + var(--bead-size) + var(--bead-gap) + var(--bead-size));
         
-        /* Výška: Přesně 2 kostky + mezera */
-        height: calc(var(--bead-size) * 2 + var(--bead-gap));
+        /* Výška: 2 kostky + 1 mezera */
+        height: calc(var(--bead-size) + var(--bead-gap) + var(--bead-size));
         
-        width: calc(var(--bead-size) * 0.9); /* Šířka tlačítka */
+        width: calc(var(--bead-size) * 0.9); 
         display: flex;
         flex-direction: column;
-        justify-content: space-between; /* Rozložení písmen */
-        align-items: center; /* Centrované na šířku */
+        justify-content: space-between; 
+        align-items: center; 
         
         font-weight: bold;
-        color: #111; /* TMAVÁ BARVA PRO LEPŠÍ ČITELNOST */
-        pointer-events: none; /* Nekliká se na něj */
+        color: #111; 
+        pointer-events: none; 
         
-        font-size: 16px; /* Dynamicky upraveno v JS */
-        line-height: 1; /* Bez extra mezery */
+        font-size: 18px; 
+        line-height: 1;
+        
+        /* Výchozí stav: Nebliká, viditelné */
+        animation: none;
     }
     
-    /* Barva pro dark mode */
+    /* Třída pro blikání */
+    .current-user-display.blinking-active {
+        animation: text-blink 1s infinite;
+    }
+    
     [data-theme="dark"] .current-user-display {
         color: #ddd;
     }
@@ -343,7 +363,6 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    /* --- NASTAVENÍ V MOBILU (LANDSCAPE) --- */
     @media screen and (max-height: 500px) and (orientation: landscape) {
         .modal-content {
             width: 95vw; max-width: 800px; padding: 15px;
@@ -387,7 +406,7 @@
         <div class="series-counter" id="series-counter" onclick="endSeries()" title="Kliknutím ukončíte sérii">1/5</div>
 
         <!-- Vertikální jméno uživatele -->
-        <div class="current-user-display" id="current-user-display">Zkušební</div>
+        <div class="current-user-display blinking-active" id="current-user-display">Zkušební</div>
 
         <button class="control-btn reset-btn" onclick="handleReset()" title="Vynulovat / Krok zpět">↺</button>
         <button class="control-btn" id="theme-btn" onclick="toggleTheme()" title="Téma">🌙</button>
@@ -453,6 +472,9 @@
         passInput.addEventListener('input', e => e.target.value = "");
 
         updateUIForCurrentUser();
+        
+        // Aktivace blikání při startu
+        $('current-user-display').classList.add('blinking-active');
     }
 
     function handlePasswordKeydown(e) {
@@ -526,12 +548,11 @@
         const displayName = users[currentUserIndex].name;
         const userDisplay = $('current-user-display');
         
-        // Rozdělení jména na jednotlivá písmena pro vertikální zobrazení
-        // Použijeme flex column a space-between
+        // Rozdělení jména na písmena
         userDisplay.innerHTML = displayName.split('').map(l => `<span>${l}</span>`).join('');
         
-        // Dynamická velikost písma podle délky jména
-        let fontSize = 20;
+        // Dynamická velikost písma
+        let fontSize = 18;
         if (displayName.length > 5) fontSize = 16;
         if (displayName.length > 7) fontSize = 14;
         
@@ -645,6 +666,13 @@
 
     function handleStartClick() {
       if(seriesState === 'running') return;
+      
+      // ZASTAVENÍ BLIKÁNÍ
+      const userDisplay = $('current-user-display');
+      if (userDisplay.classList.contains('blinking-active')) {
+          userDisplay.classList.remove('blinking-active');
+      }
+
       seriesState = 'running'; taskCounter = 1;
       seriesStartTime = Date.now();
       $('current-time').innerText = "00:00";
@@ -710,7 +738,7 @@
         currentProblem.parts = parts; currentProblem.target = parts[0] + parts[1] + parts[2];
       } else if (op === '-') {
         a = randomInt(minFill, maxVal); let remainder = a - 1; let subParts = splitNumber(remainder, 2);
-        currentProblem.parts = [a, -subParts[0], -subParts[1]]; currentProblem.target = a - subParts[0] - subParts[1];
+        currentProblem.parts = [a, -subParts[0], -subParts[1]]; currentProblem.target = a - subParts[0] - subPoints[1];
       } else if (op === '*1') {
         b = randomInt(2, 9); let maxA = Math.floor(maxVal / b); if (maxA < 2) maxA = 2; let minA = 2; if (maxA > minFill) minA = minFill;
         a = randomInt(minA, maxA); currentProblem.parts = [a, b]; currentProblem.target = a * b;
