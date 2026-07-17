@@ -266,27 +266,66 @@
 
     .control-panel { display: flex; flex-direction: column; gap: 10px; margin-left: 8px; z-index: 1005; align-items: center; position: relative; }
 
+    /* --- NOVÉ POZICÍ VERTIKÁLNÍHO JMÉNA --- */
     .current-user-display {
         position: absolute;
-        bottom: calc(64px + 0.3 * var(--bead-size) + 50px);
-        width: 100%;
-        text-align: center;
-        font-size: 12px;
+        /* Poloha X: Střed tlačítka Nastavení (3. tlačítko) */
+        /* Tlačítka mají šířku calc(var(--bead-size) * 0.9). Střed je polovina. */
+        left: 50%;
+        transform: translateX(-50%);
+        
+        /* Poloha Y: Zarovnáno na Soroban */
+        /* Start: Horní hrana druhé kostičky zdola. 
+           Výpočet: Spodek země (0) + 1. kostka + mezera + 2. kostka. 
+           Protože v CSS pozicujeme odzhora, musíme počítat:
+           Celková výška tyčky - (spodní okraj + 1. kostka + mezera + 2. kostka)
+           
+           Zjednodušeně pro "Start": 
+           Bottom line Sorobanu je standardně v ose.
+           Použijeme absolutní pozicování vůči liště tlačítek, ale zohledníme proměnné.
+           Abychom to vycentrovali na tlačítko, musíme "vysunout" text nahoru/dolů.
+        */
+        
+        /* Výpočet StartY (Top písmena):
+           Spodní hrana Sorobanu (vzhledem k rámu) + výška spodní kostky + mezera + výška druhé kostky.
+           Ale musíme to "přilepit" na tlačítko.
+           
+           Jiný přístup: Pozicujeme text absolutně vzhledem k app containeru, 
+           ale necháme ho na X pozici tlačítka.
+        */
+        
+        width: calc(var(--bead-size) * 0.9); /* Šířka tlačítka */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end; /* Aby text začínal odshora */
+        
+        /* Dynamická výška písma podle počtu znaků */
+        font-size: 16px; 
         font-weight: bold;
         color: var(--bar-color);
-        writing-mode: vertical-rl;
+        pointer-events: none; /* Nezasahuje do klikání */
+        
+        /* Pozicování vůči spodku oblasti tlačítek */
+        /* Tlačítko Nastavení je dole. Posuneme ho nahoru, aby začátek sedal na druhou kostku. */
+        /* Toto je přibližný offset, který doladíme */
+        bottom: 0px; 
+        
+        writing-mode: vertical-rl; /* Vertikální text */
         text-orientation: mixed;
-        transform: rotate(180deg);
-        letter-spacing: 1px;
-        pointer-events: none;
-        height: 100px;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        margin-left: auto;
-        margin-right: auto;
-        left: 0;
-        right: 0;
+        letter-spacing: 2px;
+        
+        /* Výška elementu bude odpovídat výšce 2 spodních kostek */
+        height: calc(var(--bead-size) * 2 + var(--bead-gap));
+        
+        /* Posun tak, aby START textu (konec elementu při RTL) sedal na horní hranu 2. kostky */
+        /* Tlačítka jsou u země sorobanu. 
+           Spodní okraj tlačítek je zarovnán se spodkem země.
+           Horní okraj 2. kostky je (od spodu): bead-size + gap.
+           Ale my chceme horní hranu 2. kostky (že je to kostka č. 2 ze 4).
+           Pozice: Bottom + (Bead 1) + Gap + (Bead 2). Horní hrana Bead 2.
+        */
+        /* Zjednodušené nastavení pro ukázku: */
     }
 
     .control-btn.reset-btn { margin-top: calc(64px + 0.3 * var(--bead-size)); }
@@ -398,6 +437,7 @@
       <div class="control-panel">
         <div class="series-counter" id="series-counter" onclick="endSeries()" title="Kliknutím ukončíte sérii">1/5</div>
 
+        <!-- Zde bude vertikální jméno -->
         <div class="current-user-display" id="current-user-display">Zkušební</div>
 
         <button class="control-btn reset-btn" onclick="handleReset()" title="Vynulovat / Krok zpět">↺</button>
@@ -446,6 +486,7 @@
     const TRIAL_INDEX = 0;
     let currentUserIndex = TRIAL_INDEX; 
     let users = [];
+    let passwordBuffer = ""; // Buffer pro skryté zadávání
     
     function initUserManager() {
         loadUsers();
@@ -458,9 +499,49 @@
         
         $('user-name-input').value = users[TRIAL_INDEX].name;
         $('user-name-input').disabled = true;
-        $('user-pass-input').disabled = true;
+        
+        // Inicializace skrytého pole hesla
+        const passInput = $('user-pass-input');
+        passInput.disabled = false; // Je aktivní pro vstup, ale vypadá neaktivně
+        passInput.value = ""; 
+        passInput.addEventListener('keydown', handlePasswordKeydown);
+        // Změna typu na text, aby se nezobrazovaly tečky, ale necháme type=password pro UI konzistenci
+        // Nebo nastavíme style
+        passInput.style.color = "transparent"; // Skrytí textu
+        passInput.style.caretColor = "transparent"; // Skrytí kurzoru
 
         updateUIForCurrentUser();
+    }
+
+    function handlePasswordKeydown(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            checkPasswordCommand();
+        } else if (e.key === "Backspace") {
+            passwordBuffer = passwordBuffer.slice(0, -1);
+        } else if (e.key.length === 1) {
+            passwordBuffer += e.key;
+        }
+        // Zabráníme zobrazení čehokoliv
+        e.preventDefault();
+        e.target.value = ""; // Vždy držíme pole prázdné
+    }
+
+    function checkPasswordCommand() {
+        // Příkaz: RMreset
+        // Podmínka: Musí být vybrán uživatel Zkušební
+        if (currentUserIndex === TRIAL_INDEX && passwordBuffer === "RMreset") {
+            resetCurrentRecord();
+            showToast("Rekord vynulován");
+        }
+        // Reset bufferu po Enteru
+        passwordBuffer = "";
+    }
+
+    function resetCurrentRecord() {
+        const key = getStorageKey(`best_${NUM_RODS}_${currentProblem.operation}_${SERIES_LENGTH}`);
+        localStorage.removeItem(key);
+        $('best-time').innerText = "00:00";
     }
 
     function loadUsers() {
@@ -511,8 +592,24 @@
     }
 
     function updateUIForCurrentUser() {
-        $('current-user-display').innerText = users[currentUserIndex].name;
+        const displayName = users[currentUserIndex].name;
+        const userDisplay = $('current-user-display');
         
+        // Nastavení jména do vertikálního pole
+        userDisplay.innerText = displayName;
+        
+        // Dynamické nastavení velikosti písma podle délky jména
+        // Výška prostoru je cca 2 kostky + mezera = ~2 * 40px + 4px = 84px
+        // Počet znaků: displayName.length
+        // Písmo se musí vejít do 84px.
+        const availableHeight = 2 * 40 + 4; // px, aproximace
+        const charCount = displayName.length;
+        // Jednoduchá logika: 8 znaků = 10px, 4 znaky = 20px
+        let fontSize = Math.floor(availableHeight / charCount);
+        // Omezíme min/max
+        fontSize = Math.max(10, Math.min(fontSize, 24));
+        userDisplay.style.fontSize = fontSize + "px";
+
         loadSettings();
         populateSettings();   
         applySettingsToUI();
@@ -570,7 +667,6 @@
       const isPortrait = window.innerHeight > window.innerWidth;
       const warning = $('orientation-warning'); const app = $('app');
       
-      // --- DETEKCE ZAŘÍZENÍ A ZMĚNA TEXTU ---
       const warningTextBox = warning.querySelector('div');
       const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
       
@@ -581,7 +677,6 @@
               warningTextBox.innerText = "Prosím, rozšiřte okno obrazovky, aby se soroban mohl zobrazit.";
           }
       }
-      // -------------------------------------
 
       if (isStandalone) { warning.style.display = 'none'; app.style.display = 'flex'; }
       else { if (isPortrait) { warning.style.display = 'flex'; app.style.display = 'none'; } else { warning.style.display = 'none'; app.style.display = 'flex'; } }
@@ -908,7 +1003,11 @@
         
         $('user-name-input').value = users[TRIAL_INDEX].name;
         $('user-name-input').disabled = true;
-        $('user-pass-input').disabled = true;
+        
+        // Heslo je technicky "disabled" vzhledem, ale funkční pro vstup
+        $('user-pass-input').disabled = false; 
+        $('user-pass-input').value = "";
+        passwordBuffer = ""; // Reset bufferu při otevření
 
         $('rod-count-select').value = NUM_RODS;
         $('operation-select').value = currentProblem.operation;
