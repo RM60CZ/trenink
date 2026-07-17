@@ -328,12 +328,12 @@
     @media screen and (max-height: 500px) and (orientation: landscape) {
         .modal-content {
             width: 95vw;             /* Využije šířku displeje */
-            max-width: 640px;        /* Maximální šířka */
+            max-width: 800px;        /* Maximální šířka */
             padding: 15px;
             
-            /* Grid Layout: Dva sloupce, moderní vzhled */
+            /* Grid Layout: Dva sloupce */
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: auto 1fr; /* Levý sloupec podle obsahu, pravý vyplní zbytek */
             gap: 20px 30px;          /* vertikální mezera | horizontální mezera */
         }
 
@@ -350,27 +350,27 @@
         }
         .setting-row label {
             margin-bottom: 0;
-            min-width: 70px;
+            min-width: 80px;
             font-size: 14px;
             text-align: left;
         }
         .setting-row select, .setting-row input {
-            flex: 1;
+            flex: 0;                 /* Nechceme, aby se roztahovaly */
+            width: 140px;            /* Fixní šířka cca pro 10 znaků */
             font-size: 14px;
             padding: 5px;
         }
 
         /* Rozdělení položek do sloupců pomocí nth-child */
-        /* Sloupec 1 (Uživatel) */
+        /* Levý sloupec: Všechna nastavení */
         .setting-row:nth-child(1) { grid-column: 1; } /* User Select */
         .setting-row:nth-child(2) { grid-column: 1; } /* Name Input */
         .setting-row:nth-child(3) { grid-column: 1; } /* Pass Input */
+        .setting-row:nth-child(5) { grid-column: 1; } /* Rods */
+        .setting-row:nth-child(6) { grid-column: 1; } /* Operation */
+        .setting-row:nth-child(7) { grid-column: 1; } /* Series */
 
-        /* Položky v pravém sloupci (Nastavení hry) */
-        /* HR je 4. dítě, ale je skryté, takže pozice selectů zůstávají */
-        .setting-row:nth-child(5) { grid-column: 2; } /* Rods */
-        .setting-row:nth-child(6) { grid-column: 2; } /* Operation */
-        .setting-row:nth-child(7) { grid-column: 2; } /* Series */
+        /* Pravý sloupec zůstává prázdný (prostor pro budoucí tlačítka nebo vizuální vyvážení) */
     }
 
     @media screen and (orientation: landscape) { .app-container { display: flex; } #orientation-warning { display: none !important; } }
@@ -411,13 +411,13 @@
   
   <div class="modal" id="settings-modal" onclick="handleModalBackgroundClick(event)">
     <div class="modal-content">
-      <!-- Seznam uživatelů: Nepřístupný (disabled), vždy Zkušební -->
+      <!-- Seznam uživatelů -->
       <div class="setting-row"><label>Uživatel:</label><select id="user-select" disabled></select></div>
-      <!-- Pole jsou viditelná, ale neaktivní (disabled) -->
+      <!-- Pole jsou viditelná, ale neaktivní -->
       <div class="setting-row"><label>Jméno:</label><input type="text" id="user-name-input" disabled></div>
       <div class="setting-row"><label>Heslo:</label><input type="password" id="user-pass-input" disabled placeholder="---"></div>
       <hr style="width:100%; border-color:var(--bar-color); margin: 10px 0;">
-      <!-- Nastavení se ukládá až stiskem kolečka (při zavření okna) -->
+      <!-- Nastavení hry -->
       <div class="setting-row"><label>Počet tyčí:</label><select id="rod-count-select"></select></div>
       <div class="setting-row"><label>Operace:</label>
         <select id="operation-select">
@@ -444,20 +444,17 @@
 
     // --- USER MANAGEMENT ---
     const TRIAL_INDEX = 0;
-    let currentUserIndex = TRIAL_INDEX; // Vynuceně Zkušební
+    let currentUserIndex = TRIAL_INDEX; 
     let users = [];
     
     function initUserManager() {
         loadUsers();
-        checkAndClearDailyRecords(); // Kontrola denních rekordů
-        
-        // Naplnění seznamu (i když je neaktivní, data tam musí být)
+        checkAndClearDailyRecords();
         populateUserSelect();
         
-        // Uzamčení UI na Zkušební
         const select = $('user-select');
         select.value = TRIAL_INDEX;
-        select.disabled = true; // Seznam nepřístupný
+        select.disabled = true;
         
         $('user-name-input').value = users[TRIAL_INDEX].name;
         $('user-name-input').disabled = true;
@@ -467,7 +464,6 @@
     }
 
     function loadUsers() {
-        // Pevný seznam uživatelů
         users = [];
         users.push({name: "Zkušební"});
         for(let i=1; i<=10; i++) {
@@ -480,7 +476,6 @@
         const lastDate = localStorage.getItem('soroban_record_date');
         
         if (lastDate !== today) {
-            // Nový den -> smazat všechny rekordy (best_*)
             Object.keys(localStorage).forEach(key => {
                 if (key.includes('best_')) {
                     localStorage.removeItem(key);
@@ -501,10 +496,7 @@
         });
     }
 
-    // Funkce pro změnu uživatele odstraněna/vypnuta - vždy je TRIAL_INDEX
-
     function getStorageKey(suffix) {
-        // Zkušební uživatel má svůj klíč
         return `soroban_trial_${suffix}`;
     }
 
@@ -520,7 +512,6 @@
 
     function updateUIForCurrentUser() {
         $('current-user-display').innerText = users[currentUserIndex].name;
-        // Select je už nastaven a disabled v initUserManager
         
         loadSettings();
         populateSettings();   
@@ -587,7 +578,7 @@
           if (isMobile) {
               warningTextBox.innerText = "Prosím, otočte zařízení na šířku.";
           } else {
-              warningTextBox.innerText = "Prosím, rozšiřte okno, aby soroban měl prostor se zobrazit.";
+              warningTextBox.innerText = "Prosím, rozšiřte okno obrazovky, aby se soroban mohl zobrazit.";
           }
       }
       // -------------------------------------
@@ -890,26 +881,28 @@
     function toggleSettings() {
       if(seriesState === 'running') return;
       const modal = $('settings-modal'); const btn = $('settings-btn');
+      const resetBtn = document.querySelector('.reset-btn');
+      const themeBtn = $('theme-btn');
 
       if (modal.classList.contains('visible')) {
         // --- CLOSING LOGIC ---
-        // Uživatel se neukládá, je vždy Zkušební.
-        // Ukládáme pouze nastavení (tyče, operace...)
-        
-        // Save Settings
         NUM_RODS = parseInt($('rod-count-select').value);
         currentProblem.operation = $('operation-select').value;
         SERIES_LENGTH = parseInt($('series-length-select').value);
         saveSettings();
 
         modal.classList.remove('visible'); btn.classList.remove('active');
+        
+        // Povolíme ostatní tlačítka
+        resetBtn.disabled = false;
+        themeBtn.disabled = false;
+
         updateUIForCurrentUser();
         buildSoroban();
         resetToStartState();
 
       } else {
         // --- OPENING LOGIC ---
-        // Zajištění, že seznam je zamčený na Zkušební
         $('user-select').value = TRIAL_INDEX;
         $('user-select').disabled = true; 
         
@@ -917,12 +910,15 @@
         $('user-name-input').disabled = true;
         $('user-pass-input').disabled = true;
 
-        // Načtení aktuálního nastavení do UI
         $('rod-count-select').value = NUM_RODS;
         $('operation-select').value = currentProblem.operation;
         $('series-length-select').value = SERIES_LENGTH;
 
         modal.classList.add('visible'); btn.classList.add('active');
+        
+        // Zablokujeme ostatní tlačítka
+        resetBtn.disabled = true;
+        themeBtn.disabled = true;
       }
     }
 
