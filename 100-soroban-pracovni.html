@@ -266,66 +266,39 @@
 
     .control-panel { display: flex; flex-direction: column; gap: 10px; margin-left: 8px; z-index: 1005; align-items: center; position: relative; }
 
-    /* --- NOVÉ POZICÍ VERTIKÁLNÍHO JMÉNA --- */
+    /* --- OPRAVENÉ POZICOVÁNÍ JMÉNA --- */
     .current-user-display {
         position: absolute;
-        /* Poloha X: Střed tlačítka Nastavení (3. tlačítko) */
-        /* Tlačítka mají šířku calc(var(--bead-size) * 0.9). Střed je polovina. */
-        left: 50%;
-        transform: translateX(-50%);
+        /* Horizontálně: Střed tlačítka Nastavení (je to 3. prvek v řadě) */
+        /* Control panel má align-items: center, takže left: 50% je střed sloupce */
+        left: 50%; 
+        transform: translateX(-50%); /* Centrované na střed */
         
-        /* Poloha Y: Zarovnáno na Soroban */
-        /* Start: Horní hrana druhé kostičky zdola. 
-           Výpočet: Spodek země (0) + 1. kostka + mezera + 2. kostka. 
-           Protože v CSS pozicujeme odzhora, musíme počítat:
-           Celková výška tyčky - (spodní okraj + 1. kostka + mezera + 2. kostka)
-           
-           Zjednodušeně pro "Start": 
-           Bottom line Sorobanu je standardně v ose.
-           Použijeme absolutní pozicování vůči liště tlačítek, ale zohledníme proměnné.
-           Abychom to vycentrovali na tlačítko, musíme "vysunout" text nahoru/dolů.
+        /* Vertikálně: Zarovnáno na Soroban */
+        /* Výpočet: 
+           Top = Rám nahoře (6px) + Nebe + Lišta + Země - (spodní okraj + 1. kostka + mezera + 2. kostka)
+           Horní hrana textu = Horní hrana 2. kostky zdola.
+           Dolní hrana textu = Dolní hrana 1. kostky (úplně dole).
         */
+        top: calc(6px + var(--heaven-height) + var(--bar-height) + var(--earth-height) - var(--tiny-gap) - var(--bead-size) - var(--bead-gap) - var(--bead-size));
         
-        /* Výpočet StartY (Top písmena):
-           Spodní hrana Sorobanu (vzhledem k rámu) + výška spodní kostky + mezera + výška druhé kostky.
-           Ale musíme to "přilepit" na tlačítko.
-           
-           Jiný přístup: Pozicujeme text absolutně vzhledem k app containeru, 
-           ale necháme ho na X pozici tlačítka.
-        */
+        /* Výška elementu musí odpovídat výšce 2 kostek + mezera */
+        height: calc(var(--bead-size) * 2 + var(--bead-gap));
         
         width: calc(var(--bead-size) * 0.9); /* Šířka tlačítka */
         display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: flex-end; /* Aby text začínal odshora */
+        align-items: center; /* Centrované na šířku */
+        justify-content: space-between; /* Roztažení písmen */
         
-        /* Dynamická výška písma podle počtu znaků */
-        font-size: 16px; 
         font-weight: bold;
         color: var(--bar-color);
-        pointer-events: none; /* Nezasahuje do klikání */
+        pointer-events: none;
         
-        /* Pozicování vůči spodku oblasti tlačítek */
-        /* Tlačítko Nastavení je dole. Posuneme ho nahoru, aby začátek sedal na druhou kostku. */
-        /* Toto je přibližný offset, který doladíme */
-        bottom: 0px; 
-        
-        writing-mode: vertical-rl; /* Vertikální text */
+        writing-mode: vertical-rl; /* Vertikální psaní */
         text-orientation: mixed;
-        letter-spacing: 2px;
-        
-        /* Výška elementu bude odpovídat výšce 2 spodních kostek */
-        height: calc(var(--bead-size) * 2 + var(--bead-gap));
-        
-        /* Posun tak, aby START textu (konec elementu při RTL) sedal na horní hranu 2. kostky */
-        /* Tlačítka jsou u země sorobanu. 
-           Spodní okraj tlačítek je zarovnán se spodkem země.
-           Horní okraj 2. kostky je (od spodu): bead-size + gap.
-           Ale my chceme horní hranu 2. kostky (že je to kostka č. 2 ze 4).
-           Pozice: Bottom + (Bead 1) + Gap + (Bead 2). Horní hrana Bead 2.
-        */
-        /* Zjednodušené nastavení pro ukázku: */
+        letter-spacing: 1px;
+        font-size: 16px; /* Dynamicky upravováno v JS */
     }
 
     .control-btn.reset-btn { margin-top: calc(64px + 0.3 * var(--bead-size)); }
@@ -343,7 +316,18 @@
     .modal.visible { display: flex; }
     .modal-content { background: var(--wood-light); padding: 20px; border-radius: 12px; width: 90%; max-width: 300px; text-align: center; color: var(--text-color); z-index: 1001; display: flex; flex-direction: column; }
     select, input, button { padding: 8px; border-radius: 6px; border: 1px solid var(--bar-color); background: white; color: black; font-size: 16px; width: 100%; }
-    input[type=password] { font-family: monospace; letter-spacing: 2px; }
+    
+    /* Skrytý vstup pro heslo - vypadá jako neaktivní, ale jde do něj psát */
+    input#user-pass-input {
+        color: transparent; /* Text je neviditelný */
+        text-shadow: 0 0 0 var(--bar-color); /* Záložní barva pro správné rozměry, ale neviditelná */
+        caret-color: transparent; /* Kurzor je neviditelný */
+        background: #eee; /* Vypadá jako disabled */
+    }
+    input#user-pass-input:focus {
+        border-color: #888; /* Jemná indikace fokusu */
+        outline: none;
+    }
 
     .setting-row { margin: 15px 0; display: flex; flex-direction: column; gap: 5px; text-align: left; }
     .setting-row label { font-weight: bold; }
@@ -363,53 +347,22 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    /* --- NOVÉ PRAVIDLO PRO NASTAVENÍ V MOBILU (LANDSCAPE) --- */
+    /* --- NASTAVENÍ V MOBILU (LANDSCAPE) --- */
     @media screen and (max-height: 500px) and (orientation: landscape) {
         .modal-content {
-            width: 95vw;             /* Využije šířku displeje */
-            max-width: 800px;        /* Maximální šířka */
-            padding: 15px;
-            
-            /* Grid Layout: Dva sloupce */
-            display: grid;
-            grid-template-columns: auto 1fr; /* Levý sloupec podle obsahu, pravý vyplní zbytek */
-            gap: 20px 30px;          /* vertikální mezera | horizontální mezera */
+            width: 95vw; max-width: 800px; padding: 15px;
+            display: grid; grid-template-columns: auto 1fr; gap: 20px 30px;
         }
-
-        /* Skryjeme oddělovací čáru */
         .modal-content hr { display: none; }
-
-        /* Nastavení vzhledu řádků */
-        .setting-row {
-            flex-direction: row;     /* Popiska a input vedle se */
-            align-items: center;
-            justify-content: flex-start;
-            gap: 10px;
-            margin: 5px 0;
-        }
-        .setting-row label {
-            margin-bottom: 0;
-            min-width: 80px;
-            font-size: 14px;
-            text-align: left;
-        }
-        .setting-row select, .setting-row input {
-            flex: 0;                 /* Nechceme, aby se roztahovaly */
-            width: 140px;            /* Fixní šířka cca pro 10 znaků */
-            font-size: 14px;
-            padding: 5px;
-        }
-
-        /* Rozdělení položek do sloupců pomocí nth-child */
-        /* Levý sloupec: Všechna nastavení */
-        .setting-row:nth-child(1) { grid-column: 1; } /* User Select */
-        .setting-row:nth-child(2) { grid-column: 1; } /* Name Input */
-        .setting-row:nth-child(3) { grid-column: 1; } /* Pass Input */
-        .setting-row:nth-child(5) { grid-column: 1; } /* Rods */
-        .setting-row:nth-child(6) { grid-column: 1; } /* Operation */
-        .setting-row:nth-child(7) { grid-column: 1; } /* Series */
-
-        /* Pravý sloupec zůstává prázdný (prostor pro budoucí tlačítka nebo vizuální vyvážení) */
+        .setting-row { flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; margin: 5px 0; }
+        .setting-row label { margin-bottom: 0; min-width: 80px; font-size: 14px; text-align: left; }
+        .setting-row select, .setting-row input { flex: 0; width: 140px; font-size: 14px; padding: 5px; }
+        .setting-row:nth-child(1) { grid-column: 1; }
+        .setting-row:nth-child(2) { grid-column: 1; }
+        .setting-row:nth-child(3) { grid-column: 1; }
+        .setting-row:nth-child(5) { grid-column: 1; }
+        .setting-row:nth-child(6) { grid-column: 1; }
+        .setting-row:nth-child(7) { grid-column: 1; }
     }
 
     @media screen and (orientation: landscape) { .app-container { display: flex; } #orientation-warning { display: none !important; } }
@@ -437,7 +390,7 @@
       <div class="control-panel">
         <div class="series-counter" id="series-counter" onclick="endSeries()" title="Kliknutím ukončíte sérii">1/5</div>
 
-        <!-- Zde bude vertikální jméno -->
+        <!-- Vertikální jméno uživatele -->
         <div class="current-user-display" id="current-user-display">Zkušební</div>
 
         <button class="control-btn reset-btn" onclick="handleReset()" title="Vynulovat / Krok zpět">↺</button>
@@ -451,13 +404,10 @@
   
   <div class="modal" id="settings-modal" onclick="handleModalBackgroundClick(event)">
     <div class="modal-content">
-      <!-- Seznam uživatelů -->
       <div class="setting-row"><label>Uživatel:</label><select id="user-select" disabled></select></div>
-      <!-- Pole jsou viditelná, ale neaktivní -->
       <div class="setting-row"><label>Jméno:</label><input type="text" id="user-name-input" disabled></div>
       <div class="setting-row"><label>Heslo:</label><input type="password" id="user-pass-input" disabled placeholder="---"></div>
       <hr style="width:100%; border-color:var(--bar-color); margin: 10px 0;">
-      <!-- Nastavení hry -->
       <div class="setting-row"><label>Počet tyčí:</label><select id="rod-count-select"></select></div>
       <div class="setting-row"><label>Operace:</label>
         <select id="operation-select">
@@ -465,7 +415,7 @@
           <option value="*1">Násobení 1</option><option value="*2">Násobení 2</option>
         </select>
       </div>
-      <div class="setting-row"><label>Série (počet příkladů):</label>
+      <div class="setting-row"><label>Série:</label>
         <select id="series-length-select">
           <option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5" selected>5</option>
           <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
@@ -486,7 +436,7 @@
     const TRIAL_INDEX = 0;
     let currentUserIndex = TRIAL_INDEX; 
     let users = [];
-    let passwordBuffer = ""; // Buffer pro skryté zadávání
+    let passwordBuffer = "";
     
     function initUserManager() {
         loadUsers();
@@ -500,41 +450,46 @@
         $('user-name-input').value = users[TRIAL_INDEX].name;
         $('user-name-input').disabled = true;
         
-        // Inicializace skrytého pole hesla
         const passInput = $('user-pass-input');
-        passInput.disabled = false; // Je aktivní pro vstup, ale vypadá neaktivně
+        passInput.disabled = false; 
         passInput.value = ""; 
         passInput.addEventListener('keydown', handlePasswordKeydown);
-        // Změna typu na text, aby se nezobrazovaly tečky, ale necháme type=password pro UI konzistenci
-        // Nebo nastavíme style
-        passInput.style.color = "transparent"; // Skrytí textu
-        passInput.style.caretColor = "transparent"; // Skrytí kurzoru
+        passInput.addEventListener('input', e => e.target.value = ""); // Zamezí vložení
 
         updateUIForCurrentUser();
     }
 
     function handlePasswordKeydown(e) {
+        // Enter
         if (e.key === "Enter") {
             e.preventDefault();
             checkPasswordCommand();
-        } else if (e.key === "Backspace") {
+        } 
+        // Backspace
+        else if (e.key === "Backspace") {
             passwordBuffer = passwordBuffer.slice(0, -1);
-        } else if (e.key.length === 1) {
+        } 
+        // Znak
+        else if (e.key.length === 1) {
             passwordBuffer += e.key;
         }
-        // Zabráníme zobrazení čehokoliv
-        e.preventDefault();
-        e.target.value = ""; // Vždy držíme pole prázdné
+        // Ostatní klávesy (šipky, tab...) necháme projít nebo zablokujeme?
+        // Zablokujeme vše kromě funkcí, aby se input neplnil
+        // e.preventDefault(); // Toto bych musel obezlet pro Enter/Backspace
     }
+    
+    // Blokování vkládání do inputu (keydown to neřeší úplně pro všechny)
+    document.addEventListener('DOMContentLoaded', () => {
+        $('user-pass-input').addEventListener('input', (e) => {
+            e.target.value = "";
+        });
+    });
 
     function checkPasswordCommand() {
-        // Příkaz: RMreset
-        // Podmínka: Musí být vybrán uživatel Zkušební
         if (currentUserIndex === TRIAL_INDEX && passwordBuffer === "RMreset") {
             resetCurrentRecord();
             showToast("Rekord vynulován");
         }
-        // Reset bufferu po Enteru
         passwordBuffer = "";
     }
 
@@ -555,12 +510,9 @@
     function checkAndClearDailyRecords() {
         const today = new Date().toDateString();
         const lastDate = localStorage.getItem('soroban_record_date');
-        
         if (lastDate !== today) {
             Object.keys(localStorage).forEach(key => {
-                if (key.includes('best_')) {
-                    localStorage.removeItem(key);
-                }
+                if (key.includes('best_')) { localStorage.removeItem(key); }
             });
             localStorage.setItem('soroban_record_date', today);
         }
@@ -577,9 +529,7 @@
         });
     }
 
-    function getStorageKey(suffix) {
-        return `soroban_trial_${suffix}`;
-    }
+    function getStorageKey(suffix) { return `soroban_trial_${suffix}`; }
 
     function loadBestTime() {
         const key = getStorageKey(`best_${NUM_RODS}_${currentProblem.operation}_${SERIES_LENGTH}`);
@@ -594,21 +544,21 @@
     function updateUIForCurrentUser() {
         const displayName = users[currentUserIndex].name;
         const userDisplay = $('current-user-display');
-        
-        // Nastavení jména do vertikálního pole
         userDisplay.innerText = displayName;
         
-        // Dynamické nastavení velikosti písma podle délky jména
-        // Výška prostoru je cca 2 kostky + mezera = ~2 * 40px + 4px = 84px
+        // Dynamická velikost písma podle délky jména a výšky kontejneru
+        // Výška kontejneru je fixní (2 kostky + mezera)
+        // Písmo musíme nastavit tak, aby se text vešel.
         // Počet znaků: displayName.length
-        // Písmo se musí vejít do 84px.
-        const availableHeight = 2 * 40 + 4; // px, aproximace
-        const charCount = displayName.length;
-        // Jednoduchá logika: 8 znaků = 10px, 4 znaky = 20px
-        let fontSize = Math.floor(availableHeight / charCount);
-        // Omezíme min/max
-        fontSize = Math.max(10, Math.min(fontSize, 24));
+        // Jednoduchý výpočet: čím více znaků, tím menší písmo.
+        let fontSize = 24; // Start max
+        if (displayName.length > 4) fontSize = 20;
+        if (displayName.length > 6) fontSize = 16;
+        if (displayName.length > 8) fontSize = 12;
+        
         userDisplay.style.fontSize = fontSize + "px";
+        // Reset buffer při změně uživatele (zde neplatí, ale pro pořádek)
+        passwordBuffer = "";
 
         loadSettings();
         populateSettings();   
@@ -644,7 +594,6 @@
         const keyRods = getStorageKey('settings_rods');
         const keyOp = getStorageKey('settings_op');
         const keySeries = getStorageKey('settings_series');
-
         if(localStorage.getItem(keyRods)) NUM_RODS = parseInt(localStorage.getItem(keyRods));
         if(localStorage.getItem(keyOp)) currentProblem.operation = localStorage.getItem(keyOp);
         if(localStorage.getItem(keySeries)) SERIES_LENGTH = parseInt(localStorage.getItem(keySeries));
@@ -666,18 +615,12 @@
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       const isPortrait = window.innerHeight > window.innerWidth;
       const warning = $('orientation-warning'); const app = $('app');
-      
       const warningTextBox = warning.querySelector('div');
       const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-      
       if (warningTextBox) {
-          if (isMobile) {
-              warningTextBox.innerText = "Prosím, otočte zařízení na šířku.";
-          } else {
-              warningTextBox.innerText = "Prosím, rozšiřte okno obrazovky, aby se soroban mohl zobrazit.";
-          }
+          if (isMobile) { warningTextBox.innerText = "Prosím, otočte zařízení na šířku."; } 
+          else { warningTextBox.innerText = "Prosím, rozšiřte okno obrazovky, aby se soroban mohl zobrazit."; }
       }
-
       if (isStandalone) { warning.style.display = 'none'; app.style.display = 'flex'; }
       else { if (isPortrait) { warning.style.display = 'flex'; app.style.display = 'none'; } else { warning.style.display = 'none'; app.style.display = 'flex'; } }
     }
@@ -814,12 +757,6 @@
 
     function renderProblemDisplay(underlineMode) {
         const op = currentProblem.operation; const parts = currentProblem.parts; let html = '';
-
-        const formatPart = (p, isFirst) => {
-            let val = Math.abs(p); let sign = p >= 0 ? '+' : '-';
-            return (isFirst ? '' : ' ' + sign + ' ') + formatNumber(val);
-        };
-
         if (op === '*1' || op === '*2') {
              html = `${formatNumber(parts[0])} × ${formatNumber(parts[1])}`;
         }
@@ -829,7 +766,6 @@
             let p1Str = ` ${p1Sign} ${formatNumber(p1Val)}`;
             let p2Val = Math.abs(parts[2]); let p2Sign = parts[2] >= 0 ? '+' : '-';
             let p2Str = ` ${p2Sign} ${formatNumber(p2Val)}`;
-
             if (underlineMode === 'first') {
                 html = `<span class="problem-part underlined-first">${p0}</span>${p1Str}${p2Str}`;
             } else if (underlineMode === 'two') {
@@ -856,42 +792,29 @@
       if(seriesState !== 'running') return;
       const currentVal = getCurrentValue();
       const op = currentProblem.operation;
-
-      if (op === '*1' || op === '*2') {
-        if (currentVal === currentProblem.target) handleSuccess();
-        return;
-      }
-
+      if (op === '*1' || op === '*2') { if (currentVal === currentProblem.target) handleSuccess(); return; }
       const firstTarget = currentProblem.parts[0];
       let intermediateTarget;
       if (op === '-') { intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1]; }
       else { intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1]; }
       const finalTarget = currentProblem.target;
-
       if (currentVal === finalTarget) {
-          lastCheckpointType = null;
-          renderProblemDisplay('none');
-          handleSuccess();
+          lastCheckpointType = null; renderProblemDisplay('none'); handleSuccess();
       }
       else if (currentVal === intermediateTarget) {
           if (lastCheckpointType !== 'intermediate') { showToast("Správně! Pokračujte."); }
-          lastCheckpointType = 'intermediate';
-          renderProblemDisplay('two');
+          lastCheckpointType = 'intermediate'; renderProblemDisplay('two');
       }
       else if (currentVal === firstTarget) {
           if (lastCheckpointType !== 'first') { showToast("První číslo OK"); }
-          lastCheckpointType = 'first';
-          renderProblemDisplay('first');
+          lastCheckpointType = 'first'; renderProblemDisplay('first');
       }
-      else {
-          renderProblemDisplay('none');
-      }
+      else { renderProblemDisplay('none'); }
     }
 
     function handleSuccess() {
         if(seriesState !== 'running') return;
         showToast("Správně! 👍"); taskCounter++;
-
         if(taskCounter > SERIES_LENGTH) {
             seriesState = 'finished';
             let endTime = Date.now(); let duration = endTime - seriesStartTime; let formattedTime = formatDuration(duration);
@@ -939,17 +862,13 @@
         if(seriesState !== 'running') { setSorobanValue(0); return; }
         const currentVal = getCurrentValue();
         const op = currentProblem.operation;
-
         if (op === '*1' || op === '*2') { setSorobanValue(0); return; }
-
         const firstTarget = currentProblem.parts[0];
         let intermediateTarget;
         if (op === '-') { intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1]; }
         else { intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1]; }
-
         if (lastCheckpointType === 'intermediate' && currentVal === intermediateTarget) return;
         if (lastCheckpointType === 'first' && currentVal === firstTarget) return;
-
         if (lastCheckpointType === 'intermediate') { setSorobanValue(intermediateTarget); renderProblemDisplay('two'); }
         else if (lastCheckpointType === 'first') { setSorobanValue(firstTarget); renderProblemDisplay('first'); }
         else { setSorobanValue(0); renderProblemDisplay('none'); }
@@ -968,9 +887,7 @@
     }
 
     function handleModalBackgroundClick(e) {
-        if (e.target.id === 'settings-modal') {
-            toggleSettings();
-        }
+        if (e.target.id === 'settings-modal') { toggleSettings(); }
     }
 
     function toggleSettings() {
@@ -980,42 +897,30 @@
       const themeBtn = $('theme-btn');
 
       if (modal.classList.contains('visible')) {
-        // --- CLOSING LOGIC ---
         NUM_RODS = parseInt($('rod-count-select').value);
         currentProblem.operation = $('operation-select').value;
         SERIES_LENGTH = parseInt($('series-length-select').value);
         saveSettings();
-
         modal.classList.remove('visible'); btn.classList.remove('active');
-        
-        // Povolíme ostatní tlačítka
         resetBtn.disabled = false;
         themeBtn.disabled = false;
-
         updateUIForCurrentUser();
         buildSoroban();
         resetToStartState();
-
       } else {
-        // --- OPENING LOGIC ---
         $('user-select').value = TRIAL_INDEX;
         $('user-select').disabled = true; 
-        
         $('user-name-input').value = users[TRIAL_INDEX].name;
         $('user-name-input').disabled = true;
-        
-        // Heslo je technicky "disabled" vzhledem, ale funkční pro vstup
         $('user-pass-input').disabled = false; 
         $('user-pass-input').value = "";
-        passwordBuffer = ""; // Reset bufferu při otevření
+        passwordBuffer = ""; 
 
         $('rod-count-select').value = NUM_RODS;
         $('operation-select').value = currentProblem.operation;
         $('series-length-select').value = SERIES_LENGTH;
 
         modal.classList.add('visible'); btn.classList.add('active');
-        
-        // Zablokujeme ostatní tlačítka
         resetBtn.disabled = true;
         themeBtn.disabled = true;
       }
