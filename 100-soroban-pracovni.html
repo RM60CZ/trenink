@@ -266,39 +266,39 @@
 
     .control-panel { display: flex; flex-direction: column; gap: 10px; margin-left: 8px; z-index: 1005; align-items: center; position: relative; }
 
-    /* --- OPRAVENÉ POZICOVÁNÍ JMÉNA --- */
+    /* --- SPRÁVNÉ POZICOVÁNÍ JMÉNA --- */
     .current-user-display {
         position: absolute;
-        /* Horizontálně: Střed tlačítka Nastavení (je to 3. prvek v řadě) */
-        /* Control panel má align-items: center, takže left: 50% je střed sloupce */
-        left: 50%; 
-        transform: translateX(-50%); /* Centrované na střed */
+        /* Horizontálně: Střed tlačítka Nastavení */
+        left: 50%;
+        transform: translateX(-50%);
         
         /* Vertikálně: Zarovnáno na Soroban */
-        /* Výpočet: 
-           Top = Rám nahoře (6px) + Nebe + Lišta + Země - (spodní okraj + 1. kostka + mezera + 2. kostka)
-           Horní hrana textu = Horní hrana 2. kostky zdola.
-           Dolní hrana textu = Dolní hrana 1. kostky (úplně dole).
+        /* Výpočet pro TOP (Horní hrana 2. kostičky zdola):
+           Rám nahoře (6px) + Nebe + Lišta + Země - (Spodní okraj + 1. Kostka + Mezera + 2. Kostka)
         */
         top: calc(6px + var(--heaven-height) + var(--bar-height) + var(--earth-height) - var(--tiny-gap) - var(--bead-size) - var(--bead-gap) - var(--bead-size));
         
-        /* Výška elementu musí odpovídat výšce 2 kostek + mezera */
+        /* Výška: Přesně 2 kostky + mezera */
         height: calc(var(--bead-size) * 2 + var(--bead-gap));
         
         width: calc(var(--bead-size) * 0.9); /* Šířka tlačítka */
         display: flex;
         flex-direction: column;
+        justify-content: space-between; /* Rozložení písmen */
         align-items: center; /* Centrované na šířku */
-        justify-content: space-between; /* Roztažení písmen */
         
         font-weight: bold;
-        color: var(--bar-color);
-        pointer-events: none;
+        color: #111; /* TMAVÁ BARVA PRO LEPŠÍ ČITELNOST */
+        pointer-events: none; /* Nekliká se na něj */
         
-        writing-mode: vertical-rl; /* Vertikální psaní */
-        text-orientation: mixed;
-        letter-spacing: 1px;
-        font-size: 16px; /* Dynamicky upravováno v JS */
+        font-size: 16px; /* Dynamicky upraveno v JS */
+        line-height: 1; /* Bez extra mezery */
+    }
+    
+    /* Barva pro dark mode */
+    [data-theme="dark"] .current-user-display {
+        color: #ddd;
     }
 
     .control-btn.reset-btn { margin-top: calc(64px + 0.3 * var(--bead-size)); }
@@ -317,17 +317,13 @@
     .modal-content { background: var(--wood-light); padding: 20px; border-radius: 12px; width: 90%; max-width: 300px; text-align: center; color: var(--text-color); z-index: 1001; display: flex; flex-direction: column; }
     select, input, button { padding: 8px; border-radius: 6px; border: 1px solid var(--bar-color); background: white; color: black; font-size: 16px; width: 100%; }
     
-    /* Skrytý vstup pro heslo - vypadá jako neaktivní, ale jde do něj psát */
     input#user-pass-input {
-        color: transparent; /* Text je neviditelný */
-        text-shadow: 0 0 0 var(--bar-color); /* Záložní barva pro správné rozměry, ale neviditelná */
-        caret-color: transparent; /* Kurzor je neviditelný */
-        background: #eee; /* Vypadá jako disabled */
+        color: transparent; 
+        text-shadow: 0 0 0 var(--bar-color); 
+        caret-color: transparent; 
+        background: #eee; 
     }
-    input#user-pass-input:focus {
-        border-color: #888; /* Jemná indikace fokusu */
-        outline: none;
-    }
+    input#user-pass-input:focus { border-color: #888; outline: none; }
 
     .setting-row { margin: 15px 0; display: flex; flex-direction: column; gap: 5px; text-align: left; }
     .setting-row label { font-weight: bold; }
@@ -454,36 +450,21 @@
         passInput.disabled = false; 
         passInput.value = ""; 
         passInput.addEventListener('keydown', handlePasswordKeydown);
-        passInput.addEventListener('input', e => e.target.value = ""); // Zamezí vložení
+        passInput.addEventListener('input', e => e.target.value = "");
 
         updateUIForCurrentUser();
     }
 
     function handlePasswordKeydown(e) {
-        // Enter
         if (e.key === "Enter") {
             e.preventDefault();
             checkPasswordCommand();
-        } 
-        // Backspace
-        else if (e.key === "Backspace") {
+        } else if (e.key === "Backspace") {
             passwordBuffer = passwordBuffer.slice(0, -1);
-        } 
-        // Znak
-        else if (e.key.length === 1) {
+        } else if (e.key.length === 1) {
             passwordBuffer += e.key;
         }
-        // Ostatní klávesy (šipky, tab...) necháme projít nebo zablokujeme?
-        // Zablokujeme vše kromě funkcí, aby se input neplnil
-        // e.preventDefault(); // Toto bych musel obezlet pro Enter/Backspace
     }
-    
-    // Blokování vkládání do inputu (keydown to neřeší úplně pro všechny)
-    document.addEventListener('DOMContentLoaded', () => {
-        $('user-pass-input').addEventListener('input', (e) => {
-            e.target.value = "";
-        });
-    });
 
     function checkPasswordCommand() {
         if (currentUserIndex === TRIAL_INDEX && passwordBuffer === "RMreset") {
@@ -544,20 +525,17 @@
     function updateUIForCurrentUser() {
         const displayName = users[currentUserIndex].name;
         const userDisplay = $('current-user-display');
-        userDisplay.innerText = displayName;
         
-        // Dynamická velikost písma podle délky jména a výšky kontejneru
-        // Výška kontejneru je fixní (2 kostky + mezera)
-        // Písmo musíme nastavit tak, aby se text vešel.
-        // Počet znaků: displayName.length
-        // Jednoduchý výpočet: čím více znaků, tím menší písmo.
-        let fontSize = 24; // Start max
-        if (displayName.length > 4) fontSize = 20;
-        if (displayName.length > 6) fontSize = 16;
-        if (displayName.length > 8) fontSize = 12;
+        // Rozdělení jména na jednotlivá písmena pro vertikální zobrazení
+        // Použijeme flex column a space-between
+        userDisplay.innerHTML = displayName.split('').map(l => `<span>${l}</span>`).join('');
+        
+        // Dynamická velikost písma podle délky jména
+        let fontSize = 20;
+        if (displayName.length > 5) fontSize = 16;
+        if (displayName.length > 7) fontSize = 14;
         
         userDisplay.style.fontSize = fontSize + "px";
-        // Reset buffer při změně uživatele (zde neplatí, ale pro pořádek)
         passwordBuffer = "";
 
         loadSettings();
