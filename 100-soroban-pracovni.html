@@ -324,6 +324,55 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
+    /* --- NOVÉ PRAVIDLO PRO NASTAVENÍ V MOBILU (LANDSCAPE) --- */
+    @media screen and (max-height: 500px) and (orientation: landscape) {
+        .modal-content {
+            width: 95vw;             /* Využije šířku displeje */
+            max-width: 640px;        /* Maximální šířka */
+            padding: 15px;
+            
+            /* Grid Layout: Dva sloupce, moderní vzhled */
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px 30px;          /* vertikální mezera | horizontální mezera */
+        }
+
+        /* Skryjeme oddělovací čáru */
+        .modal-content hr { display: none; }
+
+        /* Nastavení vzhledu řádků */
+        .setting-row {
+            flex-direction: row;     /* Popiska a input vedle se */
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+            margin: 5px 0;
+        }
+        .setting-row label {
+            margin-bottom: 0;
+            min-width: 70px;
+            font-size: 14px;
+            text-align: left;
+        }
+        .setting-row select, .setting-row input {
+            flex: 1;
+            font-size: 14px;
+            padding: 5px;
+        }
+
+        /* Rozdělení položek do sloupců pomocí nth-child */
+        /* Sloupec 1 (Uživatel) */
+        .setting-row:nth-child(1) { grid-column: 1; } /* User Select */
+        .setting-row:nth-child(2) { grid-column: 1; } /* Name Input */
+        .setting-row:nth-child(3) { grid-column: 1; } /* Pass Input */
+
+        /* Položky v pravém sloupci (Nastavení hry) */
+        /* HR je 4. dítě, ale je skryté, takže pozice selectů zůstávají */
+        .setting-row:nth-child(5) { grid-column: 2; } /* Rods */
+        .setting-row:nth-child(6) { grid-column: 2; } /* Operation */
+        .setting-row:nth-child(7) { grid-column: 2; } /* Series */
+    }
+
     @media screen and (orientation: landscape) { .app-container { display: flex; } #orientation-warning { display: none !important; } }
     @media screen and (orientation: portrait) { @media all and (display-mode: browser) { .app-container { display: none !important; } #orientation-warning { display: flex !important; } } }
     @media (hover: hover) and (pointer: fine) { .app-container { justify-content: center; } .soroban-wrapper { margin: 0; align-items: flex-start; } .control-btn:hover { background: #555; } }
@@ -333,7 +382,7 @@
 
   <div id="orientation-warning">
     <svg viewBox="0 0 24 24"><path d="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h1.5C23.44 4.84 18.29 0 12 0l-.66.03 3.81 3.81 1.33-1.32zm-6.25-.77c-.59-.59-1.54-.59-2.12 0L1.75 8.11c-.59.59-.59 1.54 0 2.12l12.02 12.02c.59.59 1.54.59 2.12 0l6.36-6.36c.59-.59.59-1.54 0-2.12L10.23 1.75zm4.6 19.44L2.81 9.17l6.36-6.36 12.02 12.02-6.36 6.36zm-7.31.29C4.25 19.94 1.91 16.76 1.55 13H.05C.56 19.16 5.71 24 12 24l-.66-.03-3.81-3.81-1.33 1.32z"/></svg>
-    <div>Prosím otočte zařízení na šířku</div>
+    <div>Prosím, otočte zařízení na šířku.</div>
   </div>
 
   <div class="app-container" id="app">
@@ -529,6 +578,20 @@
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       const isPortrait = window.innerHeight > window.innerWidth;
       const warning = $('orientation-warning'); const app = $('app');
+      
+      // --- DETEKCE ZAŘÍZENÍ A ZMĚNA TEXTU ---
+      const warningTextBox = warning.querySelector('div');
+      const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+      
+      if (warningTextBox) {
+          if (isMobile) {
+              warningTextBox.innerText = "Prosím, otočte zařízení na šířku.";
+          } else {
+              warningTextBox.innerText = "Prosím, rozšiřte okno, aby soroban měl prostor se zobrazit.";
+          }
+      }
+      // -------------------------------------
+
       if (isStandalone) { warning.style.display = 'none'; app.style.display = 'flex'; }
       else { if (isPortrait) { warning.style.display = 'flex'; app.style.display = 'none'; } else { warning.style.display = 'none'; app.style.display = 'flex'; } }
     }
