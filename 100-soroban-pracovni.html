@@ -266,7 +266,7 @@
 
     .control-panel { display: flex; flex-direction: column; gap: 10px; margin-left: 8px; z-index: 1005; align-items: center; position: relative; }
 
-    /* --- ANIMACE BLIKÁNÍ --- */
+    /* --- ANIMACE BLIKÁNÍ (2x pomalejší) --- */
     @keyframes text-blink {
       0%, 100% { opacity: 1; }
       50% { opacity: 0; }
@@ -278,18 +278,7 @@
         left: 50%;
         transform: translateX(-50%);
         
-        /* Výpočet pozice:
-           1. Border rámu (6px)
-           2. Nebe (heaven-height)
-           3. Lišta (bar-height)
-           4. Země:
-              - TinyGap (2px) - prostor pod spodní kostkou
-              - 1. Kostka (bead-size)
-              - Mezera (bead-gap)
-              - 2. Kostka (bead-size)
-              - Mezera (bead-gap)
-              - 3. Kostka (bead-size) -> HORNÍ HRANA této kostky je začátek textu
-        */
+        /* Výpočet pozice: Horní hrana textu = Horní hrana 3. kostičky zdola */
         top: calc(6px + var(--heaven-height) + var(--bar-height) + var(--tiny-gap) + var(--bead-size) + var(--bead-gap) + var(--bead-size) + var(--bead-gap) + var(--bead-size));
         
         /* Výška: 2 kostky + 1 mezera */
@@ -308,13 +297,12 @@
         font-size: 18px; 
         line-height: 1;
         
-        /* Výchozí stav: Nebliká, viditelné */
         animation: none;
     }
     
-    /* Třída pro blikání */
+    /* Třída pro blikání - ZMĚNA ZDE: 2s místo 1s */
     .current-user-display.blinking-active {
-        animation: text-blink 1s infinite;
+        animation: text-blink 2s infinite;
     }
     
     [data-theme="dark"] .current-user-display {
@@ -738,7 +726,7 @@
         currentProblem.parts = parts; currentProblem.target = parts[0] + parts[1] + parts[2];
       } else if (op === '-') {
         a = randomInt(minFill, maxVal); let remainder = a - 1; let subParts = splitNumber(remainder, 2);
-        currentProblem.parts = [a, -subParts[0], -subParts[1]]; currentProblem.target = a - subParts[0] - subPoints[1];
+        currentProblem.parts = [a, -subParts[0], -subParts[1]]; currentProblem.target = a - subParts[0] - subParts[1];
       } else if (op === '*1') {
         b = randomInt(2, 9); let maxA = Math.floor(maxVal / b); if (maxA < 2) maxA = 2; let minA = 2; if (maxA > minFill) minA = minFill;
         a = randomInt(minA, maxA); currentProblem.parts = [a, b]; currentProblem.target = a * b;
