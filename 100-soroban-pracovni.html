@@ -409,7 +409,7 @@
     <div class="modal-content">
       <div class="setting-row"><label>Uživatel:</label><select id="user-select" disabled></select></div>
       <div class="setting-row"><label>Jméno:</label><input type="text" id="user-name-input" disabled></div>
-      <div class="setting-row"><label>Heslo:</label><input type="password" id="user-pass-input" disabled placeholder="---"></div>
+      <div class="setting-row"><label>Heslo:</label><input type="text" id="user-pass-input" disabled placeholder="---" autocomplete="off"></div>
       <hr style="width:100%; border-color:var(--bar-color); margin: 10px 0;">
       <div class="setting-row"><label>Počet tyčí:</label><select id="rod-count-select"></select></div>
       <div class="setting-row"><label>Operace:</label>
@@ -503,7 +503,9 @@
         const lastDate = localStorage.getItem('soroban_record_date');
         if (lastDate !== today) {
             Object.keys(localStorage).forEach(key => {
-                if (key.includes('best_')) { localStorage.removeItem(key); }
+                if (key.includes('soroban_record_date') >= 0) {
+                    localStorage.removeItem(key);
+                }
             });
             localStorage.setItem('soroban_record_date', today);
         }
@@ -725,7 +727,7 @@
         result = randomInt(minFill, maxVal); let parts = splitNumber(result, 3);
         currentProblem.parts = parts; currentProblem.target = parts[0] + parts[1] + parts[2];
       } else if (op === '-') {
-        a = randomInt(minFill, maxVal); let remainder = a - 1; let subParts = splitNumber(remainder, 2);
+        a = randomInt(minFill, maxVal); let remainder = randomInt(1, a - 1); let subParts = splitNumber(remainder, 2);
         currentProblem.parts = [a, -subParts[0], -subParts[1]]; currentProblem.target = a - subParts[0] - subParts[1];
       } else if (op === '*1') {
         b = randomInt(2, 9); let maxA = Math.floor(maxVal / b); if (maxA < 2) maxA = 2; let minA = 2; if (maxA > minFill) minA = minFill;
