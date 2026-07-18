@@ -784,28 +784,61 @@
       return arr;
     }
 
+    // NOVÁ KONTROLA S CHYBOVOU HLÁŠKOU
     function checkResult() {
       if(seriesState !== 'running') return;
       const currentVal = getCurrentValue();
       const op = currentProblem.operation;
+      
+      // Násobení - bez změny
       if (op === '*1' || op === '*2') { if (currentVal === currentProblem.target) handleSuccess(); return; }
+
+      // Ostatní operace
       const firstTarget = currentProblem.parts[0];
-      let intermediateTarget;
-      if (op === '-') { intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1]; }
-      else { intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1]; }
+      // Výpočet průběžného cíle (parts[1] může být záporné)
+      const intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1];
       const finalTarget = currentProblem.target;
+
+      // 1. Kontrola finálního výsledku
       if (currentVal === finalTarget) {
-          lastCheckpointType = null; renderProblemDisplay('none'); handleSuccess();
+          if (lastCheckpointType === 'intermediate') {
+              // Prošel všemi kroky -> Úspěch
+              lastCheckpointType = null; renderProblemDisplay('none'); handleSuccess();
+          } else {
+              // Přeskočil krok -> Chyba
+              showToast("Součet byl zadán nepovoleným způsobem.");
+              setSorobanValue(0);
+          }
+          return;
       }
-      else if (currentVal === intermediateTarget) {
-          if (lastCheckpointType !== 'intermediate') { showToast("Správně! Pokračujte."); }
-          lastCheckpointType = 'intermediate'; renderProblemDisplay('two');
+
+      // 2. Kontrola průběžného součtu
+      if (currentVal === intermediateTarget) {
+          if (lastCheckpointType === 'first') {
+              // Prošel prvním krokem -> OK
+              lastCheckpointType = 'intermediate'; renderProblemDisplay('two');
+              showToast("Správně! Pokračujte.");
+          } else {
+              // Zadal hned průběžný výsledek -> Chyba
+              showToast("Součet byl zadán nepovoleným způsobem.");
+              setSorobanValue(0);
+          }
+          return;
       }
-      else if (currentVal === firstTarget) {
-          if (lastCheckpointType !== 'first') { showToast("První číslo OK"); }
-          lastCheckpointType = 'first'; renderProblemDisplay('first');
+
+      // 3. Kontrola prvního čísla
+      if (currentVal === firstTarget) {
+          if (lastCheckpointType === null) { 
+              lastCheckpointType = 'first'; renderProblemDisplay('first');
+              showToast("První číslo OK");
+          }
+          // Pokud už jsme v tomto stavu, nic se neděje
       }
-      else { renderProblemDisplay('none'); }
+      // Pokud je hodnota mimo všechny cíle, jen se aktualizuje zobrazení (podtržení se zruší, pokud tam je)
+      else {
+          // Pokud nebyla nalezena shoda, resetujeme vizuální podtržení, aby se nezobrazovalo, když to není pravda
+          renderProblemDisplay('none');
+      }
     }
 
     function handleSuccess() {
