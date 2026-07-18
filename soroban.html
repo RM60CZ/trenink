@@ -320,6 +320,7 @@
     .control-btn.active { border-color: #d32f2f; box-shadow: 0 0 10px rgba(211, 47, 47, 0.5); }
     .control-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; background: #333; }
 
+    /* Modal pro nastavení */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
     .modal.visible { display: flex; }
     .modal-content { background: var(--wood-light); padding: 20px; border-radius: 12px; width: 90%; max-width: 300px; text-align: center; color: var(--text-color); z-index: 1001; display: flex; flex-direction: column; }
@@ -337,6 +338,35 @@
     .setting-row label { font-weight: bold; }
     select option { font-weight: bold; }
     select:disabled, input:disabled { opacity: 0.6; background: #eee; cursor: not-allowed; }
+
+    /* Modal pro chybovou hlášku */
+    #error-modal .modal-content {
+        border: 3px solid #d32f2f;
+        box-shadow: 0 8px 32px rgba(211, 47, 47, 0.4);
+        animation: shake 0.5s;
+    }
+    #error-modal .error-text {
+        font-size: 18px;
+        margin-bottom: 20px;
+        font-weight: bold;
+        color: #d32f2f;
+    }
+    #error-modal button {
+        background: #d32f2f;
+        color: white;
+        border: none;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    #error-modal button:hover { background: #b71c1c; }
+    #error-modal button:active { transform: scale(0.98); }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
 
     .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 3000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
     .toast.show { opacity: 1; }
@@ -405,11 +435,12 @@
 
   <div class="toast" id="toast"></div>
   
+  <!-- MODAL PRO NASTAVENÍ -->
   <div class="modal" id="settings-modal" onclick="handleModalBackgroundClick(event)">
     <div class="modal-content">
       <div class="setting-row"><label>Uživatel:</label><select id="user-select" disabled></select></div>
       <div class="setting-row"><label>Jméno:</label><input type="text" id="user-name-input" disabled></div>
-      <div class="setting-row"><label>Heslo:</label><input type="password" id="user-pass-input" disabled placeholder="---"></div>
+      <div class="setting-row"><label>Heslo:</label><input type="text" id="user-pass-input" disabled placeholder="---" autocomplete="off"></div>
       <hr style="width:100%; border-color:var(--bar-color); margin: 10px 0;">
       <div class="setting-row"><label>Počet tyčí:</label><select id="rod-count-select"></select></div>
       <div class="setting-row"><label>Operace:</label>
@@ -426,6 +457,15 @@
       </div>
     </div>
   </div>
+
+  <!-- NOVÝ MODAL PRO CHYBOVÉ HLÁŠENÍ -->
+  <div class="modal" id="error-modal">
+    <div class="modal-content">
+      <div class="error-text" id="error-text">Součet byl zadán nepovoleným způsobem.</div>
+      <button onclick="closeErrorModal()">OK</button>
+    </div>
+  </div>
+
   <div class="firework-container" id="fireworks"></div>
 
   <script>
@@ -503,7 +543,9 @@
         const lastDate = localStorage.getItem('soroban_record_date');
         if (lastDate !== today) {
             Object.keys(localStorage).forEach(key => {
-                if (key.includes('best_')) { localStorage.removeItem(key); }
+                if (key.includes('soroban_record_date') >= 0) {
+                    localStorage.removeItem(key);
+                }
             });
             localStorage.setItem('soroban_record_date', today);
         }
@@ -640,6 +682,19 @@
     }
 
     function showToast(msg) { const t = $('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
+    
+    // --- FUNKCE PRO CHYBOVÝ MODAL ---
+    function showErrorModal() {
+        $('error-modal').classList.add('visible');
+    }
+
+    function closeErrorModal() {
+        $('error-modal').classList.remove('visible');
+        // Po zavření modálu resetujeme stav
+        setSorobanValue(0);
+        lastCheckpointType = null;
+        renderProblemDisplay('none');
+    }
 
     function resetToStartState() {
       seriesState = 'idle'; taskCounter = 0;
@@ -725,7 +780,7 @@
         result = randomInt(minFill, maxVal); let parts = splitNumber(result, 3);
         currentProblem.parts = parts; currentProblem.target = parts[0] + parts[1] + parts[2];
       } else if (op === '-') {
-        a = randomInt(minFill, maxVal); let remainder = a - 1; let subParts = splitNumber(remainder, 2);
+        a = randomInt(minFill, maxVal); let remainder = randomInt(1, a - 1); let subParts = splitNumber(remainder, 2);
         currentProblem.parts = [a, -subParts[0], -subParts[1]]; currentProblem.target = a - subParts[0] - subParts[1];
       } else if (op === '*1') {
         b = randomInt(2, 9); let maxA = Math.floor(maxVal / b); if (maxA < 2) maxA = 2; let minA = 2; if (maxA > minFill) minA = minFill;
@@ -782,28 +837,58 @@
       return arr;
     }
 
+    // NOVÁ KONTROLA S CHYBOVÝM MODALEM
     function checkResult() {
       if(seriesState !== 'running') return;
       const currentVal = getCurrentValue();
       const op = currentProblem.operation;
+      
+      // Násobení - bez změny
       if (op === '*1' || op === '*2') { if (currentVal === currentProblem.target) handleSuccess(); return; }
+
+      // Ostatní operace
       const firstTarget = currentProblem.parts[0];
-      let intermediateTarget;
-      if (op === '-') { intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1]; }
-      else { intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1]; }
+      // Výpočet průběžného cíle (parts[1] může být záporné)
+      const intermediateTarget = currentProblem.parts[0] + currentProblem.parts[1];
       const finalTarget = currentProblem.target;
+
+      // 1. Kontrola finálního výsledku
       if (currentVal === finalTarget) {
-          lastCheckpointType = null; renderProblemDisplay('none'); handleSuccess();
+          if (lastCheckpointType === 'intermediate') {
+              // Prošel všemi kroky -> Úspěch
+              lastCheckpointType = null; renderProblemDisplay('none'); handleSuccess();
+          } else {
+              // Přeskočil krok -> Chyba
+              showErrorModal();
+          }
+          return;
       }
-      else if (currentVal === intermediateTarget) {
-          if (lastCheckpointType !== 'intermediate') { showToast("Správně! Pokračujte."); }
-          lastCheckpointType = 'intermediate'; renderProblemDisplay('two');
+
+      // 2. Kontrola průběžného součtu
+      if (currentVal === intermediateTarget) {
+          if (lastCheckpointType === 'first') {
+              // Prošel prvním krokem -> OK
+              lastCheckpointType = 'intermediate'; renderProblemDisplay('two');
+              showToast("Správně! Pokračujte.");
+          } else {
+              // Zadal hned průběžný výsledek -> Chyba
+              showErrorModal();
+          }
+          return;
       }
-      else if (currentVal === firstTarget) {
-          if (lastCheckpointType !== 'first') { showToast("První číslo OK"); }
-          lastCheckpointType = 'first'; renderProblemDisplay('first');
+
+      // 3. Kontrola prvního čísla
+      if (currentVal === firstTarget) {
+          if (lastCheckpointType === null) { 
+              lastCheckpointType = 'first'; renderProblemDisplay('first');
+              showToast("První číslo OK");
+          }
+          // Pokud už jsme v tomto stavu, nic se neděje
       }
-      else { renderProblemDisplay('none'); }
+      // Pokud je hodnota mimo všechny cíle, jen se aktualizuje zobrazení (podtržení se zruší, pokud tam je)
+      else {
+          renderProblemDisplay('none');
+      }
     }
 
     function handleSuccess() {
