@@ -1,1 +1,214 @@
+<!DOCTYPE html>
+<html lang="cs" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalendář Leden 2027</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .paper-line { border-bottom: 1px solid #cbd5e1; margin-bottom: 4px; padding-bottom: 4px; }
+        textarea:focus { outline: none; background: transparent; }
+        textarea { resize: none; overflow: hidden; background: transparent; }
+        @media (max-width: 640px) {
+            .day-num { font-size: 1.5rem; }
+            textarea { font-size: 0.875rem; }
+        }
+        #fileInput { display: none; }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-900 min-h-screen p-4 transition-colors duration-300">
 
+    <input type="file" id="fileInput" accept=".json">
+
+    <!-- Hlavička -->
+    <div class="max-w-4xl mx-auto mt-8 mb-2 flex justify-between items-center gap-2 flex-wrap">
+        <!-- Nadpis vlevo -->
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800 dark:text-white">Januar/janvier 2027</h1>
+            <span class="text-xs text-slate-500 dark:text-slate-400 block">Übersicht/aperçu</span>
+        </div>
+        
+        <div class="flex gap-2">
+            <button id="themeToggle" class="p-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm">
+                🌙 / ☀️
+            </button>
+            <button id="exportBtn" class="p-2 px-4 rounded-lg bg-green-600 hover:bg-green-500 text-white text-sm font-bold shadow-lg flex items-center gap-2">
+                💾 Záloha
+            </button>
+            <button id="importBtn" class="p-2 px-4 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold shadow-lg flex items-center gap-2">
+                📂 Obnovit
+            </button>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto bg-white dark:bg-slate-800 shadow-2xl rounded-lg overflow-hidden">
+        <div class="p-6">
+            <div class="space-y-2" id="calendarGrid">
+                <!-- Řádky se generují pomocí JavaScriptu -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const year = 2027;
+        const month = 0; // Leden
+        
+        // Zkratky dnů: [Německy, Francouzsky]
+        // 0=Ne, 1=Po, 2=Út, 3=St, 4=Čt, 5=Pá, 6=So
+        const dayAbbr = {
+            0: 'S-d', // Sonntag / dimanche
+            1: 'M-l', // Montag / lundi
+            2: 'D-m', // Dienstag / mardi
+            3: 'M-m', // Mittwoch / mercredi
+            4: 'D-j', // Donnerstag / jeudi
+            5: 'F-v', // Freitag / vendredi
+            6: 'S-s'  // Samstag / samedi
+        };
+
+        // Svátky a události z obrázku (klíč je datum ve formátu RRRR-MM-DD)
+        const events = {
+            '2027-01-01': 'Neujahr/Nouvel an',
+            '2027-01-03': '2. Sonntag nach Weihnachten/Épiphanie du Seigneur',
+            '2027-01-06': 'Erscheinung des Herrn/Mercredi après l\'Épiphanie.',
+            '2027-01-10': 'Taufe des Herrn/Baptême du Seigneur',
+            '2027-01-17': '2. Sonntag im Jk./2e dimanche du temps ord.',
+            '2027-01-24': '3. Sonntag im Jk./3e dimanche du temps ord.',
+            '2027-01-31': '4. Sonntag im Jk./4e dimanche du ter'
+        };
+
+        const grid = document.getElementById('calendarGrid');
+        const fileInput = document.getElementById('fileInput');
+        
+        function getDaysInMonth(month, year) {
+            return new Date(year, month + 1, 0).getDate();
+        }
+        
+        const daysInMonth = getDaysInMonth(month, year);
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(year, month, day);
+            // Formátování data pro klíč (YYYY-MM-DD), ošetřené nuly
+            const monthStr = String(month + 1).padStart(2, '0');
+            const dayStr = String(day).padStart(2, '0');
+            const dateKey = `${year}-${monthStr}-${dayStr}`;
+            
+            const dayOfWeek = date.getDay(); // 0-6
+            const dayCode = dayAbbr[dayOfWeek];
+
+            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+            
+            // Barva čísla dne
+            let dayColorClass = 'text-slate-500';
+            if (dayOfWeek === 0) dayColorClass = 'text-red-600 font-bold'; // Neděle červeně
+            if (dayOfWeek === 6) dayColorClass = 'text-blue-600 font-bold'; // Sobota modře
+
+            const savedText = localStorage.getItem(dateKey) || '';
+            const predefinedEvent = events[dateKey] || '';
+
+            const row = document.createElement('div');
+            row.className = 'paper-line flex items-start group';
+            
+            // Zde nastavujeme vzhled textu
+            // text-base = normální velikost, text-slate-900 = tmavě černá (dobrá viditelnost)
+            // italic = kurzíva pro předtištěné svátky
+            row.innerHTML = `
+                <div class="w-12 flex-shrink-0 text-right pr-3 pt-1">
+                    <span class="day-num text-2xl font-semibold ${dayColorClass}">${day}</span>
+                </div>
+                <div class="w-10 flex-shrink-0 pt-2 text-xs font-bold text-slate-400 dark:text-slate-500 tracking-tight">
+                    ${dayCode}
+                </div>
+                <div class="flex-grow relative">
+                    <textarea 
+                        rows="1" 
+                        class="w-full text-base text-slate-900 dark:text-slate-100 pt-2 border-none leading-tight ${predefinedEvent ? 'italic font-medium' : ''}"
+                        data-date="${dateKey}"
+                        placeholder="${predefinedEvent ? '' : '...'}"
+                    >${savedText ? savedText : predefinedEvent}</textarea>
+                </div>
+            `;
+            
+            grid.appendChild(row);
+        }
+
+        // Ukládání při psaní
+        const textareas = document.querySelectorAll('textarea');
+        textareas.forEach(ta => {
+            ta.addEventListener('input', (e) => {
+                const key = e.target.getAttribute('data-date');
+                localStorage.setItem(key, e.target.value);
+                autoResize(e.target);
+            });
+            autoResize(ta);
+        });
+
+        function autoResize(el) {
+            el.style.height = 'auto';
+            el.style.height = (el.scrollHeight) + 'px';
+        }
+
+        // --- LOGIKA PRO ZÁLOHU ---
+
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            const dataToSave = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('2027-')) {
+                    dataToSave[key] = localStorage.getItem(key);
+                }
+            }
+            const jsonString = JSON.stringify(dataToSave, null, 2);
+            const blob = new Blob([jsonString], { type: "application/json" });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'kalendar-zaloha-leden2027.json';
+            link.click();
+        });
+
+        document.getElementById('importBtn').addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const loadedData = JSON.parse(event.target.result);
+                    const keysToRemove = [];
+                    for (let i = 0; i < localStorage.length; i++) {
+                        if(localStorage.key(i).startsWith('2027-')) keysToRemove.push(localStorage.key(i));
+                    }
+                    keysToRemove.forEach(k => localStorage.removeItem(k));
+                    Object.keys(loadedData).forEach(key => {
+                        localStorage.setItem(key, loadedData[key]);
+                    });
+                    textareas.forEach(ta => {
+                        const key = ta.getAttribute('data-date');
+                        if(loadedData[key]) {
+                            ta.value = loadedData[key];
+                        } else {
+                            ta.value = events[key] || ''; // Obnovíme i výchozí svátky
+                        }
+                        autoResize(ta);
+                    });
+                    alert("✅ Data byla obnovena.");
+                } catch (err) {
+                    alert("❌ Chyba při čtení souboru.");
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // Přepínač motivu
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+        });
+
+    </script>
+</body>
+</html>
