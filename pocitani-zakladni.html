@@ -62,7 +62,6 @@ input{
   }
 }
 
-/* SKRYTÝ TEXT */
 #odpoved.hidden-text{
   color:transparent!important;
   background-color:transparent!important;
@@ -197,8 +196,10 @@ input{
   pointer-events:none
 }
 
-/* JEDINÁ ÚPRAVA:
-   Automatické přizpůsobení dlouhých čísel velikosti mobilu */
+.hidden-mode{
+  display: none !important;
+}
+
 @media(max-width:480px){
   #priklad,
   #cara,
@@ -410,7 +411,7 @@ micLabel=$('micLabel'),
 inputBox=$('inputBox'),
 homeBtn=$('homeBtn');
 
-const KEY='matika_trenink_v4';
+const KEY='matika_trenink_v5_auto';
 
 let correct=0,
 wrong=0,
@@ -423,6 +424,11 @@ micListening=false,
 micAutoRestart=true,
 spBuf=[],
 recognition=null;
+
+const isAutoMode = () => {
+    const op = operaceEl.value;
+    return op === '+' || op === '-' || op === '*';
+};
 
 const today=new Date(),
 czM='ledna,února,března,dubna,května,června,července,srpna,září,října,listopadu,prosince'.split(','),
@@ -555,7 +561,8 @@ updateCis2();
 operaceEl.addEventListener('change',()=>{
 updateCis2();
 chybaEl.textContent='';
-save()
+save();
+resetToInitialState();
 });
 
 cis1.addEventListener('change',()=>{
@@ -639,14 +646,22 @@ odpovedEl.value='';
 odpovedEl.classList.remove('hidden-text');
 spReset();
 zobrazitVysledek=true;
+
+if(isAutoMode()){
+    btnEl.classList.add('hidden-mode');
+    micBtn.classList.add('hidden-mode');
+}else{
+    btnEl.classList.remove('hidden-mode');
+    updateMicVisibility();
+}
+
 updateBtn();
-updateMicVisibility();
 updateHomeBtn();
 
 setTimeout(()=>{
 caraEl.style.opacity='1';
 
-if(hlasCheck.checked)
+if(hlasCheck.checked && !isAutoMode())
 setTimeout(()=>startMic(),100);
 else odpovedEl.focus();
 
@@ -666,6 +681,10 @@ odpovedEl.placeholder='historie';
 odpovedEl.style.textAlign='center';
 prikladEl.innerHTML='';
 caraEl.style.opacity='0';
+
+btnEl.classList.remove('hidden-mode');
+micBtn.classList.remove('hidden-mode');
+
 updateMicVisibility();
 updateBtn();
 updateHomeBtn();
@@ -983,15 +1002,19 @@ isProcessing=false
 }
 };
 
-btnEl.addEventListener('touchstart',e=>handle(e,false),{passive:false});
+// OPRAVA ZDE:
+// Tlačítko START musí fungovat vždy, když není aktivní příklad (!aktualniPriklad).
+// Tlačítko VÝSLEDEK funguje jen pro dělení (!isAutoMode).
+btnEl.addEventListener('touchstart',e=>{
+    if(!aktualniPriklad || !isAutoMode()) handle(e,false)
+},{passive:false});
 
 btnEl.addEventListener('click',e=>{
-if(e.pointerType!=='touch')
-handle(e,false)
+    if( (!aktualniPriklad || !isAutoMode()) && e.pointerType!=='touch') handle(e,false)
 });
 
 odpovedEl.addEventListener('keydown',e=>{
-if(e.key==='Enter')
+if(e.key==='Enter' && !isAutoMode())
 handle(e,false)
 });
 
@@ -1015,21 +1038,89 @@ const keyboardMap={
 };
 
 odpovedEl.addEventListener('input',e=>{
-let val=e.target.value;
+    let val=e.target.value;
 
-if(aktualniPriklad){
-let converted='';
+    if(aktualniPriklad){
+        let converted='';
+        for(let char of val){
+            if(keyboardMap[char])
+            converted+=keyboardMap[char];
+            else if(/^[-,.\d]$/.test(char))
+            converted+=char
+        }
+        val = converted;
+    }
 
-for(let char of val){
-if(keyboardMap[char])
-converted+=keyboardMap[char];
-else if(/^[-,.\d]$/.test(char))
-converted+=char
-}
+    if(isAutoMode() && aktualniPriklad){
+        
+        const correctRes = aktualniPriklad.vysledekZ !== undefined 
+            ? aktualniPriklad.vysledekZ 
+            : aktualniPriklad.vysledek;
+        
+        const correctLen = correctRes.toString().length;
+        const rawVal = norm(val);
+        
+        if(rawVal.length > correctLen){
+            const trimmed = rawVal.slice(0, correctLen);
+            e.target.value = fmtInputStr(trimmed);
+            return;
+        }
+        
+        if(/^[-]?\d*$/.test(rawVal)){
+             e.target.value = rawVal ? fmtInputStr(rawVal) : '';
+        }
 
-const normalized=norm(converted);
-e.target.value=normalized?fmtInputStr(normalized):''
-}
+        if(rawVal.length === correctLen){
+            
+            const ok = check(rawVal, aktualniPriklad);
+            const P = odpovedEl.parentElement.parentElement;
+
+            if(ok){
+                P.classList.add('zelene');
+                odpovedEl.classList.add('text-white');
+                
+                correct++;
+                streak++;
+                updateScores();
+                addHist(ok, rawVal);
+                save();
+
+                setTimeout(() => {
+                    P.classList.remove('zelene');
+                    odpovedEl.classList.remove('text-white');
+                    startNewProblem();
+                }, 200);
+
+            } else {
+                P.classList.add('cervene');
+                odpovedEl.classList.add('text-white');
+                
+                wrong++;
+                streak=0;
+                P.classList.add('shake');
+                
+                updateScores();
+                addHist(ok, rawVal);
+                save();
+
+                setTimeout(() => {
+                    P.classList.remove('shake');
+                }, 500);
+            }
+        } else {
+            const P = odpovedEl.parentElement.parentElement;
+            if(P.classList.contains('cervene')){
+                P.classList.remove('cervene');
+                odpovedEl.classList.remove('text-white');
+            }
+        }
+
+    } else {
+        if(aktualniPriklad){
+            const normalized = norm(val);
+            e.target.value = normalized?fmtInputStr(normalized):''
+        }
+    }
 });
 
 updateScores();
