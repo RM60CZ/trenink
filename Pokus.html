@@ -1,3 +1,4 @@
+html
 <!DOCTYPE html>
 <html lang="cs" class="dark">
 <head>
@@ -11,20 +12,48 @@
         .paper-line { border-bottom: 1px solid #cbd5e1; margin-bottom: 4px; padding-bottom: 4px; }
         textarea:focus { outline: none; background: transparent; }
         textarea { resize: none; overflow: hidden; background: transparent; }
+        
         @media (max-width: 640px) {
             .day-num { font-size: 1.5rem; }
             textarea { font-size: 0.875rem; }
         }
         #fileInput { display: none; }
+
+        /* --- NASTAVENÍ PRO TISK --- */
+        @media print {
+            body { 
+                background: white !important; 
+                -webkit-print-color-adjust: exact; 
+            }
+            /* Skryjeme vše, co nepotřebujeme (tlačítka, hlavičku) */
+            .no-print { 
+                display: none !important; 
+            }
+            /* Zajistíme černý text na bílém pozadí */
+            textarea, .day-num, body {
+                color: black !important;
+                background: white !important;
+                border-color: #ccc !important;
+            }
+            /* Odstraníme okraje pro maximální využití papíru */
+            .max-w-4xl {
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            /* Skryjeme odkazy a zbytečné okraje stránky */
+            @page {
+                margin: 0.5cm;
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-900 min-h-screen p-4 transition-colors duration-300">
 
     <input type="file" id="fileInput" accept=".json">
 
-    <!-- Hlavička -->
-    <div class="max-w-4xl mx-auto mt-8 mb-2 flex justify-between items-center gap-2 flex-wrap">
-        <!-- Nadpis vlevo -->
+    <!-- Hlavička - přidána třída "no-print" pro skrytí při tisku -->
+    <div class="max-w-4xl mx-auto mt-8 mb-2 flex justify-between items-center gap-2 flex-wrap no-print">
         <div>
             <h1 class="text-2xl font-bold text-slate-800 dark:text-white">Januar/janvier 2027</h1>
             <span class="text-xs text-slate-500 dark:text-slate-400 block">Übersicht/aperçu</span>
@@ -56,18 +85,10 @@
         const month = 0; // Leden
         
         // Zkratky dnů: [Německy, Francouzsky]
-        // 0=Ne, 1=Po, 2=Út, 3=St, 4=Čt, 5=Pá, 6=So
         const dayAbbr = {
-            0: 'S-d', // Sonntag / dimanche
-            1: 'M-l', // Montag / lundi
-            2: 'D-m', // Dienstag / mardi
-            3: 'M-m', // Mittwoch / mercredi
-            4: 'D-j', // Donnerstag / jeudi
-            5: 'F-v', // Freitag / vendredi
-            6: 'S-s'  // Samstag / samedi
+            0: 'S-d', 1: 'M-l', 2: 'D-m', 3: 'M-m', 4: 'D-j', 5: 'F-v', 6: 'S-s'
         };
 
-        // Svátky a události z obrázku (klíč je datum ve formátu RRRR-MM-DD)
         const events = {
             '2027-01-01': 'Neujahr/Nouvel an',
             '2027-01-03': '2. Sonntag nach Weihnachten/Épiphanie du Seigneur',
@@ -81,28 +102,22 @@
         const grid = document.getElementById('calendarGrid');
         const fileInput = document.getElementById('fileInput');
         
-        function getDaysInMonth(month, year) {
-            return new Date(year, month + 1, 0).getDate();
-        }
-        
+        function getDaysInMonth(month, year) { return new Date(year, month + 1, 0).getDate(); }
         const daysInMonth = getDaysInMonth(month, year);
 
         for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(year, month, day);
-            // Formátování data pro klíč (YYYY-MM-DD), ošetřené nuly
             const monthStr = String(month + 1).padStart(2, '0');
             const dayStr = String(day).padStart(2, '0');
             const dateKey = `${year}-${monthStr}-${dayStr}`;
             
-            const dayOfWeek = date.getDay(); // 0-6
+            const dayOfWeek = date.getDay();
             const dayCode = dayAbbr[dayOfWeek];
-
             const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
             
-            // Barva čísla dne
             let dayColorClass = 'text-slate-500';
-            if (dayOfWeek === 0) dayColorClass = 'text-red-600 font-bold'; // Neděle červeně
-            if (dayOfWeek === 6) dayColorClass = 'text-blue-600 font-bold'; // Sobota modře
+            if (dayOfWeek === 0) dayColorClass = 'text-red-600 font-bold';
+            if (dayOfWeek === 6) dayColorClass = 'text-blue-600 font-bold';
 
             const savedText = localStorage.getItem(dateKey) || '';
             const predefinedEvent = events[dateKey] || '';
@@ -110,9 +125,6 @@
             const row = document.createElement('div');
             row.className = 'paper-line flex items-start group';
             
-            // Zde nastavujeme vzhled textu
-            // text-base = normální velikost, text-slate-900 = tmavě černá (dobrá viditelnost)
-            // italic = kurzíva pro předtištěné svátky
             row.innerHTML = `
                 <div class="w-12 flex-shrink-0 text-right pr-3 pt-1">
                     <span class="day-num text-2xl font-semibold ${dayColorClass}">${day}</span>
@@ -133,7 +145,6 @@
             grid.appendChild(row);
         }
 
-        // Ukládání při psaní
         const textareas = document.querySelectorAll('textarea');
         textareas.forEach(ta => {
             ta.addEventListener('input', (e) => {
@@ -149,15 +160,12 @@
             el.style.height = (el.scrollHeight) + 'px';
         }
 
-        // --- LOGIKA PRO ZÁLOHU ---
-
+        // Ukládání JSON souboru
         document.getElementById('exportBtn').addEventListener('click', () => {
             const dataToSave = {};
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
-                if (key.startsWith('2027-')) {
-                    dataToSave[key] = localStorage.getItem(key);
-                }
+                if (key.startsWith('2027-')) { dataToSave[key] = localStorage.getItem(key); }
             }
             const jsonString = JSON.stringify(dataToSave, null, 2);
             const blob = new Blob([jsonString], { type: "application/json" });
@@ -167,9 +175,8 @@
             link.click();
         });
 
-        document.getElementById('importBtn').addEventListener('click', () => {
-            fileInput.click();
-        });
+        // Načítání JSON souboru
+        document.getElementById('importBtn').addEventListener('click', () => { fileInput.click(); });
 
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
@@ -183,22 +190,14 @@
                         if(localStorage.key(i).startsWith('2027-')) keysToRemove.push(localStorage.key(i));
                     }
                     keysToRemove.forEach(k => localStorage.removeItem(k));
-                    Object.keys(loadedData).forEach(key => {
-                        localStorage.setItem(key, loadedData[key]);
-                    });
+                    Object.keys(loadedData).forEach(key => { localStorage.setItem(key, loadedData[key]); });
                     textareas.forEach(ta => {
                         const key = ta.getAttribute('data-date');
-                        if(loadedData[key]) {
-                            ta.value = loadedData[key];
-                        } else {
-                            ta.value = events[key] || ''; // Obnovíme i výchozí svátky
-                        }
+                        ta.value = loadedData[key] || events[key] || '';
                         autoResize(ta);
                     });
                     alert("✅ Data byla obnovena.");
-                } catch (err) {
-                    alert("❌ Chyba při čtení souboru.");
-                }
+                } catch (err) { alert("❌ Chyba při čtení souboru."); }
             };
             reader.readAsText(file);
         });
