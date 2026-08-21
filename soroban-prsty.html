@@ -197,6 +197,7 @@
   <div id="fw-layer"></div>
   <button id="btn-left" class="addend-btn">dvouciferné číslo</button>
   <button id="btn-right" class="addend-btn">jednociferné číslo</button>
+  <button id="btn-reset" class="addend-btn">vynulovat</button>
   <span id="addend-a" class="addend-part"></span>
   <span id="addend-plus" class="addend-part">+</span>
   <span id="addend-b" class="addend-part"></span>
@@ -332,6 +333,7 @@
 
     const btnLeft = document.getElementById('btn-left');
     const btnRight = document.getElementById('btn-right');
+    const btnReset = document.getElementById('btn-reset');
     const addendA = document.getElementById('addend-a');
     const addendPlus = document.getElementById('addend-plus');
     const addendB = document.getElementById('addend-b');
@@ -407,15 +409,17 @@
       btnRight.style.minWidth = width+'px';
 
       const height = Math.max(btnLeft.offsetHeight, btnRight.offsetHeight);
-      const top = sumRect.top - gap - height;
+      const formulaRect = sumFormula.getBoundingClientRect();
+      const buttonsTop = formulaRect.top + formulaRect.height/2 - height/2;
 
-      btnLeft.style.top = top+'px';
-      btnRight.style.top = top+'px';
+      btnLeft.style.top = buttonsTop+'px';
+      btnRight.style.top = buttonsTop+'px';
       btnLeft.style.left = rect50.left+'px';
       btnRight.style.left = (rect5.right - width)+'px';
 
+      const exerciseTop = sumRect.top - gap - height;
       const centerX = sumRect.left + sumRect.width/2;
-      const centerY = top + height/2;
+      const centerY = exerciseTop + height/2;
       const plusFontSize = parseFloat(getComputedStyle(addendPlus).fontSize);
       const numGap = plusFontSize * 0.35;
 
@@ -434,7 +438,14 @@
       addendB.style.left = (centerX + plusHalfWidth + numGap)+'px';
       addendB.style.top = centerY+'px';
       addendB.style.transform = 'translateY(-50%)';
+
+      const resetCenterX = (rect50.right + rect5.left) / 2;
+      const resetCenterY = (rect50.top + rect50.bottom) / 2;
+      btnReset.style.left = (resetCenterX - btnReset.offsetWidth/2)+'px';
+      btnReset.style.top = (resetCenterY - btnReset.offsetHeight/2)+'px';
     }
+
+    btnReset.addEventListener('click', resetFingers);
 
     let operatorOn = false;
     addendPlus.addEventListener('click', () => {
