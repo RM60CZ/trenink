@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<!-- Verze nahrána: 21.08.2026 20:10 -->
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1c1c1e">
+<title>Násobilka prstů</title>
+<style>
+  :root{--bg:#000;--t:#f5f5f7;--c:#1c1c1e;}
+  *{box-sizing:border-box;font-family:-apple-system,sans-serif;margin:0;padding:0;}
+  html,body{overflow:hidden;}
+  body{background:var(--c);color:var(--t);display:flex;justify-content:center;align-items:center;min-height:100vh;}
+
+  .hands-wrap{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    column-gap:140px;
+  }
+  .formula{
+    position:fixed;
+    top:0;left:0;
+    font-size:calc(40px * var(--ui-scale, 1));font-weight:bold;
+    color:var(--t);
+    white-space:nowrap;
+    text-align:center;
+    transform:translate(-50%,0);
+    pointer-events:none;
+  }
+  .formula-top{
+    position:fixed;
+    top:0;left:0;
+    font-size:calc(40px * var(--ui-scale, 1));font-weight:bold;
+    color:var(--t);
+    white-space:nowrap;
+    text-align:center;
+    transform:translate(-50%,-100%);
+    pointer-events:none;
+  }
+  .formula-final{
+    position:fixed;
+    top:0;left:0;
+    font-size:calc(60px * var(--ui-scale, 1));font-weight:bold;
+    color:var(--t);
+    white-space:nowrap;
+    text-align:center;
+    transform:translate(-50%,0);
+    pointer-events:none;
+  }
+  .mode-btn{
+    position:fixed;
+    top:0;left:0;
+    transform:translate(-50%,-100%);
+    background:#2c2c2e;color:var(--t);
+    border:1px solid #48484a;border-radius:12px;
+    font-size:calc(32px * var(--ui-scale, 1));font-weight:bold;
+    text-transform:uppercase;
+    letter-spacing:calc(4px * var(--ui-scale, 1));
+    padding:calc(16px * var(--ui-scale, 1)) calc(26px * var(--ui-scale, 1));
+    white-space:nowrap;
+    cursor:pointer;
+  }
+  .mode-btn:active{background:#3a3a3c;}
+  .fs-btn{
+    position:fixed;top:14px;right:14px;
+    width:44px;height:44px;
+    background:#2c2c2e;border:1px solid #48484a;border-radius:12px;
+    color:var(--t);font-size:20px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;z-index:1000;
+    opacity:.55;transition:opacity .15s ease;
+  }
+  .fs-btn:hover,.fs-btn:active{opacity:1;}
+  .hand-rotate{
+    display:inline-flex;
+    touch-action:manipulation;
+  }
+  .hand-rotate.hand-left{
+    transform:rotate(90deg);
+  }
+  .hand-rotate.hand-right{
+    transform:rotate(-90deg);
+  }
+  .finger-group{
+    display:flex;
+    flex-direction:row;
+    align-items:flex-end;
+    column-gap:21px;
+    height:calc(60px * 2);
+  }
+  .finger-sq{
+    position:relative;
+    width:84px;height:60px;background:#e0ac8b;border:none;border-radius:18px;
+    user-select:none;-webkit-tap-highlight-color:transparent;
+    transform-origin:bottom center;
+    transition:transform .18s ease,background-color .18s ease,box-shadow .18s ease;
+    box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 3px 10px rgba(0,0,0,.28);
+    cursor:pointer;
+  }
+  .finger-tip{
+    position:absolute;top:0;left:50%;
+    width:2px;height:2px;
+    transform:translate(-50%,-50%);
+    pointer-events:none;
+  }
+  .finger-mid{
+    position:absolute;top:50%;left:50%;
+    width:2px;height:2px;
+    transform:translate(-50%,-50%);
+    pointer-events:none;
+  }
+  #link-layer{
+    position:fixed;inset:0;
+    pointer-events:none;z-index:500;
+  }
+  .finger-sq.on{
+    background:#c98a63;transform:scaleY(4);
+    box-shadow:0 1px 0 rgba(255,255,255,.15) inset,0 8px 18px rgba(0,0,0,.35);
+  }
+  .finger-sq.on.linked{
+    background:#0a84ff;
+  }
+  .finger-sq.finger-big.on{
+    transform:scaleY(5);
+  }
+  .finger-sq.finger-small.on{
+    transform:scaleY(3.4);
+  }
+  .finger-sq.finger-first{
+    transform:translateY(270%) rotate(-45deg);
+  }
+  .finger-sq.finger-first.on{
+    transform:translateY(270%) rotate(-45deg) scaleY(4);
+  }
+  .finger-sq.finger-last{
+    transform:translateY(270%) rotate(45deg);
+  }
+  .finger-sq.finger-last.on{
+    transform:translateY(270%) rotate(45deg) scaleY(4);
+  }
+  .finger-sq.finger-first,
+  .finger-sq.finger-last{
+    width:101px;
+  }
+
+  .finger-col{position:relative;}
+  .finger-value{
+    position:absolute;top:100%;left:50%;
+    transform:translateX(-50%);
+    margin-top:12px;
+    font-size:36px;font-weight:bold;
+    color:#ffd60a;
+    opacity:0;transition:opacity .18s ease;
+    pointer-events:none;white-space:nowrap;
+  }
+  .finger-value.finger-value-thumb{
+    margin-top:calc(12px + (60px * 2.7));
+  }
+  .finger-value.finger-value-first{
+    transform:translateX(calc(-50% + 20px));
+  }
+  .finger-value.finger-value-last{
+    transform:translateX(calc(-50% - 20px));
+  }
+  .finger-sq.on ~ .finger-value{opacity:1;}
+  .finger-value .value-text{display:inline-block;}
+  .hand-left .finger-value .value-text{transform:rotate(-90deg);}
+  .hand-right .finger-value .value-text{transform:rotate(90deg);}
+
+  @media (max-width:520px){
+    .hands-wrap{column-gap:95px;}
+    .finger-group{column-gap:15px;height:calc(54px * 2);}
+    .finger-sq{width:72px;height:54px;}
+    .finger-sq.finger-first,
+    .finger-sq.finger-last{width:86px;}
+    .finger-value{font-size:31px;}
+    .finger-value.finger-value-thumb{margin-top:calc(12px + (54px * 2.7));}
+  }
+  @media (max-width:390px){
+    .hands-wrap{column-gap:64px;}
+    .finger-group{column-gap:12px;height:calc(51px * 2);}
+    .finger-sq{width:63px;height:51px;}
+    .finger-sq.finger-first,
+    .finger-sq.finger-last{width:76px;}
+    .finger-value{font-size:27px;}
+    .finger-value.finger-value-thumb{margin-top:calc(12px + (51px * 2.7));}
+  }
+</style>
+</head>
+<body data-theme="dark">
+  <div class="hands-wrap" id="hands-wrap">
+    <div class="hand-rotate hand-left" id="hand-left"></div>
+    <div class="hand-rotate hand-right" id="hand-right"></div>
+  </div>
+  <div class="formula" id="formula"></div>
+  <div class="formula-top" id="formula-top"></div>
+  <div class="formula-final" id="formula-final"></div>
+  <button class="mode-btn" id="mode-btn">malá násobilka</button>
+  <button id="fs-btn" class="fs-btn" title="Celá obrazovka">⛶</button>
+  <svg id="link-layer"></svg>
+
+  <script>
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    const handsWrap = document.getElementById('hands-wrap');
+    const handLeft = document.getElementById('hand-left');
+    const handRight = document.getElementById('hand-right');
+    const linkLayer = document.getElementById('link-layer');
+    const formula = document.getElementById('formula');
+    const formulaTop = document.getElementById('formula-top');
+    const formulaFinal = document.getElementById('formula-final');
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const topValues = [10,9,8,7,6];
+    const bottomValues = [6,7,8,9,10];
+
+    function buildGroup(values, bigIndex, smallIndices, firstIndex, lastIndex, onPick){
+      const group = document.createElement('div');
+      group.className = 'finger-group';
+      values.forEach((v, i) => {
+        const col = document.createElement('div');
+        col.className = 'finger-col';
+
+        const el = document.createElement('div');
+        el.className = 'finger-sq on';
+        if(i === bigIndex) el.classList.add('finger-big');
+        if(smallIndices.includes(i)) el.classList.add('finger-small');
+        if(i === firstIndex) el.classList.add('finger-first');
+        if(i === lastIndex) el.classList.add('finger-last');
+        el.dataset.value = String(v);
+
+        const tip = document.createElement('span');
+        tip.className = 'finger-tip';
+        el.appendChild(tip);
+
+        const mid = document.createElement('span');
+        mid.className = 'finger-mid';
+        el.appendChild(mid);
+
+        el.addEventListener('click', () => onPick(tip));
+
+        const label = document.createElement('div');
+        label.className = 'finger-value';
+        if(i === firstIndex) label.classList.add('finger-value-thumb', 'finger-value-first');
+        if(i === lastIndex) label.classList.add('finger-value-thumb', 'finger-value-last');
+        const valueText = document.createElement('span');
+        valueText.className = 'value-text';
+        valueText.textContent = String(v);
+        label.appendChild(valueText);
+
+        col.appendChild(el);
+        col.appendChild(label);
+        group.appendChild(col);
+      });
+      return group;
+    }
+
+    let leftTip = null;
+    let rightTip = null;
+    let bigMode = false;
+
+    handLeft.appendChild(buildGroup(topValues, 2, [4], 0, null, tip => { leftTip = tip; redraw(); }));
+    handRight.appendChild(buildGroup(bottomValues, 2, [0], null, 4, tip => { rightTip = tip; redraw(); }));
+
+    const modeBtn = document.getElementById('mode-btn');
+
+    function updateValueLabels(){
+      document.querySelectorAll('.finger-sq').forEach(el => {
+        const vt = el.parentElement.querySelector('.value-text');
+        vt.textContent = String(Number(el.dataset.value) + (bigMode ? 10 : 0));
+      });
+    }
+
+    let uiScale = 1;
+
+    function visualBounds(container){
+      const squares = container.querySelectorAll('.finger-sq');
+      let top=Infinity, bottom=-Infinity, left=Infinity, right=-Infinity;
+      squares.forEach(el => {
+        const r = el.getBoundingClientRect();
+        if(r.top < top) top = r.top;
+        if(r.bottom > bottom) bottom = r.bottom;
+        if(r.left < left) left = r.left;
+        if(r.right > right) right = r.right;
+      });
+      return { width: right-left, height: bottom-top };
+    }
+
+    function fitLayout(){
+      handsWrap.style.transform = 'translateY(-15px)';
+      const rect = visualBounds(handsWrap);
+      const availW = window.innerWidth - Math.min(140, window.innerWidth*0.2);
+      const availH = window.innerHeight - Math.min(300, window.innerHeight*0.5);
+      let scale = Math.min(availW/rect.width, availH/rect.height, 1);
+      if(!isFinite(scale) || scale <= 0) scale = 1;
+      uiScale = scale;
+      document.documentElement.style.setProperty('--ui-scale', scale);
+      handsWrap.style.transform = `translateY(${-15*scale}px) scale(${scale})`;
+    }
+
+    function positionModeBtn(){
+      const leftThumbEl = handLeft.querySelector('.finger-sq.finger-first');
+      const rightThumbEl = handRight.querySelector('.finger-sq.finger-last');
+      const topMost = Math.min(leftThumbEl.getBoundingClientRect().top, rightThumbEl.getBoundingClientRect().top);
+      const leftHandRect = handLeft.getBoundingClientRect();
+      const rightHandRect = handRight.getBoundingClientRect();
+      const mx = (leftHandRect.right + rightHandRect.left) / 2;
+      modeBtn.style.left = mx+'px';
+      modeBtn.style.top = (topMost - 70*uiScale)+'px';
+    }
+
+    modeBtn.addEventListener('click', () => {
+      bigMode = !bigMode;
+      modeBtn.textContent = bigMode ? 'velká násobilka' : 'malá násobilka';
+      updateValueLabels();
+      leftTip = null;
+      rightTip = null;
+      redraw();
+    });
+
+    function sizeSvg(){
+      linkLayer.setAttribute('width', window.innerWidth);
+      linkLayer.setAttribute('height', window.innerHeight);
+    }
+
+    function makeDot(x, y, r){
+      const c = document.createElementNS(svgNS, 'circle');
+      c.setAttribute('cx', x);
+      c.setAttribute('cy', y);
+      c.setAttribute('r', r);
+      c.setAttribute('fill', '#ff3b30');
+      return c;
+    }
+
+    function makeOrdinal(x, y, n, fontSize){
+      const t = document.createElementNS(svgNS, 'text');
+      t.setAttribute('x', x);
+      t.setAttribute('y', y);
+      t.setAttribute('fill', '#000');
+      t.setAttribute('font-size', fontSize);
+      t.setAttribute('font-weight', 'bold');
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('dominant-baseline', 'central');
+      t.textContent = String(n);
+      return t;
+    }
+
+    function redraw(){
+      linkLayer.innerHTML = '';
+      document.querySelectorAll('.finger-sq.linked').forEach(el => el.classList.remove('linked'));
+      const plainFinger = document.querySelector('.finger-sq:not(.finger-first):not(.finger-last)');
+      const fingerRect = plainFinger.getBoundingClientRect();
+      const strokeW = fingerRect.width / 16;
+      const dotR = fingerRect.height / 4;
+
+      let L = null, R = null;
+      if(leftTip){
+        const r = leftTip.getBoundingClientRect();
+        L = { x:r.left+r.width/2, y:r.top+r.height/2 };
+      }
+      if(rightTip){
+        const r = rightTip.getBoundingClientRect();
+        R = { x:r.left+r.width/2, y:r.top+r.height/2 };
+      }
+
+      if(L && R){
+        const leftValue = Number(leftTip.parentElement.dataset.value);
+        const rightValue = Number(rightTip.parentElement.dataset.value);
+        handLeft.querySelectorAll('.finger-sq').forEach(el => {
+          if(Number(el.dataset.value) <= leftValue) el.classList.add('linked');
+        });
+        handRight.querySelectorAll('.finger-sq').forEach(el => {
+          if(Number(el.dataset.value) <= rightValue) el.classList.add('linked');
+        });
+        const leftHandRect = handLeft.getBoundingClientRect();
+        const rightHandRect = handRight.getBoundingClientRect();
+        const mx = (leftHandRect.right + rightHandRect.left) / 2;
+        const path = document.createElementNS(svgNS, 'path');
+        path.setAttribute('d', `M ${L.x} ${L.y} H ${mx} V ${R.y} H ${R.x}`);
+        path.setAttribute('stroke', '#ff3b30');
+        path.setAttribute('stroke-width', strokeW);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke-linecap', 'round');
+        path.setAttribute('stroke-linejoin', 'round');
+        path.setAttribute('pointer-events', 'stroke');
+        path.style.cursor = 'pointer';
+        path.addEventListener('click', () => { leftTip = null; rightTip = null; redraw(); });
+        linkLayer.appendChild(path);
+
+        const ordFontSize = fingerRect.width * 0.28;
+        [leftTip.parentElement, rightTip.parentElement].forEach(el => {
+          const m = el.querySelector('.finger-mid').getBoundingClientRect();
+          linkLayer.appendChild(makeOrdinal(m.left+m.width/2, m.top+m.height/2, Number(el.dataset.value)-5, ordFontSize));
+        });
+
+        const leftOrdinal = leftValue-5, rightOrdinal = rightValue-5;
+        let bottomResult;
+        if(bigMode){
+          bottomResult = 200 + 20*(leftOrdinal+rightOrdinal);
+          formula.innerHTML = `<span style="color:#ff3b30">200</span> + (${leftOrdinal} + ${rightOrdinal}) × <span style="color:#ff3b30">20</span> = ${bottomResult}`;
+        } else {
+          bottomResult = (leftOrdinal+rightOrdinal)*10;
+          formula.innerHTML = `(${leftOrdinal} + ${rightOrdinal}) × <span style="color:#ff3b30">10</span> = ${bottomResult}`;
+        }
+
+        let lowestBottom = -Infinity;
+        document.querySelectorAll('.finger-sq').forEach(el => {
+          const b = el.getBoundingClientRect().bottom;
+          if(b > lowestBottom) lowestBottom = b;
+        });
+        formula.style.left = mx+'px';
+        formula.style.top = (lowestBottom + 40*uiScale)+'px';
+
+        const leftThumbEl = handLeft.querySelector('.finger-sq.finger-first');
+        const rightThumbEl = handRight.querySelector('.finger-sq.finger-last');
+        const leftAbove = 10-leftValue, rightAbove = 10-rightValue;
+
+        if(leftValue !== 10){
+          const m = leftThumbEl.querySelector('.finger-mid').getBoundingClientRect();
+          linkLayer.appendChild(makeOrdinal(m.left+m.width/2, m.top+m.height/2, leftAbove, ordFontSize));
+        }
+        if(rightValue !== 10){
+          const m = rightThumbEl.querySelector('.finger-mid').getBoundingClientRect();
+          linkLayer.appendChild(makeOrdinal(m.left+m.width/2, m.top+m.height/2, rightAbove, ordFontSize));
+        }
+
+        const topResult = leftAbove*rightAbove;
+        formulaTop.textContent = `${leftAbove} × ${rightAbove} = ${topResult}`;
+        const topMost = Math.min(leftThumbEl.getBoundingClientRect().top, rightThumbEl.getBoundingClientRect().top);
+        formulaTop.style.left = mx+'px';
+        formulaTop.style.top = (topMost - 2*uiScale)+'px';
+
+        formulaFinal.textContent = `${bottomResult + topResult}`;
+        const formulaBottom = formula.getBoundingClientRect().bottom;
+        formulaFinal.style.left = mx+'px';
+        formulaFinal.style.top = (formulaBottom + 24*uiScale)+'px';
+      } else {
+        formula.textContent = '';
+        formulaTop.textContent = '';
+        formulaFinal.textContent = '';
+      }
+      if(L) linkLayer.appendChild(makeDot(L.x, L.y, dotR));
+      if(R) linkLayer.appendChild(makeDot(R.x, R.y, dotR));
+    }
+
+    function layoutAll(){
+      fitLayout();
+      sizeSvg();
+      positionModeBtn();
+      redraw();
+    }
+
+    layoutAll();
+    window.addEventListener('resize', layoutAll);
+    window.addEventListener('orientationchange', layoutAll);
+
+    const fsBtn = document.getElementById('fs-btn');
+    function enterFullscreen(){
+      if(!document.fullscreenElement){
+        document.documentElement.requestFullscreen().catch(()=>{});
+      }
+    }
+    fsBtn.addEventListener('click', () => {
+      if(!document.fullscreenElement){
+        enterFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    });
+    document.addEventListener('fullscreenchange', () => {
+      fsBtn.textContent = document.fullscreenElement ? '✕' : '⛶';
+    });
+    document.addEventListener('touchend', enterFullscreen, { once:true });
+    document.addEventListener('click', enterFullscreen, { once:true });
+  </script>
+</body>
+</html>
