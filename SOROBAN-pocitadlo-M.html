@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Verze nahrána: 21.08.2026 14:55 -->
+<!-- Verze nahrána: 21.08.2026 18:08 -->
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
@@ -471,6 +471,7 @@
   <div class="firework-container" id="fireworks"></div>
 
   <script>
+    document.addEventListener('contextmenu', e => e.preventDefault());
     let NUM_RODS = 7; let UNIT_INDEX = 1; let SERIES_LENGTH = 5;
     const $ = id => document.getElementById(id);
     let rods = []; let currentProblem = { target: 0, parts: [], operation: '+' };
