@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Verze nahrána: 21.08.2026 20:10 -->
+<!-- Verze nahrána: 22.08.2026 16:48 -->
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
@@ -31,6 +31,7 @@
     transform:translate(-50%,0);
     pointer-events:none;
   }
+  .formula u,.formula-top u{text-decoration-thickness:calc(3px * var(--ui-scale, 1));text-underline-offset:calc(4px * var(--ui-scale, 1));}
   .formula-top{
     position:fixed;
     top:0;left:0;
@@ -44,16 +45,19 @@
   .formula-final{
     position:fixed;
     top:0;left:0;
-    font-size:calc(60px * var(--ui-scale, 1));font-weight:bold;
+    transition:top 10.8s ease,left 10.8s ease;
+    font-size:calc(72px * var(--ui-scale, 1));font-weight:bold;
     color:var(--t);
     white-space:nowrap;
     text-align:center;
-    transform:translate(-50%,0);
+    transform:translate(-50%,-100%);
     pointer-events:none;
   }
+  .formula-final u{font-size:calc(88px * var(--ui-scale, 1));text-decoration-thickness:calc(4px * var(--ui-scale, 1));text-underline-offset:calc(6px * var(--ui-scale, 1));}
   .mode-btn{
     position:fixed;
     top:0;left:0;
+    transition:top 10.8s ease,left 10.8s ease;
     transform:translate(-50%,-100%);
     background:#2c2c2e;color:var(--t);
     border:1px solid #48484a;border-radius:12px;
@@ -75,6 +79,22 @@
     opacity:.55;transition:opacity .15s ease;
   }
   .fs-btn:hover,.fs-btn:active{opacity:1;}
+  .hand-shift{
+    display:inline-flex;
+    transition:transform 10.8s ease;
+  }
+  .hand-pulse{
+    display:inline-flex;
+  }
+  .hand-pulse.twitch{
+    animation:hand-twitch .28s ease;
+  }
+  @keyframes hand-twitch{
+    0%{transform:scale(1);}
+    35%{transform:scale(1.08);}
+    65%{transform:scale(0.96);}
+    100%{transform:scale(1);}
+  }
   .hand-rotate{
     display:inline-flex;
     touch-action:manipulation;
@@ -193,8 +213,14 @@
 </head>
 <body data-theme="dark">
   <div class="hands-wrap" id="hands-wrap">
-    <div class="hand-rotate hand-left" id="hand-left"></div>
-    <div class="hand-rotate hand-right" id="hand-right"></div>
+    <div class="hand-pulse" id="hand-left-pulse">
+      <div class="hand-rotate hand-left" id="hand-left"></div>
+    </div>
+    <div class="hand-shift" id="hand-right-shift">
+      <div class="hand-pulse" id="hand-right-pulse">
+        <div class="hand-rotate hand-right" id="hand-right"></div>
+      </div>
+    </div>
   </div>
   <div class="formula" id="formula"></div>
   <div class="formula-top" id="formula-top"></div>
@@ -208,6 +234,7 @@
     const handsWrap = document.getElementById('hands-wrap');
     const handLeft = document.getElementById('hand-left');
     const handRight = document.getElementById('hand-right');
+    const handRightShift = document.getElementById('hand-right-shift');
     const linkLayer = document.getElementById('link-layer');
     const formula = document.getElementById('formula');
     const formulaTop = document.getElementById('formula-top');
@@ -260,9 +287,41 @@
     let leftTip = null;
     let rightTip = null;
     let bigMode = false;
+    let rightBaseline = new Map();
+    let pendingLineHandler = null;
 
-    handLeft.appendChild(buildGroup(topValues, 2, [4], 0, null, tip => { leftTip = tip; redraw(); }));
-    handRight.appendChild(buildGroup(bottomValues, 2, [0], null, 4, tip => { rightTip = tip; redraw(); }));
+    function cacheRightBaseline(){
+      rightBaseline = new Map();
+      handRight.querySelectorAll('.finger-sq').forEach(el => {
+        const fr = el.getBoundingClientRect();
+        const tipR = el.querySelector('.finger-tip').getBoundingClientRect();
+        const midR = el.querySelector('.finger-mid').getBoundingClientRect();
+        rightBaseline.set(el, {
+          top: fr.top,
+          bottom: fr.bottom,
+          tip: { x: tipR.left+tipR.width/2, y: tipR.top+tipR.height/2 },
+          mid: { x: midR.left+midR.width/2, y: midR.top+midR.height/2 }
+        });
+      });
+    }
+
+    const handLeftPulse = document.getElementById('hand-left-pulse');
+    const handRightPulse = document.getElementById('hand-right-pulse');
+
+    function twitch(el){
+      el.classList.remove('twitch');
+      void el.offsetWidth;
+      el.classList.add('twitch');
+    }
+
+    handLeft.appendChild(buildGroup(topValues, 2, [4], 0, null, tip => {
+      if(!leftTip) twitch(handLeftPulse);
+      leftTip = tip; redraw();
+    }));
+    handRight.appendChild(buildGroup(bottomValues, 2, [0], null, 4, tip => {
+      if(!rightTip) twitch(handRightPulse);
+      rightTip = tip; redraw();
+    }));
 
     const modeBtn = document.getElementById('mode-btn');
 
@@ -298,17 +357,6 @@
       uiScale = scale;
       document.documentElement.style.setProperty('--ui-scale', scale);
       handsWrap.style.transform = `translateY(${-15*scale}px) scale(${scale})`;
-    }
-
-    function positionModeBtn(){
-      const leftThumbEl = handLeft.querySelector('.finger-sq.finger-first');
-      const rightThumbEl = handRight.querySelector('.finger-sq.finger-last');
-      const topMost = Math.min(leftThumbEl.getBoundingClientRect().top, rightThumbEl.getBoundingClientRect().top);
-      const leftHandRect = handLeft.getBoundingClientRect();
-      const rightHandRect = handRight.getBoundingClientRect();
-      const mx = (leftHandRect.right + rightHandRect.left) / 2;
-      modeBtn.style.left = mx+'px';
-      modeBtn.style.top = (topMost - 70*uiScale)+'px';
     }
 
     modeBtn.addEventListener('click', () => {
@@ -348,6 +396,10 @@
     }
 
     function redraw(){
+      if(pendingLineHandler){
+        handRightShift.removeEventListener('transitionend', pendingLineHandler);
+        pendingLineHandler = null;
+      }
       linkLayer.innerHTML = '';
       document.querySelectorAll('.finger-sq.linked').forEach(el => el.classList.remove('linked'));
       const plainFinger = document.querySelector('.finger-sq:not(.finger-first):not(.finger-last)');
@@ -360,10 +412,37 @@
         const r = leftTip.getBoundingClientRect();
         L = { x:r.left+r.width/2, y:r.top+r.height/2 };
       }
-      if(rightTip){
-        const r = rightTip.getBoundingClientRect();
-        R = { x:r.left+r.width/2, y:r.top+r.height/2 };
+
+      // All right-hand Y-positions are derived from the cached, never-shifted
+      // baseline (`rightBaseline`) plus a single `shiftY` offset — never from
+      // a live getBoundingClientRect() on the (possibly still animating)
+      // shifted element. This keeps every overlay calculation correct even
+      // while the hand is mid-slide, and immune to rapid re-selection.
+      const rightThumbEl = handRight.querySelector('.finger-sq.finger-last');
+      const rightSelEl = rightTip ? rightTip.parentElement : null;
+      const baseSel = rightSelEl ? rightBaseline.get(rightSelEl) : null;
+      const baseThumb = rightBaseline.get(rightThumbEl);
+
+      let shiftY = 0;
+      if(L && baseSel) shiftY = L.y - baseSel.tip.y;
+      const prevTransform = handRightShift.style.transform;
+      const newTransform = shiftY ? `translateY(${shiftY}px)` : '';
+      const willMove = newTransform !== prevTransform;
+      handRightShift.style.transform = newTransform;
+
+      if(baseSel){
+        R = { x: baseSel.tip.x, y: baseSel.tip.y + shiftY };
       }
+
+      const leftHandRect = handLeft.getBoundingClientRect();
+      const rightHandRectNow = handRight.getBoundingClientRect();
+      const mx = (leftHandRect.right + rightHandRectNow.left) / 2;
+      const leftThumbEl = handLeft.querySelector('.finger-sq.finger-first');
+      const topMost = Math.min(leftThumbEl.getBoundingClientRect().top, baseThumb.top+shiftY);
+      modeBtn.style.left = mx+'px';
+      modeBtn.style.top = (topMost - 70*uiScale)+'px';
+      formulaFinal.style.left = mx+'px';
+      formulaFinal.style.top = (topMost - 160*uiScale)+'px';
 
       if(L && R){
         const leftValue = Number(leftTip.parentElement.dataset.value);
@@ -374,47 +453,63 @@
         handRight.querySelectorAll('.finger-sq').forEach(el => {
           if(Number(el.dataset.value) <= rightValue) el.classList.add('linked');
         });
-        const leftHandRect = handLeft.getBoundingClientRect();
-        const rightHandRect = handRight.getBoundingClientRect();
-        const mx = (leftHandRect.right + rightHandRect.left) / 2;
-        const path = document.createElementNS(svgNS, 'path');
-        path.setAttribute('d', `M ${L.x} ${L.y} H ${mx} V ${R.y} H ${R.x}`);
-        path.setAttribute('stroke', '#ff3b30');
-        path.setAttribute('stroke-width', strokeW);
-        path.setAttribute('fill', 'none');
-        path.setAttribute('stroke-linecap', 'round');
-        path.setAttribute('stroke-linejoin', 'round');
-        path.setAttribute('pointer-events', 'stroke');
-        path.style.cursor = 'pointer';
-        path.addEventListener('click', () => { leftTip = null; rightTip = null; redraw(); });
-        linkLayer.appendChild(path);
+        const drawLine = () => {
+          const path = document.createElementNS(svgNS, 'path');
+          path.setAttribute('d', `M ${L.x} ${L.y} H ${mx} V ${R.y} H ${R.x}`);
+          path.setAttribute('stroke', '#ff3b30');
+          path.setAttribute('stroke-width', strokeW);
+          path.setAttribute('fill', 'none');
+          path.setAttribute('stroke-linecap', 'round');
+          path.setAttribute('stroke-linejoin', 'round');
+          path.setAttribute('pointer-events', 'stroke');
+          path.style.cursor = 'pointer';
+          path.addEventListener('click', () => { leftTip = null; rightTip = null; redraw(); });
+          linkLayer.appendChild(path);
+        };
+        // The line only appears once the right hand has actually arrived at
+        // the aligned position — not the instant the fingers are picked.
+        if(willMove){
+          // transitionend bubbles up from descendant fingers' own (much
+          // shorter) transitions too, so ignore anything not fired by this
+          // element's own transform transition.
+          pendingLineHandler = (ev) => {
+            if(ev.target !== handRightShift || ev.propertyName !== 'transform') return;
+            handRightShift.removeEventListener('transitionend', pendingLineHandler);
+            pendingLineHandler = null;
+            drawLine();
+          };
+          handRightShift.addEventListener('transitionend', pendingLineHandler);
+        } else {
+          drawLine();
+        }
 
         const ordFontSize = fingerRect.width * 0.28;
-        [leftTip.parentElement, rightTip.parentElement].forEach(el => {
-          const m = el.querySelector('.finger-mid').getBoundingClientRect();
-          linkLayer.appendChild(makeOrdinal(m.left+m.width/2, m.top+m.height/2, Number(el.dataset.value)-5, ordFontSize));
-        });
+        const leftMid = leftTip.parentElement.querySelector('.finger-mid').getBoundingClientRect();
+        linkLayer.appendChild(makeOrdinal(leftMid.left+leftMid.width/2, leftMid.top+leftMid.height/2, leftValue-5, ordFontSize));
+        linkLayer.appendChild(makeOrdinal(baseSel.mid.x, baseSel.mid.y+shiftY, rightValue-5, ordFontSize));
 
         const leftOrdinal = leftValue-5, rightOrdinal = rightValue-5;
         let bottomResult;
         if(bigMode){
           bottomResult = 200 + 20*(leftOrdinal+rightOrdinal);
-          formula.innerHTML = `<span style="color:#ff3b30">200</span> + (${leftOrdinal} + ${rightOrdinal}) × <span style="color:#ff3b30">20</span> = ${bottomResult}`;
+          formula.innerHTML = `<span style="color:#ff3b30">200</span> + (${leftOrdinal} + ${rightOrdinal}) × <span style="color:#ff3b30">20</span> = <u>${bottomResult}</u>`;
         } else {
           bottomResult = (leftOrdinal+rightOrdinal)*10;
-          formula.innerHTML = `(${leftOrdinal} + ${rightOrdinal}) × <span style="color:#ff3b30">10</span> = ${bottomResult}`;
+          formula.innerHTML = `(${leftOrdinal} + ${rightOrdinal}) × <span style="color:#ff3b30">10</span> = <u>${bottomResult}</u>`;
         }
 
         let lowestBottom = -Infinity;
-        document.querySelectorAll('.finger-sq').forEach(el => {
+        handLeft.querySelectorAll('.finger-sq').forEach(el => {
           const b = el.getBoundingClientRect().bottom;
           if(b > lowestBottom) lowestBottom = b;
+        });
+        handRight.querySelectorAll('.finger-sq').forEach(el => {
+          const bb = rightBaseline.get(el).bottom + shiftY;
+          if(bb > lowestBottom) lowestBottom = bb;
         });
         formula.style.left = mx+'px';
         formula.style.top = (lowestBottom + 40*uiScale)+'px';
 
-        const leftThumbEl = handLeft.querySelector('.finger-sq.finger-first');
-        const rightThumbEl = handRight.querySelector('.finger-sq.finger-last');
         const leftAbove = 10-leftValue, rightAbove = 10-rightValue;
 
         if(leftValue !== 10){
@@ -422,20 +517,15 @@
           linkLayer.appendChild(makeOrdinal(m.left+m.width/2, m.top+m.height/2, leftAbove, ordFontSize));
         }
         if(rightValue !== 10){
-          const m = rightThumbEl.querySelector('.finger-mid').getBoundingClientRect();
-          linkLayer.appendChild(makeOrdinal(m.left+m.width/2, m.top+m.height/2, rightAbove, ordFontSize));
+          linkLayer.appendChild(makeOrdinal(baseThumb.mid.x, baseThumb.mid.y+shiftY, rightAbove, ordFontSize));
         }
 
         const topResult = leftAbove*rightAbove;
-        formulaTop.textContent = `${leftAbove} × ${rightAbove} = ${topResult}`;
-        const topMost = Math.min(leftThumbEl.getBoundingClientRect().top, rightThumbEl.getBoundingClientRect().top);
+        formulaTop.innerHTML = `${leftAbove} × ${rightAbove} = <u>${topResult}</u>`;
         formulaTop.style.left = mx+'px';
         formulaTop.style.top = (topMost - 2*uiScale)+'px';
 
-        formulaFinal.textContent = `${bottomResult + topResult}`;
-        const formulaBottom = formula.getBoundingClientRect().bottom;
-        formulaFinal.style.left = mx+'px';
-        formulaFinal.style.top = (formulaBottom + 24*uiScale)+'px';
+        formulaFinal.innerHTML = `${bottomResult} + ${topResult} = <u>${bottomResult + topResult}</u>`;
       } else {
         formula.textContent = '';
         formulaTop.textContent = '';
@@ -448,7 +538,15 @@
     function layoutAll(){
       fitLayout();
       sizeSvg();
-      positionModeBtn();
+      // Re-measure the right hand's un-shifted baseline positions at the new
+      // scale before redraw() re-applies any active selection's shift.
+      const prevTransition = handRightShift.style.transition;
+      handRightShift.style.transition = 'none';
+      handRightShift.style.transform = '';
+      void handRightShift.offsetHeight;
+      cacheRightBaseline();
+      handRightShift.style.transition = prevTransition;
+      void handRightShift.offsetHeight;
       redraw();
     }
 
@@ -472,8 +570,11 @@
     document.addEventListener('fullscreenchange', () => {
       fsBtn.textContent = document.fullscreenElement ? '✕' : '⛶';
     });
+    // Auto-fullscreen only on the first touch (mobile) — a mouse click would
+    // trigger the desktop browser's "press ESC to exit" banner, which is
+    // distracting right when picking the first finger, so desktop stays
+    // manual (the fs-btn button).
     document.addEventListener('touchend', enterFullscreen, { once:true });
-    document.addEventListener('click', enterFullscreen, { once:true });
   </script>
 </body>
 </html>
