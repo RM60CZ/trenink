@@ -45,7 +45,7 @@
   .formula-final{
     position:fixed;
     top:0;left:0;
-    transition:top 10.8s ease,left 10.8s ease;
+    transition:top .6s ease,left .6s ease;
     font-size:calc(72px * var(--ui-scale, 1));font-weight:bold;
     color:var(--t);
     white-space:nowrap;
@@ -57,7 +57,7 @@
   .mode-btn{
     position:fixed;
     top:0;left:0;
-    transition:top 10.8s ease,left 10.8s ease;
+    transition:top .6s ease,left .6s ease;
     transform:translate(-50%,-100%);
     background:#2c2c2e;color:var(--t);
     border:1px solid #48484a;border-radius:12px;
@@ -81,7 +81,7 @@
   .fs-btn:hover,.fs-btn:active{opacity:1;}
   .hand-shift{
     display:inline-flex;
-    transition:transform 10.8s ease;
+    transition:transform .6s ease;
   }
   .hand-pulse{
     display:inline-flex;
@@ -378,7 +378,12 @@
       // switched off for the whole measure-and-center pass below.
       const transitionEls = [modeBtn, formulaFinal, handRightShift];
       const savedTransitions = transitionEls.map(el => el.style.transition);
-      transitionEls.forEach(el => el.style.transition = 'none');
+      transitionEls.forEach(el => { el.style.transition = 'none'; });
+      // Force a style flush so the browser commits "no transition" before
+      // any transform/top/left change below — otherwise it can fold the
+      // upcoming instant change and the transition restore at the end into
+      // one long animated slide instead of an immediate snap.
+      transitionEls.forEach(el => void el.offsetHeight);
 
       function applyTransform(transformStr, scaleVal){
         uiScale = scaleVal;
@@ -409,8 +414,11 @@
 
       leftTip = savedLeft; rightTip = savedRight;
       redraw();
+      // Commit this final, instant snap before re-enabling the slow
+      // interactive-slide transition, so it doesn't get animated too.
+      transitionEls.forEach(el => void el.offsetHeight);
 
-      transitionEls.forEach((el,i) => el.style.transition = savedTransitions[i]);
+      transitionEls.forEach((el,i) => { el.style.transition = savedTransitions[i]; });
     }
 
     modeBtn.addEventListener('click', () => {
