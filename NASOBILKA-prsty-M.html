@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Verze nahrána: 22.08.2026 16:48 -->
+<!-- Verze nahrána: 24.08.2026 18:27 -->
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
@@ -334,29 +334,83 @@
 
     let uiScale = 1;
 
-    function visualBounds(container){
-      const squares = container.querySelectorAll('.finger-sq');
+    function measureContentExtent(){
+      const els = [handsWrap, formula, formulaTop, formulaFinal, modeBtn];
       let top=Infinity, bottom=-Infinity, left=Infinity, right=-Infinity;
-      squares.forEach(el => {
+      els.forEach(el => {
         const r = el.getBoundingClientRect();
+        if(r.width===0 && r.height===0) return;
         if(r.top < top) top = r.top;
         if(r.bottom > bottom) bottom = r.bottom;
         if(r.left < left) left = r.left;
         if(r.right > right) right = r.right;
       });
-      return { width: right-left, height: bottom-top };
+      return { top, bottom, left, right };
+    }
+
+    // Tries every one of the 25 finger-pair combinations (all possible
+    // calculations, not just the extreme corners) and returns the union
+    // bounding box across all of them, so the layout is sized to whichever
+    // combination actually needs the most room.
+    function sweepMaxExtent(){
+      const leftTips = [...handLeft.querySelectorAll('.finger-sq')].map(el => el.querySelector('.finger-tip'));
+      const rightTips = [...handRight.querySelectorAll('.finger-sq')].map(el => el.querySelector('.finger-tip'));
+      let top=Infinity, bottom=-Infinity, left=Infinity, right=-Infinity;
+      leftTips.forEach(lt => {
+        rightTips.forEach(rt => {
+          leftTip = lt; rightTip = rt;
+          redraw();
+          const ext = measureContentExtent();
+          if(ext.top < top) top = ext.top;
+          if(ext.bottom > bottom) bottom = ext.bottom;
+          if(ext.left < left) left = ext.left;
+          if(ext.right > right) right = ext.right;
+        });
+      });
+      return { top, bottom, left, right };
     }
 
     function fitLayout(){
-      handsWrap.style.transform = 'translateY(-15px)';
-      const rect = visualBounds(handsWrap);
-      const availW = window.innerWidth - Math.min(140, window.innerWidth*0.2);
-      const availH = window.innerHeight - Math.min(300, window.innerHeight*0.5);
-      let scale = Math.min(availW/rect.width, availH/rect.height, 1);
+      const savedLeft = leftTip, savedRight = rightTip;
+      // formula-final/mode-btn animate top/left over 10.8s for the normal
+      // interactive slide; during measurement that would freeze
+      // getBoundingClientRect() at a stale, mid-animation position, so it's
+      // switched off for the whole measure-and-center pass below.
+      const transitionEls = [modeBtn, formulaFinal, handRightShift];
+      const savedTransitions = transitionEls.map(el => el.style.transition);
+      transitionEls.forEach(el => el.style.transition = 'none');
+
+      function applyTransform(transformStr, scaleVal){
+        uiScale = scaleVal;
+        document.documentElement.style.setProperty('--ui-scale', scaleVal);
+        handsWrap.style.transform = transformStr;
+        void handsWrap.offsetHeight;
+        handRightShift.style.transform = '';
+        void handRightShift.offsetHeight;
+        cacheRightBaseline();
+      }
+
+      const pad = 12;
+
+      applyTransform('', 1);
+      const extent1 = sweepMaxExtent();
+      let scale = Math.min(
+        (window.innerWidth - pad*2) / (extent1.right - extent1.left),
+        (window.innerHeight - pad*2) / (extent1.bottom - extent1.top)
+      );
       if(!isFinite(scale) || scale <= 0) scale = 1;
-      uiScale = scale;
-      document.documentElement.style.setProperty('--ui-scale', scale);
-      handsWrap.style.transform = `translateY(${-15*scale}px) scale(${scale})`;
+
+      applyTransform(`scale(${scale})`, scale);
+      const extent2 = sweepMaxExtent();
+      const dx = window.innerWidth/2 - (extent2.left + extent2.right)/2;
+      const dy = window.innerHeight/2 - (extent2.top + extent2.bottom)/2;
+
+      applyTransform(`translate(${dx}px, ${dy}px) scale(${scale})`, scale);
+
+      leftTip = savedLeft; rightTip = savedRight;
+      redraw();
+
+      transitionEls.forEach((el,i) => el.style.transition = savedTransitions[i]);
     }
 
     modeBtn.addEventListener('click', () => {
@@ -536,18 +590,8 @@
     }
 
     function layoutAll(){
-      fitLayout();
       sizeSvg();
-      // Re-measure the right hand's un-shifted baseline positions at the new
-      // scale before redraw() re-applies any active selection's shift.
-      const prevTransition = handRightShift.style.transition;
-      handRightShift.style.transition = 'none';
-      handRightShift.style.transform = '';
-      void handRightShift.offsetHeight;
-      cacheRightBaseline();
-      handRightShift.style.transition = prevTransition;
-      void handRightShift.offsetHeight;
-      redraw();
+      fitLayout();
     }
 
     layoutAll();
