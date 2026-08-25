@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Verze nahrána: 24.08.2026 18:27 -->
+<!-- Verze nahrána: 25.08.2026 20:45 -->
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
@@ -289,6 +289,7 @@
     let bigMode = false;
     let rightBaseline = new Map();
     let pendingLineHandler = null;
+    let fitting = false;
 
     function cacheRightBaseline(){
       rightBaseline = new Map();
@@ -334,10 +335,21 @@
 
     let uiScale = 1;
 
+    // The hands' wrapper is NOT usable for measuring: its children are rotated
+    // and translated, and a parent's border box ignores overflowing transformed
+    // descendants — so the wrapper measures ~1182x120 while the fingers really
+    // span the whole screen. Every finger and label is measured individually.
+    let measureEls = null;
     function measureContentExtent(){
-      const els = [handsWrap, formula, formulaTop, formulaFinal, modeBtn];
+      if(!measureEls){
+        measureEls = [
+          ...document.querySelectorAll('.finger-sq'),
+          ...document.querySelectorAll('.finger-value'),
+          formula, formulaTop, formulaFinal, modeBtn
+        ];
+      }
       let top=Infinity, bottom=-Infinity, left=Infinity, right=-Infinity;
-      els.forEach(el => {
+      measureEls.forEach(el => {
         const r = el.getBoundingClientRect();
         if(r.width===0 && r.height===0) return;
         if(r.top < top) top = r.top;
@@ -384,6 +396,7 @@
       // upcoming instant change and the transition restore at the end into
       // one long animated slide instead of an immediate snap.
       transitionEls.forEach(el => void el.offsetHeight);
+      fitting = true;
 
       function applyTransform(transformStr, scaleVal){
         uiScale = scaleVal;
@@ -396,19 +409,28 @@
       }
 
       const pad = 12;
+      const availW = window.innerWidth - pad*2;
+      const availH = window.innerHeight - pad*2;
 
+      // Text sizes track --ui-scale, so the content doesn't shrink perfectly
+      // linearly with the scale factor; a couple of correction passes settle it.
+      let scale = 1;
       applyTransform('', 1);
-      const extent1 = sweepMaxExtent();
-      let scale = Math.min(
-        (window.innerWidth - pad*2) / (extent1.right - extent1.left),
-        (window.innerHeight - pad*2) / (extent1.bottom - extent1.top)
-      );
-      if(!isFinite(scale) || scale <= 0) scale = 1;
+      let extent = sweepMaxExtent();
+      for(let i=0; i<3; i++){
+        const f = Math.min(
+          availW / (extent.right - extent.left),
+          availH / (extent.bottom - extent.top)
+        );
+        if(!isFinite(f) || f <= 0) break;
+        scale *= f;
+        applyTransform(`scale(${scale})`, scale);
+        extent = sweepMaxExtent();
+        if(Math.abs(f - 1) < 0.01) break;
+      }
 
-      applyTransform(`scale(${scale})`, scale);
-      const extent2 = sweepMaxExtent();
-      const dx = window.innerWidth/2 - (extent2.left + extent2.right)/2;
-      const dy = window.innerHeight/2 - (extent2.top + extent2.bottom)/2;
+      const dx = window.innerWidth/2 - (extent.left + extent.right)/2;
+      const dy = window.innerHeight/2 - (extent.top + extent.bottom)/2;
 
       applyTransform(`translate(${dx}px, ${dy}px) scale(${scale})`, scale);
 
@@ -419,6 +441,7 @@
       transitionEls.forEach(el => void el.offsetHeight);
 
       transitionEls.forEach((el,i) => { el.style.transition = savedTransitions[i]; });
+      fitting = false;
     }
 
     modeBtn.addEventListener('click', () => {
@@ -488,7 +511,10 @@
       let shiftY = 0;
       if(L && baseSel) shiftY = L.y - baseSel.tip.y;
       const prevTransform = handRightShift.style.transform;
-      const newTransform = shiftY ? `translateY(${shiftY}px)` : '';
+      // shiftY is in viewport pixels, but this element sits inside the
+      // scale()d hands wrapper, so the translate must be pre-divided by the
+      // scale or the hand only travels a fraction of the way.
+      const newTransform = shiftY ? `translateY(${shiftY/uiScale}px)` : '';
       const willMove = newTransform !== prevTransform;
       handRightShift.style.transform = newTransform;
 
@@ -530,7 +556,9 @@
         };
         // The line only appears once the right hand has actually arrived at
         // the aligned position — not the instant the fingers are picked.
-        if(willMove){
+        // During fitLayout the transition is switched off, so transitionend
+        // would never fire and the line would silently disappear on resize.
+        if(willMove && !fitting){
           // transitionend bubbles up from descendant fingers' own (much
           // shorter) transitions too, so ignore anything not fired by this
           // element's own transform transition.
