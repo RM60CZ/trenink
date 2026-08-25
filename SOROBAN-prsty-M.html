@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Verze nahrána: 21.08.2026 18:06 -->
+<!-- Verze nahrána: 25.08.2026 21:43 -->
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
@@ -10,9 +10,14 @@
 <meta name="theme-color" content="#1c1c1e">
 <title>SOROBAN-prsty-M</title>
 <style>
-  :root{--bg:#000;--t:#f5f5f7;--c:#1c1c1e;}
+  :root{--bg:#000;--t:#f5f5f7;--c:#1c1c1e;--ui-scale:1;}
   *{box-sizing:border-box;font-family:-apple-system,sans-serif;margin:0;padding:0;}
+  html,body{overflow:hidden;}
   body{background:var(--c);color:var(--t);display:flex;justify-content:center;align-items:center;min-height:100vh;}
+
+  /* While fitLayout measures, every transition/animation must be off or
+     getBoundingClientRect() reports mid-animation values and the fit is wrong. */
+  body.measuring *{transition:none !important;animation:none !important;}
 
   .app-wrap{
     display:flex;flex-direction:column;align-items:center;
@@ -143,9 +148,9 @@
     position:fixed;
     top:0;left:0;
     background:#2c2c2e;color:var(--t);
-    border:1px solid #48484a;border-radius:16px;
-    font-size:30px;font-weight:bold;
-    padding:16px 10px;
+    border:1px solid #48484a;border-radius:calc(16px * var(--ui-scale));
+    font-size:calc(30px * var(--ui-scale));font-weight:bold;
+    padding:calc(16px * var(--ui-scale)) calc(10px * var(--ui-scale));
     text-align:center;white-space:nowrap;
     cursor:pointer;
   }
@@ -153,7 +158,7 @@
 
   .addend-part{
     position:fixed;top:0;left:0;
-    font-size:110px;font-weight:bold;color:var(--t);
+    font-size:calc(110px * var(--ui-scale));font-weight:bold;color:var(--t);
     white-space:nowrap;
     pointer-events:none;
   }
@@ -163,12 +168,12 @@
   }
 
   @media (max-width:520px){
-    .addend-btn{font-size:23px;padding:12px 8px;}
-    .addend-part{font-size:84px;}
+    .addend-btn{font-size:calc(23px * var(--ui-scale));padding:calc(12px * var(--ui-scale)) calc(8px * var(--ui-scale));}
+    .addend-part{font-size:calc(84px * var(--ui-scale));}
   }
   @media (max-width:390px){
-    .addend-btn{font-size:19px;padding:10px 6px;}
-    .addend-part{font-size:70px;}
+    .addend-btn{font-size:calc(19px * var(--ui-scale));padding:calc(10px * var(--ui-scale)) calc(6px * var(--ui-scale));}
+    .addend-part{font-size:calc(70px * var(--ui-scale));}
   }
 
   .fs-btn{
@@ -246,7 +251,7 @@
       sumTotal.textContent = String(total);
       sumFormula.innerHTML = groups.join('<span class="sum-gap">+</span>');
 
-      if(targetSum!==null && total===targetSum){
+      if(!measuring && targetSum!==null && total===targetSum){
         if(!celebrated){
           celebrated = true;
           triggerFireworks();
@@ -258,6 +263,8 @@
 
     let targetSum = null;
     let celebrated = false;
+    let measuring = false;
+    let uiScale = 1;
 
     function triggerFireworks(){
       const layer = document.getElementById('fw-layer');
@@ -449,6 +456,89 @@
 
     btnReset.addEventListener('click', resetFingers);
 
+    // ---- automatické přizpůsobení velikosti oknu / obrazovce ----
+    const appWrap = document.querySelector('.app-wrap');
+    let measureEls = null;
+
+    function measureExtent(){
+      if(!measureEls){
+        measureEls = [
+          ...document.querySelectorAll('.finger-sq'),
+          ...document.querySelectorAll('.finger-value'),
+          sumTotal, sumFormula, btnLeft, btnRight, btnReset,
+          addendA, addendPlus, addendB
+        ];
+      }
+      let top=Infinity, bottom=-Infinity, left=Infinity, right=-Infinity;
+      measureEls.forEach(el => {
+        const r = el.getBoundingClientRect();
+        if(r.width===0 && r.height===0) return;
+        if(r.top < top) top = r.top;
+        if(r.bottom > bottom) bottom = r.bottom;
+        if(r.left < left) left = r.left;
+        if(r.right > right) right = r.right;
+      });
+      return { top, bottom, left, right };
+    }
+
+    function applyScale(transformStr, scaleVal){
+      uiScale = scaleVal;
+      document.documentElement.style.setProperty('--ui-scale', scaleVal);
+      appWrap.style.transform = transformStr;
+      void appWrap.offsetHeight;
+      layoutAddendButtons();
+    }
+
+    // The layout must fit its *largest* state, not the current one: every
+    // finger raised (raised fingers are 4x taller), the widest sum formula,
+    // and a two-digit + one-digit exercise above it.
+    function fitLayout(){
+      const savedOn = [...document.querySelectorAll('.finger-sq')].map(el => el.classList.contains('on'));
+      const savedA = addendA.textContent, savedB = addendB.textContent;
+
+      document.body.classList.add('measuring');
+      measuring = true;
+      document.querySelectorAll('.finger-sq').forEach(el => el.classList.add('on'));
+      updateSum();
+      addendA.textContent = '99';
+      addendB.textContent = '9';
+
+      const pad = 12;
+      const availW = window.innerWidth - pad*2;
+      const availH = window.innerHeight - pad*2;
+
+      let scale = 1;
+      applyScale('', 1);
+      let ext = measureExtent();
+      for(let i=0; i<3; i++){
+        const f = Math.min(
+          availW / (ext.right - ext.left),
+          availH / (ext.bottom - ext.top)
+        );
+        if(!isFinite(f) || f <= 0) break;
+        scale *= f;
+        applyScale(`scale(${scale})`, scale);
+        ext = measureExtent();
+        if(Math.abs(f - 1) < 0.01) break;
+      }
+
+      const dx = window.innerWidth/2 - (ext.left + ext.right)/2;
+      const dy = window.innerHeight/2 - (ext.top + ext.bottom)/2;
+      applyScale(`translate(${dx}px, ${dy}px) scale(${scale})`, scale);
+
+      document.querySelectorAll('.finger-sq').forEach((el,i) => el.classList.toggle('on', savedOn[i]));
+      addendA.textContent = savedA;
+      addendB.textContent = savedB;
+      updateSum();
+      measuring = false;
+      document.body.classList.remove('measuring');
+      layoutAddendButtons();
+    }
+
+    function layoutAll(){
+      fitLayout();
+    }
+
     let operatorOn = false;
     addendPlus.addEventListener('click', () => {
       operatorOn = !operatorOn;
@@ -456,9 +546,10 @@
       resetExercise();
     });
 
-    layoutAddendButtons();
-    window.addEventListener('resize', layoutAddendButtons);
-    window.addEventListener('load', layoutAddendButtons);
+    layoutAll();
+    window.addEventListener('resize', layoutAll);
+    window.addEventListener('orientationchange', layoutAll);
+    window.addEventListener('load', layoutAll);
 
     const fsBtn = document.getElementById('fs-btn');
     fsBtn.addEventListener('click', () => {
